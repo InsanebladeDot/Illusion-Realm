@@ -1,0 +1,57 @@
+appId: com.illusionrealm.app
+productName: Illusion Realm
+
+# electron-builder 输出目录（相对于 apps/electron）：apps/electron/release
+directories:
+  output: release
+
+# 打包内容（相对 apps/electron）：
+# - 主进程 / preload / 资源：'*.js'、'icon.png'、'ffmpeg/**'
+# - 主进程子目录：ipc-handlers/、services/（漏收会在启动时 Cannot find module）
+# - 运行时依赖：node_modules/@illusion-realm/**（workspace 链接到 packages/shared）
+# 注意：Next.js 静态导出目录位于 app 目录之外（apps/next/out），
+#       electron-builder 不会把外部目录收进 asar，因此通过 extraResources 分发。
+files:
+  - '!**/*'
+  - '*.js'
+  - 'ipc-handlers/**/*'
+  - 'services/**/*'
+  - 'ffmpeg/**/*'
+  - 'icon.png'
+  - 'package.json'
+  - 'node_modules/@illusion-realm/**/*'
+
+asar: true
+# 原生模块解包（当前无 .node，但保留约定）
+asarUnpack:
+  - '**/*.node'
+
+extraResources:
+  # Next.js 静态导出（生产环境由 app:// 协议读取：resources/next-out）
+  - from: ../next/out
+    to: next-out
+    filter:
+      - '**/*'
+  # FFmpeg / FFprobe：放到 apps/electron/bin/ffmpeg/ 后随包分发，
+  # 运行期由 ffmpeg/locate.js 通过 process.resourcesPath/ffmpeg 找到
+  - from: bin/ffmpeg
+    to: ffmpeg
+    filter:
+      - '**/*'
+
+# 主进程与 preload 是手写 CommonJS，无需 node-gyp / npm 重建
+npmRebuild: false
+nodeGypRebuild: false
+
+# 使用本地已安装的 Electron 发行包（pnpm 隔离布局下路径为 apps/electron/node_modules/electron/dist），
+# 避免打包时再去 GitHub 下载 electron-v*.zip
+electronDist: node_modules/electron/dist
+
+win:
+  icon: icon.png
+  target:
+    - nsis
+mac:
+  icon: icon.png
+linux:
+  icon: icon.png

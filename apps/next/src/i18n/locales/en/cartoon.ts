@@ -1,0 +1,119 @@
+/**
+ * English catalogue — **结构与 zh-CN 完全一致**（由 apps/next/scripts/mirror-locale.mjs 生成）。
+ *
+ * 现状：值仍与 zh-CN 相同（镜像），翻译按命名空间增量推进。
+ * 未翻译数量由 apps/next/scripts/check-i18n-en.mjs 的 ratchet 盯着（只减不增），
+ * 因此「翻了哪些」是可以机检的数字，不靠人记。
+ */
+export const cartoon = {
+  "page": {
+    "title": "漫画对话框",
+    "description": "选择素材后进入合成编辑；合成页也可随时切换素材库",
+    "assetSettings": "素材设定",
+    "assetSettingsHint": "确认素材后进入合成页上传背景、添加文字",
+    "currentAsset": "当前素材：",
+    "enterCompose": "进入合成编辑",
+    "customAssetSaved": "自定义素材已保存"
+  },
+  "assetPicker": {
+    "title": "漫画素材",
+    "description": "选择内置或自定义对话框素材",
+    "remove": "删除 {name}"
+  },
+  "customAsset": {
+    "add": "添加自定义素材",
+    "defaultName": "自定义素材",
+    "description": "上传对话框图片，文字在合成编辑阶段添加",
+    "closeDialog": "关闭对话框",
+    "rechooseImage": "重新选择图片",
+    "chooseImage": "点击上传 PNG / JPG 素材",
+    "nameLabel": "素材名称",
+    "namePlaceholder": "例如：尖角气泡",
+    "previewAlt": "自定义素材预览",
+    "save": "保存素材"
+  },
+  "compose": {
+    "title": "漫画合成编辑",
+    "hint": "点击画布添加对话框 · Delete 删除选中对话框/文本 · 左侧切换素材 · Ctrl+Z/Y 撤销重做",
+    "back": "返回素材设定",
+    "undo": "撤销 Ctrl+Z",
+    "redo": "重做 Ctrl+Y",
+    "textItemSection": "文本框属性",
+    "bubbleSection": "对话框属性",
+    "defaultSection": "合成编辑",
+    "backgroundSection": "背景图片",
+    "changeBackground": "更换背景图片",
+    "uploadBackground": "上传背景图片",
+    "projectSection": "工程",
+    "projectHint": "编辑内容会自动保存到浏览器本地",
+    "exportProject": "导出工程 JSON",
+    "importProject": "导入工程",
+    "bubbleListTitle": "对话框 (",
+    "bubbleListDeleteTitle": "Delete 删除对话框",
+    "bubbleTextCount": " · {count} 个文本",
+    "unknownAsset": "未知素材",
+    "textLayerTitle": "文本图层 (",
+    "emptyTextBox": "（空文本框）",
+    "metaRotation": " · 旋转",
+    "metaWidth": "° · 宽",
+    "metaHeight": "% · 高",
+    "flipSection": "镜像翻转（素材）",
+    "flipHorizontal": "水平",
+    "flipVertical": "垂直",
+    "flipHint": "仅翻转对话框素材 PNG，文字保持正向",
+    "opacity": "透明度",
+    "textContent": "文本内容",
+    "textDeleteTitle": "Delete 删除",
+    "textPlaceholder": "输入文字…",
+    "charCount": "字数",
+    "charCountWarn": " · 建议拆分为多个气泡（12–20 字为佳）",
+    "charCountOver": " · 过长，建议拆分",
+    "alignSection": "对齐",
+    "alignLeft": "左",
+    "alignCenter": "中",
+    "alignRight": "右",
+    "directionSection": "文字方向",
+    "directionHorizontal": "横排",
+    "directionVertical": "竖排",
+    "fontLabel": "字体",
+    "fontGroupSystem": "系统字体",
+    "fontGroupWeb": "网络字体",
+    "fontGroupCustom": "自定义字体",
+    "uploadFont": "上传字体 ttf/otf/woff",
+    "colorSection": "文字颜色",
+    "colorPresetLabel": "颜色 {color}",
+    "fontSize": "字号",
+    "lineHeight": "行高倍率",
+    "letterSpacing": "字间距",
+    "strokeWidth": "描边宽度",
+    "textRotation": "文字旋转",
+    "textBoxSection": "文本框尺寸",
+    "boxWidth": "宽度",
+    "boxHeight": "高度",
+    "exporting": "导出中…",
+    "export": "导出合成 {format}",
+    "assetSwitched": "已切换选中对话框素材：{name}",
+    "assetSelected": "已选择素材：{name}，点击画布添加对话框",
+    "assetRemoved": "素材已删除，相关对话框已替换为默认素材",
+    "customAssetRemoved": "自定义素材已删除",
+    "customAssetSaved": "自定义素材已保存，点击画布添加对话框",
+    "bubbleDeleted": "已删除对话框",
+    "exportFileName": "漫画合成.{ext}",
+    "exported": "已导出 {format} 图片"
+  },
+  "canvas": {
+    "backgroundAlt": "背景图",
+    "emptyBackground": "请从右侧上传背景图片",
+    "addBubbleHint": "点击画布添加对话框（当前素材："
+  },
+  "bubble": {
+    "rotateHandle": "按住并拖动旋转对话框"
+  },
+  "export": {
+    "assetImageLoadFailed": "无法加载素材图片",
+    "imageLoadFailed": "无法加载图片",
+    "canvasUnavailable": "无法创建画布",
+    "failed": "导出失败",
+    "draftFileName": "漫画工程"
+  }
+} as const;

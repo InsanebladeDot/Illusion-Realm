@@ -1,0 +1,42 @@
+{
+  "name": "illusion-realm",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "pnpm@11.7.0",
+  "scripts": {
+    "dev": "concurrently -k \"pnpm --filter @illusion-realm/next dev\" \"pnpm --filter @illusion-realm/electron dev\"",
+    "dev:next": "pnpm --filter @illusion-realm/next dev",
+    "dev:electron": "pnpm --filter @illusion-realm/electron dev",
+    "build": "pnpm --filter @illusion-realm/next build && pnpm --filter @illusion-realm/electron dist",
+    "build:next": "pnpm --filter @illusion-realm/next build",
+    "pack": "pnpm --filter @illusion-realm/next build && pnpm --filter @illusion-realm/electron exec electron-builder --dir",
+    "typecheck": "pnpm --filter @illusion-realm/next typecheck && pnpm --filter @illusion-realm/electron exec tsc -p tsconfig.json",
+    "lint": "pnpm --filter @illusion-realm/next lint",
+    "verify": "electron scripts/verify-electron-modules.js",
+    "check": "pnpm typecheck && pnpm verify && pnpm check:gates && pnpm check:outputpath && pnpm check:foldercount && pnpm check:locale && pnpm check:smoke && pnpm check:refs && pnpm check:initlocale && pnpm check:i18n && pnpm check:i18n:en && pnpm check:locale-keys && pnpm check:meta",
+    "check:i18n": "pnpm --filter @illusion-realm/next check:i18n",
+    "check:i18n:list": "pnpm --filter @illusion-realm/next check:i18n:list",
+    "check:i18n:en:backlog": "node apps/next/scripts/check-i18n-en.mjs --backlog",
+    "check:i18n:en": "pnpm --filter @illusion-realm/next check:i18n:en",
+    "check:i18n:en:list": "pnpm --filter @illusion-realm/next check:i18n:en:list",
+    "mirror:locale": "pnpm --filter @illusion-realm/next mirror-locale",
+    "check:locale-keys": "pnpm --filter @illusion-realm/next mirror-locale --check",
+    "check:meta": "pnpm --filter @illusion-realm/next check:meta",
+    "check:gates": "pnpm --filter @illusion-realm/next check:gates",
+    "check:smoke": "node scripts/check-smoke-rules.js",
+    "check:refs": "node scripts/check-script-refs.js",
+    "check:initlocale": "node scripts/verify-initial-locale-arg.js",
+    "check:locale": "node scripts/verify-locale-resolution.js",
+    "self-test:gate": "node scripts/self-test-gates.js",
+    "survey:meta": "pnpm --filter @illusion-realm/next survey:meta",
+    "electron:install": "cross-env ELECTRON_MIRROR=https://npmmirror.com/mirrors/electron/ pnpm --filter @illusion-realm/electron run install-binary",
+    "postinstall": "pnpm --filter @illusion-realm/electron exec electron-builder install-app-deps",
+    "check:outputpath": "node scripts/verify-output-path-contract.js",
+    "check:foldercount": "node scripts/verify-folder-image-count.js"
+  },
+  "devDependencies": {
+    "concurrently": "^10.0.3",
+    "cross-env": "^10.1.0",
+    "electron": "^43.1.1"
+  }
+}

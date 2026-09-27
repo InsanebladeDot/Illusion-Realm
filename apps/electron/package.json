@@ -1,0 +1,27 @@
+{
+  "name": "@illusion-realm/electron",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Illusion Realm Electron 主进程与 preload",
+  "author": "Illusion Realm",
+  "main": "main.js",
+  "scripts": {
+    "dev": "wait-on http://localhost:3000 && cross-env NODE_ENV=development electron .",
+    "dev:nowait": "cross-env NODE_ENV=development electron .",
+    "build": "tsc",
+    "check": "tsc -p tsconfig.json && node scripts/check-nocheck.js",
+    "check:nocheck": "node scripts/check-nocheck.js",
+    "dist": "electron-builder",
+    "install-binary": "node node_modules/electron/install.js"
+  },
+  "dependencies": {
+    "@illusion-realm/shared": "workspace:*"
+  },
+  "devDependencies": {
+    "cross-env": "^10.1.0",
+    "electron": "^43.1.1",
+    "electron-builder": "^26.15.3",
+    "typescript": "^5",
+    "wait-on": "^9.0.10"
+  }
+}

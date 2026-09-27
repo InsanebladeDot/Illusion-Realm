@@ -1,0 +1,577 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+  --muted: #f4f4f5;
+  --muted-foreground: #71717a;
+  --border: #e4e4e7;
+  --accent: #f4f4f5;
+  --ring: #a855f7;
+  --input: #e4e4e7;
+  --primary: #a855f7;
+  --primary-foreground: #fafafa;
+  --popover: #ffffff;
+  /**
+   * 强调色（选中描边 / 实心按钮）：浅色沿用「与文字同色」的黑，深色换成中间调。
+   *
+   * 为什么需要这一对 token：深色下原来直接拿 `--foreground`（#ededed）当描边与实心填充，
+   * 于是选中的尺寸预设是一圈**近白 2px 边框**、主按钮是一整块纯白 —— 用户反馈
+   * 「边框线太粗、对比太强，要淡色」。改成中间调后选中态依然一眼可辨，但不刺眼。
+   * 浅色的取值与改造前逐字一致，浅色界面不变。
+   */
+  --accent-stroke: #171717;
+  --accent-fill: #18181b;
+  --accent-fill-foreground: #ffffff;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-accent: var(--accent);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-popover: var(--popover);
+  --color-accent-stroke: var(--accent-stroke);
+  --color-accent-fill: var(--accent-fill);
+  --color-accent-fill-foreground: var(--accent-fill-foreground);
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+    "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC",
+    Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas,
+    "Liberation Mono", monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+    --muted: #27272a;
+    --muted-foreground: #a1a1aa;
+    --border: #3f3f46;
+    --accent: #27272a;
+    --input: #3f3f46;
+    --primary: #a855f7;
+    --primary-foreground: #fafafa;
+    --popover: #0a0a0a;
+    /** 深色：柔和的中灰。zinc-500 描边 / zinc-600 填充，够醒目但不刺眼 */
+    --accent-stroke: #71717a;
+    --accent-fill: #52525b;
+    --accent-fill-foreground: #f4f4f5;
+  }
+}
+
+html,
+body {
+  height: 100%;
+  overflow-x: hidden;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+}
+
+[data-placeholder]:empty::before {
+  content: attr(data-placeholder);
+  color: var(--muted-foreground);
+  pointer-events: none;
+}
+
+* {
+  scrollbar-width: thin;
+}
+
+.scroll-stable {
+  scrollbar-gutter: stable;
+}
+
+/* Toast / 结果提示入场动画 */
+@keyframes toast-pop {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.toast-pop {
+  animation: toast-pop 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes result-banner-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/**
+ * 整页子页入场：从右侧滑入（手机端「进入下一层」的既有动线）。
+ * 用 `motion-safe:` 修饰符在调用处引用 —— 尊重 prefers-reduced-motion。
+ */
+@keyframes subpage-enter {
+  from {
+    opacity: 0;
+    transform: translateX(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.subpage-enter {
+  animation: subpage-enter 200ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.result-banner-in {
+  animation: result-banner-in 260ms ease-out;
+}
+
+/**
+ * 主题切换的「波纹换肤」：新配色以点击点为圆心、按圆形 clip-path 向外扩散。
+ *
+ * 为什么用 View Transitions 而不是自己叠一层遮罩：换肤要变的是**整张页面**的颜色
+ * （token + 全部 `dark:` 工具类），叠遮罩只能盖住，盖不出「新页面正从圆心长出来」的观感。
+ * 这里把**新**快照裁成圆形扩散、**旧**快照垫在下面，于是扩散边缘之外仍是旧配色 —— 这才是水波。
+ *
+ * 整段都挂在 `html.theme-ripple` 下（而不是全局的 ::view-transition 规则）：
+ * 只在用户**显式选主题**时由 `utils/themeTransition.ts` 挂上这个类。
+ * 启动时按系统偏好落色、系统偏好自己变化，都不该放动画 —— 全局改会连那些一起动画化。
+ */
+html.theme-ripple::view-transition-old(root),
+html.theme-ripple::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+html.theme-ripple::view-transition-old(root) {
+  z-index: 0;
+}
+
+html.theme-ripple::view-transition-new(root) {
+  z-index: 1;
+  animation: theme-ripple 560ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes theme-ripple {
+  from {
+    clip-path: circle(
+      0px at var(--theme-ripple-x, 0px) var(--theme-ripple-y, 100%)
+    );
+  }
+  to {
+    clip-path: circle(
+      var(--theme-ripple-radius, 150vmax) at var(--theme-ripple-x, 0px)
+        var(--theme-ripple-y, 100%)
+    );
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────
+ * 动效基线
+ *
+ * 三件事收在这一处，避免每个组件各写一套数字与写法：
+ *  1. 时长 / 缓动做成 token（此前散着 200 / 220 / 260 / 300 / 560 五种数字）；
+ *  2. 入场动画只动 `opacity` 与**独立变换属性** `scale` / `translate`，
+ *     绝不写 `transform` —— 弹窗普遍靠 `-translate-x-1/2 -translate-y-1/2` 居中，
+ *     动 transform 会把居中打飞（动画期间弹窗瞬移到别处）；
+ *  3. `prefers-reduced-motion` 在文件末尾做**全局兜底**，而不是指望每个调用点都记得写
+ *     `motion-safe:`（此前只有部分地方写了，新加的地方很容易漏）。
+ */
+:root {
+  --motion-fast: 140ms;
+  --motion-base: 220ms;
+  --motion-slow: 320ms;
+  --motion-ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --motion-ease-emphasized: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes motion-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes motion-pop-in {
+  from {
+    opacity: 0;
+    scale: 0.97;
+  }
+  to {
+    opacity: 1;
+    scale: 1;
+  }
+}
+
+@keyframes motion-rise-in {
+  from {
+    opacity: 0;
+    translate: 0 6px;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+
+/** 骨架屏的扫光：加载态统一铺这一层，不要再写「正在加载…」纯文字 */
+@keyframes motion-shimmer {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+
+/**
+ * 模态 / 弹层入场：**按 role 一次性覆盖全部弹窗**（项目里有 19 个 dialog，
+ * 逐个加类迟早漏一个）。要退出这条规则的，给元素加 `motion-none`。
+ */
+[role="dialog"]:not(.motion-none) {
+  animation: motion-pop-in var(--motion-base) var(--motion-ease-emphasized) both;
+}
+
+[role="menu"]:not(.motion-none) {
+  animation: motion-pop-in var(--motion-fast) var(--motion-ease-standard) both;
+}
+
+/** 内容到位时的入场（列表 / 网格 / 卡片） */
+.motion-fade-in {
+  animation: motion-fade-in var(--motion-base) var(--motion-ease-standard) both;
+}
+
+.motion-rise-in {
+  animation: motion-rise-in var(--motion-base) var(--motion-ease-emphasized) both;
+}
+
+.motion-skeleton {
+  background-color: var(--muted);
+  background-image: linear-gradient(
+    90deg,
+    transparent 0%,
+    color-mix(in oklab, var(--foreground) 10%, transparent) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  background-repeat: no-repeat;
+  animation: motion-shimmer 1.6s linear infinite;
+}
+
+/**
+ * 生成中的转圈：刻意不是匀速 —— 中段先加速、末段收慢，观感是「一会儿快一会儿慢」。
+ * 用独立类而不是 Tailwind 的 animate-spin，避免全局匀速的呆板感。
+ */
+@keyframes generation-spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  42% {
+    transform: rotate(330deg);
+  }
+  58% {
+    transform: rotate(390deg);
+  }
+  100% {
+    transform: rotate(720deg);
+  }
+}
+
+.generation-spin {
+  animation: generation-spin 1.8s cubic-bezier(0.42, 0, 0.58, 1) infinite;
+}
+
+/**
+ * 减少动效：全局兜底（时长压到 1ms，等于「瞬间到位」）。
+ * 放在最后、用 `!important` 覆盖上文的 token —— 这一条是**无障碍要求**，
+ * 不是风格偏好，任何一个组件漏写 `motion-safe:` 都不该让用户被动画困住。
+ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────
+ * 首页概念页的背景 / 装饰层动效
+ *
+ * 分层是刻意的（用户给的规范）：背景层（天空·云·日光·城市剪影）、装饰层（花瓣·星芒）、
+ * 品牌层（Logo·名称·标语）、功能层（半透明卡片）。这里只负责装饰层的两个循环动画；
+ * 「尊重 prefers-reduced-motion」由上面的全局兜底负责，不用每个元素各写一遍。
+ */
+@keyframes home-petal-fall {
+  0% {
+    transform: translate3d(0, -12%, 0) rotate(0deg);
+    opacity: 0;
+  }
+  12% {
+    opacity: 0.85;
+  }
+  100% {
+    transform: translate3d(18px, 118%, 0) rotate(220deg);
+    opacity: 0;
+  }
+}
+
+@keyframes home-sparkle {
+  0%,
+  100% {
+    opacity: 0.2;
+    scale: 0.75;
+  }
+  50% {
+    opacity: 1;
+    scale: 1;
+  }
+}
+
+.home-petal {
+  animation: home-petal-fall 9s linear infinite;
+}
+
+.home-sparkle {
+  animation: home-sparkle 2.6s ease-in-out infinite;
+}
+
+/*
+ * 首页底部潮水：沿用用户原项目的做法 —— 一条比 viewBox 宽的 `gentle-wave` 路径，
+ * 四层 `<use>` 叠色，各自跑**单向**平移（-90px → +85px），靠路径自身的周期（176 单位）
+ * 做到无缝循环。
+ *
+ * 为什么强调「单向」：先前我写的是 0 → -50% 的单向平移（没问题），但如果写成
+ * 「0 → -50% → 0」那种两段往返，回程会把波形原样推回去 —— 停顿感与「浪不是一直在走」
+ * 的错觉都是这么来的。单向 + 周期对齐才是潮水。
+ */
+@keyframes home-wave-move {
+  0% {
+    transform: translate3d(-176px, 0, 0);
+  }
+  100% {
+    /** 位移量 = 恰好一个波长（176 单位）：首尾波形完全相同，循环看不出接缝 */
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.home-waves use {
+  animation: home-wave-move 25s cubic-bezier(0.55, 0.5, 0.45, 0.5) infinite;
+}
+
+.home-waves use:nth-child(1) {
+  animation-delay: -2s;
+  animation-duration: 7s;
+}
+
+.home-waves use:nth-child(2) {
+  animation-delay: -3s;
+  animation-duration: 10s;
+}
+
+.home-waves use:nth-child(3) {
+  animation-delay: -4s;
+  animation-duration: 13s;
+}
+
+.home-waves use:nth-child(4) {
+  animation-delay: -5s;
+  animation-duration: 20s;
+}
+
+/* ─────────────────────────────────────────────────────────────
+ * 页面切换：旧内容被「抽出」、新内容从同侧移入
+ *
+ * 名字（view-transition-name）**只在过渡期间挂**：常驻的话，主题波纹那条「裁剪 root 新快照」
+ * 的动画会把这些元素从 root 里摘出去，波纹就盖不到它们了。
+ *
+ * 方向由 `data-page-direction` 决定（向前 = 向右抽 / 从右进；向后镜像到左侧）。
+ * 抽出与移入**先后错开**（后者带 delay），读起来是「抽走 → 换新」，而不是两边同时擦过。
+ */
+html.page-transition {
+  /** 新内容从这一侧整屏推入（右侧进 = 正、左侧进 = 负） */
+  --page-shift-in: 32%;
+  /** 旧内容反向让位：只做轻微视差，不整屏平移（整屏平移在 400ms 里会糊） */
+  --page-shift-out: -10%;
+  /**
+   * 「退到后面去」的模糊强度：**只加在被盖住的那一层**（退出的那一层）。
+   *
+   * 为什么需要：位移本身会让人读成「整块内容在漂」，尤其旧层从新层边缘露出来的那一条；
+   * 模糊给的是景深信号（近处清晰、远处虚），于是那点位移被读成「退后」而不是「漂移」。
+   * 方向上不要给进入层加模糊 —— 新内容一进来就糊，反而像没加载完。
+   */
+  --page-blur-covered: 7px;
+  /** 页面切换专用的曲线：起步快、收尾极缓（比标准 ease 更像「滑动停下来」而不是「撞停」） */
+  --motion-ease-page: cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+html.page-transition[data-page-direction="backward"] {
+  --page-shift-in: -32%;
+  --page-shift-out: 10%;
+}
+
+html.page-transition [data-page-transition] {
+  view-transition-name: page-content;
+}
+
+html.page-transition nav[aria-expanded] {
+  view-transition-name: app-sidebar;
+}
+
+/**
+ * 导航与 root：**整组（含 old / new 两个快照）都不播动画**。
+ *
+ * 只关 `group` 是不够的 —— 默认给 old/new 各挂一条淡出/淡入，两个「几乎相同」的侧栏快照
+ * 互相淡化，观感就是**侧栏在闪**（这正是「很严重的闪烁」的主因之一）。
+ * `mix-blend-mode: normal` 同理：默认的 plus-lighter 会把重叠处提亮。
+ */
+html.page-transition::view-transition-group(app-sidebar),
+html.page-transition::view-transition-old(app-sidebar),
+html.page-transition::view-transition-new(app-sidebar),
+html.page-transition::view-transition-group(root),
+html.page-transition::view-transition-old(root),
+html.page-transition::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+/**
+ * 侧栏那一组**永远在最上层**。
+ *
+ * 为什么需要：内容层的快照不局限于它原来的框 —— 旧内容向左让位时那一坨会滑到侧栏下面，
+ * 而组间层级默认按 DOM 顺序，`<nav>` 在 `<main>` 之前 ⇒ 侧栏反而被压在下面，
+ * 看起来就是「侧栏被盖住了」（用户实测反馈）。
+ * 侧栏本身是不透明的固定列（`w-[220px] bg-background`），把它抬到最上面之后，
+ * 滑到它下面的内容自然被挡住，视觉上就等于「动画发生在主区里」。
+ */
+html.page-transition::view-transition-group(app-sidebar) {
+  z-index: 9;
+}
+
+@keyframes page-content-out {
+  from {
+    transform: translateX(0);
+    filter: blur(0px);
+  }
+  to {
+    transform: translateX(var(--page-shift-out));
+    filter: blur(var(--page-blur-covered));
+  }
+}
+
+@keyframes page-content-in {
+  from {
+    transform: translateX(var(--page-shift-in));
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+/**
+ * 交接模型：**新内容整屏推入（在上），旧内容反向让位（在下）**，两侧都不淡化。
+ *
+ * 为什么不做淡入淡出：两段淡化之间存在「都接近透明」的窗口，那几十毫秒透出的是空白 —— 观感就是闪。
+ *
+ * 为什么从「旧内容抽出、露出新内容」改成「新内容推入盖住旧内容」（用户反馈「底层是白色然后从下面浮现」）：
+ * 揭示模型会把**新页面自己的加载态**先露出来 —— 图库这类页面首帧只有筛选栏 + 空白网格，
+ * 图片要再过几十毫秒才到，于是看到的就是「白底 → 内容浮现」，既像卡顿也像闪烁。
+ * 推入模型下，旧页面一直垫在下面可见，新页面盖上来时才是「完整的它」，没有白底暴露的窗口。
+ */
+html.page-transition::view-transition-old(page-content) {
+  z-index: 0;
+  animation: page-content-out 380ms var(--motion-ease-page) both;
+  mix-blend-mode: normal;
+}
+
+html.page-transition::view-transition-new(page-content) {
+  z-index: 1;
+  animation: page-content-in 380ms var(--motion-ease-page) both;
+  background-color: var(--background);
+  mix-blend-mode: normal;
+}
+
+/**
+ * 图片详情面板（占满主区的那一层）：进出用**和页面切换同一条曲线与位移**。
+ *
+ * 它挂在 `body` 的 portal 里（不在内容区包裹层内），所以单独起一个组；
+ * 打开时只有 new 快照、返回时只有 old 快照，两条都要写。
+ */
+html.page-transition [data-image-detail-panel] {
+  view-transition-name: page-panel;
+}
+
+@keyframes page-panel-in {
+  from {
+    transform: translateX(var(--page-shift-in));
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes page-panel-out {
+  from {
+    transform: translateX(0);
+    filter: blur(0px);
+  }
+  to {
+    /** 返回时**让位**（同 page-content-out 的语义），而不是自己滑走 —— 见下面的层级说明 */
+    transform: translateX(var(--page-shift-out));
+    filter: blur(var(--page-blur-covered));
+  }
+}
+
+html.page-transition::view-transition-new(page-panel) {
+  animation: page-panel-in 380ms var(--motion-ease-page) both;
+  background-color: var(--background);
+  mix-blend-mode: normal;
+}
+
+html.page-transition::view-transition-old(page-panel) {
+  animation: page-panel-out 380ms var(--motion-ease-page) both;
+  mix-blend-mode: normal;
+}
+
+/**
+ * 组间层级：**进入时新层在上，返回时目标层在上**（与页面切换同一套语义）。
+ *
+ * 不写这几条的话，层级由 DOM 顺序决定 —— 详情面板挂在 body 末尾的 portal 里，
+ * 于是它永远压在内容区之上，返回时的观感变成「详情（顶层）自己向左滑走」，
+ * 与「返回 = 上一层盖回当前层」不是一回事（用户正是这么描述的）。
+ */
+html.page-transition[data-page-direction="forward"]::view-transition-group(page-panel) {
+  z-index: 3;
+}
+
+html.page-transition[data-page-direction="forward"]::view-transition-group(page-content) {
+  z-index: 2;
+}
+
+html.page-transition[data-page-direction="backward"]::view-transition-group(page-content) {
+  z-index: 3;
+}
+
+html.page-transition[data-page-direction="backward"]::view-transition-group(page-panel) {
+  z-index: 2;
+}

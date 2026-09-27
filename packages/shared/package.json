@@ -1,0 +1,12 @@
+{
+  "name": "@illusion-realm/shared",
+  "version": "0.1.0",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "scripts": { "build": "tsc" },
+  "devDependencies": {
+    "@types/react": "^19",
+    "typescript": "^5",
+    "zod": "^3"
+  }
+}

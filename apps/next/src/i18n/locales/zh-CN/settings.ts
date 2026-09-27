@@ -1,0 +1,93 @@
+/**
+ * 设置页（`view/SettingsPage.tsx` + `view/settings/**`）词条。
+ * 命名约定：`settings.<语义>`，例如 `settings.outputPath.title`。
+ */
+export const settings = {
+  theme: {
+    system: "跟随系统",
+    light: "浅色",
+    dark: "深色",
+  },
+  page: {
+    title: "设置",
+    description: "配置本地模型路径，系统将自动检索文件夹中的 Checkpoint 与 LoRA 模型。",
+    browserNotice: "当前为浏览器环境，文件夹选择与模型扫描需在 Electron 桌面版中使用。",
+  },
+  electron: {
+    selectFolder: "请在 Electron 桌面版中选择本地文件夹",
+    selectPath: "请在 Electron 桌面版中选择路径",
+    scanModels: "请在 Electron 桌面版中扫描本地模型",
+    openFolder: "请在 Electron 桌面版中打开文件夹",
+  },
+  pathSection: {
+    title: "路径配置",
+    descriptionPrefix: "通过打开文件夹自动获取本地地址，支持嵌套目录结构（如",
+    empty: "未选择文件夹",
+    placeholder: "点击右侧按钮选择本地文件夹",
+    openFolder: "打开文件夹",
+  },
+  outputSection: {
+    title: "生成输出",
+    description: "图片生成完成后自动保存到本地文件夹。",
+  },
+  outputPath: {
+    updated: "已更新生成图片保存路径",
+    reset: "已恢复为默认保存路径",
+    unresolved: "无法解析保存路径",
+    openFailed: "打开文件夹失败",
+    defaultHint: "当前使用默认路径（与软件目录同级）",
+    chooseFolder: "选择文件夹",
+    openInExplorer: "在资源管理器中打开",
+  },
+  userDataSection: {
+    title: "用户数据",
+    description: "设置、个人资料、快捷短语等将保存到单一 JSON 文件。",
+  },
+  userDataPath: {
+    updated: "已更新用户数据保存路径，请重启应用以确保路径生效",
+    reset: "已恢复为默认用户数据路径",
+    defaultHint: "当前使用默认路径（与软件目录同级的 user/illusion-realm.json）",
+    chooseFolder: "选择目录",
+  },
+  defaultPathLoading: "加载默认路径中…",
+  resetDefault: "恢复默认",
+  comfySection: {
+    description: "连接本地 ComfyUI 服务，用于图片生成（默认 127.0.0.1:8188）。",
+    address: "服务地址",
+    hint: "请确保 ComfyUI 已启动。浏览器开发模式下请求经 Next.js 代理，Electron 模式下经主进程直连，可避免 WebSocket 403 跨域问题。",
+  },
+  models: {
+    title: "本地模型",
+    countPrefix: "共 ",
+    countMiddle: " 个模型（Checkpoint ",
+    lastScanned: " · 上次扫描 {time}",
+    rescan: "重新扫描",
+    scanDone: "本地模型扫描完成",
+    scanning: "正在扫描本地模型…",
+    empty: "尚未扫描到模型，请先配置路径并点击「重新扫描」",
+    badge: "模型",
+    sourcePrefix: "来源：",
+    removeFromCategory: "移出该分类",
+    customSuffix: "（自定义）",
+    addModels: "批量添加模型",
+    otherCategory: "其他",
+  },
+  newCategory: {
+    title: "新建自定义分类",
+    description: "创建后可在分类内批量添加模型文件。",
+    namePlaceholder: "分类名称",
+    invalid: "分类名称无效或已存在",
+    created: "分类已创建",
+    create: "创建",
+  },
+  addModels: {
+    titlePrefix: "批量添加模型到「",
+    description: "已分配到其他自定义分类的模型不会在此显示。",
+    empty: "没有可添加的模型（所有模型均已分配）",
+    selectedPrefix: "已选 ",
+    selectedSuffix: " 个",
+    added: "已添加 {count} 个模型到「{name}」",
+    noneSelected: "未选择模型",
+    add: "添加",
+  },
+} as const;

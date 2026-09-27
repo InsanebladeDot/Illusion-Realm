@@ -1,0 +1,56 @@
+# 门禁自检（gate self-test）：把「故障注入」固定下来，而不是靠人记得开环境变量
+#
+# 这条作业跑的是 `scripts/self-test-gates.js`，它收拢了四处负向对照：
+#   1. Next 侧三件套的配对对照（16 项）
+#   2. 构建指纹的确定性对照（record-build-fingerprint --compare）
+#   3. 退出码护栏的四例自检（有失败 exit(0)→1 / 有失败 quit→1 / 干净 quit→0 / 干净 exit(0)→0）
+#   4. 事件丢失维度（SMOKE_SWALLOW_MEDIA_EVENT=all）——headless 可跑的最坏情况注入
+#
+# 刻意**不含** SMOKE_OCCLUDE=1：遮挡维度需要真实可见窗口，无桌面会话时会被显式 SKIP，
+# 属于本地 / 带桌面会话的 runner。两个维度分开命名正是为了这一刻。
+#
+# 为什么用 windows-latest：本项目是 Windows 桌面应用（NSIS），Electron 在 Windows runner 上
+# 可直接启动、不需要 xvfb；Linux 上跑 Electron 需要额外的 xvfb 与依赖，收益不成正比。
+name: gate-self-test
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  gate-self-test:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: 安装依赖
+        run: pnpm install --frozen-lockfile
+
+      # 构建是必须的前置：冒烟脚本测的是静态导出 apps/next/out，
+      # 而构建指纹的确定性对照也要先有一次构建作为基准。
+      - name: 构建静态导出（含构建指纹记录）
+        run: pnpm --filter @illusion-realm/next build
+
+      - name: 常规门禁（typecheck / verify / 文案 / Meta 契约 / 三件套对照）
+        run: pnpm check
+
+      - name: 门禁自检（故障注入 + 反向对照）
+        run: pnpm self-test:gate
+
+      - name: 失败时上传日志
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: smoke-logs
+          path: logs/
+          if-no-files-found: ignore
