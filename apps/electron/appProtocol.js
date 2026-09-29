@@ -8,7 +8,7 @@ const { Readable } = require("stream");
  * 1) app://      —— 服务 Next.js 静态导出（out/）资源。
  *    Next 静态导出的 HTML 使用绝对路径（/_next/...），若以 file:// 加载会解析到磁盘根目录而 404，
  *    导致样式/脚本/图片全丢；用 app:// 后渲染进程与静态导出同源，客户端路由与 fetch 均可用。
- * 2) localfile:// —— 只读方式服务本机任意文件（视频工具箱预览用），支持 HTTP Range 以便拖动进度条。
+ * 2) localfile:// —— 只读方式服务本机任意媒体文件（图片 / 视频预览用），支持 HTTP Range。
  *
  * 本文件与其余 electron 主进程文件保持一致，使用 CommonJS。
  */
@@ -168,7 +168,7 @@ async function handleAppRequest(request) {
 }
 
 /**
- * 本地文件服务（视频预览）：localfile://local/?path=<绝对路径>
+ * 本地文件服务（图片 / 视频预览）：localfile://local/?path=<绝对路径>
  * @param {Request} request
  * @returns {Promise<Response>}
  */
@@ -179,7 +179,8 @@ async function handleLocalFileRequest(request) {
     return new Response("Missing path", { status: 400 });
   }
 
-  const resolved = resolve(decodeURIComponent(target));
+  // URLSearchParams.get() 已完成百分号解码；再次 decode 会破坏文件名里的字面 `%`。
+  const resolved = resolve(target);
   let stat;
   try {
     stat = await promises.stat(resolved);

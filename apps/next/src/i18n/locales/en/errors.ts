@@ -16,6 +16,7 @@ export const errors = {
     "characters": "The character library is only available in the Electron desktop app",
     "videoEditing": "Video editing is only available in the Electron desktop app",
     "readLocalImage": "Cannot read local images — use the Electron desktop app",
+    "agentUnavailable": "The Electron backend is unavailable, so the agent cannot run",
     "bridgeMissing": "Delete is unavailable because the feature did not load — fully quit Electron and restart the app"
   },
   "sdImage": {
@@ -41,6 +42,12 @@ export const errors = {
     "modelOutsideSeries": "The selected model is not inside the current series folder: {filePath}\n{seriesHint}",
     "animaSeriesOnly": "The Anima series only uses models under {root}",
     "sdxlSeriesOnly": "The SDXL series only uses models under {root}"
+  },
+  "agentHostTool": {
+    "missingPrompt": "Missing prompt — nothing to draw",
+    "unknownTool": "The renderer has no implementation for host tool: {name}",
+    "savedImages": "Generated {count} image(s), saved to: {paths}.",
+    "unsavedImages": "ComfyUI job {promptId} finished, but the images could not be saved to disk — ask the user to check Settings → output folder."
   },
   "metadataConsistency": {
     "passed": "✓ All {count} images share the same metadata structure",

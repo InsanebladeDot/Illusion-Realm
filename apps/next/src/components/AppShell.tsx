@@ -36,6 +36,7 @@ import { cn } from "@/utils/cn";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { applyThemeSignals } from "@/utils/themeSignals";
 import { DEFAULT_THEME_PREFERENCE } from "@/utils/themeResolution";
+import { subscribeAgentHostTools } from "@/utils/agentHostTools";
 
 /**
  * 语言信号写点已抽到 `@/utils/localeSignals`（唯一写点，切换弹框与这里共用）。
@@ -118,6 +119,12 @@ export function AppShell({
   useEffect(() => {
     applyThemeSignals(themePreference);
   }, [themePreference, prefersDark]);
+
+  /**
+   * 宿主工具调用只在 Electron 里存在（主进程 `agent:hostCall` → 这里执行 → 回执）。
+   * 挂在 AppShell 而不是 Agent 页：切页后订阅若被卸载，主进程要白等到工具超时才收场。
+   */
+  useEffect(() => subscribeAgentHostTools(), []);
 
   useEffect(() => {
     void (async () => {

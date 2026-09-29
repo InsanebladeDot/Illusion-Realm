@@ -17,6 +17,8 @@ export const errors = {
     characters: "角色库需要在 Electron 桌面版中使用",
     videoEditing: "视频剪辑功能需要在 Electron 桌面版中使用",
     readLocalImage: "无法读取本地图片，请在 Electron 桌面版中使用",
+    /** Agent 页面：渲染层拿不到 Electron 桥（浏览器里跑 dev 时会出现） */
+    agentUnavailable: "当前环境没有 Electron 后端，无法运行 Agent",
     /** 主进程桥接没加载（通常是升级后没完全退出应用） */
     bridgeMissing: "删除功能未加载，请完全退出 Electron 后重新启动应用",
   },
@@ -46,6 +48,17 @@ export const errors = {
     modelOutsideSeries: "所选模型不在当前系列的模型目录中：{filePath}\n{seriesHint}",
     animaSeriesOnly: "Anima 系列只使用 {root} 下的模型",
     sdxlSeriesOnly: "SDXL 系列只使用 {root} 下的模型",
+  },
+  /**
+   * 宿主工具：Agent 发起的调用被主进程转回渲染层执行（见 `utils/agentHostTools.ts`）。
+   * 这些文本会作为工具结果进模型、再由模型转述给用户，所以照旧走词条表。
+   */
+  agentHostTool: {
+    missingPrompt: "缺少 prompt：不知道要画什么",
+    unknownTool: "渲染层没有实现宿主工具：{name}",
+    savedImages: "已生成 {count} 张图片，保存路径：{paths}。",
+    unsavedImages:
+      "ComfyUI 任务 {promptId} 已完成，但图片没能保存到磁盘；请让用户检查「设置 → 输出目录」。",
   },
   metadataConsistency: {
     passed: "✓ 所有 {count} 张图片的元数据结构一致",

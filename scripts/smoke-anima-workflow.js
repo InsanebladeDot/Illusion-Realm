@@ -588,6 +588,57 @@ app.whenReady().then(async () => {
     check("弹框列出内置预设", presetDialog.cards >= 5, `${presetDialog.cards} 个`);
     check("内置预设含用户提供的加权负面", presetDialog.text.includes("解剖 / 融合修正"), "");
 
+    const presetLayout = await run(`(() => {
+      const dialog = document.getElementById('negative-preset-dialog-title')?.closest('[role="dialog"]');
+      const header = dialog?.querySelector('[data-preset-dialog-header]');
+      const main = dialog?.querySelector('[data-preset-dialog-main]');
+      const footer = dialog?.querySelector('[data-preset-dialog-footer]');
+      if (!dialog || !header || !main || !footer) return null;
+      const before = { header: header.getBoundingClientRect(), footer: footer.getBoundingClientRect() };
+      main.scrollTop = main.scrollHeight;
+      const after = { header: header.getBoundingClientRect(), footer: footer.getBoundingClientRect() };
+      const dialogRect = dialog.getBoundingClientRect();
+      const mainContent = document.getElementById('main-content');
+      const mainPaddingLeft = mainContent
+        ? Number.parseFloat(getComputedStyle(mainContent).paddingLeft) || 0
+        : 0;
+      const expectedCenterX = (mainPaddingLeft + window.innerWidth) / 2;
+      const hitPoints = [
+        [dialogRect.left + 2, dialogRect.top + dialogRect.height / 2],
+        [dialogRect.right - 2, dialogRect.top + dialogRect.height / 2],
+        [dialogRect.left + dialogRect.width / 2, dialogRect.top + 2],
+        [dialogRect.left + dialogRect.width / 2, dialogRect.bottom - 2],
+      ];
+      return {
+        overflowY: getComputedStyle(main).overflowY,
+        mainScrollable: main.scrollHeight > main.clientHeight,
+        headerFixed: before.header.top === after.header.top,
+        footerFixed: before.footer.top === after.footer.top,
+        footerAtBottom: Math.abs(dialogRect.bottom - after.footer.bottom) <= 1,
+        saveInFooter: !!footer.querySelector('button:last-child'),
+        portalAtBody: dialog.parentElement?.parentElement === document.body,
+        centeredInMain: Math.abs(
+          dialogRect.left + dialogRect.width / 2 - expectedCenterX
+        ) <= 2,
+        abovePageLayers: hitPoints.every(([x, y]) =>
+          document.elementFromPoint(x, y)?.closest('[role="dialog"]') === dialog
+        ),
+      };
+    })()`);
+    check("预设弹框只有 main 区域滚动",
+      presetLayout?.overflowY === "auto" && presetLayout?.mainScrollable === true,
+      JSON.stringify(presetLayout));
+    check("预设弹框 header / footer 不随内容滚动",
+      presetLayout?.headerFixed === true && presetLayout?.footerFixed === true);
+    check("预设弹框操作按钮固定在底部 footer",
+      presetLayout?.footerAtBottom === true && presetLayout?.saveInFooter === true);
+    check("预设弹框挂载到顶层且高于 stage / side",
+      presetLayout?.portalAtBody === true && presetLayout?.abovePageLayers === true,
+      JSON.stringify(presetLayout));
+    check("预设弹框居中于导航右侧主内容区",
+      presetLayout?.centeredInMain === true,
+      JSON.stringify(presetLayout));
+
     // 选中「SDXL 通用负面」并保存 → 内容写入输入框
     const pickPreset = await run(`(() => {
       const card = document.querySelector('[data-preset-id="neg-sdxl-standard"]');

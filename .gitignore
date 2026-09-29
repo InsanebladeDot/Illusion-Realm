@@ -41,6 +41,8 @@ logs/
 
 # env files (can opt-in for committing if needed)
 .env*
+# 但模板要入库：别人靠它知道有哪些键
+!.env.example
 
 # vercel
 .vercel
@@ -51,3 +53,12 @@ next-env.d.ts
 
 # generated images (dev default output sibling folder)
 * Output/
+
+# python agent（apps/agent）——依赖与缓存不入库，与 .venv 一起随包分发或打成单文件
+apps/agent/.venv/
+apps/agent/build/
+apps/agent/dist/
+__pycache__/
+*.pyc
+# pip install -e . 的元数据副产物（运行时不需要，见 apps/agent/README.md）
+*.egg-info/

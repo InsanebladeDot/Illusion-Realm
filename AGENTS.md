@@ -37,6 +37,7 @@ Illusion Realm/
 | `pnpm verify` | Electron 内跑主进程校验：模块审计 + 通道一致性 + IPC handler 注册 |
 | `pnpm check` | `typecheck` + `verify` + `check:i18n`，提 PR 前的统一入口 |
 | `pnpm self-test:gate` | **门禁自检**：Next 侧配对对照 + 构建指纹确定性对照 + 退出码护栏四例 + 事件丢失维度（`SMOKE_SWALLOW_MEDIA_EVENT=all`，headless 可跑）。CI 见 `.github/workflows/gate-self-test.yml` |
+| `pnpm check:packaged-agent` | **打包版 Agent 冒烟**：在 `release/win-unpacked` 上验证「asar 里的 locate/runner + `resources/agent` 那棵树」能跑通一次假模型运行（不花 token）。**需先 `pnpm run pack`**；没打包目录时按约定退 2 |
 | `pnpm check:i18n` | 文案逃逸断言：硬编码中文数量与基线比较，**只减不增** |
 | `pnpm check:i18n:list` | 按文件列出剩余硬编码文案分布，用于挑下一批迁移 |
 | `pnpm --filter @illusion-realm/electron check` | 主进程 tsc + `@ts-nocheck` 逃逸断言 |

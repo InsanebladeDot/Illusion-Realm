@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import NextImage from "next/image";
 import {
   Check,
@@ -11,7 +12,11 @@ import {
   X,
 } from "lucide-react";
 import type { ImageAsset } from "@/types/common";
+import { SIDEBAR_WIDTH_COLLAPSED, SIDEBAR_WIDTH_EXPANDED } from "@/data/navigation";
+import { useIsHydrated } from "@/hooks/useIsHydrated";
+import { useMediaQueryAfterHydration } from "@/hooks/useMediaQuery";
 import { useTranslation } from "@/i18n";
+import { useSidebarStore } from "@/stores/useSidebarStore";
 import { INPUT_BORDER_CLASS, THIN_BORDER_CLASS } from "@/utils/layout";
 import { cn } from "@/utils/cn";
 
@@ -87,6 +92,7 @@ const textareaClassName = cn(
  * 预设 选择 / 新建 弹框（预设提示词与反向提示词预设共用）：
  * 只有「字段定义 + 条目数据」不同，交互与样式完全一致。
  * 调用方在关闭时不要渲染本组件（内部状态随卸载重置）。
+ * Portal 到 body 以越过创建页 stage / side 的堆叠上下文；弹框在 nav 右侧主区居中。
  */
 export function PresetDialogShell<T extends PresetDialogItem>({
   title,
@@ -107,6 +113,14 @@ export function PresetDialogShell<T extends PresetDialogItem>({
   titleId = "preset-dialog-title",
 }: PresetDialogShellProps<T>) {
   const { t } = useTranslation();
+  const isHydrated = useIsHydrated();
+  const hasDesktopNav = useMediaQueryAfterHydration("(min-width: 768px)");
+  const navExpanded = useSidebarStore((state) => state.expanded);
+  const navOffset = hasDesktopNav
+    ? navExpanded
+      ? SIDEBAR_WIDTH_EXPANDED
+      : SIDEBAR_WIDTH_COLLAPSED
+    : 0;
   // 可选文案的回退值放在这里而不是解构默认值：默认值在 hook 之外求值，拿不到 t
   const emptyTextValue = emptyText ?? t("components.presetShell.empty");
   const [creating, setCreating] = useState(false);
@@ -150,29 +164,43 @@ export function PresetDialogShell<T extends PresetDialogItem>({
     setDraftValues({});
   };
 
-  return (
+  if (!isHydrated) return null;
+
+  return createPortal(
     <>
-      <div className="fixed inset-0 z-[89] bg-black/50" aria-hidden onClick={() => onOpenChange(false)} />
+      <div
+        className="fixed inset-0 z-[89] bg-black/50"
+        aria-hidden
+        onClick={() => onOpenChange(false)}
+      />
 
       <div
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby={titleId}
-        className={cn(
-          "fixed left-1/2 top-1/2 z-[90] grid max-h-[85vh] w-full max-w-lg -translate-x-1/2 -translate-y-1/2 gap-4 overflow-y-auto border bg-background p-6 shadow-lg outline-none duration-200 sm:rounded-xl",
-          THIN_BORDER_CLASS
-        )}
+        data-preset-dialog-positioner
+        className="pointer-events-none fixed inset-y-0 right-0 z-[90] flex items-center justify-center"
+        style={{ left: navOffset }}
       >
-        <button
-          type="button"
-          aria-label={t("common.close")}
-          onClick={() => onOpenChange(false)}
-          className="absolute right-4 top-4 z-[200] rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 max-sm:left-4 max-sm:right-auto sm:left-auto"
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby={titleId}
+          className={cn(
+            "pointer-events-auto relative flex h-[85dvh] max-h-[720px] w-full max-w-lg flex-col overflow-hidden border bg-background shadow-lg outline-none duration-200 sm:rounded-xl",
+            THIN_BORDER_CLASS
+          )}
         >
-          <X className="h-5 w-5 sm:h-4 sm:w-4" />
-        </button>
+          <button
+            type="button"
+            aria-label={t("common.close")}
+            onClick={() => onOpenChange(false)}
+            className="absolute right-4 top-4 z-[200] rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 max-sm:left-4 max-sm:right-auto sm:left-auto"
+          >
+            <X className="h-5 w-5 sm:h-4 sm:w-4" />
+          </button>
 
-        <div className="flex flex-col space-y-1.5 text-center sm:text-left">
+        <header
+          data-preset-dialog-header
+          className="shrink-0 space-y-1.5 border-b border-border/60 px-6 pb-4 pt-6 text-center sm:text-left"
+        >
           <h2
             id={titleId}
             className="flex items-center gap-2 text-lg font-semibold leading-none tracking-tight"
@@ -197,99 +225,81 @@ export function PresetDialogShell<T extends PresetDialogItem>({
               </div>
             </button>
           </div>
-        </div>
+        </header>
 
-        {creating ? (
-          <div className="py-2">
-            {activeGroup && (
-              <p className="mb-4 text-xs text-muted-foreground">
-                {t("components.presetShell.creatingFor", {
-                  group: activeGroup.label,
-                })}
-              </p>
-            )}
-            <div className="space-y-4">
-              <button
-                type="button"
-                onClick={() => setCreating(false)}
-                className="flex items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-foreground"
-              >
-                <ChevronLeft className="h-4 w-4" />
-                {t("components.presetShell.backToList")}
-              </button>
-
-              <div className="space-y-3">
-                <div className="space-y-1.5">
-                  <label className="text-sm font-medium leading-none" htmlFor="preset-name">
-                    {t("components.presetShell.nameLabel")}
-                  </label>
-                  <input
-                    id="preset-name"
-                    value={draftName}
-                    onChange={(event) => setDraftName(event.target.value)}
-                    placeholder={t("components.presetShell.namePlaceholder")}
-                    className={cn(
-                      "flex h-9 w-full rounded-md bg-transparent px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
-                      INPUT_BORDER_CLASS
-                    )}
-                  />
-                </div>
-
-                {fields.map((field) => (
-                  <div key={field.key} className="space-y-1.5">
-                    <label
-                      className={cn(
-                        "text-sm font-medium leading-none",
-                        field.tone === "positive" && "text-green-600 dark:text-green-400",
-                        field.tone === "negative" && "text-red-600 dark:text-red-400"
-                      )}
-                      htmlFor={`preset-field-${field.key}`}
-                    >
-                      {field.label}
-                    </label>
-                    <textarea
-                      id={`preset-field-${field.key}`}
-                      value={draftValues[field.key] ?? ""}
-                      onChange={(event) =>
-                        setDraftValues((prev) => ({
-                          ...prev,
-                          [field.key]: event.target.value,
-                        }))
-                      }
-                      placeholder={field.placeholder}
-                      className={textareaClassName}
-                    />
-                    {field.hint && (
-                      <p className="text-[11px] text-muted-foreground">{field.hint}</p>
-                    )}
-                  </div>
-                ))}
-              </div>
-
-              <div className="flex justify-end gap-2 pt-2">
+        <main
+          data-preset-dialog-main
+          className="min-h-0 flex-1 overflow-y-auto px-6 py-4"
+        >
+          {creating ? (
+            <div>
+              {activeGroup && (
+                <p className="mb-4 text-xs text-muted-foreground">
+                  {t("components.presetShell.creatingFor", {
+                    group: activeGroup.label,
+                  })}
+                </p>
+              )}
+              <div className="space-y-4">
                 <button
                   type="button"
                   onClick={() => setCreating(false)}
-                  className={cn(
-                    "inline-flex h-9 items-center justify-center rounded-md bg-background px-4 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground",
-                    INPUT_BORDER_CLASS
-                  )}
+                  className="flex items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-foreground"
                 >
-                  {t("common.cancel")}
+                  <ChevronLeft className="h-4 w-4" />
+                  {t("components.presetShell.backToList")}
                 </button>
-                <button
-                  type="button"
-                  disabled={!canCreate}
-                  onClick={handleCreate}
-                  className="inline-flex h-9 items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90 disabled:pointer-events-none disabled:opacity-50"
-                >
-                  {t("components.presetShell.create")}
-                </button>
+
+                <div className="space-y-3">
+                  <div className="space-y-1.5">
+                    <label className="text-sm font-medium leading-none" htmlFor="preset-name">
+                      {t("components.presetShell.nameLabel")}
+                    </label>
+                    <input
+                      id="preset-name"
+                      value={draftName}
+                      onChange={(event) => setDraftName(event.target.value)}
+                      placeholder={t("components.presetShell.namePlaceholder")}
+                      className={cn(
+                        "flex h-9 w-full rounded-md bg-transparent px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
+                        INPUT_BORDER_CLASS
+                      )}
+                    />
+                  </div>
+
+                  {fields.map((field) => (
+                    <div key={field.key} className="space-y-1.5">
+                      <label
+                        className={cn(
+                          "text-sm font-medium leading-none",
+                          field.tone === "positive" && "text-green-600 dark:text-green-400",
+                          field.tone === "negative" && "text-red-600 dark:text-red-400"
+                        )}
+                        htmlFor={`preset-field-${field.key}`}
+                      >
+                        {field.label}
+                      </label>
+                      <textarea
+                        id={`preset-field-${field.key}`}
+                        value={draftValues[field.key] ?? ""}
+                        onChange={(event) =>
+                          setDraftValues((prev) => ({
+                            ...prev,
+                            [field.key]: event.target.value,
+                          }))
+                        }
+                        placeholder={field.placeholder}
+                        className={textareaClassName}
+                      />
+                      {field.hint && (
+                        <p className="text-[11px] text-muted-foreground">{field.hint}</p>
+                      )}
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
-          </div>
-        ) : (
-          <>
+          ) : (
             <div>
               {groups.length > 1 && (
                 <div
@@ -428,8 +438,36 @@ export function PresetDialogShell<T extends PresetDialogItem>({
                 )}
               </div>
             </div>
+          )}
+        </main>
 
-            <div className="mt-4 flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2">
+        <footer
+          data-preset-dialog-footer
+          className="shrink-0 border-t border-border/60 bg-background px-6 py-4"
+        >
+          {creating ? (
+            <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+              <button
+                type="button"
+                onClick={() => setCreating(false)}
+                className={cn(
+                  "inline-flex h-9 items-center justify-center rounded-md bg-background px-4 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground",
+                  INPUT_BORDER_CLASS
+                )}
+              >
+                {t("common.cancel")}
+              </button>
+              <button
+                type="button"
+                disabled={!canCreate}
+                onClick={handleCreate}
+                className="inline-flex h-9 items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90 disabled:pointer-events-none disabled:opacity-50"
+              >
+                {t("components.presetShell.create")}
+              </button>
+            </div>
+          ) : (
+            <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
               <button
                 type="button"
                 onClick={() => onOpenChange(false)}
@@ -448,10 +486,12 @@ export function PresetDialogShell<T extends PresetDialogItem>({
                 {t("components.presetShell.saveChanges")}
               </button>
             </div>
-          </>
-        )}
+          )}
+        </footer>
+        </div>
       </div>
-    </>
+    </>,
+    document.body
   );
 }
 

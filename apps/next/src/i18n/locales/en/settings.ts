@@ -62,6 +62,24 @@ export const settings = {
     "address": "Service address",
     "hint": "Make sure ComfyUI is running. In browser dev mode requests go through the Next.js proxy; in Electron they go straight through the main process, which avoids WebSocket 403 CORS issues."
   },
+  "agentSection": {
+    "title": "Agent",
+    "description": "The model key used by Agent chats. It stays on this machine, is encrypted by the main process, never goes into the user-data document and is never handed back to the UI.",
+    "keyLabel": "API Key",
+    "keyPlaceholder": "sk-...",
+    "reveal": "Show key",
+    "hide": "Hide key",
+    "save": "Save",
+    "clear": "Clear",
+    "saved": "API key saved",
+    "cleared": "API key cleared",
+    "empty": "API key cannot be empty",
+    "statusConfigured": "Configured (ends with {tail})",
+    "statusFromEnv": "Provided by .env / environment (ends with {tail})",
+    "statusMissing": "Not configured — you need to set one here before asking the Agent anything",
+    "envHint": "The .env in the repo root is for development testing only; fill it in here for everyday use.",
+    "plainWarning": "This system offers no encryption, so the key can only be stored locally as plain base64 — keep that file from leaving this machine."
+  },
   "models": {
     "title": "Local models",
     "countPrefix": "Total ",

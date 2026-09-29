@@ -7,8 +7,12 @@ directories:
 
 # 打包内容（相对 apps/electron）：
 # - 主进程 / preload / 资源：'*.js'、'icon.png'、'ffmpeg/**'
-# - 主进程子目录：ipc-handlers/、services/（漏收会在启动时 Cannot find module）
+# - 主进程子目录：ipc-handlers/、services/、agent/、ffmpeg/（漏收会在启动时 Cannot find module）
 # - 运行时依赖：node_modules/@illusion-realm/**（workspace 链接到 packages/shared）
+#   main.js 第 6 行 require("./agent/env") 是启动第一步：agent/ 一旦漏收，
+#   表现就是「双击 exe 只弹一个 Cannot find module './agent/env' 的错误框」。
+#   这条白名单是手写的，新增主进程子目录时**必须同步加到这里**
+#   （scripts/verify-electron-modules.js 有对应断言，别只靠记性）。
 # 注意：Next.js 静态导出目录位于 app 目录之外（apps/next/out），
 #       electron-builder 不会把外部目录收进 asar，因此通过 extraResources 分发。
 files:
@@ -16,6 +20,7 @@ files:
   - '*.js'
   - 'ipc-handlers/**/*'
   - 'services/**/*'
+  - 'agent/**/*'
   - 'ffmpeg/**/*'
   - 'icon.png'
   - 'package.json'
@@ -32,6 +37,44 @@ extraResources:
     to: next-out
     filter:
       - '**/*'
+  # Agent（Python sidecar）：**方案 A = 随包带虚拟环境**（2026-09-27 定）。
+  # 目标目录必须是 agent：`agent/locate.js` 把 AGENT_DIR 算成 <resources>/agent，
+  # 解释器查找的第一顺位就是它下面的 .venv/Scripts/python.exe。
+  # **改名 / 漏收的后果不是报错而是静默降级**：locate.js 会一路回退到系统 PATH 的
+  # python，打包版看起来"能跑"，实则用的是用户机器上的解释器（多半没装 mcp）。
+  # 已知代价：venv 不可搬迁（pyvenv.cfg 的 home 指向基础 Python），
+  # 所以目标机要么有同版本 Python 3.13，要么改走方案 B / embeddable。
+  # filters 里剔掉的是运行期用不到的约 24MB：pip、pywin32 文档与 COM 家族、
+  # win32 的示例/头文件/脚本 —— **但 pywin32 本身不能删**：
+  # mcp/os/win32/utilities.py 在 Windows 上直接 import pywintypes / win32api /
+  # win32con / win32job，删掉就是打包版一跑就 ModuleNotFoundError: pywintypes
+  # （2026-09-27 实测踩过）。
+  - from: ../agent
+    to: agent
+    filter:
+      - 'agent_core/**'
+      - 'tools/**'
+      - 'pyproject.toml'
+      - '.venv/**'
+      - '!.venv/Lib/site-packages/pip/**'
+      - '!.venv/Lib/site-packages/pip-*.dist-info/**'
+      - '!.venv/Lib/site-packages/PyWin32.chm'
+      - '!.venv/Lib/site-packages/win32com/**'
+      - '!.venv/Lib/site-packages/win32comext/**'
+      - '!.venv/Lib/site-packages/pythonwin/**'
+      - '!.venv/Lib/site-packages/isapi/**'
+      - '!.venv/Lib/site-packages/adodbapi/**'
+      - '!.venv/Lib/site-packages/win32/Demos/**'
+      - '!.venv/Lib/site-packages/win32/include/**'
+      - '!.venv/Lib/site-packages/win32/libs/**'
+      - '!.venv/Lib/site-packages/win32/scripts/**'
+      - '!.venv/Lib/site-packages/win32/test/**'
+  # 方案 B（PyInstaller 单文件，≈40–60MB，需先在 apps/agent 里构建）留档：
+  #   - from: ../agent/dist/iris-agent.exe
+  #     to: agent/iris-agent.exe
+  # 选 B 前先读 docs/agent-integration.md：工具 server 是**第二个** Python 进程
+  # （core.py 里 `sys.executable -m tools.server`），单文件 exe 不能直接 `-m`，
+  # 得先给入口加一个 `--tools-server` 自调用分支。
   # FFmpeg / FFprobe：放到 apps/electron/bin/ffmpeg/ 后随包分发，
   # 运行期由 ffmpeg/locate.js 通过 process.resourcesPath/ffmpeg 找到
   - from: bin/ffmpeg

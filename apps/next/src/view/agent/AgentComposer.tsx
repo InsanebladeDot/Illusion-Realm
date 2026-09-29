@@ -1,13 +1,11 @@
 "use client";
 
-import { Plus, Send } from "lucide-react";
+import { useEffect, useRef } from "react";
+import { Send } from "lucide-react";
+import { AGENT_DEFAULTS } from "@illusion-realm/shared";
 import { APP_NAME } from "@/data/navigation";
 import { useTranslation } from "@/i18n";
-import {
-  useAgentStore,
-  type AgentEffort,
-  type AgentPermission,
-} from "@/stores/useAgentStore";
+import { useAgentStore, type AgentEffort } from "@/stores/useAgentStore";
 import { useSettingsStore } from "@/stores/useSettingsStore";
 import { cn } from "@/utils/cn";
 import {
@@ -15,9 +13,12 @@ import {
   PRIMARY_BUTTON_CLASS,
   THIN_BORDER_CLASS,
 } from "@/utils/layout";
+import { AgentAttachmentStrip } from "@/view/agent/AgentAttachments";
+import { AgentAddMenu, AgentPermissionMenu } from "@/view/agent/AgentComposerMenus";
 
 const EFFORT_VALUES: AgentEffort[] = ["low", "medium", "high"];
-const PERMISSION_VALUES: AgentPermission[] = ["readonly", "full"];
+/** 输入框高度上限（约 6 行）：再长就内部滚动，别把 composer 顶到半个屏幕 */
+const INPUT_MAX_HEIGHT_PX = 148;
 
 /** 下拉共用的外观（与组装面板的模板选择器同一套观感） */
 const SELECT_CLASS = cn(
@@ -64,137 +65,126 @@ function AgentComposerInput() {
   const draft = useAgentStore((state) => state.draft);
   const setDraft = useAgentStore((state) => state.setDraft);
   const sendDraft = useAgentStore((state) => state.sendDraft);
+  const running = useAgentStore((state) => state.runningRunId !== null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+
+  /**
+   * 高度随内容伸缩（Codex 的输入区就是这样）。
+   * 先归零再读 `scrollHeight`：不归零的话删内容时高度只增不减（scrollHeight 不会变小）。
+   */
+  useEffect(() => {
+    const element = inputRef.current;
+    if (!element) return;
+    element.style.height = "auto";
+    const next = Math.min(element.scrollHeight, INPUT_MAX_HEIGHT_PX);
+    element.style.height = `${next}px`;
+    element.style.overflowY = element.scrollHeight > INPUT_MAX_HEIGHT_PX ? "auto" : "hidden";
+  }, [draft]);
 
   return (
     <textarea
+      ref={inputRef}
       data-agent-input
       aria-label={t("agent.composer.placeholder")}
-      rows={2}
+      rows={1}
       value={draft}
       placeholder={t("agent.composer.placeholder")}
       onChange={(event) => setDraft(event.target.value)}
       onKeyDown={(event) => {
         if (event.key !== "Enter" || event.shiftKey) return;
         event.preventDefault();
-        sendDraft();
+        // 正在跑就不接受回车发送（一次只跑一个 run，避免把队列语义搅进来）
+        if (!running) void sendDraft();
       }}
       className="w-full resize-none bg-transparent px-1 py-1.5 text-sm outline-none placeholder:text-muted-foreground"
     />
   );
 }
 
-/** 右侧三个下拉：权限 / 模型 / 强度（目前只写 store，未接后端） */
-function AgentComposerControls() {
+/**
+ * 右侧的模型标识（**只读**）。
+ *
+ * 为什么这里没有下拉：早先那版把**本地 SD 模型**当成 LLM 列在下拉里
+ * （界面上会显示成「不错的风格」这类模型名），对 Agent 毫无意义。
+ * 模型现在来自共享配置（`packages/shared/src/data/agent.ts` + 工作区根 `.env`）。
+ */
+function AgentModelBadge() {
   const { t } = useTranslation();
-  const models = useSettingsStore((state) => state.models);
-  const permission = useAgentStore((state) => state.permission);
-  const modelId = useAgentStore((state) => state.modelId);
-  const effort = useAgentStore((state) => state.effort);
-  const setPermission = useAgentStore((state) => state.setPermission);
-  const setModelId = useAgentStore((state) => state.setModelId);
-  const setEffort = useAgentStore((state) => state.setEffort);
+  const model = AGENT_DEFAULTS.model;
+  const shortName = model.includes("/")
+    ? model.slice(model.lastIndexOf("/") + 1)
+    : model;
 
   return (
-    <div className="flex min-w-0 items-center gap-1">
-      <select
-        data-agent-permission
-        aria-label={t("agent.composer.permission")}
-        value={permission}
-        onChange={(event) => setPermission(event.target.value as AgentPermission)}
-        className={SELECT_CLASS}
-      >
-        {PERMISSION_VALUES.map((value) => (
-          <option key={value} value={value}>
-            {value === "full"
-              ? t("agent.composer.permissionFull")
-              : t("agent.composer.permissionReadonly")}
-          </option>
-        ))}
-      </select>
-
-      <select
-        data-agent-model
-        aria-label={t("agent.composer.model")}
-        value={modelId ?? ""}
-        onChange={(event) => setModelId(event.target.value || null)}
-        className={cn(SELECT_CLASS, "max-w-[180px]")}
-      >
-        {models.length === 0 ? (
-          <option value="">{t("agent.composer.modelUnset")}</option>
-        ) : null}
-        {models.map((model) => (
-          <option key={model.id} value={model.id}>
-            {model.name}
-          </option>
-        ))}
-      </select>
-
-      <select
-        data-agent-effort
-        aria-label={t("agent.composer.effort")}
-        value={effort}
-        onChange={(event) => setEffort(event.target.value as AgentEffort)}
-        className={SELECT_CLASS}
-      >
-        {EFFORT_VALUES.map((value) => (
-          <option key={value} value={value}>
-            {value === "high"
-              ? t("agent.composer.effortHigh")
-              : value === "low"
-                ? t("agent.composer.effortLow")
-                : t("agent.composer.effortMedium")}
-          </option>
-        ))}
-      </select>
-    </div>
+    <span
+      data-agent-model={model}
+      title={`${t("agent.composer.model")}：${model}\n${t("agent.composer.modelTitle")}`}
+      className="max-w-[160px] truncate text-[11px] text-muted-foreground"
+    >
+      {shortName}
+    </span>
   );
 }
 
-/** 底部一排：左「新聊天」、右三个下拉 + 发送 */
-function AgentComposerActions() {
+/** 强度下拉（界面状态；后端接上后才会真的传下去） */
+function AgentEffortSelect() {
   const { t } = useTranslation();
-  const createSession = useAgentStore((state) => state.createSession);
-  const sendDraft = useAgentStore((state) => state.sendDraft);
+  const effort = useAgentStore((state) => state.effort);
+  const setEffort = useAgentStore((state) => state.setEffort);
 
   return (
-    <div className="flex items-center justify-between gap-2 px-1 pt-1">
-      <button
-        type="button"
-        data-agent-new-chat
-        onClick={() => createSession()}
-        title={t("agent.newChat")}
-        aria-label={t("agent.newChat")}
-        className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-      >
-        <Plus className="h-4 w-4" />
-      </button>
+    <select
+      data-agent-effort
+      aria-label={t("agent.composer.effort")}
+      value={effort}
+      onChange={(event) => setEffort(event.target.value as AgentEffort)}
+      className={SELECT_CLASS}
+    >
+      {EFFORT_VALUES.map((value) => (
+        <option key={value} value={value}>
+          {value === "high"
+            ? t("agent.composer.effortHigh")
+            : value === "low"
+              ? t("agent.composer.effortLow")
+              : t("agent.composer.effortMedium")}
+        </option>
+      ))}
+    </select>
+  );
+}
 
-      <div className="flex min-w-0 items-center gap-1">
-        <AgentComposerControls />
-        <button
-          type="button"
-          data-agent-send
-          onClick={() => sendDraft()}
-          title={t("agent.composer.send")}
-          aria-label={t("agent.composer.send")}
-          className={cn(
-            "inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full",
-            PRIMARY_BUTTON_CLASS
-          )}
-        >
-          <Send className="h-3.5 w-3.5" />
-        </button>
-      </div>
-    </div>
+/** 发送（回车与它走同一条路径） */
+function AgentSendButton() {
+  const { t } = useTranslation();
+  const sendDraft = useAgentStore((state) => state.sendDraft);
+  const running = useAgentStore((state) => state.runningRunId !== null);
+
+  return (
+    <button
+      type="button"
+      data-agent-send
+      disabled={running}
+      onClick={() => void sendDraft()}
+      title={t("agent.composer.send")}
+      aria-label={t("agent.composer.send")}
+      className={cn(
+        "inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full",
+        PRIMARY_BUTTON_CLASS,
+        running && "opacity-50"
+      )}
+    >
+      <Send className="h-3.5 w-3.5" />
+    </button>
   );
 }
 
 /**
- * Agent 页的输入区（composer）—— 仿 Codex 底部那块：
- * 上下文 chip 行 → 输入框 → 左「新聊天」/ 右（权限 / 模型 / 强度 / 发送）。
+ * Agent 页的输入区（composer）—— 对齐 Codex 底部那一块：
+ * 上下文 chip 行 → 附件条（有图才显示）→ 输入框 →
+ * 底排「左：+ / 权限；右：模型 / 强度 / 发送」。
  *
- * 现状：这三个下拉只写进 `useAgentStore` 的界面状态，**没有接后端**；
- * 主区右上角那枚「界面骨架 · 未接入后端」徽标说的就是这件事。
+ * 位置与 Codex 一致：**权限紧跟 `+` 右边**；模型与强度在右侧（模型只读、来自共享配置）。
+ * 「新聊天」不在这里 —— 它在左栏与标题栏上（Codex 也放在侧栏）。
  */
 export function AgentComposer() {
   return (
@@ -206,8 +196,19 @@ export function AgentComposer() {
         )}
       >
         <AgentContextChips />
+        <AgentAttachmentStrip />
         <AgentComposerInput />
-        <AgentComposerActions />
+        <div className="flex items-center justify-between gap-2 px-1 pt-1">
+          <div className="flex min-w-0 items-center gap-1">
+            <AgentAddMenu />
+            <AgentPermissionMenu />
+          </div>
+          <div className="flex min-w-0 items-center gap-2">
+            <AgentModelBadge />
+            <AgentEffortSelect />
+            <AgentSendButton />
+          </div>
+        </div>
       </div>
     </div>
   );

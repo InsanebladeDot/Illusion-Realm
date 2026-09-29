@@ -314,6 +314,7 @@ export function ImagePreviewOverlay({
   return createPortal(
     <div
       className="fixed inset-0 z-[100] flex flex-col bg-black/80 backdrop-blur-[1px]"
+      data-image-preview-overlay
       onClick={closeIfBackdrop}
       role="dialog"
       aria-modal="true"

@@ -32,7 +32,8 @@
     "electron:install": "cross-env ELECTRON_MIRROR=https://npmmirror.com/mirrors/electron/ pnpm --filter @illusion-realm/electron run install-binary",
     "postinstall": "pnpm --filter @illusion-realm/electron exec electron-builder install-app-deps",
     "check:outputpath": "node scripts/verify-output-path-contract.js",
-    "check:foldercount": "node scripts/verify-folder-image-count.js"
+    "check:foldercount": "node scripts/verify-folder-image-count.js",
+    "check:packaged-agent": "electron scripts/verify-packaged-agent.js"
   },
   "devDependencies": {
     "concurrently": "^10.0.3",

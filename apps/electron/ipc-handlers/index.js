@@ -23,6 +23,7 @@ const {
 } = require("./user-data.handlers");
 const { registerVideoToolIpc } = require("../ffmpeg");
 const { registerAnimadexIpc } = require("../animadex");
+const { registerAgentHandlers } = require("./agent.handlers");
 
 const { ipcMain } = require("electron");
 
@@ -44,6 +45,7 @@ const REGISTRATIONS = [
   ["changelog", registerChangelogHandlers],
   ["video", () => registerVideoToolIpc()],
   ["animadex", () => registerAnimadexIpc()],
+  ["agent", registerAgentHandlers],
 ];
 
 /**

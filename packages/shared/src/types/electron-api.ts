@@ -1,3 +1,11 @@
+import type {
+  AgentEventMessage,
+  AgentHostCall,
+  AgentHostCallResult,
+  AgentRunHandle,
+  AgentRunOptions,
+  AgentSecretStatus,
+} from "./agent";
 import type { LocalModel, LocalModelType } from "./localModel";
 import type { ComfyApiPrompt } from "./comfy";
 import type { AnimadexSearchParams, AnimadexSearchResult } from "./character";
@@ -291,6 +299,27 @@ export type ElectronAPI = {
 
   // 角色库（animadex）
   animadexSearch: (params: AnimadexSearchParams) => Promise<IpcResult<AnimadexSearchResult>>;
+
+  // Agent（Python sidecar）：run 立刻返回 runId，结果通过 onAgentEvent 推回来
+  runAgent: (options: AgentRunOptions) => Promise<IpcResult<AgentRunHandle>>;
+  /** 取消某次运行（kill 整棵进程树） */
+  cancelAgent: (runId: string) => Promise<IpcResult<boolean>>;
+  /** 订阅事件流，返回退订函数 */
+  onAgentEvent: (callback: (event: AgentEventMessage) => void) => () => void;
+  /**
+   * 订阅宿主工具调用（主进程 → 渲染层），返回退订函数。
+   *
+   * 渲染层执行完必须调 `agentHostResult` 回执 —— 不回的话主进程要等到超时才收场。
+   */
+  onAgentHostCall: (callback: (call: AgentHostCall) => void) => () => void;
+  /** 回执宿主工具的执行结果（`ok:false` 也要回，error 只放一句可读原因） */
+  agentHostResult: (result: AgentHostCallResult) => Promise<IpcResult<boolean>>;
+  /** 查密钥状态（**不回原值**：只有有没有 / 来源 / 存储方式 / 尾 4 位） */
+  agentSecretStatus: () => Promise<IpcResult<AgentSecretStatus>>;
+  /** 写入密钥：主进程侧加密落盘，明文只在这一次调用里存在一瞬 */
+  agentSetSecret: (apiKey: string) => Promise<IpcResult<AgentSecretStatus>>;
+  /** 清除密钥 */
+  agentClearSecret: () => Promise<IpcResult<AgentSecretStatus>>;
 };
 
 declare global {

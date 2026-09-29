@@ -15,7 +15,7 @@ export const agent = {
   },
   "hero": {
     "title": "你想让 Agent 在 Illusion Realm 里做什么？",
-    "subtitle": "目前是界面骨架：消息只写进本地会话，还没有接后端。"
+    "subtitle": "问一句试试：它会调用本地工具（模型清单 / 算数 / 列目录），并把过程显示出来。"
   },
   "composer": {
     "placeholder": "随心输入 · Enter 发送，Shift + Enter 换行",
@@ -27,20 +27,42 @@ export const agent = {
     "permission": "权限",
     "permissionReadonly": "只读",
     "permissionFull": "完全访问",
+    "permissionChange": "更改权限",
+    "permissionTitle": "应如何批准 Agent 的操作？",
+    "permissionReadonlyHint": "只读取本地文件，不修改、不联网",
+    "permissionFullHint": "可以修改文件与访问互联网",
     "model": "模型",
-    "modelUnset": "未扫描到模型",
+    "modelTitle": "模型来自共享配置（工作区根 .env / packages/shared/src/data/agent.ts）",
     "effort": "强度",
     "effortLow": "低",
     "effortMedium": "中",
-    "effortHigh": "高"
+    "effortHigh": "高",
+    "add": "添加",
+    "addMenuLabel": "添加内容",
+    "addImage": "添加图片",
+    "addImageHint": "把本地图片挂到这条消息上（后端接入后随消息一起发给 Agent）",
+    "attachmentPreview": "放大预览",
+    "attachmentRemove": "移除附件",
+    "attachmentCount": "{count} 张图片"
   },
   "status": {
-    "shellOnly": "界面骨架 · 未接入后端",
-    "shellOnlyTitle": "Agent 后端还没接：发送只会写入本地会话，不会真的调用模型。",
-    "pending": "（Agent 后端尚未接入：这条消息只写进了本地会话）"
+    "idle": "就绪",
+    "generating": "生成中…",
+    "stop": "停止生成",
+    "tools": "识别到 {count} 个工具"
+  },
+  "notice": {
+    "missingKeyTitle": "No API key configured yet",
+    "missingKeyBody": "The Agent needs your own model key before it can chat.",
+    "missingKeyLink": "Fill it in under Settings"
   },
   "message": {
     "you": "你",
-    "agent": "Agent"
+    "agent": "Agent",
+    "reasoning": "思考",
+    "toolRunning": "调用中…",
+    "cancelled": "已停止",
+    "imageLoadFailed": "Failed to load image",
+    "openGeneratedImage": "View generated image: {name}"
   }
 } as const;

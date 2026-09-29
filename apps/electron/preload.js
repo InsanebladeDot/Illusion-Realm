@@ -125,6 +125,41 @@ const api = {
   // 角色库（animadex）
   animadexSearch: (params) => ipcRenderer.invoke(IPC_CHANNELS.ANIMADEX_SEARCH, params),
 
+  // Agent（Python sidecar）：run 立刻返回 runId，结果走事件流
+  runAgent: (options) => ipcRenderer.invoke(IPC_CHANNELS.AGENT_RUN, options),
+  cancelAgent: (runId) => ipcRenderer.invoke(IPC_CHANNELS.AGENT_CANCEL, runId),
+  /** 密钥状态：只有「有没有 / 从哪来 / 怎么存的 / 尾 4 位」，原值留在主进程 */
+  agentSecretStatus: () => ipcRenderer.invoke(IPC_CHANNELS.AGENT_SECRET_STATUS),
+  agentSetSecret: (apiKey) =>
+    ipcRenderer.invoke(IPC_CHANNELS.AGENT_SECRET_SET, apiKey),
+  agentClearSecret: () => ipcRenderer.invoke(IPC_CHANNELS.AGENT_SECRET_CLEAR),
+  onAgentEvent: (callback) => {
+    /**
+     * @param {Electron.IpcRendererEvent} _event
+     * @param {import("@illusion-realm/shared").AgentEventMessage} payload
+     */
+    const listener = (_event, payload) => callback(payload);
+    ipcRenderer.on(IPC_CHANNELS.AGENT_EVENT, listener);
+    return () => ipcRenderer.removeListener(IPC_CHANNELS.AGENT_EVENT, listener);
+  },
+  /**
+   * 宿主工具调用：主进程转过来，渲染层执行后必须调 `agentHostResult` 回执。
+   * 执行端在 `apps/next/src/utils/agentHostTools.ts`（那里才有工作流组装与落盘能力）。
+   */
+  onAgentHostCall: (callback) => {
+    /**
+     * @param {Electron.IpcRendererEvent} _event
+     * @param {import("@illusion-realm/shared").AgentHostCall} payload
+     */
+    const listener = (_event, payload) => callback(payload);
+    ipcRenderer.on(IPC_CHANNELS.AGENT_HOST_CALL, listener);
+    return () =>
+      ipcRenderer.removeListener(IPC_CHANNELS.AGENT_HOST_CALL, listener);
+  },
+  /** 回执宿主工具结果（invoke 只是为了拿到「主进程收到了吗」，渲染层不关心错误码） */
+  agentHostResult: (result) =>
+    ipcRenderer.invoke(IPC_CHANNELS.AGENT_HOST_RESULT, result),
+
   onVideoProgress: (callback) => {
     /**
      * @param {Electron.IpcRendererEvent} _event

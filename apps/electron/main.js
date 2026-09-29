@@ -1,3 +1,10 @@
+/**
+ * 共用 `.env`（工作区根 / exe 同目录）必须在**其它模块 require 之前**载入：
+ * `agent/runner.js` 在 require 期就读 `ILLUSION_AGENT_TIMEOUT_MS`，晚一步就永远拿不到。
+ * 只报键名不报值（见 agent/env.js）。
+ */
+require("./agent/env").loadWorkspaceEnv();
+
 const { app, BrowserWindow } = require("electron");
 const path = require("path");
 const { registerAppProtocol } = require("./appProtocol");

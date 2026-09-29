@@ -1,0 +1,23 @@
+[project]
+name = "illusion-realm-agent"
+version = "0.1.0"
+description = "Illusion Realm 的 Agent 后端：MCP 工具 + OpenAI 兼容模型 + 工具循环，以 stdio 子进程形态被 Electron 主进程拉起"
+requires-python = ">=3.11"
+dependencies = [
+  # 下限按开发机实测钉住、上限挡住大版本漂移；升级前先跑 tools 自检 + app 侧冒烟
+  "mcp>=1.30,<2",
+  "openai>=1.0,<3",
+  "python-dotenv>=1.0,<2",
+]
+
+[project.optional-dependencies]
+# 打包成单文件可执行体。**当前未启用**：2026-09-27 已选「随包带 venv」（方案 A），
+# 见 docs/agent-integration.md 的「六、已定的决策」第 2 条；要走 B 再装这个 extra。
+pack = ["pyinstaller>=6.0,<7"]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["agent_core*", "tools*"]

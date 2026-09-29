@@ -101,6 +101,41 @@ const KNOWN_FLAKES = [
     recordedAt: "2026-09-19",
   },
   {
+    id: "agent-key/click-before-hydration",
+    suite: "agent-key",
+    assertion:
+      "没配密钥时按发送 → 出现「去设置里填写」提示（连带「提示里的链接指向设置页的 Agent 区块」）",
+    status: "fixed",
+    /** 照抄失败输出，便于按字符串检索 */
+    signature:
+      "FAIL 没配密钥时按发送 → 出现「去设置里填写」提示  / " +
+      "FAIL 提示里的链接指向设置页的 Agent 区块  ()  / 4-6 通过",
+    symptom:
+      "本套件**首轮**（紧跟一次 Next 静态导出构建之后）红了 2 条：点击发送后提示条始终没出现，" +
+      "而「被拦下没生成助手消息」那条却是 PASS —— 说明 sendDraft 压根没跑到判断，点击落空了。" +
+      "随后同一条命令连跑三次全绿（17/17）。",
+    rootCause:
+      "**测试侧时序，不是产品缺陷**：静态导出的 HTML 里 `[data-agent-input]` 是 SSR 出来的，" +
+      "元素存在 ≠ React 已 hydrate。hydrate 之前 `.click()` 点在一个还没挂事件处理器的按钮上，" +
+      "什么都不会发生、也不抛错，于是后续断言全部落空。判据是这次点击落空与「输入框接受输入」PASS " +
+      "同时出现（后者是纯 DOM 写值，不需要 React）。",
+    evidence: [
+      "对照（同一份代码、同一台机器）：首轮红 4/6 → 连跑三次 17/17（run2/3/4）。",
+      "故障注入：`SMOKE_AGENT_KEY_SKIP_HYDRATION_WAIT=1` 跳过 hydrate 等待后仍然是 16/16 —— " +
+        "证明「重试点击」这层兜底确实兜得住「还没 hydrate 就点」，而不是靠运气。",
+      "另有一次单独的最小探针（同一 bootstrap）在点击后 1.2s 就看到提示条 = true，" +
+        "说明「提示不出现」不是产品侧没实现。",
+    ],
+    fix:
+      "smoke-agent-key.js 两处加固：① 用 React 挂在 DOM 上的 `__reactProps$` 作为 **hydrate 完成**的判据，" +
+      "等到了再交互；② 发送改成「点一次、等 1.2s 看有没有反应，没有就再点」，直到 15s 上限 —— " +
+      "让断言不再依赖「第一下必须点中」。",
+    repro:
+      "`$env:SMOKE_AGENT_KEY_SKIP_HYDRATION_WAIT='1'; npx electron scripts/smoke-agent-key.js` " +
+      "—— 跳过 hydrate 等待即为故障注入；把 sendMessage 的重试循环退回「点一次」就会重演首轮的红。",
+    recordedAt: "2026-09-27",
+  },
+  {
     id: "characters/expand-animation-never-starts",
     suite: "characters",
     assertion: "展开是连续的高度动画（存在中间帧）",

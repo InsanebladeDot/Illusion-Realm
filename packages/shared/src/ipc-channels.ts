@@ -80,6 +80,32 @@ export const IPC_CHANNELS = {
 
   // animadex —— 角色库
   ANIMADEX_SEARCH: 'animadex:search',
+
+  // agent —— Python sidecar（stdio 子进程，事件流经 AGENT_EVENT 推给渲染层）
+  /** invoke：启动一次运行，立刻返回 runId（结果走事件流） */
+  AGENT_RUN: 'agent:run',
+  /** invoke：取消某次运行（主进程把整棵进程树收掉） */
+  AGENT_CANCEL: 'agent:cancel',
+  /** main -> renderer：事件流（与 video:progress 同款单向推送） */
+  AGENT_EVENT: 'agent:event',
+  /**
+   * main -> renderer：宿主工具调用请求（渲染层执行后用 `AGENT_HOST_RESULT` 回执）。
+   *
+   * 方向与 `AGENT_EVENT` 相同，但这条**需要回执** —— 主进程等它把结果写回 Python 的
+   * stdin（见 `apps/electron/agent/host-tools.js` 的 `callRenderer`）。
+   */
+  AGENT_HOST_CALL: 'agent:hostCall',
+  /** invoke：渲染层回执宿主工具的执行结果（成功与否都要回，否则主进程要等到超时） */
+  AGENT_HOST_RESULT: 'agent:hostResult',
+  /**
+   * invoke：查密钥状态 —— **只回「有没有 / 从哪来 / 怎么存的 / 尾 4 位」**，不回原值。
+   * 密钥存在主进程侧（`apps/electron/agent/secret.js`），渲染层永远读不回它。
+   */
+  AGENT_SECRET_STATUS: 'agent:secretStatus',
+  /** invoke：写入密钥（主进程用 safeStorage 加密落盘，拿不到加密能力时才退明文并标记） */
+  AGENT_SECRET_SET: 'agent:secretSet',
+  /** invoke：清除密钥 */
+  AGENT_SECRET_CLEAR: 'agent:secretClear',
 } as const;
 
 export type IpcChannel = (typeof IPC_CHANNELS)[keyof typeof IPC_CHANNELS];

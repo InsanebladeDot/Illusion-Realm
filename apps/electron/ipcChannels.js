@@ -58,6 +58,17 @@ const IPC_CHANNELS = {
   VIEW3D_READ_MODEL_FILE: "view3d:readModelFile",
   // animadex
   ANIMADEX_SEARCH: "animadex:search",
+  // agent（Python sidecar）
+  AGENT_RUN: "agent:run",
+  AGENT_CANCEL: "agent:cancel",
+  AGENT_EVENT: "agent:event",
+  // 宿主工具：主进程 → 渲染层请求执行，渲染层回执结果
+  AGENT_HOST_CALL: "agent:hostCall",
+  AGENT_HOST_RESULT: "agent:hostResult",
+  // agent 密钥：只由主进程持有，渲染层只能问状态 / 要求写入 / 要求清除
+  AGENT_SECRET_STATUS: "agent:secretStatus",
+  AGENT_SECRET_SET: "agent:secretSet",
+  AGENT_SECRET_CLEAR: "agent:secretClear",
 };
 
 module.exports = { IPC_CHANNELS };

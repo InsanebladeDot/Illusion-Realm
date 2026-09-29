@@ -1,3 +1,4 @@
+export * from './agent';
 export * from './cartoonBubble';
 export * from './changelog';
 export * from './character';

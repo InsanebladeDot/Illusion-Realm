@@ -18,6 +18,7 @@ import { PathSettingRow } from "@/view/settings/PathSettingRow";
 import { OutputPathSetting } from "@/view/settings/OutputPathSetting";
 import { UserDataPathSetting } from "@/view/settings/UserDataPathSetting";
 import { ComfyServerSetting } from "@/view/settings/ComfyServerSetting";
+import { AgentApiKeySetting } from "@/view/settings/AgentApiKeySetting";
 import { LocalModelList } from "@/view/settings/LocalModelList";
 import { useIsHydrated } from "@/hooks/useIsHydrated";
 
@@ -161,6 +162,28 @@ export function SettingsPage() {
           </p>
         </div>
         <ComfyServerSetting />
+      </section>
+
+      {/**
+        id="agent" 是**链接锚点**：Agent 页在没有密钥时会提示「去设置里填写」，
+        那条链接指向 /settings#agent —— 改这个 id 等于悄悄改坏那条提示的落点。
+      */}
+      <section
+        id="agent"
+        className={cn(
+          "space-y-4 rounded-2xl bg-background p-4 sm:p-6",
+          INPUT_BORDER_CLASS
+        )}
+      >
+        <div className="space-y-1">
+          <h2 className="text-base font-semibold text-foreground">
+            {t("settings.agentSection.title")}
+          </h2>
+          <p className="text-xs text-muted-foreground">
+            {t("settings.agentSection.description")}
+          </p>
+        </div>
+        <AgentApiKeySetting />
       </section>
 
       <section
