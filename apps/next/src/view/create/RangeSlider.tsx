@@ -8,6 +8,7 @@ type RangeSliderProps = {
   step?: number;
   value: number;
   onChange: (value: number) => void;
+  ariaLabel?: string;
   /** 以 0 为原点双向填充（适用于含负值的范围） */
   bipolar?: boolean;
   className?: string;
@@ -22,6 +23,7 @@ export function RangeSlider({
   step = 1,
   value,
   onChange,
+  ariaLabel,
   bipolar = false,
   className,
   trackClassName,
@@ -64,6 +66,7 @@ export function RangeSlider({
         step={step}
         value={value}
         onChange={(event) => onChange(Number(event.target.value))}
+        aria-label={ariaLabel}
         aria-valuenow={value}
         aria-valuemin={min}
         aria-valuemax={max}
@@ -75,7 +78,6 @@ export function RangeSlider({
         style={{ left: `calc(${percent}% )` }}
       >
         <span
-          role="slider"
           aria-hidden
           className={cn(
             "block h-4 w-4 -translate-x-1/2 rounded-full border border-primary/50 bg-background shadow transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",

@@ -21,30 +21,30 @@ export function ForceClearModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
-      <div className="w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-2xl">
-        <div className="flex items-start gap-4 border-b border-amber-100 bg-amber-50 p-6">
-          <div className="rounded-full bg-amber-100 p-2">
-            <ShieldAlert className="h-6 w-6 text-amber-600" />
+      <div className="w-full max-w-md overflow-hidden rounded-2xl bg-background shadow-2xl">
+        <div className="flex items-start gap-4 border-b border-amber-100 bg-amber-500/10 p-6">
+          <div className="rounded-full bg-amber-500/10 p-2">
+            <ShieldAlert className="h-6 w-6 text-amber-700 dark:text-amber-300" />
           </div>
           <div>
-            <h3 className="text-lg font-bold text-amber-900">
+            <h3 className="text-lg font-bold text-amber-700 dark:text-amber-300">
               {t("toolBox.exif.forceClearModal.title")}
             </h3>
-            <p className="mt-1 text-sm text-amber-700">
+            <p className="mt-1 text-sm text-amber-700 dark:text-amber-300">
               {t("toolBox.exif.forceClearModal.body")}
             </p>
           </div>
         </div>
 
         <div className="space-y-4 p-6">
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-muted-foreground">
             {t("toolBox.exif.forceClearModal.choose")}{" "}
-            <span className="font-semibold text-red-600">
+            <span className="font-semibold text-red-700 dark:text-red-300">
               {t("toolBox.exif.forceClearModal.option")}
             </span>{" "}
             {t("toolBox.exif.forceClearModal.willDo")}
           </p>
-          <ul className="list-inside list-disc space-y-2 rounded-lg border border-gray-200 bg-gray-50 p-4 text-sm text-gray-600">
+          <ul className="list-inside list-disc space-y-2 rounded-lg border border-border bg-muted/40 p-4 text-sm text-muted-foreground">
             <li>{t("toolBox.exif.forceClearModal.removeAll")}</li>
             <li>{t("toolBox.exif.forceClearModal.switchToAdd")}</li>
             <li>{t("toolBox.exif.forceClearModal.reAdd")}</li>
@@ -54,7 +54,7 @@ export function ForceClearModal({
             <button
               type="button"
               onClick={onCancel}
-              className="flex-1 rounded-lg border border-gray-300 px-4 py-2.5 font-medium text-gray-700 transition-colors hover:bg-gray-50"
+              className="flex-1 rounded-lg border border-border px-4 py-2.5 font-medium text-foreground transition-colors hover:bg-muted/40"
             >
               {t("toolBox.exif.forceClearModal.cancelKeep")}
             </button>

@@ -42,6 +42,9 @@ export type UserDataSidebar = {
 export type UserDataHistoryFolders = {
   selectedFolderId: string;
   openedFolderId: string;
+  /** 生成输出策略：自由跟随当前图库选择，或固定到指定目录 */
+  outputMode?: "free" | "fixed";
+  fixedOutputPath?: string;
 };
 
 export type UserDataQuickPhrases = {
@@ -58,6 +61,8 @@ export type UserDataCreateForm = {
   sizeMode?: ImageSizeMode;
   customWidth?: number;
   customHeight?: number;
+  /** 图片尺寸原始宽高的倍率（0.1–1）；旧文档缺省为 1。 */
+  sizeScale?: number;
   /** 模型/扩展 Dialog 字体：sm=小，md=中，lg=大 */
   resourceDialogFontSize?: "sm" | "md" | "lg";
   /** 模型/扩展分类筛选 UI：tabs=标签栏，dropdown=下拉框 */
@@ -147,6 +152,8 @@ export type UserDataDocument = {
   negativePresets: UserDataNegativePresets;
   view3d: UserDataView3D;
   characterFavorites: UserDataCharacterFavorites;
+  comicTemplates: import("./comic-template").ComicTemplateLibrary;
+  promptAssistant?: import("./prompt-assistant").PromptAssistantPreferences;
 };
 
 /** 角色库收藏（animadex 角色 slug） */
@@ -176,6 +183,8 @@ export const DEFAULT_USER_DATA_DOCUMENT: UserDataDocument = {
   historyFolders: {
     selectedFolderId: DEFAULT_FOLDER_ID,
     openedFolderId: DEFAULT_FOLDER_ID,
+    outputMode: "free",
+    fixedOutputPath: "",
   },
   quickPhrases: { phrases: [] },
   updates: { lastSeenChangelogSectionId: null },
@@ -191,6 +200,8 @@ export const DEFAULT_USER_DATA_DOCUMENT: UserDataDocument = {
   negativePresets: { customPresets: [], lastPresetId: null },
   view3d: { modelPath: null, facingOffset: 0, modelHistory: [] },
   characterFavorites: { slugs: [] },
+  comicTemplates: { version: 1, templates: [] },
+  promptAssistant: { provider: "glm", baseUrl: "https://open.bigmodel.cn/api/paas/v4", model: "glm-4.7-flash", customModel: "", presetId: "translate", presets: [] },
 };
 
 export const USER_DATA_SETTING = {

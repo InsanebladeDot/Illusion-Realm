@@ -5,12 +5,13 @@
  */
 require("./agent/env").loadWorkspaceEnv();
 
-const { app, BrowserWindow } = require("electron");
+const { app, BrowserWindow, shell } = require("electron");
 const path = require("path");
 const { registerAppProtocol } = require("./appProtocol");
 const { registerAllIpcHandlers } = require("./ipc-handlers");
 const { readUserData } = require("./userData");
 const { initialLocaleArguments } = require("./initialLocale");
+const { windowChromeOptions, registerWindowChrome, windowChromeArguments } = require("./window-chrome");
 
 const isDev = process.env.NODE_ENV === "development" || !app.isPackaged;
 const PORT = process.env.PORT || 3000;
@@ -20,6 +21,20 @@ const preloadPath = path.join(__dirname, "preload.js");
 
 // 自定义 app:// 协议：解决静态导出绝对路径在 file:// 下失效的问题
 registerAppProtocol();
+
+/** Reuse renderer target=_blank links; open HTTP(S) in the system browser instead of a child app window.
+ * @param {import("electron").BrowserWindow} win
+ */
+function registerExternalLinks(win) {
+  win.webContents.setWindowOpenHandler(({ url }) => {
+    if (/^https?:\/\//i.test(url)) {
+      void shell.openExternal(url).catch(() => {
+        console.error({ level: "error", module: "external-links", message: "Failed to open the external browser" });
+      });
+    }
+    return { action: "deny" };
+  });
+}
 
 /**
  * 创建主窗口。
@@ -38,9 +53,11 @@ function createWindow() {
    * 注意 missing 这一档从此**只能由 harness 覆盖**：正式窗口只要文档可读就一定有值
    * （合法或非法），「不传参数 → undefined → zh-CN」只在自建窗口里跑得通。
    */
-  const additionalArguments = initialLocaleArguments(readUserData());
+  const additionalArguments = [...initialLocaleArguments(readUserData()), ...windowChromeArguments()];
 
   const win = new BrowserWindow({
+    // 界面：下载入口位于原生最小化按钮左侧。
+    ...windowChromeOptions(),
     width: 1440,
     height: 900,
     minWidth: 960,
@@ -58,6 +75,8 @@ function createWindow() {
     show: false,
   });
 
+  registerExternalLinks(win);
+  registerWindowChrome(win);
   win.once("ready-to-show", () => win.show());
 
   if (isDev) {

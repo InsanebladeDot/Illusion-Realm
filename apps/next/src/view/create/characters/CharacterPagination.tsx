@@ -77,20 +77,20 @@ export function CharacterPagination({
     <nav
       {...{ [`data-${testIdPrefix}-pagination`]: "true" }}
       aria-label={t("characters.pagination.ariaLabel")}
-      className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border border-[#E8E8E8] bg-white px-3 py-2"
+      className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border border-border bg-background px-3 py-2"
     >
       <span
         {...{ [`data-${testIdPrefix}-pagination-info`]: "true" }}
-        className="text-xs text-[#888888]"
+        className="text-xs text-muted-foreground"
       >
         {t("characters.pagination.totalPrefix")}
-        <span className="font-medium text-[#333333]">{total.toLocaleString("zh-CN")}</span>
+        <span className="font-medium text-foreground">{total.toLocaleString("zh-CN")}</span>
         {t("characters.pagination.unitSuffix")}
         {itemLabelText}
-        <span className="mx-1.5 text-[#D1D5DB]">|</span>
+        <span className="mx-1.5 text-border">|</span>
         {t("characters.pagination.rangePrefix")}
-        <span className="font-medium text-[#333333]">{from}</span>-
-        <span className="font-medium text-[#333333]">{to}</span>
+        <span className="font-medium text-foreground">{from}</span>-
+        <span className="font-medium text-foreground">{to}</span>
         {t("characters.pagination.unitSuffix")}
       </span>
 
@@ -113,7 +113,7 @@ export function CharacterPagination({
         {/* 页码指示：与左右分页按钮同一套浅色极简风格，数字可自定义输入，回车 / 失焦跳页 */}
         <span
           {...{ [`data-${testIdPrefix}-page-indicator`]: "true" }}
-          className="inline-flex h-8 items-center gap-1 rounded-lg border border-[#E5E7EB] bg-white px-2 text-xs text-[#333333]"
+          className="inline-flex h-8 items-center gap-1 rounded-lg border border-border bg-background px-2 text-xs text-foreground"
         >
           <input
             type="text"
@@ -129,11 +129,11 @@ export function CharacterPagination({
                 commitDraft();
               }
             }}
-            className="h-6 w-9 rounded-md bg-[#F8F9FA] text-center text-xs font-medium text-[#333333] outline-none transition-colors hover:bg-[#F3F4F6] focus:bg-white focus:ring-2 focus:ring-[#A78BFA]/40"
+            className="h-6 w-9 rounded-md bg-muted text-center text-xs font-medium text-foreground outline-none transition-colors hover:bg-muted focus:bg-background focus:ring-2 focus:ring-accent-stroke/40"
           />
           <span
             {...{ [`data-${testIdPrefix}-page-suffix`]: "true" }}
-            className="whitespace-nowrap text-[#888888]"
+            className="whitespace-nowrap text-muted-foreground"
           >
             / {pages}{t("characters.pagination.pageSuffix")}
           </span>
@@ -180,8 +180,8 @@ function PageButton({
       disabled={disabled}
       onClick={onClick}
       className={cn(
-        "inline-flex h-8 items-center gap-1 rounded-lg border border-[#E5E7EB] bg-white px-2.5 text-xs text-[#333333] transition-colors hover:bg-[#F8F9FA]",
-        "disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-white"
+        "inline-flex h-8 items-center gap-1 rounded-lg border border-border bg-background px-2.5 text-xs text-foreground transition-colors hover:bg-muted",
+        "disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-background"
       )}
     >
       {icon === "left" && <ChevronLeft className="h-3.5 w-3.5" />}

@@ -31,6 +31,8 @@ import {
 import {
   IMAGE_SIZE_MAX,
   clampImageSide,
+  clampSizeScale,
+  type ImageSizeSelection,
   type ImageSizeMode,
 } from "@/utils/imageSize";
 import {
@@ -66,6 +68,7 @@ type CreateFormState = {
   aspectRatio: AspectRatioLabel;
   customWidth: number;
   customHeight: number;
+  sizeScale: number;
   resourceDialogFontSize: ResourceDialogFontSize;
   resourceCategoryUiMode: ResourceCategoryUiMode;
   steps: number;
@@ -89,6 +92,7 @@ type CreateFormState = {
   setAspectRatio: (ratio: AspectRatioLabel) => void;
   setCustomSize: (patch: { width?: number; height?: number }) => void;
   setSizeMode: (mode: ImageSizeMode) => void;
+  setSizeSelection: (selection: ImageSizeSelection) => void;
   setResourceDialogFontSize: (size: ResourceDialogFontSize) => void;
   setResourceCategoryUiMode: (mode: ResourceCategoryUiMode) => void;
   setAdvancedPrompt: (enabled: boolean) => void;
@@ -135,6 +139,7 @@ export const useCreateFormStore = create<CreateFormState>()(
       aspectRatio: DEFAULT_ASPECT_RATIO,
       customWidth: 1024,
       customHeight: 1024,
+      sizeScale: 1,
       resourceDialogFontSize: DEFAULT_RESOURCE_DIALOG_FONT_SIZE,
       resourceCategoryUiMode: DEFAULT_RESOURCE_CATEGORY_UI_MODE,
       steps: DEFAULT_STEPS,
@@ -149,10 +154,11 @@ export const useCreateFormStore = create<CreateFormState>()(
       promptTabs: localizedDefaultPromptTabs(),
       activePromptTabId: DEFAULT_PROMPT_TABS[0].id,
       promptTemplates: [],
-      setAspectRatio: (ratio) => set({ aspectRatio: ratio, sizeMode: "preset" }),
+      setAspectRatio: (ratio) => set({ aspectRatio: ratio, sizeMode: "preset", sizeScale: 1 }),
       setCustomSize: (patch) =>
         set((state) => ({
           sizeMode: "custom",
+          sizeScale: 1,
           customWidth:
             patch.width !== undefined
               ? clampImageSide(patch.width)
@@ -162,7 +168,13 @@ export const useCreateFormStore = create<CreateFormState>()(
               ? clampImageSide(patch.height)
               : state.customHeight,
         })),
-      setSizeMode: (mode) => set({ sizeMode: mode }),
+      setSizeMode: (mode) => set({ sizeMode: mode, sizeScale: 1 }),
+      // 原始宽高与倍率一并更新，防止先改尺寸再改倍率造成额外渲染或缩放跳变。
+      setSizeSelection: (selection) => set({
+        sizeMode: selection.mode, aspectRatio: sanitizeAspectRatio(selection.aspectRatio),
+        customWidth: clampImageSide(selection.customWidth), customHeight: clampImageSide(selection.customHeight),
+        sizeScale: clampSizeScale(selection.scale),
+      }),
       setResourceDialogFontSize: (size) => set({ resourceDialogFontSize: size }),
       setResourceCategoryUiMode: (mode) => set({ resourceCategoryUiMode: mode }),
       setAdvancedSettings: (patch) => set((state) => ({ ...state, ...patch })),
@@ -286,6 +298,7 @@ export const useCreateFormStore = create<CreateFormState>()(
         sizeMode: state.sizeMode,
         customWidth: state.customWidth,
         customHeight: state.customHeight,
+        sizeScale: state.sizeScale,
         resourceDialogFontSize: state.resourceDialogFontSize,
         resourceCategoryUiMode: state.resourceCategoryUiMode,
         advancedPrompt: state.advancedPrompt,
@@ -299,6 +312,7 @@ export const useCreateFormStore = create<CreateFormState>()(
           ...current,
           ...saved,
           aspectRatio: sanitizeAspectRatio(saved.aspectRatio),
+          sizeScale: clampSizeScale(saved.sizeScale),
           customWidth: clampImageSide(saved.customWidth ?? current.customWidth, IMAGE_SIZE_MAX),
           customHeight: clampImageSide(
             saved.customHeight ?? current.customHeight,

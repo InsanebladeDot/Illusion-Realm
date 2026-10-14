@@ -72,7 +72,10 @@ export function GenerationNotice() {
   if (status === "idle") return null;
 
   return (
-    <div className="pointer-events-none fixed right-4 top-4 z-[1001]">
+    <div
+      data-generation-notice={status}
+      className="pointer-events-none fixed right-4 top-[calc(var(--window-chrome-height,0px)+1rem)] z-[1001]"
+    >
       <div
         className={cn(
           "pointer-events-auto flex min-h-10 items-center gap-2 rounded-xl bg-background/95 px-3 py-2 text-sm shadow-lg backdrop-blur",

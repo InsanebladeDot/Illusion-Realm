@@ -12,6 +12,7 @@
 export const IPC_CHANNELS = {
   // window —— 窗口控制
   WINDOW_SET_FULL_SCREEN: 'window:setFullScreen',
+  WINDOW_CHROME_VISIBILITY: 'window:chromeVisibility',
   /**
    * 深色/浅色：转发给 Electron 的 `nativeTheme.themeSource`。
    *
@@ -28,6 +29,17 @@ export const IPC_CHANNELS = {
 
   // models —— 本地模型扫描
   MODELS_SCAN: 'models:scan',
+  MODELS_DOWNLOAD_TARGET: 'models:downloadTarget',
+  MODELS_DOWNLOAD_START: 'models:downloadStart',
+  MODELS_DOWNLOAD_CANCEL: 'models:downloadCancel',
+  MODELS_DOWNLOAD_RETRY: 'models:downloadRetry',
+  MODELS_DOWNLOAD_REMOVE: 'models:downloadRemove',
+  MODELS_DOWNLOAD_LIST: 'models:downloadList',
+  MODELS_CHANGE_LOGO: 'models:changeLogo',
+  MODELS_CATEGORY_TARGET: 'models:categoryTarget',
+  MODELS_MOVE_CATEGORY: 'models:moveCategory',
+  MODELS_BATCH: 'models:batch',
+  MODELS_DOWNLOAD_PROGRESS: 'models:downloadProgress',
 
   // files —— 文件与生成图归档
   FILES_READ_IMAGE_DATA_URL: 'files:readImageDataUrl',
@@ -106,6 +118,13 @@ export const IPC_CHANNELS = {
   AGENT_SECRET_SET: 'agent:secretSet',
   /** invoke：清除密钥 */
   AGENT_SECRET_CLEAR: 'agent:secretClear',
+  CIVITAI_KEY_STATUS: 'civitai:keyStatus',
+  CIVITAI_KEY_SET: 'civitai:keySet',
+  CIVITAI_KEY_CLEAR: 'civitai:keyClear',
+  PROMPT_TRANSFORM: 'prompt:transform',
+  PROMPT_SECRET_STATUS: 'prompt:secretStatus',
+  PROMPT_SECRET_SET: 'prompt:secretSet',
+  PROMPT_SECRET_CLEAR: 'prompt:secretClear',
 } as const;
 
 export type IpcChannel = (typeof IPC_CHANNELS)[keyof typeof IPC_CHANNELS];

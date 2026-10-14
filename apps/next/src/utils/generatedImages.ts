@@ -180,6 +180,18 @@ export function resolveSaveOutputPath(
   return folderDirPath ?? baseOutputPath;
 }
 
+/** 判断候选目录是否位于设置页的有效输出根目录内（根目录本身也允许）。 */
+export function isPathWithinOutputRoot(
+  outputRoot: string,
+  candidatePath: string
+): boolean {
+  const normalize = (value: string) =>
+    value.trim().replace(/\\/g, "/").replace(/\/+$/, "").toLowerCase();
+  const root = normalize(outputRoot);
+  const candidate = normalize(candidatePath);
+  return Boolean(root && candidate && (candidate === root || candidate.startsWith(`${root}/`)));
+}
+
 export async function moveImagesToFolderOnDisk(
   outputPath: string,
   targetFolderDirPath: string,

@@ -1,174 +1,78 @@
 "use client";
 
-import { useEffect } from "react";
+// 分类下的模型沿用旧版卡片弹窗；Portal 避免创建栏裁切，Esc 只关闭这一层并恢复入口焦点。
+import { useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import { X } from "lucide-react";
-import { ResourceCoverImage } from "@/components/ResourceCoverImage";
-import { TruncatedTextPopover } from "@/components/TruncatedTextPopover";
+import { ResourceSelectionCard } from "./resource-selection-card";
+import { getResourceDialogTypography } from "@/utils/resourceDialogFontSize";
+import { useCreateFormStore } from "@/stores/useCreateFormStore";
 import { useTranslation } from "@/i18n";
-import type { ModelCover } from "@/types/model";
 import { PRIMARY_BUTTON_CLASS, THIN_BORDER_CLASS } from "@/utils/layout";
 import { cn } from "@/utils/cn";
+import type { ModelCover } from "@/types/model";
 
-type ModelVersionDialogProps = {
-  open: boolean;
-  title: string;
-  description?: string;
-  selectedKey: string;
-  options: Array<{
-    key: string;
-    name: string;
-    label: string;
-    cover: ModelCover;
-  }>;
-  onOpenChange: (open: boolean) => void;
-  onSelect: (key: string) => void;
-};
-
-export function ModelVersionDialog({
-  open,
-  title,
-  description,
-  selectedKey,
-  options,
-  onOpenChange,
-  onSelect,
-}: ModelVersionDialogProps) {
-  const { t } = useTranslation();
+interface ModelOption { key: string; name: string; label: string; cover: ModelCover }
+interface Props {
+  title: string; options: ModelOption[]; selectedKeys: string[];
+  multiple: boolean;
+  onOpenChange: (open: boolean) => void; onSelect: (key: string) => void;
+}
+function useNestedDialog(close: () => void) {
+  const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    if (!open) return;
-
-    const handleEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onOpenChange(false);
+    const previousFocus = document.activeElement;
+    // 页面滚动由外层 ResourceDialogShell 锁定；内层重复锁定会在同时关闭时遗留 hidden。
+    ref.current?.querySelector<HTMLButtonElement>("button")?.focus({ preventScroll: true });
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") { event.preventDefault(); event.stopImmediatePropagation(); close(); }
+      if (event.key !== "Tab") return;
+      const nodes = Array.from(ref.current?.querySelectorAll<HTMLElement>("button, [tabindex='0']") ?? []);
+      const first = nodes[0], last = nodes.at(-1);
+      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus(); }
+      else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
     };
-
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    document.addEventListener("keydown", handleEscape);
-
+    document.addEventListener("keydown", onKeyDown, true);
     return () => {
-      document.body.style.overflow = previousOverflow;
-      document.removeEventListener("keydown", handleEscape);
+      document.removeEventListener("keydown", onKeyDown, true);
+      if (previousFocus instanceof HTMLElement && previousFocus.isConnected) previousFocus.focus({ preventScroll: true });
     };
-  }, [open, onOpenChange]);
-
-  if (!open) return null;
-
-  return (
-    <>
-      <div
-        className="fixed inset-0 z-[95] bg-black/50"
-        aria-hidden
-        onClick={() => onOpenChange(false)}
-      />
-
-      <div
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="model-version-dialog-title"
-        className={cn(
-          "fixed left-1/2 top-1/2 z-[96] grid w-full max-h-[85vh] max-w-2xl -translate-x-1/2 -translate-y-1/2 gap-4 overflow-y-auto border bg-background p-6 shadow-lg duration-200 outline-none sm:rounded-xl",
-          THIN_BORDER_CLASS
-        )}
-      >
-        <button
-          type="button"
-          aria-label={t("common.close")}
-          onClick={() => onOpenChange(false)}
-          className="absolute right-4 top-4 z-[200] rounded-sm opacity-70 transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 max-sm:left-4 max-sm:right-auto sm:left-auto"
-        >
-          <X className="h-5 w-5 sm:h-4 sm:w-4" />
-        </button>
-
-        <div className="flex flex-col space-y-1.5 text-center sm:text-left">
-          <h2
-            id="model-version-dialog-title"
-            className="text-xl font-semibold tracking-tight"
-          >
-            {title}
-          </h2>
-          {description && (
-            <p className="sr-only">{description}</p>
-          )}
-        </div>
-
-        <div className="grid grid-cols-2 items-start gap-3 sm:grid-cols-3">
-          {options.map((option) => {
-            const selected = option.key === selectedKey;
-
-            return (
-              <div
-                key={option.key}
-                role="button"
-                tabIndex={0}
-                onClick={() => {
-                  onSelect(option.key);
-                  onOpenChange(false);
-                }}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter" || event.key === " ") {
-                    event.preventDefault();
-                    onSelect(option.key);
-                    onOpenChange(false);
-                  }
-                }}
-                className={cn(
-                  "group relative flex h-full cursor-pointer flex-col overflow-visible rounded-xl border",
-                  selected
-                    ? "border-green-500 outline outline-1 outline-green-500 dark:border-green-500 dark:outline-green-500"
-                    : "border-border hover:border-primary/50 dark:border-gray-700"
-                )}
-              >
-                {selected && (
-                  <div className="absolute -top-5 right-2 z-30 rounded-t-md bg-green-500 px-2 py-0.5 text-[10px] font-bold uppercase text-white shadow-lg">
-                    {t("create.modelVersionDialog.selected")}
-                  </div>
-                )}
-
-                <div
-                  className="relative isolate flex flex-col justify-end overflow-hidden rounded-t-xl bg-gray-900 pb-3"
-                  style={{ aspectRatio: "4 / 5" }}
-                >
-                  <ResourceCoverImage
-                    cover={option.cover}
-                    alt={option.name}
-                    fill
-                    sizes="(max-width: 768px) 50vw, 33vw"
-                    className="absolute inset-0 -z-10 h-full w-full object-cover"
-                  />
-                </div>
-
-                <div className="flex min-w-0 flex-1 flex-col px-3 pb-3 pt-2">
-                  <div className="min-w-0 flex-1">
-                    <TruncatedTextPopover
-                      text={option.name}
-                      className="text-sm font-semibold leading-6 text-primary"
-                    />
-                    <TruncatedTextPopover
-                      text={option.label}
-                      className="text-xs text-muted-foreground"
-                    />
-                  </div>
-                  <div className="mt-3">
-                    <button
-                      type="button"
-                      className={cn(
-                        "inline-flex h-8 w-full items-center justify-center rounded-xl px-3 text-sm font-medium text-white shadow transition-colors",
-                        selected
-                          ? "bg-green-600 hover:bg-green-700 dark:bg-green-600 dark:hover:bg-green-700"
-                          : PRIMARY_BUTTON_CLASS
-                      )}
-                    >
-                      {selected
-                        ? t("create.modelVersionDialog.selected")
-                        : t("create.modelVersionDialog.select")}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
+  }, [close]);
+  return ref;
+}
+function ModelOptionCard({ option, selected, choose }: { option: ModelOption; selected: boolean; choose: () => void }) {
+  const { t } = useTranslation();
+  const size = useCreateFormStore((state) => state.resourceDialogFontSize);
+  const typography = getResourceDialogTypography(size);
+  return <ResourceSelectionCard name={option.name} cover={option.cover} selected={selected} typography={typography}
+    optionId={option.key} onPick={choose} meta={option.label !== option.name ? <span title={option.label} className="block truncate">{option.label}</span> : undefined}>
+      <button type="button" data-resource-model-select className={cn("mt-3 inline-flex w-full items-center justify-center rounded-xl px-3 font-medium", typography.action, typography.actionHeight, PRIMARY_BUTTON_CLASS)}>
+        {t(selected ? "create.extensionSelectDialog.selected" : "create.extensionSelectDialog.select")}
+      </button>
+  </ResourceSelectionCard>;
+}
+export function ModelVersionDialog({ title, options, selectedKeys, multiple, onOpenChange, onSelect }: Props) {
+  const { t } = useTranslation();
+  const ref = useNestedDialog(() => onOpenChange(false));
+  return createPortal(<>
+    <div data-lora-model-backdrop className="fixed inset-0 z-[95] bg-black/50" aria-hidden onClick={() => onOpenChange(false)} />
+    {/* 弹窗：分类内的主模型 / LoRA 卡片，层级高于分类库，窗口标题栏仍在最上方 */}
+    <div ref={ref} role="dialog" aria-modal="true" aria-labelledby="model-version-dialog-title"
+      style={{ top: "calc((100dvh + var(--window-chrome-height, 0px)) / 2)" }}
+      className={cn("fixed left-1/2 z-[96] flex max-h-[calc(100dvh-var(--window-chrome-height,0px)-2rem)] w-[calc(100vw-2rem)] max-w-2xl -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-xl bg-background text-foreground shadow-xl", THIN_BORDER_CLASS)}>
+      <div className="flex shrink-0 flex-wrap items-center gap-2 border-b border-border px-4 py-3">
+        <h2 id="model-version-dialog-title" className="min-w-0 flex-1 truncate text-base font-semibold" title={title}>{title}</h2>
+        <button type="button" aria-label={t("common.close")} onClick={() => onOpenChange(false)} className="shrink-0 rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground"><X className="h-4 w-4" /></button>
       </div>
-    </>
-  );
+      <div data-resource-model-scroll className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+      <div className="grid auto-rows-max grid-cols-2 items-start gap-x-3 gap-y-7 p-4 pt-7 sm:grid-cols-3">
+        {options.map((option) => <ModelOptionCard key={option.key} option={option} selected={selectedKeys.includes(option.key)} choose={() => { onSelect(option.key); if (!multiple) onOpenChange(false); }} />)}
+      </div>
+      </div>
+      {/* 界面：分类内确认只返回分类库，所有模型数据最后由外层 footer 统一提交。 */}
+      <div className="shrink-0 border-t border-border px-4 py-3">
+        <button type="button" data-resource-model-done onClick={() => onOpenChange(false)} className={cn("ml-auto block h-9 rounded-xl px-4 text-sm font-medium", PRIMARY_BUTTON_CLASS)}>{t("common.confirm")}</button>
+      </div>
+    </div>
+  </>, document.body);
 }

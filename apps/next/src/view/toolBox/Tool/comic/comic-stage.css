@@ -1,0 +1,5 @@
+/* 点阵仅用于工作区；纸张颜色独立于主题，预览和导出使用同一个值。 */
+.comic-dot-workspace { background-color: #eef0f2; background-image: radial-gradient(circle, #a9afb7 0.8px, transparent 0.9px); background-size: 22px 22px; }
+@media (prefers-color-scheme: dark) {
+  .comic-dot-workspace { background-color: #1c1c1c; background-image: radial-gradient(circle, #505050 0.8px, transparent 0.9px); }
+}

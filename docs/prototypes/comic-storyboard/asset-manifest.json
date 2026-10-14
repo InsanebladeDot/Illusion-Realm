@@ -1,0 +1,40 @@
+{
+  "format": "illusion-realm-comic-prototype-assets",
+  "version": 1,
+  "source": "apps/next/src/assets/icon/create/models/anima-preview2.webp",
+  "purpose": "Existing repository image crops for layout and interaction validation",
+  "assets": [
+    {
+      "id": "panel-a",
+      "role": "base",
+      "title": "场景建立",
+      "shot": "全景",
+      "file": "assets/panel-a.png",
+      "crop": { "left": 0, "top": 0, "width": 1024, "height": 1024 }
+    },
+    {
+      "id": "panel-b",
+      "role": "base",
+      "title": "人物反应",
+      "shot": "中近景",
+      "file": "assets/panel-b.png",
+      "crop": { "left": 345, "top": 55, "width": 320, "height": 505 }
+    },
+    {
+      "id": "panel-c",
+      "role": "base",
+      "title": "对话视角",
+      "shot": "人物近景",
+      "file": "assets/panel-c.png",
+      "crop": { "left": 620, "top": 0, "width": 404, "height": 600 }
+    },
+    {
+      "id": "panel-d",
+      "role": "overlay",
+      "title": "物件揭示",
+      "shot": "局部特写",
+      "file": "assets/panel-d.png",
+      "crop": { "left": 375, "top": 610, "width": 440, "height": 205 }
+    }
+  ]
+}

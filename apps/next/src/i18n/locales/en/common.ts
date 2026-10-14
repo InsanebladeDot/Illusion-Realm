@@ -7,6 +7,7 @@
  */
 export const common = {
   "cancel": "Cancel",
+  "confirm": "Confirm",
   "save": "Save",
   "delete": "Delete",
   "copy": "Copy",

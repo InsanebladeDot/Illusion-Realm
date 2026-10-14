@@ -60,13 +60,27 @@ function registerThemeHandlers() {
  * @returns {void}
  */
 function registerDialogHandlers() {
-  registerHandle(IPC_CHANNELS.DIALOG_SELECT_FOLDER, async () => {
-    const result = await dialog.showOpenDialog({ properties: ["openDirectory"] });
-    if (result.canceled || result.filePaths.length === 0) {
-      return null;
-    }
-    return result.filePaths[0];
-  });
+  registerHandle(
+    IPC_CHANNELS.DIALOG_SELECT_FOLDER,
+    async (_event, defaultPath) => {
+      const result = await dialog.showOpenDialog({
+        defaultPath: typeof defaultPath === "string" && defaultPath.trim()
+          ? defaultPath.trim()
+          : undefined,
+        properties: ["openDirectory"],
+      });
+      if (result.canceled || result.filePaths.length === 0) {
+        return null;
+      }
+      return result.filePaths[0];
+    },
+    (args) =>
+      args.length === 0 ||
+      args[0] === undefined ||
+      (typeof args[0] === "string" && args[0].trim().length > 0)
+        ? null
+        : "defaultPath 必须是非空字符串"
+  );
 }
 
 module.exports = {

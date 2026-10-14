@@ -4,6 +4,7 @@
  */
 export const common = {
   cancel: "取消",
+  confirm: "确定",
   save: "保存",
   delete: "删除",
   copy: "复制",

@@ -6,21 +6,36 @@ import {
   DEFAULT_VIDEO_WORKFLOW_ID,
   VIDEO_WORKFLOW_LIMITS,
   getVideoWorkflowById,
+  isMinimaxWorkflow,
 } from "@/data/videoForm";
 import { RangeSlider } from "@/view/create/RangeSlider";
-import { VideoImageUpload } from "@/view/create/VideoImageUpload";
 import { VideoWorkflowSelect } from "@/view/create/VideoWorkflowSelect";
 import { useComfyVideoGenerate } from "@/hooks/useComfyVideoGenerate";
 import { useToastStore } from "@/stores/useToastStore";
 import { useTranslation } from "@/i18n";
 import {
-  INPUT_BORDER_CLASS,
   PRIMARY_BUTTON_CLASS,
-  PROMPT_EDITOR_SCROLL_CLASS,
   THIN_BORDER_CLASS,
   THIN_DIVIDER_CLASS,
 } from "@/utils/layout";
 import { cn } from "@/utils/cn";
+import { VideoModelSettings } from "./video-model-settings";
+import { VideoModelSelect } from "./video-model-select";
+import type { VideoModelOverrides } from "@/utils/comfy/video-workflow-models";
+import { getVideoLoras, type VideoLora } from "@/utils/comfy/video-workflow-loras";
+import { getVideoWorkflowTemplate } from "@/utils/comfy/videoWorkflow";
+import { VideoLoraSelect } from "./video-lora-select";
+import { VideoGenerationControls } from "./video-generation-controls";
+import type { VideoGenerationSettings } from "@/utils/comfy/video-generation-settings";
+import type { VideoResolutionSettings } from "@/utils/comfy/video-resolution";
+import { VideoResolutionControls } from "./video-resolution-controls";
+import { VideoFrameInputs } from "./video-frame-inputs";
+import { ImageReferencePrompt } from "./image-reference-prompt";
+import { normalizeImageReferences } from "@/utils/image-prompt-references";
+import type { PromptReferenceMedia } from "@/utils/prompt-media-references";
+import { normalizeVideoReferences, orderedReferences } from "@/utils/comfy/video-reference-media";
+import { useVideoReferenceMedia } from "./use-video-reference-media";
+import { VideoReferenceInputs } from "./video-reference-inputs";
 
 function useStartImage() {
   const [file, setFile] = useState<File | null>(null);
@@ -57,11 +72,35 @@ export function VideoCreatePanel() {
   const { generating, videoUrl, generate } = useComfyVideoGenerate();
 
   const [workflowId, setWorkflowId] = useState(DEFAULT_VIDEO_WORKFLOW_ID);
-  const [prompt, setPrompt] = useState("");
+  const [prompts, setPrompts] = useState<Record<string, string>>({});
+  const prompt = prompts[workflowId] ?? "";
+  const setPrompt = (value: string) => setPrompts((current) => ({ ...current, [workflowId]: value }));
   const [duration, setDuration] = useState<number>(
     VIDEO_WORKFLOW_LIMITS.defaultDuration
   );
   const startImage = useStartImage();
+  const lastImage = useStartImage();
+  const [bothFrames, setBothFrames] = useState(false);
+  const [resolutions, setResolutions] = useState<Record<string, VideoResolutionSettings | undefined>>({});
+  const resolution = resolutions[workflowId];
+  const references = useVideoReferenceMedia();
+  const isReference = workflowId === "minimax-reference";
+  const isMinimax = isMinimaxWorkflow(workflowId);
+  const referenceImages = useMemo(() => isReference
+    ? Array.from({ length: 9 }, (_, index) => references.media.find((item) => item.kind === "image" && item.number === index + 1)?.src ?? null)
+    : [startImage.url, bothFrames ? lastImage.url : null], [isReference, references.media, startImage.url, lastImage.url, bothFrames]);
+  // 当前任务只有首尾帧：按固定编号提供候选；共用输入框也能接收视频、音频数据。
+  const referenceMedia = useMemo<PromptReferenceMedia[]>(() => isReference ? orderedReferences(references.media) : referenceImages.flatMap((src, index) => src ? [{
+    id: `image-${index + 1}`, kind: "image" as const, number: index + 1, src,
+    name: (index === 0 ? startImage.file : lastImage.file)?.name ?? `image${index + 1}`,
+    label: t(index === 0 ? "create.videoSettings.firstFrame" : "create.videoSettings.lastFrame"),
+  }] : []), [isReference, references.media, referenceImages, startImage.file, lastImage.file, t]);
+  const [overridesByWorkflow, setOverridesByWorkflow] = useState<Record<string, VideoModelOverrides>>({});
+  const modelOverrides = overridesByWorkflow[workflowId] ?? {};
+  const [lorasByWorkflow, setLorasByWorkflow] = useState<Record<string, VideoLora[] | undefined>>({});
+  const loras = lorasByWorkflow[workflowId];
+  const [settingsByWorkflow, setSettingsByWorkflow] = useState<Record<string, VideoGenerationSettings | undefined>>({});
+  const generationSettings = settingsByWorkflow[workflowId];
 
   const workflow = useMemo(
     () => getVideoWorkflowById(workflowId) ?? getVideoWorkflowById(DEFAULT_VIDEO_WORKFLOW_ID)!,
@@ -77,7 +116,7 @@ export function VideoCreatePanel() {
       showToast(t("create.videoCreatePanel.promptRequired"));
       return;
     }
-    if (!startImage.file) {
+    if (!isReference && !startImage.file) {
       showToast(t("create.videoCreatePanel.startImageRequired"));
       return;
     }
@@ -92,11 +131,20 @@ export function VideoCreatePanel() {
     }
 
     try {
+      const normalized = normalizeImageReferences(prompt.trim(), referenceImages.map(Boolean));
+      if (!isReference && normalized.missing) { showToast(t("create.videoSettings.referenceUnavailable", { number: normalized.missing })); return; }
+      const normalizedPrompt = isMinimax ? normalizeVideoReferences(prompt.trim(), referenceMedia) : prompt.trim();
       const result = await generate({
         workflowId: workflow.id,
-        prompt: prompt.trim(),
+        prompt: normalizedPrompt,
         durationSeconds: workflow.requiresDuration ? duration : undefined,
-        imageFile: startImage.file,
+        imageFile: isReference ? null : startImage.file,
+        referenceMedia: isReference ? references.media : undefined,
+        lastImageFile: workflow.id === "minimax" && bothFrames ? lastImage.file : null,
+        modelOverrides,
+        loras,
+        generationSettings: isMinimax ? generationSettings : undefined,
+        resolution: isMinimax ? resolution : undefined,
       });
       showToast(
         result.savedPaths.length > 0
@@ -114,13 +162,19 @@ export function VideoCreatePanel() {
 
   return (
     <form
+      data-video-create-panel
       className="flex min-h-0 flex-1 flex-col lg:h-full lg:flex lg:flex-col"
       onSubmit={handleSubmit}
     >
       <div className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto [scrollbar-gutter:stable]">
-        <div className="px-2 pt-2 sm:px-3 sm:pt-3">
+        <div className="space-y-2 px-2 pt-2 sm:px-3 sm:pt-3">
           <VideoWorkflowSelect value={workflowId} onChange={setWorkflowId} />
+          {/* 界面：「模型」封面入口，与图片生成复用；工作流决定可选模型系列 */}
+          <VideoModelSelect key={workflowId} workflowId={workflowId} overrides={modelOverrides} onChange={(value) => setOverridesByWorkflow((current) => ({ ...current, [workflowId]: value }))} disabled={generating} />
         </div>
+        {/* 界面：模型加载设置，默认使用当前工作流中的 UNet / CLIP / VAE */}
+        <VideoLoraSelect key={`loras-${workflowId}`} workflowId={workflowId} value={loras} disabled={generating} onChange={(value) => setLorasByWorkflow((current) => ({ ...current, [workflowId]: typeof value === "function" ? value(current[workflowId] ?? getVideoLoras(getVideoWorkflowTemplate(workflowId))) : value }))} />
+        <VideoModelSettings key={workflowId} workflowId={workflowId} overrides={modelOverrides} disabled={generating} onChange={(value) => setOverridesByWorkflow((current) => ({ ...current, [workflowId]: value }))} onReset={() => { setOverridesByWorkflow((current) => ({ ...current, [workflowId]: {} })); setLorasByWorkflow((current) => ({ ...current, [workflowId]: undefined })); }} />
 
         {workflow.requiresDuration && (
           <div className="space-y-3 px-2 py-2 sm:px-3 sm:py-3">
@@ -158,13 +212,8 @@ export function VideoCreatePanel() {
             THIN_DIVIDER_CLASS
           )}
         >
-          <VideoImageUpload
-            label={t("create.videoCreatePanel.startImage")}
-            required
-            imageUrl={startImage.url}
-            onSelect={startImage.setFromFile}
-            onRemove={startImage.clear}
-          />
+          {/* 界面：仅首帧占一格；首尾帧模式为同一行的两个上传位置 */}
+          {isReference ? <VideoReferenceInputs references={references} disabled={generating} /> : <VideoFrameInputs first={startImage} last={lastImage} both={bothFrames} onModeChange={setBothFrames} disabled={generating} supportsLast={workflow.id === "minimax"} />}
         </div>
 
         <div className="relative space-y-4 px-2 py-2 sm:px-3 sm:py-3">
@@ -179,20 +228,12 @@ export function VideoCreatePanel() {
                 <Info className="h-4 w-4" />
               </button>
             </label>
-            <textarea
-              value={prompt}
-              onChange={(event) => setPrompt(event.target.value)}
-              rows={4}
-              name="prompt"
-              placeholder={t("create.videoCreatePanel.promptPlaceholder")}
-              className={cn(
-                "flex min-h-[60px] w-full resize-none rounded-md bg-transparent px-3 py-2 text-sm shadow-none placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50",
-                PROMPT_EDITOR_SCROLL_CLASS,
-                INPUT_BORDER_CLASS
-              )}
-            />
+            {/* 界面：图片引用只装饰文字，点击使用图库原有预览 */}
+            <ImageReferencePrompt value={prompt} onChange={setPrompt} images={referenceImages} media={referenceMedia} disabled={generating} />
           </div>
 
+          {/* 界面：Minimax 的生成参数，默认读取工作流；与图片高级设置共用输入控件 */}
+          {isMinimax && <><VideoResolutionControls workflowId={workflowId} value={resolution} onChange={(value) => setResolutions((current) => ({ ...current, [workflowId]: value }))} disabled={generating} /><VideoGenerationControls key={workflowId} workflowId={workflowId} value={generationSettings} onChange={(value) => setSettingsByWorkflow((current) => ({ ...current, [workflowId]: value }))} disabled={generating} /></>}
           {videoUrl && (
             <div
               className={cn(

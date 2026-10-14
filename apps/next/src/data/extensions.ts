@@ -10,11 +10,8 @@ import {
   getLocalLoraDisplay,
   isLocalLoraId,
   parseLocalLoraId,
+  type LocalResourceSeries,
 } from "@/utils/localModelResources";
-import {
-  collectLocalModelCategories,
-  resolveScanRootForType,
-} from "@/utils/localModelCategory";
 
 export const EXTENSION_TAG_CLASS: Record<ExtensionSeriesTag, string> = {
   "SDXL 1.0": "bg-blue-400/80 text-white",
@@ -51,9 +48,10 @@ export function filterAndSortExtensions(
   query: string,
   localModels: LocalModel[] = [],
   paths?: SettingsPaths,
-  category: string | null = null
+  category: string | null = null,
+  series?: LocalResourceSeries
 ): CreateExtension[] {
-  const source = buildCreateExtensionsFromLocal(localModels, paths);
+  const source = buildCreateExtensionsFromLocal(localModels, paths, series);
   const normalized = query.trim().toLowerCase();
 
   return source
@@ -62,7 +60,10 @@ export function filterAndSortExtensions(
       if (!normalized) return true;
       return (
         extension.name.toLowerCase().includes(normalized) ||
-        (extension.category?.toLowerCase().includes(normalized) ?? false)
+        (extension.category?.toLowerCase().includes(normalized) ?? false) ||
+        (extension.versions?.some((version) =>
+          version.label.toLowerCase().includes(normalized)
+        ) ?? false)
       );
     })
     .sort((a, b) => a.name.localeCompare(b.name, "zh-CN"));
@@ -70,13 +71,13 @@ export function filterAndSortExtensions(
 
 export function getLocalExtensionCategories(
   localModels: LocalModel[],
-  paths?: SettingsPaths
+  paths?: SettingsPaths,
+  series?: LocalResourceSeries
 ): string[] {
-  const scanRoot = paths ? resolveScanRootForType(paths, "lora") : "";
-  return collectLocalModelCategories(
-    localModels.filter((model) => model.type === "lora"),
-    scanRoot
-  );
+  const categories = buildCreateExtensionsFromLocal(localModels, paths, series)
+    .map((extension) => extension.category);
+  return [...new Set(categories.filter((value): value is string => Boolean(value)))]
+    .sort((a, b) => a.localeCompare(b, "zh-CN"));
 }
 
 export function getExtensionById(

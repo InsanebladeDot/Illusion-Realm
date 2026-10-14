@@ -1,7 +1,5 @@
-import ExifEditorPage from "@/view/toolBox/Tool/exif/exif";
+import { ToolRouteRedirect } from "@/components/tool-route-redirect";
 
-export default function ExifPage() {
-  return (
-   <ExifEditorPage/>
-  );
+export default function Page() {
+  return <ToolRouteRedirect href="/tools/image/exif" />;
 }

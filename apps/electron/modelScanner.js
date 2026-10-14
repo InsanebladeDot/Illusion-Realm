@@ -16,7 +16,7 @@ const path = require("path");
  * @property {string} name 版本目录名
  * @property {string} filePath 版本目录绝对路径
  * @property {string | null} iconPath 目录内找到的封面图，无则为 null
- * @property {"checkpoint" | "lora"} type 模型类型
+ * @property {"checkpoint" | "lora" | "embedding"} type 模型类型
  * @property {ScannedModelVersion[]} versions
  */
 
@@ -77,7 +77,7 @@ function findIconInDir(dirPath) {
 /**
  * 递归扫描目录下的模型文件，按「所在目录（= 版本）」聚合
  * @param {string} rootDir 扫描根目录
- * @param {"checkpoint" | "lora"} type 模型类型
+ * @param {"checkpoint" | "lora" | "embedding"} type 模型类型
  * @returns {ScannedModel[]} 按名称排序的模型列表
  */
 function scanModelsInDirectory(rootDir, type) {
@@ -147,4 +147,5 @@ function scanModelsInDirectory(rootDir, type) {
 
 module.exports = {
   scanModelsInDirectory,
+  findIconInDir,
 };

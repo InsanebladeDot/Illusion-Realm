@@ -1,5 +1,7 @@
 appId: com.illusionrealm.app
 productName: Illusion Realm
+beforePack: scripts/ffmpeg-before-pack.cjs
+afterPack: scripts/ffmpeg-after-pack.cjs
 
 # electron-builder 输出目录（相对于 apps/electron）：apps/electron/release
 directories:
@@ -80,7 +82,12 @@ extraResources:
   - from: bin/ffmpeg
     to: ffmpeg
     filter:
-      - '**/*'
+      - 'ffmpeg.exe'
+      - 'ffprobe.exe'
+      - 'LICENSE.txt'
+      - 'UPSTREAM-README.txt'
+      - 'SOURCE.txt'
+      - 'bundle.json'
 
 # 主进程与 preload 是手写 CommonJS，无需 node-gyp / npm 重建
 npmRebuild: false

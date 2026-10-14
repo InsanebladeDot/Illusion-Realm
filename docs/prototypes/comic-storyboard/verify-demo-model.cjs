@@ -1,0 +1,42 @@
+/** Negative layout-contract checks for the standalone demo. */
+const assert = require("assert/strict");
+const M = require("./demo-model.js");
+let count = 0;
+function invalid(name, change) {
+  const state = M.initial(); change(state);
+  assert.equal(M.validate(state), false, name); count++;
+}
+assert.equal(M.validate(M.initial()), true); count++;
+invalid("Future version", s => { s.version = 99; });
+invalid("Null panel", s => { s.panels[0] = null; });
+invalid("Duplicate reading ID", s => { s.order[1] = s.order[0]; });
+invalid("Missing reading ID", s => { s.order.pop(); });
+invalid("Missing tree leaf", s => { s.tree.children[0].panelId = "absent"; });
+invalid("Duplicate tree leaf", s => { s.tree.children[0].panelId = "b"; });
+invalid("Non-binary branch", s => { s.tree.children.pop(); });
+invalid("Non-finite boundary", s => { s.tree.ratio = Infinity; });
+invalid("Boundary outside permitted range", s => { s.tree.ratio = .99; });
+invalid("Minimum frame size", s => { s.tree.children[1].children[0].children[0].ratio = .1; });
+invalid("Unknown image reference", s => { s.panels[0].asset = "missing"; });
+invalid("Remote image source", s => { s.assets["asset-test"] = "https://example.com/x.png"; });
+invalid("Invalid crop", s => { s.panels[0].focusX = 2; });
+invalid("Unknown tear preset", s => { s.panels[0].edge = "unknown"; });
+const state = M.initial();
+state.panels[0].locked = true;
+assert.throws(() => M.split(state, "a", "x")); count++;
+assert.throws(() => M.template(state, "balanced")); count++;
+assert.equal(M.validate(state), true); count++;
+state.panels[0].locked = false;
+M.split(state, "a", "x");
+const snapshot = JSON.stringify(state);
+assert.throws(() => M.template(state, "mixed")); count++;
+assert.equal(JSON.stringify(state), snapshot); count++;
+const custom = M.initial();
+M.template(custom, "custom");
+assert.equal(M.validate(custom), true); count++;
+custom.customFrames.a.x = 0;
+assert.equal(M.validate(custom), false); count++;
+custom.customFrames.a.x = 48;
+custom.panels[0].customVertices = Array.from({ length: 65 }, (_, index) => ({ x: index / 64, y: .5 }));
+assert.equal(M.validate(custom), false); count++;
+console.log(`PASS: ${count} demo-model contract checks`);

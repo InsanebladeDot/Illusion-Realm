@@ -15,13 +15,13 @@ export function SpeedPanel({ speed, onChange }: SpeedPanelProps) {
   const { t } = useTranslation();
 
   return (
-    <section className="space-y-4 rounded-xl border border-gray-200 bg-white p-5">
-      <header className="flex items-center justify-between border-b border-gray-100 pb-3">
-        <h3 className="flex items-center gap-2 text-base font-semibold text-gray-900">
-          <Gauge className="h-4 w-4 text-purple-600" />
+    <section className="space-y-4 rounded-xl border border-border bg-background p-5">
+      <header className="flex items-center justify-between border-b border-border/60 pb-3">
+        <h3 className="flex items-center gap-2 text-base font-semibold text-foreground">
+          <Gauge className="h-4 w-4 text-sky-700 dark:text-sky-300" />
           {t("toolBox.video.speed.title")}
         </h3>
-        <span className="text-xs text-gray-500">
+        <span className="text-xs text-muted-foreground">
           {speed === 1 ? t("toolBox.video.speed.originalSpeed") : `${speed}×`}
         </span>
       </header>
@@ -34,8 +34,8 @@ export function SpeedPanel({ speed, onChange }: SpeedPanelProps) {
             onClick={() => onChange(preset)}
             className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
               speed === preset
-                ? "bg-purple-100 text-purple-700"
-                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                ? "bg-sky-500/10 text-sky-700 dark:text-sky-300"
+                : "bg-muted text-foreground hover:bg-muted"
             }`}
           >
             {preset}×
@@ -44,7 +44,7 @@ export function SpeedPanel({ speed, onChange }: SpeedPanelProps) {
       </div>
 
       {speed !== 1 && (
-        <p className="text-xs text-amber-600">
+        <p className="text-xs text-amber-700 dark:text-amber-300">
           {t("toolBox.video.speed.reencodeHint")}
         </p>
       )}

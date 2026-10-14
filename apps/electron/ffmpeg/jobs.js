@@ -1,3 +1,4 @@
+// 视频、动图和单帧导出共用任务执行器；FFmpeg 参数由各模式独立构建。
 const { spawn } = require("child_process");
 
 /**
@@ -60,9 +61,9 @@ function toEven(value) {
  * - 输入侧 `-to` 相对原始时间轴，配合重编码可做到帧级精确（实测误差 < 0.1s）
  *
  * 两条路径：
- * - **无损剪切**（未变速/未裁剪，且未勾选精确剪切）：`-c copy` 流拷贝，秒级完成；
+ * - **无损剪切**（未变速/未裁剪，且显式关闭精确剪切）：`-c copy` 流拷贝，秒级完成；
  *   代价是按关键帧对齐——起点不在关键帧时会从上一个关键帧开始，输出可能比请求略长。
- * - **重新编码**（变速/裁剪/精确剪切）：libx264 + aac，帧级精确。
+ * - **重新编码**（默认精确剪切，或变速/裁剪）：libx264 + aac，帧级精确。
  *
  * @param {VideoEditJob} job
  * @returns {EditPlan}
@@ -74,7 +75,7 @@ function buildEditArgs(job) {
     trim,
     speed = 1,
     crop,
-    accurateCut = false,
+    accurateCut = true,
   } = job;
 
   const start = Math.max(0, Number(trim?.start ?? 0));
@@ -362,7 +363,26 @@ function buildGifArgs(job) {
  * 已知的任务类型；未知类型通常意味着渲染进程比主进程新（主进程未重启）
  * @type {Set<string>}
  */
-const KNOWN_JOB_MODES = new Set(["single", "concat", "gif"]);
+const KNOWN_JOB_MODES = new Set(["single", "concat", "gif", "frame"]);
+
+/** 精确定位原始视频时间轴，导出一张原始分辨率 PNG，不应用剪辑滤镜。
+ * @param {VideoEditJob} job
+ * @returns {EditPlan}
+ */
+function buildFrameArgs(job) {
+  if (!job.inputPath || !job.outputPath || !/\.png$/i.test(job.outputPath)) {
+    throw new Error("单帧导出需要输入视频和 PNG 输出路径");
+  }
+  if (typeof job.frameTime !== "number" || !Number.isFinite(job.frameTime) || job.frameTime < 0) {
+    throw new Error("单帧导出时间必须是非负有限数字");
+  }
+  return {
+    args: ["-y", "-hide_banner", "-ss", String(job.frameTime), "-i", job.inputPath,
+      "-map", "0:v:0", "-frames:v", "1", "-an", "-c:v", "png", "-f", "image2", "-update", "1", job.outputPath],
+    requiresReencode: true,
+    expectedDuration: 0,
+  };
+}
 
 /**
  * 校验任务类型是否已知
@@ -385,11 +405,13 @@ function assertKnownMode(mode) {
 function startEditJob({ ffmpegPath, job, onProgress, onDone, onError }) {
   assertKnownMode(job?.mode);
   const plan =
-    job.mode === "concat"
-      ? buildConcatArgs(job)
-      : job.mode === "gif"
-        ? buildGifArgs(job)
-        : buildEditArgs(job);
+    job.mode === "frame"
+      ? buildFrameArgs(job)
+      : job.mode === "concat"
+        ? buildConcatArgs(job)
+        : job.mode === "gif"
+          ? buildGifArgs(job)
+          : buildEditArgs(job);
   const { args, requiresReencode, expectedDuration } = plan;
   const child = spawn(ffmpegPath, args, { windowsHide: true });
 
@@ -430,4 +452,4 @@ function startEditJob({ ffmpegPath, job, onProgress, onDone, onError }) {
   return child;
 }
 
-module.exports = { buildEditArgs, buildConcatArgs, buildGifArgs, startEditJob };
+module.exports = { buildEditArgs, buildConcatArgs, buildGifArgs, buildFrameArgs, startEditJob };

@@ -9,6 +9,7 @@ export type VideoWorkflow = {
   category: string;
   /** 展示名 */
   name: string;
+  nameKey?: "create.videoWorkflowSelect.minimaxReference";
   /** 相对 src/data/comfy/videoWorkflower 的工作流文件路径 */
   file: string;
   /** 是否需要用户提供时长（minimax 时长固定，wan2.2 需提供） */
@@ -24,6 +25,14 @@ export const VIDEO_WORKFLOWS: VideoWorkflow[] = [
     requiresDuration: false,
   },
   {
+    id: "minimax-reference",
+    category: "minimax",
+    name: "MiniMax H3 Reference to Video",
+    nameKey: "create.videoWorkflowSelect.minimaxReference",
+    file: "minnimax/minimax h3 参考视频.json",
+    requiresDuration: false,
+  },
+  {
     id: "wan2.2",
     category: "wan2.2",
     name: "Wan2.2 Remix NSFW",
@@ -33,6 +42,11 @@ export const VIDEO_WORKFLOWS: VideoWorkflow[] = [
 ];
 
 export const DEFAULT_VIDEO_WORKFLOW_ID = "minimax";
+
+/** 同系列工作流共用模型筛选和参数控件，不按单个模板名称判断。 */
+export function isMinimaxWorkflow(id?: string) {
+  return getVideoWorkflowById(id)?.category === "minimax";
+}
 
 /** 视频生成限制规则（集中管理，便于调整阈值） */
 export const VIDEO_WORKFLOW_LIMITS = {

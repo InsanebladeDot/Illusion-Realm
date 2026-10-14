@@ -1,6 +1,7 @@
 @import "tailwindcss";
 
 :root {
+  --window-chrome-height: 0px;
   --background: #ffffff;
   --foreground: #171717;
   --muted: #f4f4f5;
@@ -23,6 +24,42 @@
   --accent-stroke: #171717;
   --accent-fill: #18181b;
   --accent-fill-foreground: #ffffff;
+}
+
+:root[data-window-chrome="custom"] {
+  --window-chrome-height: 32px;
+}
+
+.window-titlebar {
+  -webkit-app-region: drag;
+  position: fixed;
+  z-index: 1102;
+  top: 0;
+  left: env(titlebar-area-x, 0px);
+  width: env(titlebar-area-width, calc(100% - 138px));
+  max-width: calc(100% - 138px);
+  height: var(--window-chrome-height);
+  /* 贴合原生按钮区域，覆盖窗口控件叠加层边界可能露出的 1px 缝隙。 */
+  box-shadow: 1px 0 0 var(--muted);
+}
+
+.window-caption-action,
+.window-download-center {
+  -webkit-app-region: no-drag;
+}
+
+/* 页面内的高层级工具和下拉框不能越过全局顶栏；不改变 fixed 元素的定位参照。 */
+#main-content {
+  isolation: isolate;
+}
+
+.window-download-center {
+  position: fixed;
+  z-index: 1101;
+  top: calc(var(--window-chrome-height) + 8px);
+  right: clamp(12px, calc(100vw - env(titlebar-area-x, 0px) - env(titlebar-area-width, calc(100vw - 138px))), max(12px, calc(100vw - 444px)));
+  width: min(420px, calc(100vw - 24px));
+  max-height: min(560px, calc(100dvh - var(--window-chrome-height) - 24px));
 }
 
 @theme inline {
@@ -438,6 +475,11 @@ html.page-transition nav[aria-expanded] {
   view-transition-name: app-sidebar;
 }
 
+/* 顶栏必须从 root 快照中独立出来：转场层在普通 DOM 之上，增大 DOM 的 z-index 无法挡住它。 */
+html.page-transition [data-window-titlebar] {
+  view-transition-name: window-titlebar;
+}
+
 /**
  * 导航与 root：**整组（含 old / new 两个快照）都不播动画**。
  *
@@ -448,6 +490,9 @@ html.page-transition nav[aria-expanded] {
 html.page-transition::view-transition-group(app-sidebar),
 html.page-transition::view-transition-old(app-sidebar),
 html.page-transition::view-transition-new(app-sidebar),
+html.page-transition::view-transition-group(window-titlebar),
+html.page-transition::view-transition-old(window-titlebar),
+html.page-transition::view-transition-new(window-titlebar),
 html.page-transition::view-transition-group(root),
 html.page-transition::view-transition-old(root),
 html.page-transition::view-transition-new(root) {
@@ -456,7 +501,7 @@ html.page-transition::view-transition-new(root) {
 }
 
 /**
- * 侧栏那一组**永远在最上层**。
+ * 侧栏在内容之上，顶栏再高一层。
  *
  * 为什么需要：内容层的快照不局限于它原来的框 —— 旧内容向左让位时那一坨会滑到侧栏下面，
  * 而组间层级默认按 DOM 顺序，`<nav>` 在 `<main>` 之前 ⇒ 侧栏反而被压在下面，
@@ -466,6 +511,10 @@ html.page-transition::view-transition-new(root) {
  */
 html.page-transition::view-transition-group(app-sidebar) {
   z-index: 9;
+}
+
+html.page-transition::view-transition-group(window-titlebar) {
+  z-index: 10;
 }
 
 @keyframes page-content-out {

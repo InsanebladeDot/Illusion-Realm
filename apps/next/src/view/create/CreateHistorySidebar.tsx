@@ -10,6 +10,8 @@ import {
   GalleryVertical,
   Grid3x3,
   ImagePlay,
+  Lock,
+  Unlock,
   Plus,
   Search,
   SquareCheck,
@@ -49,10 +51,19 @@ import {
   historyFolderFromDiskEntry,
   isDefaultHistoryFolder,
 } from "@/utils/historyFolders";
-import { listGeneratedImages, listOutputFoldersOnDisk } from "@/utils/generatedImages";
+import {
+  isPathWithinOutputRoot,
+  listGeneratedImages,
+  listOutputFoldersOnDisk,
+} from "@/utils/generatedImages";
 import { formatShortDateTime } from "@/utils/dateTimeFormat";
 import { runPageStyleTransition } from "@/utils/pageTransition";
-import { hasDeleteFolderSupport, hasDeleteImagesSupport } from "@/utils/electronBridge";
+import {
+  hasDeleteFolderSupport,
+  hasDeleteImagesSupport,
+  resolveEffectiveOutputPath,
+  selectLocalFolder,
+} from "@/utils/electronBridge";
 import type { GeneratedImageFile, HistoryFolder } from "@/types/historyFolder";
 import {
   ACCENT_SELECTED_SOFT_CLASS,
@@ -285,6 +296,12 @@ export function CreateHistorySidebar({
   const selectedFolderId = useHistoryFolderStore(
     (state) => state.selectedFolderId
   );
+  const outputMode = useHistoryFolderStore((state) => state.outputMode);
+  const fixedOutputPath = useHistoryFolderStore((state) => state.fixedOutputPath);
+  const setOutputMode = useHistoryFolderStore((state) => state.setOutputMode);
+  const setFixedOutputPath = useHistoryFolderStore(
+    (state) => state.setFixedOutputPath
+  );
   const openedFolderId = useHistoryFolderStore((state) => state.openedFolderId);
   const openFolder = useHistoryFolderStore((state) => state.openFolder);
   const setSelectedFolderId = useHistoryFolderStore(
@@ -309,6 +326,7 @@ export function CreateHistorySidebar({
 
   const [diskFolders, setDiskFolders] = useState<HistoryFolder[]>([]);
   const [loadingFolders, setLoadingFolders] = useState(false);
+  const [effectiveOutputRoot, setEffectiveOutputRoot] = useState("");
 
   /**
    * 「全部」是**内置项**，不是用户数据 —— 它的名字必须走词条表。
@@ -446,6 +464,28 @@ export function CreateHistorySidebar({
   const handleNewFolder = () => {
     setCreateFolderParent(null);
     setCreateFolderOpen(true);
+  };
+
+  useEffect(() => {
+    let cancelled = false;
+    void resolveEffectiveOutputPath(outputPath).then((path) => {
+      if (!cancelled) setEffectiveOutputRoot(path ?? "");
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [outputPath]);
+
+  const handlePickFixedOutputPath = async () => {
+    const selected = await selectLocalFolder(effectiveOutputRoot || undefined);
+    if (!selected) return;
+    if (!isPathWithinOutputRoot(effectiveOutputRoot, selected)) {
+      showToast(t("create.createHistorySidebar.fixedOutputOutsideRoot"), "error");
+      return;
+    }
+    setFixedOutputPath(selected);
+    setOutputMode("fixed");
+    showToast(t("create.createHistorySidebar.fixedOutputUpdated"));
   };
 
   useEffect(() => {
@@ -632,6 +672,59 @@ export function CreateHistorySidebar({
                   value={folderSearch}
                   onChange={setFolderSearch}
                 />
+                <div
+                  className={cn(
+                    "flex flex-wrap items-center gap-2 border-t px-2 py-2",
+                    THIN_DIVIDER_CLASS,
+                    isPage && "rounded-xl bg-muted/30"
+                  )}
+                >
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={outputMode === "free"}
+                    aria-label={t("create.createHistorySidebar.freeOutputMode")}
+                    onClick={() => setOutputMode(outputMode === "free" ? "fixed" : "free")}
+                    className="inline-flex items-center gap-1.5 rounded-md px-1 py-1 text-[11px] text-muted-foreground transition-colors hover:text-foreground"
+                  >
+                    <span
+                      aria-hidden
+                      className={cn(
+                        "relative inline-flex h-5 w-9 shrink-0 rounded-full p-0.5 transition-colors",
+                        outputMode === "free" ? "bg-primary" : "bg-muted-foreground/35"
+                      )}
+                    >
+                      <span
+                        className={cn(
+                          "h-4 w-4 rounded-full bg-white shadow-sm transition-transform",
+                          outputMode === "free" ? "translate-x-4" : "translate-x-0"
+                        )}
+                      />
+                    </span>
+                    {outputMode === "free" ? <Unlock className="h-3.5 w-3.5" /> : <Lock className="h-3.5 w-3.5" />}
+                    {t("create.createHistorySidebar.freeOutputMode")}
+                  </button>
+                  <button
+                    type="button"
+                    disabled={outputMode === "free" || !effectiveOutputRoot}
+                    onClick={() => void handlePickFixedOutputPath()}
+                    className={cn(
+                      "min-w-0 max-w-full rounded-md px-2 py-1 text-left text-[11px] transition-colors",
+                      outputMode === "free"
+                        ? "cursor-not-allowed text-muted-foreground/50"
+                        : "text-muted-foreground hover:bg-muted/60 hover:text-foreground",
+                      INPUT_BORDER_CLASS
+                    )}
+                    title={fixedOutputPath || effectiveOutputRoot}
+                  >
+                    <span className="mr-1 font-medium">
+                      {t("create.createHistorySidebar.fixedOutputPath")}
+                    </span>
+                    <span className="inline-block max-w-[16rem] truncate align-bottom">
+                      {fixedOutputPath || t("create.createHistorySidebar.chooseFixedOutput")}
+                    </span>
+                  </button>
+                </div>
               </div>
 
               {foldersOpen && (
@@ -1049,13 +1142,7 @@ export function CreateHistorySidebar({
                                     setSelectedImage(image);
                                     setDetailOpen(true);
                                   };
-                                  /**
-                                   * **只有窄屏（page 版式）**才走「进入下一层」的整页位移：
-                                   * 那时详情是一条占满主区的页（挂着 `data-image-detail-panel`）。
-                                   * 宽屏的详情是居中弹窗，靠自己的 `motion-pop-in` 缓缓浮现 ——
-                                   * 之前这里没判宽窄，于是宽屏下 `isSettled` 永远不成立、
-                                   * 过渡白跑满超时，用户看到的是「主区先整体滑一遍，然后弹窗才出现」。
-                                   */
+                                  /** 宽屏直接打开详情弹窗；窄屏详情作为下一层页面进入。 */
                                   if (!isPage) {
                                     openDetail();
                                     return;

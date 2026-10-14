@@ -2,7 +2,7 @@
  * 视频剪辑核心逻辑验证（需本机 ffmpeg）：
  * 1) 无损剪切：-c copy，精确落在关键帧上时输出时长准确
  * 2) 无损剪切的固有特性：起点非关键帧时从上一关键帧开始（输出不短于请求）
- * 3) 精确剪切（accurateCut）：重新编码，帧级精确
+ * 3) 默认精确剪切：长 GOP 短视频的非关键帧起点，检查时长和首帧内容
  * 4) 变速 + 裁剪：时长与分辨率符合预期
  *
  * 运行：node scripts/verify-video-edit.cjs
@@ -15,10 +15,10 @@ const { spawnSync } = require("child_process");
 
 const FFMPEG =
   process.env.FFMPEG_PATH ||
-  "E:\\Tool\\ffmpeg\\ffmpeg-9.0.1-essentials_build\\bin\\ffmpeg.exe";
+  path.resolve(__dirname, "../apps/electron/bin/ffmpeg/ffmpeg.exe");
 const FFPROBE =
   process.env.FFPROBE_PATH ||
-  "E:\\Tool\\ffmpeg\\ffmpeg-9.0.1-essentials_build\\bin\\ffprobe.exe";
+  path.resolve(__dirname, "../apps/electron/bin/ffmpeg/ffprobe.exe");
 
 const { buildEditArgs } = require("../apps/electron/ffmpeg/jobs.js");
 
@@ -28,7 +28,7 @@ function check(name, ok, detail = "") {
   console.log(`${ok ? "PASS" : "FAIL"}  ${name}${detail ? `  (${detail})` : ""}`);
 }
 
-const run = (bin, args) => spawnSync(bin, args, { encoding: "utf8", windowsHide: true });
+const run = (bin, args) => spawnSync(bin, args, { encoding: "utf8", windowsHide: true, timeout: 30000 });
 
 function probeDuration(file) {
   const out = run(FFPROBE, [
@@ -85,6 +85,7 @@ const losslessPlan = buildEditArgs({
   sourceDuration,
   trim: { start: 2, end: 4.5 },
   speed: 1,
+  accurateCut: false,
 });
 check("无损剪切不重新编码", losslessPlan.requiresReencode === false);
 check(
@@ -105,6 +106,7 @@ const alignedPlan = buildEditArgs({
   sourceDuration,
   trim: { start: 1, end: 3 },
   speed: 1,
+  accurateCut: false,
 });
 if (execute(alignedPlan.args[alignedPlan.args.length - 1], alignedPlan, "非关键帧起点剪切")) {
   const duration = probeDuration(path.join(dir, "aligned.mp4"));
@@ -130,6 +132,33 @@ if (execute(accuratePlan.args[accuratePlan.args.length - 1], accuratePlan, "精�
   const duration = probeDuration(path.join(dir, "accurate.mp4"));
   check("精确剪切时长 ≈ 2 秒（帧级）", Math.abs(duration - 2) < 0.2, `${duration.toFixed(3)}s`);
 }
+
+// 只有开头一个关键帧；1.5 秒之前为红色，之后为蓝色，首帧能直接证明起点正确。
+function verifyDefaultTrim(start, end, label) {
+  const output = path.join(dir, `${label}.mp4`);
+  const plan = buildEditArgs({ inputPath: sparseSource, outputPath: output, sourceDuration: 5.167, trim: { start, end } });
+  check(`${label}: 默认精确剪切`, plan.requiresReencode === true);
+  if (!execute(output, plan, label)) return;
+  const duration = probeDuration(output);
+  check(`${label}: 输出时长符合选区`, Math.abs(duration - (end - start)) < 0.07, `${duration.toFixed(3)}s`);
+  const frame = spawnSync(FFMPEG, ["-v", "error", "-i", output, "-frames:v", "1", "-vf", "scale=1:1", "-pix_fmt", "rgb24", "-f", "rawvideo", "pipe:1"], { windowsHide: true, timeout: 30000 });
+  const pixel = frame.stdout;
+  const blue = start >= 1.5;
+  check(`${label}: 首帧来自选区起点`, frame.status === 0 && pixel?.length === 3 && (blue ? pixel[2] > 200 && pixel[0] < 30 : pixel[0] > 200 && pixel[2] < 30));
+}
+const sparseSource = path.join(dir, "sparse-keyframes.mp4");
+const sparseGenerated = run(FFMPEG, [
+  "-y", "-v", "error", "-f", "lavfi", "-i", "color=c=blue:s=160x120:r=30",
+  "-f", "lavfi", "-i", "sine=frequency=440:sample_rate=44100",
+  "-vf", "drawbox=x=0:y=0:w=iw:h=ih:color=red:t=fill:enable='lt(t,1.5)'",
+  "-t", "5.167", "-c:v", "libx264", "-g", "300", "-keyint_min", "300", "-sc_threshold", "0", "-c:a", "aac", sparseSource,
+]);
+if (sparseGenerated.status !== 0) throw new Error("Failed to generate the long-GOP regression fixture.");
+const keyframes = run(FFPROBE, ["-v", "error", "-select_streams", "v:0", "-skip_frame", "nokey", "-show_entries", "frame=pts_time", "-of", "json", sparseSource]);
+check("短视频只有开头一个关键帧", keyframes.status === 0 && JSON.parse(keyframes.stdout).frames.length === 1);
+verifyDefaultTrim(1.547, 5.167, "screenshot-range");
+verifyDefaultTrim(1.547, 3.2, "both-boundaries");
+verifyDefaultTrim(0, 1.547, "end-only");
 
 // ---------- 4) 变速 ----------
 const speedPlan = buildEditArgs({

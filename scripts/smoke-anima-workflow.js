@@ -204,6 +204,7 @@ function readRemixParamsFromImage(filePath) {
 // ---------- 测试用模型目录 ----------
 const workDir = fs.mkdtempSync(path.join(os.tmpdir(), "anima-workflow-smoke-"));
 smoke.setWorkDir(workDir);
+app.setPath("userData", path.join(workDir, "browser"));
 const modelsRoot = path.join(workDir, "models");
 const diffusionModelsDir = path.join(modelsRoot, "diffusion_models");
 const lorasDir = path.join(modelsRoot, "loras");
@@ -212,7 +213,10 @@ const outputDir = path.join(workDir, "output");
 const ANIMA_MODEL = "anima_aestheticV11.safetensors";
 const LORA_A = "lora_style_a.safetensors";
 const LORA_B = "lora_style_b.safetensors";
-/** 扩展以文件夹名展示（文件夹 = 模型，内部文件 = 版本） */
+const OTHER_SERIES_LORA = "minimax_video.safetensors";
+const LORA_CATEGORY = "风格";
+const animaTemplateCfg = JSON.parse(fs.readFileSync(path.join(__dirname, "../apps/next/src/data/comfy/imageWorkflower/Anima/标准anima生成流.json"), "utf8"))["5"].inputs.cfg;
+/** 扩展以二级文件夹名展示（分类 / 模型 / 权重文件） */
 const LORA_FOLDER_A = "lora_style_a";
 const LORA_FOLDER_B = "lora_style_b";
 
@@ -222,9 +226,10 @@ function writeDummy(filePath) {
 }
 
 writeDummy(path.join(diffusionModelsDir, "Anima", ANIMA_MODEL));
-// 扩展（LoRA）以「文件夹 = 模型，内部文件 = 版本」组织，因此两个 LoRA 需要两个文件夹
-writeDummy(path.join(lorasDir, "Anima", "lora_style_a", LORA_A));
-writeDummy(path.join(lorasDir, "Anima", "lora_style_b", LORA_B));
+// 扩展（LoRA）以「分类 / 模型文件夹 / 权重文件」组织，同一分类可选择多个模型
+writeDummy(path.join(lorasDir, "Anima", LORA_CATEGORY, LORA_FOLDER_A, LORA_A));
+writeDummy(path.join(lorasDir, "Anima", LORA_CATEGORY, LORA_FOLDER_B, LORA_B));
+writeDummy(path.join(lorasDir, "Minimax", "minimax_video", OTHER_SERIES_LORA));
 // 放大模型：检索路径指向整个 models 目录时最容易被误当成扩散模型（ComfyUI 会报 value_not_in_list）
 writeDummy(path.join(modelsRoot, "upscale_models", "4xESRGAN", "4x-ESRGAN.pth"));
 fs.mkdirSync(outputDir, { recursive: true });
@@ -270,6 +275,10 @@ ipcMain.handle("userData:write", async (_event, data) => {
   return { filePath: userDataFile, data };
 });
 ipcMain.handle("userData:getDefaultPath", async () => userDataFile);
+ipcMain.handle("paths:getDefaultOutput", async () => outputDir);
+ipcMain.handle("models:downloadList", async () => []);
+ipcMain.handle("comfy:listModels", async () => ({ checkpoints: [], loras: [], diffusionModels: [], clips: [], vaes: [] }));
+require("../apps/electron/ipc-handlers/window.handlers").registerThemeHandlers();
 ipcMain.handle("models:scan", async (_event, dirPath, type) => {
   if (!dirPath || (type !== "checkpoint" && type !== "lora")) return [];
   try {
@@ -398,8 +407,8 @@ app.whenReady().then(async () => {
   /** 在弹窗里按卡片标题找到它的「选择」按钮并点击 */
   const selectCardByTitle = (titlePart) =>
     run(`(() => {
-      const title = Array.from(document.querySelectorAll('h3')).find(
-        (h) => h.textContent.includes(${JSON.stringify(titlePart)})
+      const title = Array.from(document.querySelectorAll('[role="dialog"] h3')).find(
+        (h) => h.textContent.toLowerCase().includes(${JSON.stringify(titlePart.toLowerCase())})
       );
       if (!title) return false;
       let node = title;
@@ -413,23 +422,37 @@ app.whenReady().then(async () => {
       return false;
     })()`);
 
+  /** 图片和视频统一从分类卡片打开模型卡片弹窗，点击模型直接返回该 LoRA。 */
+  const selectLoraModel = async (modelName) => {
+    await run("document.querySelector('[data-lora-model-picker]').click()");
+    await waitFor("Boolean(document.querySelector('[data-lora-model-option]'))", 3000);
+    return run(`(() => {
+      const card = Array.from(document.querySelectorAll('[data-lora-model-option]')).find(node => node.textContent.includes(${JSON.stringify(modelName)}));
+      if (!card) return false;
+      card.querySelector('[data-resource-model-select]').click();
+      return true;
+    })()`);
+  };
+
   const dialogOpen = (titleId) => run(`Boolean(document.getElementById(${JSON.stringify(titleId)}))`);
 
   try {
     await win.loadURL("app://app/create");
     await sleep(3500);
+    await run("document.querySelector('[aria-labelledby=update-announcement-title] button')?.click()");
+    await clickByText("图片");
 
     // 模型扫描由 AppShell 自动触发，等它把测试模型读进来
     const modelsLoaded = await waitFor(
       `document.body.innerText.includes(${JSON.stringify(ANIMA_MODEL.replace(".safetensors", ""))}) ||
-       !!document.querySelector('section [role="button"][tabindex="0"]')`,
+       !!document.querySelector('section [data-model-cover-select]')`,
       20000
     );
     check("创建页加载完成（模型卡可点击）", modelsLoaded === true);
 
     // ---------- 需求 2：选择 Anima 模型 ----------
     await run(`(() => {
-      const card = document.querySelector('section [role="button"][tabindex="0"]');
+      const card = document.querySelector('section [data-model-cover-select]');
       if (card) card.click();
       return true;
     })()`);
@@ -449,24 +472,41 @@ app.whenReady().then(async () => {
     check("模型列表包含 Anima 模型", dialogListing.listsAnima === true);
 
     const modelPicked = await selectCardByTitle("Anima");
+    check("主模型默认单选，footer 始终存在，选择后确认才提交", await run("Boolean(document.querySelector('[data-resource-confirm]'))&&document.querySelector('[data-resource-selection-mode=multiple]').getAttribute('aria-checked')==='false'"));
+    await run("document.querySelector('[data-resource-confirm]').click()");
     await sleep(800);
     check(`已选择 Anima 模型 ${ANIMA_MODEL}`, modelPicked === true);
     const modelCardText = await run(`(() => {
-      const card = document.querySelector('section [role="button"][tabindex="0"]');
+      const card = document.querySelector('section [data-model-cover-select]');
       return card ? card.innerText.replace(/\\s+/g, ' ').slice(0, 120) : '';
     })()`);
     check("模型卡显示已选模型", modelCardText.includes("Anima"), modelCardText);
 
     // ---------- 需求 3 前置：添加 2 个 LoRA ----------
+    await clickByText("添加扩展");
+    await sleep(1000);
+    const loraCategories = await run(`(() =>
+      Array.from(document.querySelectorAll('h3')).map((node) => node.textContent.trim())
+    )()`);
+    check("Anima LoRA 以第二层目录作为分类", loraCategories.includes(LORA_CATEGORY), loraCategories.join(", "));
+    check("Anima LoRA 不混入 Minimax 系列", !loraCategories.includes("Minimax"), loraCategories.join(", "));
+    await run(`(() => {
+      const btn = document.querySelector('[aria-label="关闭"]');
+      if (btn) btn.click();
+      return Boolean(btn);
+    })()`);
+    await sleep(500);
+
     const addLora = async (folderName) => {
       await clickByText("添加扩展");
       await sleep(1000);
-      const picked = await selectCardByTitle(folderName);
+      const picked = await selectLoraModel(folderName);
       await sleep(900);
       const stillOpen = await dialogOpen("extension-select-dialog-title");
       if (stillOpen) {
+        check("图片 LoRA 与视频一致，单选后保持分类库并等待确定", await run("document.querySelector('[data-resource-selection-mode=multiple]').getAttribute('aria-checked')==='false'&&Boolean(document.querySelector('[data-resource-confirm]'))"));
         await run(`(() => {
-          const btn = document.querySelector('[aria-label="关闭"]');
+          const btn = document.querySelector('[data-resource-confirm]');
           if (btn) btn.click();
           return true;
         })()`);
@@ -481,6 +521,16 @@ app.whenReady().then(async () => {
     check(`已添加扩展 ${LORA_FOLDER_B}`, pickedB === true);
     const selectedRows = await run(`(() => document.querySelectorAll('button[aria-label^="移除 "]').length)()`);
     check("扩展行显示 2 个已选 LoRA", selectedRows === 2, `${selectedRows}`);
+    // 单选确定只追加所选模型，不清空以前添加的 LoRA；图片同样能切到多选统一确认。
+    await clickByText("添加扩展"); await sleep(700);
+    await run("document.querySelector('[data-resource-selection-mode=multiple]').click();document.querySelector('[data-lora-model-picker]').click()");
+    await waitFor("Boolean(document.querySelector('[data-lora-model-option]'))", 3000);
+    check("选择模式只在外层搜索左侧显示，分类内不重复显示", await run("document.querySelector('[data-resource-selection-mode=multiple]').getAttribute('aria-checked')==='true'&&!document.querySelector('[aria-labelledby=model-version-dialog-title] [data-resource-selection-mode]')"));
+    await run("[...document.querySelectorAll('[data-lora-model-option]')].find(el=>el.textContent.includes("+JSON.stringify(LORA_FOLDER_B)+")).querySelector('[data-resource-model-select]').click()");
+    check("图片多选不自动关闭，确认前不改已添加列表", await run("Boolean(document.querySelector('[aria-labelledby=model-version-dialog-title]'))&&document.querySelectorAll('[data-selected-extension]').length===2"));
+    await run("document.querySelector('[data-resource-model-done]').click();document.querySelector('[data-resource-confirm]').click()");
+    await sleep(500);
+    check("图片批量确认去重并保留已有权重", await run("document.querySelectorAll('[data-selected-extension]').length===2"));
 
     // ---------- 需求 1：采样器 / 调度器 ----------
     await clickByText("高级设置");
@@ -986,7 +1036,7 @@ app.whenReady().then(async () => {
     // ---------- 提示词教程：入口位于「模型（UNet）选择器」下方，随系列切换 ----------
     const guidePlacement = await run(`(() => {
       const btn = document.querySelector('[data-prompt-guide-series]');
-      const modelCard = document.querySelector('section [role="button"][tabindex="0"]');
+      const modelCard = document.querySelector('section [data-model-cover-select]');
       const promptLabel = Array.from(document.querySelectorAll('label')).find(
         (l) => l.textContent.trim() === '提示词'
       );
@@ -1148,8 +1198,8 @@ app.whenReady().then(async () => {
     check("切回 Anima 后采样器/调度器取 Anima 基础工作流默认（euler_ancestral + simple）",
       animaDefaults.sampler === "euler_ancestral" && animaDefaults.scheduler === "simple",
       `${animaDefaults.sampler} / ${animaDefaults.scheduler}`);
-    check("切回 Anima 后 CFG 取 Anima 基础工作流默认（1）",
-      Number(animaDefaults.cfg) === 1, animaDefaults.cfg);
+    check(`切回 Anima 后 CFG 取 Anima 基础工作流默认（${animaTemplateCfg}）`,
+      Number(animaDefaults.cfg) === animaTemplateCfg, animaDefaults.cfg);
     const animaSize = await run(`(() => ({
       preset: document.querySelector('[data-size-preset][aria-pressed="true"]')?.getAttribute('data-size-preset') ?? '',
       width: Number(document.querySelector('[aria-label="自定义宽度"]')?.value ?? 0),
@@ -1204,6 +1254,13 @@ app.whenReady().then(async () => {
     })()`);
     await sleep(300);
 
+    await run(`(() => {
+      const el = document.querySelector('[data-size-scale] input[type=range]');
+      Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set.call(el, '0.5');
+      el.dispatchEvent(new Event('input', { bubbles: true }));
+    })()`);
+    await sleep(300);
+    check("图片缩放同步显示缩放后的宽高", await run("document.querySelector('[data-size-dimensions]').textContent==='752 × 600'"));
     await clickByText("生成");
     await waitFor(`${capturedPrompts.length} > 0 || document.body.innerText.includes('生成中')`, 20000);
     await sleep(1500);
@@ -1221,8 +1278,8 @@ app.whenReady().then(async () => {
       prompt["5"]?.inputs?.scheduler === "karras", String(prompt["5"]?.inputs?.scheduler));
 
     // 图片尺寸：自定义宽高写入 EmptyLatentImage(3)
-    check("自定义宽高写入 EmptyLatentImage",
-      Number(prompt["3"]?.inputs?.width) === 1500 && Number(prompt["3"]?.inputs?.height) === 1200,
+    check("自定义宽高经共用缩放后写入 EmptyLatentImage",
+      Number(prompt["3"]?.inputs?.width) === 752 && Number(prompt["3"]?.inputs?.height) === 600,
       `${prompt["3"]?.inputs?.width}×${prompt["3"]?.inputs?.height}`);
 
     // 反向提示词：预设内容进入负面 CLIPTextEncode(4)
@@ -1242,7 +1299,7 @@ app.whenReady().then(async () => {
     check("工作流包含输出节点（不会触发 prompt_no_outputs）",
       outputNodes.length >= 1,
       outputNodes.map(([id, node]) => `${id}:${node.class_type}`).join(", "));
-    const saveNode = outputNodes.find(([, node]) => node.class_type === "SaveImage");
+    const saveNode = outputNodes.find(([, node]) => node.class_type === "SaveImage" || node.class_type === "PreviewImage");
     check("输出节点连接到 VAE 解码结果（images → 9:0）",
       linkTarget(saveNode?.[1]?.inputs?.images) === "9",
       JSON.stringify(saveNode?.[1]?.inputs?.images ?? null));
@@ -1323,7 +1380,7 @@ app.whenReady().then(async () => {
       remixed ? JSON.stringify(remixed.loras) : "解析失败（null）");
     check("从图片 Meta 解析出采样参数与尺寸",
       Boolean(remixed) && remixed.sampler === "uni_pc_bh2" && remixed.scheduler === "karras" &&
-        remixed.width === 1500 && remixed.height === 1200,
+        remixed.width === 752 && remixed.height === 600,
       remixed
         ? JSON.stringify({
             sampler: remixed.sampler,
@@ -1371,6 +1428,12 @@ app.whenReady().then(async () => {
     const removedCount = await run(`(() => document.querySelectorAll('button[aria-label^="移除 "]').length)()`);
     check("已移除全部 LoRA 扩展", removedCount === 0, `剩余 ${removedCount}`);
 
+    await run(`(() => {
+      const el = document.querySelector('[data-size-scale] input[type=range]');
+      Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set.call(el, '1');
+      el.dispatchEvent(new Event('input', { bubbles: true }));
+    })()`);
+    await sleep(300);
     await clickByText("生成");
     await waitFor(`${capturedPrompts.length} > 1`, 20000);
     await sleep(1200);
@@ -1378,6 +1441,7 @@ app.whenReady().then(async () => {
     const second = capturedPrompts[1];
     check("第二次生成请求已截获", Boolean(second));
     if (second) {
+      check("图片倍率恢复为 1 后提交原始尺寸", second["3"].inputs.width === 1500 && second["3"].inputs.height === 1200);
       const secondLoras = Object.values(second).filter(
         (node) => node.class_type === "LoraLoaderModelOnly"
       );
@@ -1387,6 +1451,16 @@ app.whenReady().then(async () => {
           Number(second["5"].inputs.model[1]) === 0,
         JSON.stringify(second["5"]?.inputs?.model));
     }
+
+    const renderPhaseUpdateErrors = consoleErrors.filter((line) =>
+      line.includes("Cannot update a component") &&
+      line.includes("while rendering a different component")
+    );
+    check(
+      "二创回填不会在 CreatePage 渲染期间更新其它组件",
+      renderPhaseUpdateErrors.length === 0,
+      renderPhaseUpdateErrors.slice(0, 2).join(" | ")
+    );
 
     if (consoleErrors.length > 0) {
       console.log("--- 渲染进程 console 错误 ---");

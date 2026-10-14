@@ -7,6 +7,8 @@ export type ExtensionCover = ImageAsset | string;
 export type ExtensionVersion = {
   id: string;
   label: string;
+  detailLabel?: string;
+  cover?: ExtensionCover;
 };
 
 export type CreateExtension = {

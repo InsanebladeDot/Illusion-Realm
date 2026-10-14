@@ -5,7 +5,7 @@ import { nonEmptyPathSchema } from './common.schema';
 /** models:scan */
 export const ScanModelsArgsSchema = z.tuple([
   nonEmptyPathSchema,
-  z.enum(['checkpoint', 'lora']),
+  z.enum(['checkpoint', 'lora', 'embedding']),
 ]);
 
 /** files:readImageDataUrl */

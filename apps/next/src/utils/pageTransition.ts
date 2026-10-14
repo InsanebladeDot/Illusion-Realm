@@ -6,9 +6,9 @@
  * startViewTransition(callback) 的时序正好是：拍旧快照 → 跑 callback（这里做路由跳转）→
  * 拍新快照，于是两侧都能动，且不用自己维护「退场中的旧页面」这份状态。
  *
- * 只动内容区、不动导航：快照默认包含整页（导航会跟着一起滑）。这里在过渡期间给两处加
- * view-transition-name —— 内容区 page-content、侧边栏 app-sidebar —— 并在 CSS 里让导航那一组
- * animation: none。名字只在过渡期间挂上（靠 html.page-transition 类）：常驻的话，主题波纹那条
+ * 只动内容区、不动导航与顶栏：过渡期间为内容区 page-content、侧边栏 app-sidebar 和
+ * 顶栏 window-titlebar 单独命名快照，导航与顶栏不播动画，顶栏组在所有页面快照之上。
+ * 名字只在过渡期间挂上（靠 html.page-transition 类）：常驻的话，主题波纹那条
  * 「裁剪 root 新快照」的动画会把这些元素从 root 里摘出去，波纹就盖不到它们了。
  *
  * 不支持 View Transitions / 用户要求减少动效：直接跳，不留痕迹。

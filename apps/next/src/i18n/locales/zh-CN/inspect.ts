@@ -48,6 +48,11 @@ export const inspect = {
   metaField: {
     copied: "{key} 已复制",
     copyLabel: "复制{key}",
+    rawView: "原始",
+    jsonView: "格式化 JSON",
+    viewMode: "查看方式",
+    expandLabel: "弹窗查看{key}",
+    notJsonHint: "当前内容不是有效 JSON，可使用原始查看",
     /**
      * 我们合成字段的**展示文案**。字段标识见
      * `utils/sdImageInspector/metaFieldId.ts` —— 标识负责匹配、这里负责显示，

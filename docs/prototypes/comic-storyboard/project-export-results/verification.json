@@ -1,0 +1,17 @@
+{
+  "status": "passed",
+  "checks": [
+    "Actual page button exports named PNG",
+    "1440px export button remains in viewport",
+    "390px export button remains in viewport",
+    "PNG is 1200 by 1600",
+    "Page margin is opaque white",
+    "Cover cropping matches centered object-cover",
+    "Outside polygon remains white",
+    "Inside polygon contains its image",
+    "Last panel overlays previous panel",
+    "Selection guides and vertex handles excluded",
+    "Image failure produces no partial export",
+    "Image failure reenables export"
+  ]
+}

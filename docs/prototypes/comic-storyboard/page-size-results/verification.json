@@ -1,0 +1,26 @@
+{
+  "status": "passed",
+  "checks": [
+    "Default dimensions are editable",
+    "Width and height are independent",
+    "Resizing preserves panel geometry and content",
+    "Dimensions appear above canvas",
+    "Preview follows selected aspect ratio",
+    "Lock disables both inputs",
+    "Disabled inputs cannot mutate canvas dimensions",
+    "Dimensions and lock persist after reload",
+    "Versioned JSON export includes size and lock",
+    "PNG uses custom resolution while locked",
+    "Export feedback reports actual dimensions",
+    "Unlock reenables independent dimensions",
+    "320px size controls fit without horizontal overflow",
+    "Tall canvas retains full aspect ratio on mobile",
+    "Minimum dimensions enforced",
+    "Maximum dimensions enforced",
+    "Fractional pixels normalize to integer",
+    "Empty input retains last valid size",
+    "Current version round trips dimensions",
+    "Legacy drafts use default unlocked dimensions",
+    "Invalid stored dimensions fall back safely"
+  ]
+}

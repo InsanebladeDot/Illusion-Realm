@@ -6,6 +6,41 @@
  * 因此「翻了哪些」是可以机检的数字，不靠人记。
  */
 export const create = {
+  maskEditor: {
+    title: "Mask editor · Quick validation", import: "Import image", empty: "Import an image and paint the area to redraw",
+    hint: "Painted areas are used for redraw; color affects the preview only. Exports retain the original dimensions. Switching modes ends this edit.",
+    draw: "Draw", erase: "Erase", brush: "Brush", color: "Display color", undo: "Undo", redo: "Redo", clear: "Clear",
+    export: "Preview exports", upload: "Upload to ComfyUI", busy: "Processing…", download: "Download PNG",
+    mask: "Standalone grayscale mask", alphaImage: "Original + alpha mask",
+    exportHint: "Grayscale: white redraws, black protects. Read with LoadImageMask or ImageToMask. Alpha image: painted areas become transparent; ComfyUI LoadImage MASK reads them directly. Original RGB remains intact beneath transparent pixels.",
+    uploaded: "Uploaded. This example shows a LoadImage node and its IMAGE / MASK output references; a full redraw workflow is not connected yet.",
+    loadFailed: "Cannot read the image. Select a valid PNG, JPEG or WebP.", exportFailed: "Mask export failed. Please retry.",
+    tooLarge: "Quick validation supports up to 16 million pixels and 8192 pixels per side.",
+  },
+  promptAssistant: {
+    back: "Back",
+    title: "Prompt assistant", translate: "Translate to English", busy: "Processing…", provider: "Provider", customProvider: "Other platform / proxy",
+    presets: "Instructions", configure: "Connection settings", addPreset: "Add custom preset", copy: "Copy", undo: "Undo replacement",
+    translation: "English translation", anima: "Anima / Danbooru tags", instruction: "System instruction", presetName: "Preset name",
+    translationInstruction: "Translate the user's content into English. Preserve meaning, existing English tags, weights, parentheses and comma structure. Do not add or remove visual elements. Output only the translation without explanations, headings or code blocks.",
+    animaInstruction: "You are an Anima prompt engineer with ten years of experience in Danbooru tags. Convert the user's description into English comma-separated Danbooru-style tags. Preserve characters, actions, composition, background and weights. Do not invent visual elements. Output only tags without explanations or code blocks.",
+    endpoint: "API base URL", model: "Model ID", apiKey: "API Key", keyHint: "Leave blank to retain the saved key. GLM and each proxy endpoint have separate keys.",
+    keyConfigured: "Key configured", keyMissing: "No key configured", save: "Save", clearKey: "Clear key", saved: "Connection saved", deletedKey: "Key cleared",
+    docs: "GLM documentation / Get an API key", freeHint: "Flash models are included. Pricing and quotas follow the provider's current policies.",
+    empty: "Enter text to translate first", success: "Replaced with English. Undo is available.", copied: "Copied", conflict: "Input has changed. The result is retained for your review.",
+    result: "Result", apply: "Apply result", discard: "Discard result", undoConflict: "Text has been edited again. Copy it before undoing.",
+    invalid: "Check the model, endpoint and text length", missingKey: "Enter an API key under Settings → API keys → Prompt assistant", unauthorized: "Authentication failed (401): invalid or expired key. Check that the key belongs to the selected provider.",
+    forbidden: "Access denied (403): check your account status and access to the selected model.",
+    secretSaveFailed: "Failed to save or clear the key. Please retry.",
+    rateLimited: "Rate limit or quota exceeded. Try again later.", timeout: "Request timed out. Try again.", networkFailed: "Cannot reach the provider. Check the endpoint and connection.",
+    emptyResponse: "The model returned no usable text", truncatedResponse: "Output limit reached. Shorten the input and retry.", failed: "Processing failed. Check connection settings and retry.",
+    desktopOnly: "Use the prompt assistant in the desktop app", presetInvalid: "Enter a preset name and system instruction", presetSaved: "Custom preset saved",
+  },
+  generationTasks: {
+    title: "Generation tasks", active: "{count} active tasks", empty: "No generation tasks",
+    add: "Add generation task", progress: "Completed {completed} / {total} images", view: "View image",
+    status: { queued: "Queued", generating: "Generating", saving: "Saving", completed: "Completed", failed: "Failed" },
+  },
   "addImagesToFolderDialog": {
     "titlePrefix": "Add images to “",
     "description": "Pick from the images already generated locally and add them to this folder.",
@@ -90,7 +125,12 @@ export const create = {
     "selectAll": "Select all",
     "deleteUnsupported": "Delete is unavailable because the feature did not load — fully quit Electron and restart the app",
     "mediaLabelDefault": "Image",
-    "folderImageCount": "{count} images"
+    "folderImageCount": "{count} images",
+    "freeOutputMode": "自由选择输出目录",
+    "fixedOutputPath": "固定输出目录",
+    "chooseFixedOutput": "选择文件夹",
+    "fixedOutputOutsideRoot": "固定目录必须位于设置中的生成图片保存路径内",
+    "fixedOutputUpdated": "已更新固定输出目录"
   },
   "createModeTabs": {
     "image": "Image",
@@ -142,10 +182,14 @@ export const create = {
     "selected": "Selected",
     "viewInfo": "View extension info",
     "addToFavorites": "添加到收藏",
-    "versionUnit": "版本",
+    "versionUnit": "models",
     "select": "选择",
-    "versionDialogTitle": "选择 {name} 版本",
-    "versionDialogDescription": "选择使用哪个 {name} 版本进行生成"
+    "versionDialogTitle": "Select a {name} model"
+  },
+  resourceSelection: {
+    mode: "Model selection mode",
+    multiple: "Multiple",
+    oneMainModel: "This workflow supports one main model. Switch to single selection or keep only one model.",
   },
   "generateButton": {
     "label": "生成"
@@ -206,6 +250,8 @@ export const create = {
     "imageLabel": "图片"
   },
   "imageSizeSection": {
+    "scale": "Proportional scaling",
+    "scaleHint": "Scale the original dimensions by 0.1–1. Actual dimensions follow the model's pixel alignment rules.",
     "title": "图片尺寸",
     "custom": "自定义",
     "customLabel": "（自定义）",
@@ -220,20 +266,12 @@ export const create = {
   },
   "modelSelectDialog": {
     "title": "选择 {name} 模型",
-    "description": "仅加载 diffusion_models/Anima 目录下的模型文件；VAE 与 CLIP 已固定绑定，无需选择。",
     "emptyAnima": "未找到 Anima 模型，请先在设置页配置 Diffusion 模型地址（diffusion_models 目录）并扫描",
     "emptySdxl": "未找到 SDXL 模型，请先在设置页配置 Checkpoint 模型地址并在 checkpoint/SDXL 目录下放置模型",
-    "showDescription": "显示描述",
-    "searchPlaceholder": "搜索模型...",
-    "selected": "已选",
-    "select": "选择"
+    "searchPlaceholder": "搜索模型..."
   },
   "modelSeriesSelector": {
     "seriesLabel": "模型系列"
-  },
-  "modelVersionDialog": {
-    "selected": "已选择",
-    "select": "选择"
   },
   "negativePromptPresetDialog": {
     "fieldLabel": "反向提示词",
@@ -265,7 +303,6 @@ export const create = {
     "generateFailed": "ComfyUI 生成失败",
     "model": "模型",
     "addExtension": "添加扩展",
-    "editComingSoon": "Edit 功能即将推出",
     "generating": "正在生成…",
     "mediaVideo": "Videos",
     "mediaRoleCover": "Cover songs",
@@ -393,7 +430,6 @@ export const create = {
     "durationUnit": "秒",
     "durationLimitPrefix": "时长必须 ≤",
     "durationLimitSuffix": "秒。",
-    "startImage": "起始图片",
     "prompt": "提示词",
     "promptHint": "提示词说明",
     "promptPlaceholder": "描述动作和声音...",
@@ -406,6 +442,39 @@ export const create = {
     "uploadHint": "或上传文件"
   },
   "videoWorkflowSelect": {
-    "workflowLabel": "工作流"
-  }
+    "workflowLabel": "工作流",
+    minimaxReference: "MiniMax H3 Reference to Video",
+  },
+  videoModels: {
+    unavailable: "{label} not found in ComfyUI: {name}. Refresh and select an installed file. If names are duplicated, choose the exact path.",
+    videoVae: "Video VAE", audioVae: "Audio VAE",
+    selectLocal: "Choose a local Minimax model", selectLora: "Choose from the LoRA library", incompatible: "The Minimax workflow only accepts models and LoRAs in the Minimax category.", emptyMinimax: "No Minimax models found. Place models in the Minimax subfolder of your Diffusion model root and rescan.",
+    title: "Model loading settings", hint: "Uses workflow defaults. Change these when model names or locations differ. CLIP uses local text_encoders / clip folders; video and audio VAEs use the vae folder.",
+    unet: "UNet model", clip: "CLIP text encoder", vae: "VAE", lora: "LoRA",
+    default: "Workflow default · {name}", reset: "Restore workflow defaults", refresh: "Refresh available models",
+    listFailed: "Could not fetch ComfyUI models. Check the connection or restart the app and refresh. Local scan results and workflow defaults remain available.",
+    invalid: "Invalid model setting. Select a relative model path.", missingNode: "The video template is missing a required node or connection: {name}",
+  },
+  videoSettings: {
+    title: "Video generation settings", fps: "Frame rate (fps)",
+    actualDuration: "Actual duration about {seconds} seconds",
+    firstOnly: "First frame only", bothFrames: "First and last frames", firstFrame: "First frame", lastFrame: "Last frame",
+    referenceMissing: "This image has not been uploaded",
+    referenceUnavailable: "Image {number} has not been uploaded. Upload it or remove its reference.",
+    alignment: "Minimax frame counts follow 17n + 5. Duration, FPS and frames are linked; actual duration may vary slightly.",
+    invalid: "Invalid video settings. Check steps, FPS, duration and total frames.",
+  },
+  mediaReferences: {
+    title: "Search imported media",
+    empty: "No matching media. Import media into the current task first.",
+    image: "Image", video: "Video", audio: "Audio",
+  },
+  videoReferences: {
+    tabs: "Reference media type",
+    addFiles: "Add {kind} files",
+    batchHint: "Select or drop multiple files",
+    skipped: "Added {count} {kind} files; skipped {skipped} due to unsupported formats or the file limit.",
+    hint: "Import images, videos or audio as needed. Type @ in the prompt to choose media. Reference videos use frames only; import sound separately as reference audio.",
+    missing: "Media reference {token} is unavailable. Import the media or remove the reference.",
+  },
 } as const;

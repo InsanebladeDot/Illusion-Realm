@@ -5,6 +5,41 @@
  * 多个组件共用的同一句话请复用 `common.*`，不要在这里重复登记。
  */
 export const create = {
+  maskEditor: {
+    title: "蒙版编辑 · 快速验证", import: "导入图片", empty: "导入图片后涂抹需要重绘的区域",
+    hint: "涂抹区域用于重绘；显示颜色只影响预览。导出始终保持原图宽高，切换模式会结束本次编辑。",
+    draw: "涂抹", erase: "擦除", brush: "笔刷", color: "显示颜色", undo: "撤销", redo: "重做", clear: "清空",
+    export: "生成导出预览", upload: "上传到 ComfyUI 验证", busy: "正在处理…", download: "下载 PNG",
+    mask: "独立黑白 mask", alphaImage: "原图 + 透明通道 mask",
+    exportHint: "黑白 mask：白色重绘、黑色保留，请使用 LoadImageMask 或 ImageToMask 读取。透明通道原图：涂抹区域变透明，ComfyUI LoadImage 的 MASK 输出可直接读取；透明区域仍保留原图 RGB。",
+    uploaded: "上传成功。以下为 LoadImage 输入节点及 IMAGE / MASK 输出引用示例；尚未连接完整重绘工作流。",
+    loadFailed: "图片读取失败，请选择有效的 PNG、JPEG 或 WebP 图片。", exportFailed: "蒙版导出失败，请重试。",
+    tooLarge: "快速验证支持不超过 1600 万像素、单边不超过 8192 像素的图片。",
+  },
+  promptAssistant: {
+    back: "返回上一级",
+    title: "提示词助手", translate: "翻译为英文", busy: "正在处理…", provider: "选择供应商", customProvider: "其他平台 / 中转站",
+    presets: "预设文本", configure: "连接设置", addPreset: "添加自定义预设", copy: "复制", undo: "撤销替换",
+    translation: "英文翻译", anima: "Anima / Danbooru 标签", instruction: "系统指令", presetName: "预设名称",
+    translationInstruction: "将用户提供的内容翻译为英文，保留原意、现有英文标签、权重、括号及逗号结构。不要增删画面元素。只输出翻译结果，不要解释、标题或代码块。",
+    animaInstruction: "你是一位从业10年的Anima提示词工程师，擅长使用Danbooru标签描述用户想要的画面。将用户描述转换为英文、逗号分隔的Danbooru风格标签，保留角色、动作、构图、背景和原有权重，不添加用户未描述的画面元素。只输出标签，不要解释或代码块。",
+    endpoint: "API 地址", model: "模型 ID", apiKey: "API Key", keyHint: "留空保留已保存密钥；GLM 与不同中转地址各自保存密钥。",
+    keyConfigured: "已配置密钥", keyMissing: "尚未配置密钥", save: "保存", clearKey: "清除密钥", saved: "已保存连接设置", deletedKey: "已清除密钥",
+    docs: "GLM 官方文档 / 获取 API Key", freeHint: "内置 Flash 模型，实际费用和额度以供应商当前政策为准。",
+    empty: "请先输入需要翻译的内容", success: "已替换为英文，可撤销", copied: "已复制", conflict: "输入内容已变化，结果已保留，请确认后应用。",
+    result: "处理结果", apply: "应用结果", discard: "放弃结果", undoConflict: "内容已再次编辑，请先复制当前内容再撤销。",
+    invalid: "请检查模型、地址和文本长度", missingKey: "请先在设置 → API 密钥 → 提示词助手中填写 API Key", unauthorized: "认证失败（401）：密钥无效或已过期，请确认密钥属于当前供应商",
+    forbidden: "访问被拒绝（403）：请检查账户状态及所选模型的调用权限",
+    secretSaveFailed: "密钥保存或清除失败，请重试",
+    rateLimited: "请求过于频繁或额度不足，请稍后重试", timeout: "请求超时，请重试", networkFailed: "无法连接供应商，请检查 API 地址和网络",
+    emptyResponse: "模型未返回有效文本", truncatedResponse: "输出超过长度限制，请缩短输入后重试", failed: "处理失败，请检查连接设置后重试",
+    desktopOnly: "请在桌面端使用提示词助手", presetInvalid: "请填写预设名称和系统指令", presetSaved: "已保存自定义预设",
+  },
+  generationTasks: {
+    title: "生成任务", active: "{count} 个任务进行中", empty: "暂无生成任务",
+    add: "添加生成任务", progress: "已完成 {completed} / {total} 张", view: "查看图片",
+    status: { queued: "排队中", generating: "生成中", saving: "保存中", completed: "已完成", failed: "失败" },
+  },
   addImagesToFolderDialog: {
     titlePrefix: "添加图片到「",
     description: "从已生成的本地图片中批量选择，添加至该文件夹。",
@@ -94,6 +129,11 @@ export const create = {
     mediaLabelDefault: "图片",
     /** 文件夹行副信息：该文件夹里的图片数 */
     folderImageCount: "{count} 张",
+    freeOutputMode: "自由选择输出目录",
+    fixedOutputPath: "固定输出目录",
+    chooseFixedOutput: "选择文件夹",
+    fixedOutputOutsideRoot: "固定目录必须位于设置中的生成图片保存路径内",
+    fixedOutputUpdated: "已更新固定输出目录",
   },
   createModeTabs: {
     image: "图片",
@@ -149,10 +189,14 @@ export const create = {
     selected: "已选",
     viewInfo: "查看扩展信息",
     addToFavorites: "添加到收藏",
-    versionUnit: "版本",
+    versionUnit: "模型",
     select: "选择",
-    versionDialogTitle: "选择 {name} 版本",
-    versionDialogDescription: "选择使用哪个 {name} 版本进行生成",
+    versionDialogTitle: "选择 {name} 模型",
+  },
+  resourceSelection: {
+    mode: "模型选择方式",
+    multiple: "多选",
+    oneMainModel: "当前工作流只支持一个主模型，请切换为单选或仅保留一个模型。",
   },
   generateButton: {
     label: "生成",
@@ -214,6 +258,8 @@ export const create = {
     imageLabel: "图片",
   },
   imageSizeSection: {
+    scale: "等比例缩放",
+    scaleHint: "按原始宽高的 0.1–1 倍缩放，实际尺寸遵循模型的像素对齐规则。",
     title: "图片尺寸",
     custom: "自定义",
     customLabel: "（自定义）",
@@ -228,23 +274,14 @@ export const create = {
   },
   modelSelectDialog: {
     title: "选择 {name} 模型",
-    description:
-      "仅加载 diffusion_models/Anima 目录下的模型文件；VAE 与 CLIP 已固定绑定，无需选择。",
     emptyAnima:
       "未找到 Anima 模型，请先在设置页配置 Diffusion 模型地址（diffusion_models 目录）并扫描",
     emptySdxl:
       "未找到 SDXL 模型，请先在设置页配置 Checkpoint 模型地址并在 checkpoint/SDXL 目录下放置模型",
-    showDescription: "显示描述",
     searchPlaceholder: "搜索模型...",
-    selected: "已选",
-    select: "选择",
   },
   modelSeriesSelector: {
     seriesLabel: "模型系列",
-  },
-  modelVersionDialog: {
-    selected: "已选择",
-    select: "选择",
   },
   negativePromptPresetDialog: {
     fieldLabel: "反向提示词",
@@ -276,7 +313,6 @@ export const create = {
     generateFailed: "ComfyUI 生成失败",
     model: "模型",
     addExtension: "添加扩展",
-    editComingSoon: "Edit 功能即将推出",
     generating: "正在生成…",
     mediaVideo: "视频",
     mediaRoleCover: "翻唱",
@@ -410,7 +446,6 @@ export const create = {
     durationUnit: "秒",
     durationLimitPrefix: "时长必须 ≤",
     durationLimitSuffix: "秒。",
-    startImage: "起始图片",
     prompt: "提示词",
     promptHint: "提示词说明",
     promptPlaceholder: "描述动作和声音...",
@@ -425,5 +460,38 @@ export const create = {
   },
   videoWorkflowSelect: {
     workflowLabel: "工作流",
+    minimaxReference: "MiniMax H3 参考素材生视频",
+  },
+  videoModels: {
+    unavailable: "未在 ComfyUI 中找到{label}：{name}。请刷新模型列表并选择已安装的文件；同名文件存在多份时请指定准确路径。",
+    videoVae: "视频 VAE", audioVae: "音频 VAE",
+    selectLocal: "选择本地 Minimax 模型", selectLora: "从 LoRA 库选择", incompatible: "Minimax 工作流只能选择 Minimax 分类下的模型或 LoRA。", emptyMinimax: "未发现 Minimax 模型，请在 Diffusion 模型根目录下的 Minimax 子目录放入模型并重新扫描。",
+    title: "模型加载设置", hint: "默认沿用工作流配置；模型名称或位置不同时可修改。CLIP 从本地 text_encoders / clip 目录读取，视频与音频 VAE 从 vae 目录读取。",
+    unet: "UNet 模型", clip: "CLIP 文本编码器", vae: "VAE", lora: "LoRA",
+    default: "工作流默认 · {name}", reset: "恢复工作流默认", refresh: "刷新可选模型",
+    listFailed: "未能获取 ComfyUI 模型列表，请检查连接或重启软件后刷新。仍可使用本地扫描结果及工作流默认值。",
+    invalid: "模型设置无效，请选择模型相对路径。", missingNode: "视频模板缺少必要节点或连接：{name}",
+  },
+  videoSettings: {
+    title: "视频生成参数", fps: "帧率 (fps)",
+    actualDuration: "实际长度约 {seconds} 秒",
+    firstOnly: "仅首帧", bothFrames: "首尾帧", firstFrame: "首帧", lastFrame: "尾帧",
+    referenceMissing: "该图片尚未上传",
+    referenceUnavailable: "第 {number} 张图片尚未上传，请先上传图片或移除对应引用。",
+    alignment: "Minimax 帧数按 17n + 5 对齐，调整长度、帧率或帧数会同步计算，实际长度可能略有变化。",
+    invalid: "视频参数无效，请检查生成步数、帧率、长度和总帧数。",
+  },
+  mediaReferences: {
+    title: "搜索已导入素材",
+    empty: "没有匹配的素材，请先在当前任务中导入。",
+    image: "图片", video: "视频", audio: "音频",
+  },
+  videoReferences: {
+    tabs: "参考素材类型",
+    addFiles: "批量添加{kind}",
+    batchHint: "点击多选或拖入多个文件",
+    skipped: "已添加 {count} 个{kind}，另有 {skipped} 个因格式不支持或数量超限而跳过。",
+    hint: "按需导入图片、视频或音频，在提示词中输入 @ 选择素材。参考视频仅使用画面，声音请通过参考音频导入。",
+    missing: "素材引用 {token} 不存在，请先导入对应素材或移除引用。",
   },
 } as const;

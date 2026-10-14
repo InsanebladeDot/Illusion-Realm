@@ -37,6 +37,9 @@ import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { applyThemeSignals } from "@/utils/themeSignals";
 import { DEFAULT_THEME_PREFERENCE } from "@/utils/themeResolution";
 import { subscribeAgentHostTools } from "@/utils/agentHostTools";
+import { subscribeModelDownloads } from "@/stores/useModelDownloadStore";
+import { WindowTitlebar } from "@/components/window-titlebar";
+import { applyWindowChromeSignals, subscribeWindowChromeSignals } from "@/utils/window-chrome";
 
 /**
  * 语言信号写点已抽到 `@/utils/localeSignals`（唯一写点，切换弹框与这里共用）。
@@ -90,6 +93,7 @@ applyLocaleSignals(initialLocaleResolution.locale as Locale);
  * 与 locale 一样的「至多一次单向跳变」，理由见 docs/locale-hydration.md。
  */
 applyThemeSignals(DEFAULT_THEME_PREFERENCE);
+applyWindowChromeSignals();
 
 export function AppShell({
   children,
@@ -125,6 +129,8 @@ export function AppShell({
    * 挂在 AppShell 而不是 Agent 页：切页后订阅若被卸载，主进程要白等到工具超时才收场。
    */
   useEffect(() => subscribeAgentHostTools(), []);
+  useEffect(() => subscribeModelDownloads(), []);
+  useEffect(() => subscribeWindowChromeSignals(), []);
 
   useEffect(() => {
     void (async () => {
@@ -179,7 +185,9 @@ export function AppShell({
   }, []);
 
   return (
-    <div className="min-h-[100dvh] bg-background text-foreground">
+    <div className="min-h-[100dvh] bg-background pt-[var(--window-chrome-height)] text-foreground">
+      {/* 界面：全局标题栏与下载管理入口 */}
+      <WindowTitlebar />
       <Sidebar />
       <main
         id="main-content"
@@ -187,8 +195,8 @@ export function AppShell({
           "overflow-x-hidden transition-[padding-left] duration-300 ease-in-out",
           "pl-0 pb-[var(--mobile-nav-height)] md:pb-0",
           fillViewport
-            ? "h-[100dvh] overflow-hidden"
-            : "min-h-[100dvh] overflow-y-auto",
+            ? "h-[calc(100dvh-var(--window-chrome-height))] overflow-hidden"
+            : "min-h-[calc(100dvh-var(--window-chrome-height))] overflow-y-auto",
           expanded ? "md:pl-[220px]" : "md:pl-[56px]"
         )}
         style={{ "--mobile-nav-height": `${MOBILE_BOTTOM_NAV_HEIGHT}px` } as React.CSSProperties}

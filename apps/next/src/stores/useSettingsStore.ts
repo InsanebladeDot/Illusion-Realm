@@ -100,13 +100,11 @@ async function collectModelsFromPaths(paths: SettingsPaths) {
   const batches: LocalModel[] = [];
 
   /**
-   * 放大模型 / VAE / CLIP 等不能作为扩散模型使用：
-   * 检索路径常常直接指向整个 ComfyUI models 目录，这里先剔除，
-   * 避免它们出现在模型选择弹窗并被误提交为 unet_name / ckpt_name。
-   * 注意只对 checkpoint 类型生效——LoRA 目录里的文件本身是合法扩展。
+   * 保留视频加载所需的 CLIP / text_encoders / VAE；主模型选择器独立排除这些资源。
+   * 放大模型等其他辅助资源继续按现有规则过滤。
    */
   const isUsableModel = (model: LocalModel) =>
-    model.type !== "checkpoint" || !isNonDiffusionModelPath(model.filePath);
+    model.type !== "checkpoint" || !isNonDiffusionModelPath(model.filePath) || /[/\\](?:clip|text_encoders|vae)(?:[/\\]|$)/i.test(model.filePath);
 
   // 检索路径优先：只要填写了检索路径，就只在检索路径下搜索，忽略其他参数
   if (paths.searchPath) {
@@ -146,6 +144,17 @@ async function collectModelsFromPaths(paths: SettingsPaths) {
     );
   }
 
+  if (paths.diffusionModelsPath) {
+    const base = paths.diffusionModelsPath.replace(/[/\\]+$/, "");
+    const parent = base.replace(/[/\\][^/\\]+$/, "");
+    if (parent !== base) {
+      for (const name of ["text_encoders", "clip", "vae"]) {
+        const root = `${parent}/${name}`;
+        const scanned = await scanLocalModels(root, "checkpoint");
+        batches.push(...annotateCategory(scanned.filter(isUsableModel), root));
+      }
+    }
+  }
   return mergeLocalModels(batches);
 }
 

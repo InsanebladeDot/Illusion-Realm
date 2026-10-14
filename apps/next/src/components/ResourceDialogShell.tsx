@@ -138,6 +138,7 @@ export function ResourceDialogShell({
           isCompact
             ? {
                 left: navOffset,
+                top: "var(--window-chrome-height)",
                 paddingTop: "max(1rem, env(safe-area-inset-top))",
                 paddingBottom: "env(safe-area-inset-bottom)",
               }

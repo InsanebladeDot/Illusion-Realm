@@ -46,21 +46,21 @@ export function GifSettingsPanel({
     fps >= GIF_SIZE_WARNING_FPS && width >= GIF_SIZE_WARNING_WIDTH;
 
   return (
-    <section className="space-y-5 rounded-xl border border-gray-200 bg-white p-5">
-      <header className="flex items-center justify-between border-b border-gray-100 pb-3">
-        <h3 className="flex items-center gap-2 text-base font-semibold text-gray-900">
-          <Gauge className="h-4 w-4 text-purple-600" />
+    <section className="space-y-5 rounded-xl border border-border bg-background p-5">
+      <header className="flex items-center justify-between border-b border-border/60 pb-3">
+        <h3 className="flex items-center gap-2 text-base font-semibold text-foreground">
+          <Gauge className="h-4 w-4 text-sky-700 dark:text-sky-300" />
           {t("toolBox.gif.settings.title")}
         </h3>
-        <span className="text-xs text-gray-500">
+        <span className="text-xs text-muted-foreground">
           {width}×{outputHeight} · {fps} FPS
         </span>
       </header>
 
       <div className="space-y-2">
-        <div className="flex items-center justify-between text-sm font-medium text-gray-800">
+        <div className="flex items-center justify-between text-sm font-medium text-foreground">
           <span>{t("toolBox.gif.settings.frameRateLabel")}</span>
-          <span className="text-xs font-normal text-gray-500">
+          <span className="text-xs font-normal text-muted-foreground">
             {t("toolBox.gif.settings.recommendedPrefix")} {RECOMMENDED_GIF_FPS}{" "}
             {t("toolBox.gif.settings.maxPrefix")} {GIF_FPS_MAX}
           </span>
@@ -75,7 +75,7 @@ export function GifSettingsPanel({
           ariaLabel={t("toolBox.gif.settings.fpsAriaLabel")}
           onChange={onFpsChange}
         />
-        <p className="text-xs text-gray-500">
+        <p className="text-xs text-muted-foreground">
           {t("toolBox.gif.settings.customHintPrefix")}
           {GIF_FPS_MAX}
           {t("toolBox.gif.settings.customHintSuffix")}{" "}
@@ -85,12 +85,12 @@ export function GifSettingsPanel({
       </div>
 
       <div className="space-y-2">
-        <div className="flex items-center justify-between text-sm font-medium text-gray-800">
+        <div className="flex items-center justify-between text-sm font-medium text-foreground">
           <span className="flex items-center gap-2">
             <Scaling className="h-4 w-4 text-emerald-600" />
             {t("toolBox.gif.settings.resolutionLabel")}
           </span>
-          <span className="text-xs font-normal text-gray-500">
+          <span className="text-xs font-normal text-muted-foreground">
             {width} × {outputHeight}（{scalePercent}%）
           </span>
         </div>
@@ -102,16 +102,16 @@ export function GifSettingsPanel({
           value={width}
           onChange={(event) => onWidthChange(Number(event.target.value))}
           aria-label={t("toolBox.gif.settings.widthAriaLabel")}
-          className="h-2 w-full cursor-pointer appearance-none rounded-full bg-gray-200 accent-blue-600"
+          className="h-2 w-full cursor-pointer appearance-none rounded-full bg-muted accent-blue-600"
         />
-        <div className="flex items-center justify-between text-[11px] text-gray-500">
+        <div className="flex items-center justify-between text-[11px] text-muted-foreground">
           <span>{GIF_MIN_WIDTH}px</span>
           <span>{t("toolBox.gif.settings.maxWidthPrefix")} {sourceWidth || "—"}px）</span>
         </div>
       </div>
 
       {sizeWarning && (
-        <p className="flex items-start gap-2 rounded-lg bg-amber-50 p-3 text-xs text-amber-700">
+        <p className="flex items-start gap-2 rounded-lg bg-amber-500/10 p-3 text-xs text-amber-700 dark:text-amber-300">
           <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" />
           {t("toolBox.gif.settings.sizeWarning")}
         </p>

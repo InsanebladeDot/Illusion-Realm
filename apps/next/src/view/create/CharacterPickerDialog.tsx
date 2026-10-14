@@ -215,7 +215,7 @@ export function CharacterPickerDialog({
   const renderGrid = () => {
     if (characters.length === 0) {
       return (
-        <div className="flex min-h-[200px] items-center justify-center rounded-xl border border-[#E8E8E8] bg-white px-6 text-center text-sm text-[#9CA3AF]">
+        <div className="flex min-h-[200px] items-center justify-center rounded-xl border border-border bg-background px-6 text-center text-sm text-muted-foreground">
           {favoritesOnly
             ? t("characters.picker.emptyFavorites")
             : selectedOnly
@@ -258,7 +258,7 @@ export function CharacterPickerDialog({
         open={open}
         title={
           <span className="flex items-center gap-2">
-            <Users className="h-4 w-4 text-[#8B5CF6]" />
+            <Users className="h-4 w-4 text-foreground" />
             {t("characters.picker.title")}
           </span>
         }
@@ -304,13 +304,13 @@ export function CharacterPickerDialog({
           <div className="flex flex-wrap items-center justify-between gap-2">
             <span
               data-character-selected-count
-              className="min-w-0 truncate text-xs text-[#666666]"
+              className="min-w-0 truncate text-xs text-muted-foreground"
             >
               {t("characters.picker.selectedPrefix")}
-              <span className="font-semibold text-[#222222]">{selected.length}</span>
+              <span className="font-semibold text-foreground">{selected.length}</span>
               {t("characters.picker.roleUnit")}
               {selected.length > 0 && (
-                <span className="ml-2 text-[11px] text-[#999999]">
+                <span className="ml-2 text-[11px] text-muted-foreground">
                   {selected.map((item) => item.name).join("、")}
                 </span>
               )}
@@ -324,7 +324,7 @@ export function CharacterPickerDialog({
                 type="button"
                 onClick={() => onOpenChange(false)}
                 className={cn(
-                  "inline-flex h-9 items-center justify-center rounded-lg bg-white px-4 text-sm font-medium text-[#333333] transition-colors hover:bg-[#F8F9FA]",
+                  "inline-flex h-9 items-center justify-center rounded-lg bg-background px-4 text-sm font-medium text-foreground transition-colors hover:bg-muted",
                   INPUT_BORDER_CLASS
                 )}
               >
@@ -335,7 +335,7 @@ export function CharacterPickerDialog({
                 data-character-apply-trigger
                 disabled={selected.length === 0}
                 onClick={() => handleApply(false)}
-                className="inline-flex h-9 items-center justify-center rounded-lg border border-[#C4B5FD] bg-white px-4 text-sm font-medium text-[#6D28D9] transition-colors hover:bg-[#F5F3FF] disabled:cursor-not-allowed disabled:opacity-45"
+                className="inline-flex h-9 items-center justify-center rounded-lg border border-accent-stroke bg-background px-4 text-sm font-medium text-foreground transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-45"
               >
                 {t("characters.picker.applyTrigger")}
               </button>
@@ -376,7 +376,7 @@ export function CharacterPickerDialog({
         {/* Main（展示区）：与左侧 Saber 完全独立的区域，卡片区滚动、分页固定在卡片区下方 */}
         <section
           data-character-main
-          className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-[#F8F9FA]"
+          className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-muted"
         >
           <div
             ref={scrollAreaRef}
@@ -384,13 +384,13 @@ export function CharacterPickerDialog({
             className="min-h-0 flex-1 overflow-y-auto p-4 [scrollbar-width:thin]"
           >
             {error ? (
-              <div className="mb-3 rounded-lg border border-[#FECACA] bg-[#FEF2F2] px-3 py-2 text-sm text-[#B91C1C]">
+              <div className="mb-3 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-700 dark:text-red-300">
                 {error}
               </div>
             ) : null}
 
             {pending && characters.length === 0 ? (
-              <div className="flex min-h-[200px] items-center justify-center text-[#9CA3AF]">
+              <div className="flex min-h-[200px] items-center justify-center text-muted-foreground">
                 <Loader2 className="h-5 w-5 animate-spin" />
               </div>
             ) : (
@@ -402,7 +402,7 @@ export function CharacterPickerDialog({
           {showPagination && (
             <div
               data-character-pagination-bar
-              className="shrink-0 border-t border-[#EFEFEF] bg-[#F8F9FA] px-4 py-3"
+              className="shrink-0 border-t border-border bg-muted px-4 py-3"
             >
               <CharacterPagination
                 page={data.page}

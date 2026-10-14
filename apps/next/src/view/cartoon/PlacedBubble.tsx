@@ -495,7 +495,7 @@ export function PlacedBubble({
             >
               {selected ? (
                 <div
-                  className="pointer-events-none absolute inset-0 border border-dashed border-violet-500/90"
+                  className="pointer-events-none absolute inset-0 border border-dashed border-sky-500/90"
                   aria-hidden
                 />
               ) : null}

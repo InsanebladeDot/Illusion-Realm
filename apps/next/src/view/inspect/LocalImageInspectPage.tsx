@@ -129,7 +129,7 @@ function InspectResultPanel({
             </p>
             <div className="space-y-2">
               {embeddedMeta.fields.map((field) => (
-                <MetaFieldRow key={field.key} field={field} />
+                <MetaFieldRow key={`${source?.fileName}:${field.key}`} field={field} />
               ))}
             </div>
           </div>

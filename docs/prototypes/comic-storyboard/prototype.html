@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>相片撕裂 · 漫画分镜原型</title>
+  <link rel="stylesheet" href="prototype.css">
+  <script defer src="prototype-data.js"></script>
+  <script defer src="torn-geometry.js"></script>
+  <script defer src="prototype.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <div><h1>相片撕裂跨三格</h1><span class="subtle">野营 · 分镜布局原型</span></div>
+    <div class="commands">
+      <button id="undo" title="撤销" aria-label="撤销">↶</button>
+      <button id="redo" title="重做" aria-label="重做">↷</button>
+      <button id="reset" title="恢复初始布局">重置</button>
+      <button id="export-json">布局 JSON</button>
+      <button id="export-png" class="primary">导出 PNG</button>
+    </div>
+  </header>
+  <nav class="mobile-tabs" aria-label="工作区">
+    <button id="show-stage" aria-pressed="true">画布</button>
+    <button id="show-settings" aria-pressed="false">设置</button>
+  </nav>
+  <main class="workspace">
+    <section class="stage" aria-label="页面画布">
+      <div class="stage-bar"><span>第 1 页</span><span class="subtle">1200 × 1600</span><span id="save-state">未修改</span></div>
+      <div class="canvas-scroll"><div class="canvas-wrap">
+        <canvas id="page" width="1200" height="1600" aria-label="三张底层分镜与一张斜切覆盖格"></canvas>
+        <canvas id="selection" width="1200" height="1600" aria-hidden="true"></canvas>
+      </div></div>
+      <div class="stage-footer"><span id="selection-summary">D · 物件揭示</span><span id="load-state" role="status">载入素材…</span></div>
+    </section>
+    <aside class="settings" aria-label="分镜设置">
+      <section class="setting-section">
+        <h2>图层</h2>
+        <div id="layers" class="layer-list"></div>
+        <label class="check"><input id="overlay-visible" type="checkbox" checked>显示覆盖格 D</label>
+      </section>
+      <section class="setting-section">
+        <h2>分镜轮廓 <span id="edge-target" class="subtle">D</span></h2>
+        <div class="segmented" aria-label="边缘样式">
+          <button data-edge="torn" aria-pressed="true">随机裂口</button>
+          <button data-edge="straight" aria-pressed="false">直线边缘</button>
+        </div>
+        <label class="range-label" for="edge-preset">边缘预设</label>
+        <select id="edge-preset">
+          <option value="photo">手撕相片 · 大小缺口</option>
+          <option value="memory">毛边回忆 · 细碎纸边</option>
+          <option value="impact">冲击碎裂 · 深切角口</option>
+        </select>
+        <label class="check"><input id="irregular-bases" type="checkbox" checked>底格使用不规则多边形</label>
+        <label class="range-label" for="tear-roughness">撕裂幅度 <output id="roughness-value">28 px</output></label>
+        <input id="tear-roughness" type="range" min="8" max="44" step="2" value="28">
+        <button id="new-tear" title="重新生成撕裂轮廓" style="margin:12px 0">换一道裂口</button>
+        <button id="apply-all-edges" title="将当前边缘预设应用到全部分镜">应用到全部格</button>
+        <h2>覆盖格 D 位置</h2>
+        <div class="segmented" aria-label="覆盖方向">
+          <button data-direction="down-right" aria-pressed="true" title="从左上斜向右下">↘ 左上到右下</button>
+          <button data-direction="down-left" aria-pressed="false" title="从右上斜向左下">↙ 右上到左下</button>
+        </div>
+        <label class="range-label" for="band-width">覆盖宽度 <output id="width-value">180 px</output></label>
+        <input id="band-width" type="range" min="80" max="480" step="10" value="180">
+        <label class="range-label" for="band-offset">水平位置 <output id="offset-value">0 px</output></label>
+        <input id="band-offset" type="range" min="-260" max="260" step="10" value="0">
+      </section>
+      <section class="setting-section">
+        <h2>底格可见面积</h2>
+        <div id="visibility"></div>
+        <p id="occlusion-status" class="status" role="status"></p>
+      </section>
+      <section class="setting-section">
+        <h2>阅读顺序</h2>
+        <select id="reading-order" aria-label="阅读顺序">
+          <option value="impact">A → B → D → C</option>
+          <option value="linear">A → B → C → D</option>
+          <option value="early">A → D → B → C</option>
+        </select>
+        <p class="order-summary">叠放：A / B / C 在底，D 在顶</p>
+      </section>
+      <section class="setting-section selected-details">
+        <h2 id="detail-title">D · 物件揭示</h2>
+        <p id="detail-description"></p>
+        <button id="back-to-stage" class="mobile-return">返回画布</button>
+      </section>
+    </aside>
+  </main>
+  <script>window.prototypeErrors = []; window.addEventListener('error', e => window.prototypeErrors.push(e.message));</script>
+</body>
+</html>

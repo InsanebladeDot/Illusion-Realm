@@ -1,4 +1,4 @@
-export type LocalModelType = "checkpoint" | "lora";
+export type LocalModelType = "checkpoint" | "lora" | "embedding";
 
 export type LocalModelVersion = {
   id: string;

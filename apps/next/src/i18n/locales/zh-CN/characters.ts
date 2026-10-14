@@ -108,6 +108,9 @@ export const characters = {
     emptySelected: "还没有选择任何{unit}",
     empty: "没有找到匹配的结果",
     uncategorized: "未分类",
+    displayModeLabel: "显示方式",
+    cardMode: "卡片",
+    textMode: "仅文本",
     /** 左侧「分类」区标题（可选 prop 的回退值） */
     sectionTitleDefault: "分类",
   },

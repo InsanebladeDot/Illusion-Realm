@@ -5,6 +5,7 @@ import { ChevronRight } from "lucide-react";
 import { useTranslation } from "@/i18n";
 import { CHARACTER_COPYRIGHT_FILTERS } from "@/data/characterFilters";
 import { cn } from "@/utils/cn";
+import { ACCENT_PILL_ACTIVE_CLASS, ACCENT_SELECTED_SOFT_CLASS } from "@/utils/layout";
 
 type CharacterFilterSidebarProps = {
   /** 名称首字母（""=全部） */
@@ -20,8 +21,6 @@ type CharacterFilterSidebarProps = {
   onSelectedOnlyChange: (value: boolean) => void;
 };
 
-const ACCENT_BAR = "#A78BFA";
-const ACCENT_TINT = "#F5F3FF";
 const LETTERS = ["#", ..."ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("")];
 
 /**
@@ -48,12 +47,12 @@ export function CharacterFilterSidebar({
   return (
     <aside
       data-character-sidebar
-      className="flex h-full w-full shrink-0 flex-col overflow-hidden border-b border-[#E5E7EB] bg-white md:w-56 md:border-b-0 md:border-r"
+      className="flex h-full w-full shrink-0 flex-col overflow-hidden border-b border-border bg-background md:w-56 md:border-b-0 md:border-r"
     >
       {/* 固定区：字母（不收纳） */}
       <div
         data-character-sidebar-fixed
-        className="shrink-0 space-y-1.5 border-b border-[#F0F0F0] px-2 py-3"
+        className="shrink-0 space-y-1.5 border-b border-border px-2 py-3"
       >
         <SectionTitle hint={t("characters.filterSidebar.letterHint")}>
           {t("characters.filterSidebar.letter")}
@@ -81,7 +80,7 @@ export function CharacterFilterSidebar({
         title={t("characters.filterSidebar.favorites")}
         open={favoritesOpen}
         onToggle={() => setFavoritesOpen((prev) => !prev)}
-        className="border-b border-[#F0F0F0]"
+        className="border-b border-border"
       >
         <div className="space-y-0.5 px-1 pb-2">
           <FilterRow
@@ -125,7 +124,7 @@ export function CharacterFilterSidebar({
 
 function SectionTitle({ children, hint }: { children: React.ReactNode; hint?: string }) {
   return (
-    <p className="px-2 text-xs font-medium tracking-wide text-[#888888]" title={hint}>
+    <p className="px-2 text-xs font-medium tracking-wide text-muted-foreground" title={hint}>
       {children}
     </p>
   );
@@ -170,12 +169,12 @@ function CollapsibleSection({
         data-character-section-open={open ? "true" : "false"}
         aria-expanded={open}
         onClick={onToggle}
-        className="flex w-full shrink-0 items-center justify-between gap-1 px-2 py-2 text-left transition-colors hover:bg-[#F8F9FA]"
+        className="flex w-full shrink-0 items-center justify-between gap-1 px-2 py-2 text-left transition-colors hover:bg-muted"
       >
-        <span className="text-xs font-medium tracking-wide text-[#888888]">{title}</span>
+        <span className="text-xs font-medium tracking-wide text-muted-foreground">{title}</span>
         <ChevronRight
           data-character-section-arrow={open ? "down" : "right"}
-          className="h-3.5 w-3.5 shrink-0 text-[#9CA3AF]"
+          className="h-3.5 w-3.5 shrink-0 text-muted-foreground"
           style={{
             transform: open ? "rotate(90deg)" : "rotate(0deg)",
             transition: "transform 300ms cubic-bezier(0.4, 0, 0.2, 1)",
@@ -221,9 +220,8 @@ function LetterButton({
       onClick={onClick}
       className={cn(
         "flex h-6 items-center justify-center rounded text-[11px] transition-colors",
-        selected ? "font-medium text-white" : "text-[#333333] hover:bg-[#F8F9FA]"
+        selected ? cn("font-medium", ACCENT_PILL_ACTIVE_CLASS) : "text-foreground hover:bg-muted"
       )}
-      style={selected ? { background: ACCENT_BAR } : undefined}
     >
       {label}
     </button>
@@ -247,15 +245,13 @@ function FilterRow({
       data-filter-selected={selected ? "true" : "false"}
       className={cn(
         "relative flex w-full items-center rounded-md px-2 py-1.5 text-left text-sm transition-colors",
-        selected ? "text-[#222222]" : "text-[#333333] hover:bg-[#F8F9FA]"
+        selected ? ACCENT_SELECTED_SOFT_CLASS : "text-foreground hover:bg-muted"
       )}
-      style={selected ? { background: ACCENT_TINT } : undefined}
     >
       {selected && (
         <span
           aria-hidden
-          className="absolute left-0 top-1/2 h-4 w-0.5 -translate-y-1/2 rounded-full"
-          style={{ background: ACCENT_BAR }}
+          className="absolute left-0 top-1/2 h-4 w-0.5 -translate-y-1/2 rounded-full bg-accent-stroke"
         />
       )}
       <span className={cn("truncate pl-1.5", selected && "font-medium")}>{label}</span>

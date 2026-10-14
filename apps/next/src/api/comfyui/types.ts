@@ -21,7 +21,4 @@ export type ComfyRemoteGenerateResult = {
   videos: ComfyRemoteVideo[];
 };
 
-export type ComfyModelLists = {
-  checkpoints: string[];
-  loras: string[];
-};
+export type { ComfyModelLists } from "@/types/comfy";

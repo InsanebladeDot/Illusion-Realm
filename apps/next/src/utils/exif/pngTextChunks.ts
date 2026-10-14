@@ -155,6 +155,11 @@ function rawChunkToBytes(chunk: RawChunk): Uint8Array {
   return out;
 }
 
+/** 供无损像素编码复用同一份 PNG 长度 / CRC 写法。 */
+export function encodePngChunk(type: string, data: Uint8Array): Uint8Array {
+  return rawChunkToBytes({ type, data });
+}
+
 function reassemble(signature: Uint8Array, chunks: RawChunk[]): ArrayBuffer {
   return reassembleRaw(
     signature,

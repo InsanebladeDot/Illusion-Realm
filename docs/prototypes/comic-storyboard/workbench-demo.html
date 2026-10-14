@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>漫画分镜工作台 · Demo</title>
+  <link rel="stylesheet" href="workbench-demo.css">
+  <script defer src="prototype-data.js"></script>
+  <script defer src="demo-icons.js"></script>
+  <script defer src="torn-geometry.js"></script>
+  <script defer src="demo-model.js"></script>
+  <script defer src="workbench-demo.js"></script>
+</head>
+<body data-view="canvas">
+  <header class="topbar">
+    <div class="identity"><span class="brand">IR</span><div><h1>漫画分镜工作台 <small>Demo</small></h1><span id="save-state">未修改</span></div></div>
+    <div class="commands">
+      <button id="undo" data-icon="Undo2" title="撤销" aria-label="撤销"></button>
+      <button id="redo" data-icon="Redo2" title="重做" aria-label="重做"></button>
+      <span class="separator"></span>
+      <button id="import-json" data-icon="Upload" title="导入 Demo 项目" aria-label="导入 Demo 项目"></button>
+      <button id="export-json" data-icon="FileJson" title="导出 Demo 项目" aria-label="导出 Demo 项目"></button>
+      <button id="reset" data-icon="RotateCcw" title="恢复示例" aria-label="恢复示例"></button>
+      <button id="export-png" class="primary"><span data-icon="Download"></span><span>导出 PNG</span></button>
+    </div>
+  </header>
+  <nav class="mobile-tabs" aria-label="工作区">
+    <button data-view="canvas" aria-pressed="true">画布</button>
+    <button data-view="outline" aria-pressed="false">分镜</button>
+    <button data-view="settings" aria-pressed="false">设置</button>
+  </nav>
+  <main>
+    <!-- rail：漫画页面与阅读目录 -->
+    <aside class="outline">
+      <div class="project-head"><span class="eyebrow">当前项目</span><input id="project-title" aria-label="项目名称" maxlength="100"><div class="page-entry"><strong>01</strong><span>第 1 页</span><small id="panel-count">5 格</small></div></div>
+      <div class="section-heading"><h2>阅读顺序</h2><span id="reading-direction">右向左</span></div>
+      <div id="panel-list" class="panel-list"></div>
+      <div class="outline-footer"><button id="move-earlier" data-icon="ArrowUp" title="阅读前移" aria-label="阅读前移"></button><button id="move-later" data-icon="ArrowDown" title="阅读后移" aria-label="阅读后移"></button><button id="lock-panel" data-icon="Unlock" title="锁定当前格" aria-label="锁定当前格"></button></div>
+    </aside>
+    <!-- stage：页面画布 -->
+    <section class="stage" aria-label="页面画布">
+      <div class="stage-toolbar"><span id="page-title">第 1 页</span><span class="muted">1200 × 1600</span><div class="stage-actions"><button id="show-path" data-icon="Route" aria-label="显示阅读路径" title="显示阅读路径" aria-pressed="false"></button><button id="fit-page" data-icon="Maximize" aria-label="适合页面" title="适合页面"></button></div></div>
+      <div class="canvas-scroll"><div class="page-wrap"><canvas id="page" width="1200" height="1600" aria-label="漫画页"></canvas><canvas id="guides" width="1200" height="1600" aria-hidden="true"></canvas></div></div>
+      <footer class="stage-footer"><span id="selection-label"></span><span id="geometry-label" class="muted"></span></footer>
+    </section>
+    <!-- side：统一分镜设置 -->
+    <aside class="settings">
+      <div class="settings-head"><h2 id="settings-title"></h2><span id="panel-id" class="muted"></span></div>
+      <section><h3>页面版式</h3><label for="template">模板</label><select id="template"><option value="mixed">混合页漫 · 跨行竖格</option><option value="balanced">均衡分格</option><option value="strips">纵向分格</option><option value="custom">自定义排版 · 可拖动</option></select><button id="edit-layout" class="wide"><span data-icon="Settings2"></span>调整格子位置与尺寸</button><label class="range-label" for="gutter">格间距 <output id="gutter-value"></output></label><input id="gutter" type="range" min="8" max="64" step="2"></section>
+      <section><h3>切格与边界</h3><div class="split-buttons"><button id="split-y"><span data-icon="Scissors"></span>水平切格</button><button id="split-x"><span data-icon="Scissors"></span>垂直切格</button></div><button id="merge" class="wide"><span data-icon="Combine"></span>合并兄弟格</button><label for="boundary">共享边界</label><select id="boundary"></select><label class="range-label" for="boundary-position">位置 <output id="boundary-value"></output></label><input id="boundary-position" type="range" min="10" max="90" step="1"></section>
+      <section><h3>画面描述与取景</h3><label for="panel-name">叙事任务</label><input id="panel-name" maxlength="100"><label for="description">画面描述</label><textarea id="description" rows="3" maxlength="2000"></textarea><label for="asset">图像素材</label><div class="asset-controls"><select id="asset"><option value="">空白分镜</option><option value="panel-a">营地全景</option><option value="panel-b">人物 · 紫发</option><option value="panel-c">人物 · 红发</option><option value="panel-d">锅中物件</option></select><button id="import-image" data-icon="ImagePlus" title="导入当前格图片" aria-label="导入当前格图片"></button></div><div class="compact-fields"><label>水平取景<input id="focus-x" type="range" min="0" max="100"></label><label>垂直取景<input id="focus-y" type="range" min="0" max="100"></label></div><label class="range-label" for="zoom">图像放大 <output id="zoom-value"></output></label><input id="zoom" type="range" min="100" max="250" step="5"></section>
+      <section><h3>分镜边缘</h3><select id="edge" aria-label="分镜边缘"><option value="straight">直线格框</option><option value="photo">手撕相片</option><option value="memory">毛边回忆</option><option value="impact">冲击碎裂</option></select><label class="range-label" for="roughness">裂口幅度 <output id="roughness-value"></output></label><input id="roughness" type="range" min="8" max="44" step="2"><button id="new-tear" class="wide"><span data-icon="Shuffle"></span>换一道裂口</button></section>
+      <section><h3>自定义多边形</h3><p class="help-text">进入编辑后，拖动顶点；点击格内可新增顶点。至少保留 3 个顶点。</p><button id="edit-shape" class="wide"><span data-icon="Settings2"></span>编辑当前形状</button><div class="shape-buttons"><button id="add-vertex">新增顶点</button><button id="remove-vertex">删除顶点</button></div><button id="reset-shape" class="wide">恢复矩形形状</button><output id="vertex-value" class="vertex-value"></output></section>
+      <section><h3>旁白</h3><textarea id="caption" rows="2" maxlength="80" placeholder="" aria-label="当前格旁白"></textarea><button id="back-canvas" class="mobile-return wide"><span data-icon="ChevronLeft"></span>返回画布</button></section>
+    </aside>
+  </main>
+  <div id="status" role="status" aria-live="polite" hidden></div>
+  <input id="json-file" type="file" accept="application/json,.json" hidden>
+  <input id="image-file" type="file" accept="image/png,image/jpeg,image/webp" hidden>
+</body>
+</html>

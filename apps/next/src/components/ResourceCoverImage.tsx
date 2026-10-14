@@ -15,6 +15,7 @@ type ResourceCoverImageProps = {
   sizes?: string;
   className?: string;
   priority?: boolean;
+  placeholder?: string;
 };
 
 export function ResourceCoverImage({
@@ -26,6 +27,7 @@ export function ResourceCoverImage({
   sizes,
   className,
   priority = false,
+  placeholder,
 }: ResourceCoverImageProps) {
   const { t } = useTranslation();
 
@@ -39,7 +41,7 @@ export function ResourceCoverImage({
             className
           )}
         >
-          {t("components.resourceCoverImage.empty")}
+          <span className="break-all px-3 text-center">{placeholder || t("components.resourceCoverImage.empty")}</span>
         </div>
       );
     }
@@ -69,7 +71,7 @@ export function ResourceCoverImage({
               className
             )}
           >
-            {t("components.resourceCoverImage.empty")}
+            <span className="break-all px-3 text-center">{placeholder || t("components.resourceCoverImage.empty")}</span>
           </div>
         }
       />

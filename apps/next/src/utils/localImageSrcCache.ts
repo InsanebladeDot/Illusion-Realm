@@ -24,6 +24,15 @@ function notify(): void {
   for (const listener of listeners) listener();
 }
 
+/** Re-read a replaced logo even when its path is unchanged. Await any older load first. */
+export async function invalidateLocalImageSrc(filePath: string): Promise<void> {
+  await pendingLoads.get(filePath);
+  localImageSrcCache.delete(filePath);
+  snapshotCache.delete(filePath);
+  notify();
+  await loadLocalImageSrc(filePath);
+}
+
 /**
  * 订阅缓存变化
  * @returns 取消订阅函数

@@ -1,0 +1,93 @@
+{
+  "format": "illusion-realm-comic-layout-prototype",
+  "version": 1,
+  "canvas": {
+    "width": 1200,
+    "height": 1600
+  },
+  "panelOrder": [
+    "panel-a",
+    "panel-b",
+    "panel-d",
+    "panel-c"
+  ],
+  "renderOrder": [
+    "panel-a",
+    "panel-b",
+    "panel-c",
+    "panel-d"
+  ],
+  "panels": [
+    {
+      "id": "panel-a",
+      "cropFocusY": 0.05,
+      "frame": {
+        "x": 0.04,
+        "y": 0.035,
+        "width": 0.92,
+        "height": 0.29
+      }
+    },
+    {
+      "id": "panel-b",
+      "cropFocusY": 0.14,
+      "frame": {
+        "x": 0.04,
+        "y": 0.355,
+        "width": 0.92,
+        "height": 0.29
+      }
+    },
+    {
+      "id": "panel-c",
+      "cropFocusY": 0.1,
+      "frame": {
+        "x": 0.04,
+        "y": 0.675,
+        "width": 0.92,
+        "height": 0.29
+      }
+    }
+  ],
+  "overlay": {
+    "direction": "down-right",
+    "width": 180,
+    "offset": 0,
+    "visible": true
+  },
+  "composition": {
+    "basePanelIds": [
+      "panel-a",
+      "panel-b",
+      "panel-c"
+    ],
+    "overlayPanelId": "panel-d",
+    "minimumBaseVisibleRatio": 0.3
+  },
+  "overlayVertices": [
+    {
+      "x": 0.7661235986919934,
+      "y": 1
+    },
+    {
+      "x": 0.100297799988018,
+      "y": 0.051198236846835006
+    },
+    {
+      "x": 0.23,
+      "y": 0
+    },
+    {
+      "x": 0.23387640130800658,
+      "y": 1.3877787807814457e-19
+    },
+    {
+      "x": 0.8997022000119821,
+      "y": 0.948801763153165
+    },
+    {
+      "x": 0.7699999999999998,
+      "y": 1
+    }
+  ]
+}

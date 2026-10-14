@@ -13,6 +13,7 @@ const {
   registerDialogHandlers,
 } = require("./window.handlers");
 const { registerModelHandlers } = require("./models.handlers");
+const { registerModelDownloadHandlers } = require("./model-download.handlers");
 const { registerFileHandlers } = require("./files.handlers");
 const { registerComfyHandlers } = require("./comfy.handlers");
 const { registerPathHandlers } = require("./paths.handlers");
@@ -24,6 +25,8 @@ const {
 const { registerVideoToolIpc } = require("../ffmpeg");
 const { registerAnimadexIpc } = require("../animadex");
 const { registerAgentHandlers } = require("./agent.handlers");
+const { registerCivitaiHandlers } = require("./civitai.handlers");
+const { registerPromptAssistantHandlers } = require("./prompt-assistant.handlers");
 
 const { ipcMain } = require("electron");
 
@@ -37,6 +40,7 @@ const REGISTRATIONS = [
   ["theme", registerThemeHandlers],
   ["dialog", registerDialogHandlers],
   ["models", registerModelHandlers],
+  ["modelDownloads", registerModelDownloadHandlers],
   ["files", registerFileHandlers],
   ["comfy", registerComfyHandlers],
   ["paths", registerPathHandlers],
@@ -46,6 +50,8 @@ const REGISTRATIONS = [
   ["video", () => registerVideoToolIpc()],
   ["animadex", () => registerAnimadexIpc()],
   ["agent", registerAgentHandlers],
+  ["civitai", registerCivitaiHandlers],
+  ["promptAssistant", registerPromptAssistantHandlers],
 ];
 
 /**

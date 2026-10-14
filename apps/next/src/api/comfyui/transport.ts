@@ -69,7 +69,7 @@ function requireElectronDesktop(feature: string): never {
   throw new Error(t("errors.comfy.desktopOnly", { feature }));
 }
 
-/** 上传图片到 ComfyUI 输入目录 */
+/** 复用 ComfyUI /upload/image 文件上传端点；官方同一端点也接受视频和音频并原样写入 input。 */
 export async function uploadImageToComfy(
   image: File,
   serverAddress: string
@@ -153,13 +153,14 @@ export async function generateWithComfy(
 
 /** 拉取模型列表：优先 IPC，60s TTL 缓存，避免每次生成都请求 */
 export async function fetchComfyModelLists(
-  serverAddress: string
+  serverAddress: string,
+  refresh = false
 ): Promise<ComfyModelLists> {
   const address = serverAddress || DEFAULT_COMFY_SERVER;
 
   const now = Date.now();
   if (
-    modelListCache &&
+    !refresh && modelListCache &&
     modelListCache.serverAddress === address &&
     now - modelListCache.at < MODEL_LIST_CACHE_TTL_MS
   ) {

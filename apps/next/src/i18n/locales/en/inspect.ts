@@ -42,6 +42,11 @@ export const inspect = {
   "metaField": {
     "copied": "{key} 已复制",
     "copyLabel": "复制{key}",
+    "rawView": "Original",
+    "jsonView": "Formatted JSON",
+    "viewMode": "View mode",
+    "expandLabel": "View {key} in a dialog",
+    "notJsonHint": "This content is not valid JSON. Use the original view.",
     "prompt": "提示词",
     "negativePrompt": "负面提示词",
     "otherParams": "其他参数",

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Check, ChevronDown, ChevronRight, Clapperboard } from "lucide-react";
+import { Check, ChevronDown, ChevronRight } from "lucide-react";
 import { useTranslation } from "@/i18n";
 import {
   DEFAULT_VIDEO_WORKFLOW_ID,
@@ -11,7 +11,6 @@ import {
 } from "@/data/videoForm";
 import {
   ACCENT_CHECK_CLASS,
-  ACCENT_ICON_MUTED_BG_CLASS,
   INPUT_BORDER_CLASS,
 } from "@/utils/layout";
 import { cn } from "@/utils/cn";
@@ -61,36 +60,13 @@ export function VideoWorkflowSelect({
         aria-expanded={open}
         onClick={() => setOpen((prev) => !prev)}
         className={cn(
-          "relative isolate flex h-[64px] w-full cursor-pointer items-center justify-between gap-3 overflow-hidden rounded-xl border bg-background p-2 shadow-none ring-0 sm:h-[80px] sm:p-2 md:h-[72px] md:p-3",
+          "flex h-9 w-full cursor-pointer items-center justify-between gap-2 rounded-md border bg-background px-3 text-xs shadow-none",
           INPUT_BORDER_CLASS
         )}
       >
-        <div className="flex w-full min-w-0 items-center gap-3">
-          <div
-            className={cn(
-              "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg sm:h-12 sm:w-12",
-              ACCENT_ICON_MUTED_BG_CLASS
-            )}
-          >
-            <Clapperboard className={cn("h-5 w-5 sm:h-6 sm:w-6", ACCENT_CHECK_CLASS)} />
-          </div>
-          <div className="flex min-w-0 flex-col text-left">
-            <span className="text-xs font-medium text-muted-foreground sm:text-xs">
-              {t("create.videoWorkflowSelect.workflowLabel")}
-            </span>
-            <div className="flex min-w-0 items-center gap-1.5">
-              <span className="truncate text-sm font-semibold sm:text-base">
-                {selected.name}
-              </span>
-            </div>
-            <span className="truncate text-[11px] text-muted-foreground">
-              {selected.category} / {selected.file.split("/").pop()}
-            </span>
-          </div>
-        </div>
-        <div className="flex items-center border-l border-foreground/10 pl-2">
-          <ChevronDown className="h-4 w-4 text-muted-foreground" />
-        </div>
+        <span className="shrink-0 text-muted-foreground">{t("create.videoWorkflowSelect.workflowLabel")}</span>
+<span className="min-w-0 flex-1 truncate text-left font-medium" title={selected.file}>{selected.nameKey ? t(selected.nameKey) : selected.name}</span>
+        <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />
       </button>
 
       {open && (
@@ -129,6 +105,7 @@ export function VideoWorkflowSelect({
                       key={workflow.id}
                       type="button"
                       role="option"
+                      data-video-workflow-option={workflow.id}
                       aria-selected={workflow.id === value}
                       onClick={() => {
                         onChange(workflow.id);
@@ -141,7 +118,7 @@ export function VideoWorkflowSelect({
                     >
                       <span className="min-w-0">
                         <span className="block truncate font-medium">
-                          {workflow.name}
+                          {workflow.nameKey ? t(workflow.nameKey) : workflow.name}
                         </span>
                         <span className="block truncate text-[11px] text-muted-foreground">
                           {workflow.file.split("/").pop()}

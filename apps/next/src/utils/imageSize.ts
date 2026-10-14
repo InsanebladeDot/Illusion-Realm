@@ -24,7 +24,25 @@ export type ImageSizeInput = {
   aspectRatio: AspectRatioLabel | string;
   customWidth: number;
   customHeight: number;
+  /** 原始尺寸的缩放倍率；旧表单未保存时按 1 处理。 */
+  scale?: number;
 };
+
+/** 图片、视频尺寸选择器统一返回这个结构；width/height 是选择器算出的最终宽高。 */
+export interface ImageSizeSelection extends ImageSizeInput {
+  scale: number;
+  width: number;
+  height: number;
+}
+
+export function clampSizeScale(value: number | undefined): number {
+  return typeof value === "number" && Number.isFinite(value) ? Math.min(1, Math.max(0.1, value)) : 1;
+}
+
+export function createSizeSelection(input: ImageSizeInput): ImageSizeSelection {
+  const scale = clampSizeScale(input.scale);
+  return { ...input, scale, ...resolveImageDimensions({ ...input, scale }) };
+}
 
 export function parseAspectRatio(ratio: string): { w: number; h: number } {
   const parts = ratio.split(":").map((part) => Number(part.trim()));
@@ -48,7 +66,7 @@ export function clampImageSide(value: number, max = IMAGE_SIZE_MAX): number {
  * - preset：直接取该比例的训练友好分辨率（不再等比缩放，避免偏离模型训练分布）
  * - custom：用户自定义宽高，64–1500、对齐 8 像素
  */
-export function resolveImageDimensions(input: ImageSizeInput): {
+function resolveBaseImageDimensions(input: ImageSizeInput): {
   width: number;
   height: number;
 } {
@@ -71,4 +89,12 @@ export function resolveImageDimensions(input: ImageSizeInput): {
     width: clampImageSide(presetFallback.width),
     height: clampImageSide(h * scale),
   };
+}
+
+/** 两个创建模式复用同一算法；每次从原始尺寸缩放，不累计乘上次的结果。 */
+export function resolveImageDimensions(input: ImageSizeInput): { width: number; height: number } {
+  const base = resolveBaseImageDimensions(input);
+  const scale = clampSizeScale(input.scale);
+  if (scale === 1) return base;
+  return { width: clampImageSide(base.width * scale), height: clampImageSide(base.height * scale) };
 }

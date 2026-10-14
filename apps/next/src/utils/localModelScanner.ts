@@ -65,6 +65,7 @@ function getFolderName(folderPath: string): string {
 const LORA_PATH_PATTERN = /(^|[/\\])(lora|loras|lycoris|loha)([/\\]|$)/i;
 
 export function inferLocalModelType(folderPath: string): LocalModelType {
+  if (/(^|[/\\])embeddings([/\\]|$)/i.test(folderPath)) return "embedding";
   return LORA_PATH_PATTERN.test(folderPath) ? "lora" : "checkpoint";
 }
 
@@ -177,6 +178,6 @@ export function countModelsByType(models: LocalModel[]) {
       acc[model.type] += 1;
       return acc;
     },
-    { checkpoint: 0, lora: 0 } satisfies Record<LocalModelType, number>
+    { checkpoint: 0, lora: 0, embedding: 0 } satisfies Record<LocalModelType, number>
   );
 }

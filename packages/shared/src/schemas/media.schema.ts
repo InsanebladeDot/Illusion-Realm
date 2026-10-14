@@ -19,9 +19,9 @@ const clipInputSchema = z.object({
   trim: trimSchema.optional(),
 });
 
-/** VideoEditJob：single（默认）/ concat / gif */
+/** VideoEditJob：single（默认）/ concat / gif / frame */
 export const VideoEditJobSchema = z.object({
-  mode: z.enum(['single', 'concat', 'gif']).optional(),
+  mode: z.enum(['single', 'concat', 'gif', 'frame']).optional(),
   inputPath: nonEmptyPathSchema.optional(),
   clips: z.array(clipInputSchema).optional(),
   outputPath: nonEmptyPathSchema,
@@ -29,6 +29,7 @@ export const VideoEditJobSchema = z.object({
   height: z.number().optional(),
   fps: z.number().optional(),
   sourceDuration: z.number().optional(),
+  frameTime: z.number().finite().nonnegative().optional(),
   trim: trimSchema.optional(),
   speed: z.number().optional(),
   crop: cropSchema.optional(),
@@ -40,7 +41,7 @@ export const VideoEditJobSchema = z.object({
       loop: z.boolean().optional(),
     })
     .optional(),
-});
+}).refine((job) => job.mode !== 'frame' || (job.inputPath !== undefined && job.frameTime !== undefined && /\.png$/i.test(job.outputPath)));
 
 /** video:ffmpegStatus */
 export const VideoFfmpegStatusArgsSchema = z.tuple([nonEmptyPathSchema.nullable()]);
@@ -51,7 +52,7 @@ export const VideoPickOutputFolderArgsSchema = z.tuple([z.string().max(255).opti
 /** video:pickOutput */
 export const VideoPickOutputArgsSchema = z.tuple([
   z.string().max(255).optional(),
-  z.enum(['video', 'gif']).optional(),
+  z.enum(['video', 'gif', 'image']).optional(),
 ]);
 
 /** video:probe */

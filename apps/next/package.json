@@ -21,6 +21,7 @@
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
+    "@illusion-realm/shared": "workspace:*",
     "clsx": "^2.1.1",
     "exifreader": "^4.41.3",
     "lucide-react": "^1.25.0",
@@ -30,10 +31,10 @@
     "png-chunks-extract": "^1.0.0",
     "react": "19.2.4",
     "react-dom": "19.2.4",
+    "react-sketch-canvas": "8.0.0",
     "tailwind-merge": "^3.6.0",
     "three": "^0.180.0",
-    "zustand": "^5.0.14",
-    "@illusion-realm/shared": "workspace:*"
+    "zustand": "^5.0.14"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

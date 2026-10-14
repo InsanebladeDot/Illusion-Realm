@@ -25,6 +25,8 @@ type ClipPlaylistProps = {
   clips: ClipItem[];
   selectedId: string | null;
   disabled?: boolean;
+  /** 视频剪辑页为同一来源的多个区间显示区间序号。 */
+  showRanges?: boolean;
   onSelect: (id: string) => void;
   onReorder: (clips: ClipItem[]) => void;
   onRemove: (id: string) => void;
@@ -37,6 +39,7 @@ function SortableClipCard({
   disabled,
   onSelect,
   onRemove,
+  rangeIndex,
 }: {
   clip: ClipItem;
   index: number;
@@ -44,6 +47,7 @@ function SortableClipCard({
   disabled: boolean;
   onSelect: () => void;
   onRemove: () => void;
+  rangeIndex?: number;
 }) {
   const { t } = useTranslation();
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
@@ -53,8 +57,8 @@ function SortableClipCard({
     <div
       ref={setNodeRef}
       style={{ transform: CSS.Transform.toString(transform), transition }}
-      className={`flex items-center gap-2 rounded-xl border bg-white p-3 transition-colors ${
-        selected ? "border-blue-500 ring-1 ring-blue-500" : "border-gray-200"
+      className={`flex items-center gap-2 rounded-xl border bg-background p-3 transition-colors ${
+        selected ? "border-blue-500 ring-1 ring-blue-500" : "border-border"
       } ${isDragging ? "z-10 shadow-lg" : ""}`}
     >
       <button
@@ -63,7 +67,7 @@ function SortableClipCard({
         disabled={disabled}
         {...attributes}
         {...listeners}
-        className="cursor-grab touch-none rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600 active:cursor-grabbing disabled:opacity-40"
+        className="cursor-grab touch-none rounded p-1 text-muted-foreground hover:bg-muted hover:text-muted-foreground active:cursor-grabbing disabled:opacity-40"
       >
         <GripVertical className="h-4 w-4" />
       </button>
@@ -71,19 +75,25 @@ function SortableClipCard({
       <button
         type="button"
         onClick={onSelect}
+        disabled={disabled}
         className="flex min-w-0 flex-1 items-center gap-3 text-left"
       >
-        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-xs font-bold text-blue-600">
+        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-blue-500/10 text-xs font-bold text-blue-700 dark:text-blue-300">
           {index + 1}
         </span>
         <span className="min-w-0 flex-1">
           <span className="flex items-center gap-1.5">
-            <Film className="h-3.5 w-3.5 shrink-0 text-gray-400" />
-            <span className="truncate text-sm font-medium text-gray-900" title={clip.path}>
+            <Film className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+            <span className="truncate text-sm font-medium text-foreground" title={clip.path}>
               {clip.name}
             </span>
+            {rangeIndex !== undefined && (
+              <span className="shrink-0 rounded bg-muted px-1.5 py-0.5 text-[11px] text-muted-foreground">
+                {t("toolBox.video.rangeLabel", { index: rangeIndex })}
+              </span>
+            )}
           </span>
-          <span className="mt-0.5 block truncate text-xs text-gray-500">
+          <span className="mt-0.5 block truncate text-xs text-muted-foreground">
             {t("toolBox.videoEdit.playlist.trimPrefix")}{" "}
             {formatTime(clip.trim.start, true)} → {formatTime(clip.trim.end, true)}
             （{formatTime(Math.max(0, clip.trim.end - clip.trim.start), true)}）
@@ -98,7 +108,7 @@ function SortableClipCard({
         aria-label={t("toolBox.videoEdit.playlist.remove")}
         disabled={disabled}
         onClick={onRemove}
-        className="shrink-0 rounded p-2 text-gray-400 transition-colors hover:bg-red-50 hover:text-red-600 disabled:opacity-40"
+        className="shrink-0 rounded p-2 text-muted-foreground transition-colors hover:bg-red-500/10 hover:text-red-700 dark:text-red-300 disabled:opacity-40"
       >
         <Trash2 className="h-4 w-4" />
       </button>
@@ -111,6 +121,7 @@ export function ClipPlaylist({
   clips,
   selectedId,
   disabled = false,
+  showRanges = false,
   onSelect,
   onReorder,
   onRemove,
@@ -148,6 +159,7 @@ export function ClipPlaylist({
               index={index}
               selected={clip.id === selectedId}
               disabled={disabled}
+              rangeIndex={showRanges ? clips.slice(0, index + 1).filter((item) => item.path === clip.path).length : undefined}
               onSelect={() => onSelect(clip.id)}
               onRemove={() => onRemove(clip.id)}
             />

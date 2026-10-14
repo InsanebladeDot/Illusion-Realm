@@ -2,6 +2,7 @@
 
 import type { RefObject } from "react";
 import {
+  Camera,
   Pause,
   Play,
   Scissors,
@@ -40,6 +41,8 @@ type PreviewStageProps = {
   /** seek 完成回调：拖动时用它接续下一个跳帧目标，保证画面连续刷新 */
   onSeeked: () => void;
   onPlayingChange: (playing: boolean) => void;
+  /** 可选单帧导出入口，未提供时不显示（GIF 页面复用此预览组件） */
+  onExportFrame?: () => void;
 };
 
 function TransportButton({
@@ -60,7 +63,7 @@ function TransportButton({
       aria-label={label}
       disabled={disabled}
       onClick={onClick}
-      className="inline-flex h-9 min-w-9 items-center justify-center rounded-lg px-2 text-gray-200 transition-colors hover:bg-white/10 disabled:opacity-40"
+      className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-sm text-white/85 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline-2 focus-visible:outline-white disabled:opacity-40"
     >
       {children}
     </button>
@@ -91,31 +94,34 @@ export function PreviewStage({
   onTimeUpdate,
   onSeeked,
   onPlayingChange,
+  onExportFrame,
 }: PreviewStageProps) {
   const { t } = useTranslation();
 
   return (
-    <section className="overflow-hidden rounded-xl border border-gray-200 bg-black">
-      <div className="flex items-center justify-between gap-3 border-b border-white/10 px-4 py-2">
-        <span className="min-w-0 truncate text-xs text-white/70" title={clipLabel}>
+    <section className="overflow-hidden rounded-xl border border-border bg-background">
+      <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-2">
+        <span className="min-w-0 truncate text-xs text-muted-foreground" title={clipLabel}>
           {clipTotal > 1 && (
-            <span className="mr-2 rounded bg-white/10 px-1.5 py-0.5 font-mono text-[11px] text-white/80">
+            <span className="mr-2 rounded bg-muted px-1.5 py-0.5 font-mono text-[11px] text-foreground">
               {clipIndex + 1}/{clipTotal}
             </span>
           )}
           {clipLabel}
         </span>
-        <span className="shrink-0 font-mono text-xs text-white/70">
+        <span className="shrink-0 font-mono text-xs text-muted-foreground">
           {formatTime(currentTime, true)} / {formatTime(duration, true)}
         </span>
       </div>
 
+      {/* stage：视频展示区，播放控制居中贴在画面底部 */}
+      <div data-video-preview className="relative bg-black">
       {previewUrl ? (
         <video
           ref={videoRef}
           src={previewUrl}
-          className="mx-auto max-h-[420px] w-full cursor-pointer bg-black"
-          onClick={onTogglePlay}
+          className="mx-auto block max-h-[420px] w-full cursor-pointer bg-black"
+          onClick={() => { if (!disabled) onTogglePlay(); }}
           onLoadedMetadata={() => {
             // 打开片段时定位到选区起点（走统一的 seek 串行化逻辑）
             onSeek(trim.start);
@@ -129,12 +135,14 @@ export function PreviewStage({
           <track kind="captions" />
         </video>
       ) : (
-        <div className="flex h-64 items-center justify-center text-sm text-white/50">
+        <div className="flex h-64 items-center justify-center text-sm text-muted-foreground">
           {t("toolBox.videoEdit.preview.empty")}
         </div>
       )}
 
-      <div className="flex flex-wrap items-center justify-center gap-1 px-3 py-2">
+      {/* 透明走带控件：底部浅渐变仅提高图标在亮画面上的可读性。 */}
+      <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/45 to-transparent" />
+      <div data-video-transport className="absolute bottom-0 left-1/2 z-10 flex -translate-x-1/2 items-center justify-center gap-2 bg-transparent px-2 py-1 drop-shadow-[0_1px_2px_rgba(0,0,0,0.7)]">
         <TransportButton
           label={t("toolBox.videoEdit.preview.backOneSecond")}
           disabled={disabled}
@@ -163,7 +171,7 @@ export function PreviewStage({
           }
           disabled={disabled}
           onClick={onTogglePlay}
-          className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-white text-gray-900 transition-colors hover:bg-white/85 disabled:opacity-40"
+          className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-sm text-white transition-colors hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-white disabled:opacity-40"
         >
           {playing ? (
             <Pause className="h-5 w-5" />
@@ -185,8 +193,11 @@ export function PreviewStage({
         >
           <SkipForward className="h-4 w-4" />
         </TransportButton>
+      </div>
+      </div>
 
-        <span className="mx-2 h-6 w-px bg-white/15" />
+      {/* 界面：剪切起终点、当前帧导出等辅助操作 */}
+      <div className="flex flex-wrap items-center justify-center gap-1 px-3 py-2">
 
         <button
           type="button"
@@ -206,15 +217,28 @@ export function PreviewStage({
           <span className="font-mono text-sm">]</span>
           {t("toolBox.videoEdit.preview.setEnd")}
         </button>
-        <span className="ml-2 inline-flex items-center gap-1 font-mono text-[11px] text-white/50">
+        <span className="ml-2 inline-flex items-center gap-1 font-mono text-[11px] text-muted-foreground">
           <Scissors className="h-3 w-3" />
           {formatTime(trim.start, true)} → {formatTime(trim.end, true)}
         </span>
+        {/* 界面：「导出当前帧」按钮 */}
+        {onExportFrame && (
+          <button
+            type="button"
+            disabled={disabled}
+            onClick={onExportFrame}
+            title={t("toolBox.video.exportFrameHint")}
+            className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border bg-background px-3 text-xs font-medium text-foreground transition-colors hover:bg-muted disabled:opacity-40"
+          >
+            <Camera className="h-4 w-4" />
+            {t("toolBox.video.exportFrame")}
+          </button>
+        )}
         <button
           type="button"
           disabled={disabled}
           onClick={() => onSeek(trim.start)}
-          className="ml-auto rounded-lg px-2 py-1 text-xs text-white/60 transition-colors hover:bg-white/10 disabled:opacity-40"
+          className="ml-auto rounded-lg px-2 py-1 text-xs text-muted-foreground transition-colors hover:bg-muted disabled:opacity-40"
         >
           {t("toolBox.videoEdit.preview.backToStart")}
         </button>

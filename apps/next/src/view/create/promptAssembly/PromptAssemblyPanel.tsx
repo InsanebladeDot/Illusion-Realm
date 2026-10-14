@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { PromptAssistantToolbar } from "@/components/prompt-assistant/prompt-assistant-toolbar";
 import {
   Camera,
   Check,
@@ -392,6 +393,7 @@ export function PromptAssemblyPanel({
               {editingQuickWords ? t("promptAssembly.quickWords.doneEditing") : t("promptAssembly.quickWords.edit")}
             </button>
           </div>
+          <div className="relative">
           <textarea
             data-prompt-tab-input
             aria-label={t("promptAssembly.tab.inputLabel", {
@@ -404,11 +406,14 @@ export function PromptAssemblyPanel({
             rows={5}
             placeholder={t("promptAssembly.tab.placeholder", { label: activeTab?.label ?? "" })}
             className={cn(
-              "w-full resize-y rounded-lg bg-background px-2.5 py-2 text-xs leading-relaxed outline-none",
+              "block w-full resize-y rounded-lg bg-background px-2.5 pb-10 pt-2 text-xs leading-relaxed outline-none",
               ACCENT_FOCUS_RING_CLASS,
               INPUT_BORDER_CLASS
             )}
           />
+          {/* 界面：当前分类内的提示词助手，写回该分类而非合并结果 */}
+          {activeTab && <PromptAssistantToolbar contextId={activeTab.id} read={() => useCreateFormStore.getState().promptTabs.find(tab => tab.id === activeTab.id)?.content ?? ""} write={value => setTabContent(activeTab.id, value)} />}
+          </div>
         </div>
 
         {/**

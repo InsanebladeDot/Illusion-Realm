@@ -1,3 +1,4 @@
+// 视频工具 IPC：复用文件选择、任务执行和进度通道，单帧作为独立导出模式。
 const { execFile } = require("child_process");
 const fs = require("fs");
 const path = require("path");
@@ -14,7 +15,7 @@ const MAX_MODEL_FILE_BYTES = 64 * 1024 * 1024;
 
 /** 已知的任务类型；未知类型通常意味着渲染进程比主进程新（主进程未重启） */
 /** @type {Set<string>} */
-const KNOWN_JOB_MODES = new Set(["single", "concat", "gif"]);
+const KNOWN_JOB_MODES = new Set(["single", "concat", "gif", "frame"]);
 
 /**
  * 校验任务类型是否已知
@@ -27,6 +28,21 @@ function assertKnownMode(mode) {
       `未知的导出类型「${mode}」：主进程可能不是最新版本，请完全退出应用后重新启动（仅刷新页面不会重载主进程）`
     );
   }
+}
+
+/** 复用执行通道时，只约束新增单帧模式的必需字段。
+ * @param {unknown[]} args
+ * @returns {string | null}
+ */
+function validateFrameRunArgs(args) {
+  const payload = args[0];
+  if (!payload || typeof payload !== "object" || !("job" in payload)) return null;
+  const job = payload.job;
+  if (!job || typeof job !== "object" || !("mode" in job) || job.mode !== "frame") return null;
+  if (!("inputPath" in job) || typeof job.inputPath !== "string" || !job.inputPath.trim()) return "单帧导出缺少输入视频";
+  if (!("frameTime" in job) || typeof job.frameTime !== "number" || !Number.isFinite(job.frameTime) || job.frameTime < 0) return "单帧导出时间必须是非负有限数字";
+  if (!("outputPath" in job) || typeof job.outputPath !== "string" || !/\.png$/i.test(job.outputPath)) return "单帧图片需使用 .png 扩展名";
+  return null;
 }
 
 /**
@@ -107,12 +123,15 @@ function registerVideoToolIpc() {
    */
   registerHandle(IPC_CHANNELS.VIDEO_PICK_OUTPUT, async (_event, defaultName, kind) => {
     const isGif = kind === "gif";
+    const isImage = kind === "image";
     const result = await dialog.showSaveDialog({
-      title: isGif ? "保存 GIF 文件" : "保存视频文件",
+      title: isImage ? "保存 PNG 图片" : isGif ? "保存 GIF 文件" : "保存视频文件",
       defaultPath: typeof defaultName === "string" && defaultName
         ? defaultName
-        : isGif ? "output.gif" : "output.mp4",
-      filters: isGif
+        : isImage ? "frame.png" : isGif ? "output.gif" : "output.mp4",
+      filters: isImage
+        ? [{ name: "PNG 图片", extensions: ["png"] }]
+        : isGif
         ? [{ name: "GIF 动图", extensions: ["gif"] }]
         : [
             { name: "MP4 视频", extensions: ["mp4"] },
@@ -205,6 +224,10 @@ function registerVideoToolIpc() {
         },
         onDone: (result) => {
           activeJobs.delete(jobId);
+          if (job.mode === "frame" && !fs.existsSync(result.outputPath)) {
+            reject(new Error("该位置没有可导出的画面，请选择视频内的其他时间点"));
+            return;
+          }
           resolve({ jobId, ...result });
         },
         onError: (error) => {
@@ -215,7 +238,7 @@ function registerVideoToolIpc() {
 
       activeJobs.set(jobId, child);
     });
-  });
+  }, validateFrameRunArgs);
 
   registerHandle(IPC_CHANNELS.VIDEO_CANCEL, async (_event, jobId) => {
     const child = activeJobs.get(jobId);

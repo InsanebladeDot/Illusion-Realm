@@ -192,7 +192,7 @@ export function Sidebar() {
 
   return (
     <nav
-      className="fixed left-0 top-0 z-50 hidden h-[100dvh] flex-col border-r border-border bg-background transition-[width] duration-300 ease-in-out md:flex"
+      className="fixed left-0 top-[var(--window-chrome-height)] z-50 hidden h-[calc(100dvh-var(--window-chrome-height))] flex-col border-r border-border bg-background transition-[width] duration-300 ease-in-out md:flex"
       style={{ width }}
       aria-expanded={expanded}
     >

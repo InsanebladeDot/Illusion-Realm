@@ -43,12 +43,12 @@ function Toggle({
   return (
     <div
       className={`relative h-5 w-10 cursor-pointer rounded-full transition-colors ${
-        checked ? activeClass : "bg-gray-300"
+        checked ? activeClass : "bg-muted-foreground/30"
       }`}
       onClick={onToggle}
     >
       <div
-        className={`absolute left-0.5 top-0.5 h-4 w-4 rounded-full bg-white transition-transform ${
+        className={`absolute left-0.5 top-0.5 h-4 w-4 rounded-full bg-background transition-transform ${
           checked ? "translate-x-5" : "translate-x-0"
         }`}
       />
@@ -75,19 +75,19 @@ export function MetadataEditor({
   };
 
   return (
-    <div className="space-y-4 rounded-xl border border-gray-200 bg-white p-6">
-      <div className="flex items-center justify-between border-b border-gray-100 pb-3">
-        <h3 className="flex items-center gap-2 text-lg font-semibold text-gray-900">
-          <Edit2 className="h-5 w-5 text-blue-600" />
+    <div className="space-y-4 rounded-xl border border-border bg-background p-6">
+      <div className="flex items-center justify-between border-b border-border/60 pb-3">
+        <h3 className="flex items-center gap-2 text-lg font-semibold text-foreground">
+          <Edit2 className="h-5 w-5 text-blue-700 dark:text-blue-300" />
           {title}
           {locked && (
-            <span className="ml-2 flex items-center gap-1 text-xs font-normal text-amber-600">
+            <span className="ml-2 flex items-center gap-1 text-xs font-normal text-amber-700 dark:text-amber-300">
               <Lock className="h-3 w-3" /> {t("toolBox.exif.metadataEditor.locked")}
             </span>
           )}
         </h3>
         <label className="flex cursor-pointer items-center gap-2">
-          <span className="text-sm text-gray-600">{t("toolBox.exif.metadataEditor.enable")}</span>
+          <span className="text-sm text-muted-foreground">{t("toolBox.exif.metadataEditor.enable")}</span>
           <Toggle
             checked={enabled}
             activeClass="bg-blue-600"
@@ -107,8 +107,8 @@ export function MetadataEditor({
                   onClick={() => onModeChange(item)}
                   className={`rounded-lg px-4 py-2 font-medium transition-colors ${
                     mode === item
-                      ? "bg-blue-100 text-blue-700"
-                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                      ? "bg-blue-500/10 text-blue-700 dark:text-blue-300"
+                      : "bg-muted text-foreground hover:bg-muted"
                   }`}
                 >
                   {t(MODE_LABELS[item])}
@@ -123,14 +123,14 @@ export function MetadataEditor({
                 <button
                   type="button"
                   onClick={() => onChange([])}
-                  className="flex items-center gap-1 text-sm text-red-600 hover:text-red-700"
+                  className="flex items-center gap-1 text-sm text-red-700 dark:text-red-300 hover:text-red-700 dark:text-red-300"
                 >
                   <Trash2 className="h-4 w-4" /> {t("toolBox.exif.metadataEditor.clearAll")}
                 </button>
               </div>
 
               {items.length === 0 && (
-                <p className="rounded-lg border border-dashed border-gray-300 bg-gray-50 py-4 text-center text-sm text-gray-500">
+                <p className="rounded-lg border border-dashed border-border bg-muted/40 py-4 text-center text-sm text-muted-foreground">
                   {t("toolBox.exif.metadataEditor.emptyHint")}
                 </p>
               )}
@@ -138,7 +138,7 @@ export function MetadataEditor({
               {items.map((item, index) => (
                 <div
                   key={index}
-                  className="flex items-start gap-2 rounded-lg bg-gray-50 p-3"
+                  className="flex items-start gap-2 rounded-lg bg-muted/40 p-3"
                 >
                   <div className="flex-1 space-y-2">
                     <input
@@ -148,7 +148,7 @@ export function MetadataEditor({
                       onChange={(event) =>
                         updateItem(index, { key: event.target.value })
                       }
-                      className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full rounded-md border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                     <textarea
                       placeholder={t("toolBox.exif.metadataEditor.valuePlaceholder")}
@@ -157,13 +157,13 @@ export function MetadataEditor({
                       onChange={(event) =>
                         updateItem(index, { value: event.target.value })
                       }
-                      className="w-full rounded-md border border-gray-300 px-3 py-2 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full rounded-md border border-border px-3 py-2 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
                   <button
                     type="button"
                     onClick={() => onChange(items.filter((_, i) => i !== index))}
-                    className="rounded p-2 text-gray-400 transition-colors hover:bg-red-50 hover:text-red-600"
+                    className="rounded p-2 text-muted-foreground transition-colors hover:bg-red-500/10 hover:text-red-700 dark:text-red-300"
                   >
                     <Trash2 className="h-4 w-4" />
                   </button>
@@ -173,7 +173,7 @@ export function MetadataEditor({
               <button
                 type="button"
                 onClick={() => onChange([...items, { key: "", value: "" }])}
-                className="flex items-center gap-1 text-sm font-medium text-blue-600 hover:text-blue-700"
+                className="flex items-center gap-1 text-sm font-medium text-blue-700 dark:text-blue-300 hover:text-blue-700 dark:text-blue-300"
               >
                 <Plus className="h-4 w-4" /> {t("toolBox.exif.metadataEditor.addField")}
               </button>

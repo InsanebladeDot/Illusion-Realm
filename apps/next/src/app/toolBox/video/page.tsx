@@ -1,7 +1,5 @@
-import VideoToolPage from '@/view/toolBox/Tool/video/video'
+import { ToolRouteRedirect } from "@/components/tool-route-redirect";
 
-export default function VideoPage() {
-  return (
-  <VideoToolPage/>
-  );
+export default function Page() {
+  return <ToolRouteRedirect href="/tools/video/editor" />;
 }

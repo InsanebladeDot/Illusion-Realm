@@ -18,6 +18,7 @@ type SelectedExtensionRowProps = {
   weight: number;
   onWeightChange: (weight: number) => void;
   onRemove: () => void;
+  display?: Pick<ReturnType<typeof getExtensionDisplay>, "name" | "cover">;
 };
 
 export function SelectedExtensionRow({
@@ -25,10 +26,11 @@ export function SelectedExtensionRow({
   weight,
   onWeightChange,
   onRemove,
+  display,
 }: SelectedExtensionRowProps) {
   const { t } = useTranslation();
   const localModels = useSettingsStore((state) => state.models);
-  const extension = getExtensionDisplay(extensionId, localModels);
+  const extension = display ?? getExtensionDisplay(extensionId, localModels);
   const [editingWeight, setEditingWeight] = useState(false);
   const [draftWeight, setDraftWeight] = useState("");
   const weightInputRef = useRef<HTMLInputElement>(null);

@@ -1,0 +1,5 @@
+/* 工具页复用全局主题变量；蓝色强调也覆盖 portal 弹窗，离开工具页后恢复全局主题。 */
+:root:has([data-tools]) { --primary: #0284c7; --primary-foreground: #ffffff; --ring: #0ea5e9; }
+@media (prefers-color-scheme: dark) {
+  :root:has([data-tools]) { --primary: #38bdf8; --primary-foreground: #082f49; }
+}

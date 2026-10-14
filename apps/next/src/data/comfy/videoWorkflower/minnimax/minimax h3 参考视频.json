@@ -1,0 +1,328 @@
+{
+  "151": {
+    "inputs": {
+      "image": "坠落之间5_回头看.png"
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "参考图1"
+    }
+  },
+  "152": {
+    "inputs": {
+      "image": "坠落之间5_回头看-死去的骑士.png"
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "参考图2"
+    }
+  },
+  "153": {
+    "inputs": {
+      "filename_prefix": "video/MINIMAX",
+      "format": "auto",
+      "format.codec": "auto",
+      "codec": "auto",
+      "video": [
+        "147:130",
+        0
+      ]
+    },
+    "class_type": "SaveVideo",
+    "_meta": {
+      "title": "保存视频"
+    }
+  },
+  "154": {
+    "inputs": {
+      "image": "坠落之间参考全景图.png"
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "参考图3"
+    }
+  },
+  "157": {
+    "inputs": {
+      "file": "ComfyUI_00010_.mp4",
+      "video-preview": ""
+    },
+    "class_type": "LoadVideo",
+    "_meta": {
+      "title": "参考视频1"
+    }
+  },
+  "158": {
+    "inputs": {
+      "video": [
+        "157",
+        0
+      ]
+    },
+    "class_type": "GetVideoComponents",
+    "_meta": {
+      "title": "获取视频元素"
+    }
+  },
+  "160": {
+    "inputs": {
+      "audio": "ComfyUI_00010_.mp4"
+    },
+    "class_type": "LoadAudio",
+    "_meta": {
+      "title": "参考音频"
+    }
+  },
+  "147:127": {
+    "inputs": {
+      "unet_name": "Minimax\\minimax_h3_fl2va_pruned_int8_convrot\\minimax_h3_fl2va_pruned_int8_convrot.safetensors",
+      "weight_dtype": "default"
+    },
+    "class_type": "UNETLoader",
+    "_meta": {
+      "title": "UNet加载器"
+    }
+  },
+  "147:128": {
+    "inputs": {
+      "clip_name": "Minimax\\minimax_h3\\qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors",
+      "type": "minimax",
+      "device": "default"
+    },
+    "class_type": "CLIPLoader",
+    "_meta": {
+      "title": "加载CLIP"
+    }
+  },
+  "147:145": {
+    "inputs": {
+      "lora_name": "Minimax\\加速lora\\minimax_h3_fl2v_turbo_8step_v1.0_comfyui_bf16.safetensors",
+      "strength_model": 1,
+      "model": [
+        "147:127",
+        0
+      ]
+    },
+    "class_type": "LoraLoaderModelOnly",
+    "_meta": {
+      "title": "LoRA加载器（仅模型）"
+    }
+  },
+  "147:119": {
+    "inputs": {
+      "vae_name": "Minimax\\Video\\minimax_h3_video_vae_int8_convrot.safetensors"
+    },
+    "class_type": "VAELoader",
+    "_meta": {
+      "title": "加载VAE"
+    }
+  },
+  "147:120": {
+    "inputs": {
+      "vae_name": "Minimax\\Audio\\minimax_h3_audio_vae_fp32.safetensors"
+    },
+    "class_type": "VAELoader",
+    "_meta": {
+      "title": "加载VAE"
+    }
+  },
+  "147:136": {
+    "inputs": {
+      "prompt": "integrated_multimodal_description: [Shot 1] 2D anime style. a low rear POV  perspective, looking down at a young woman wearing a pulled up blue and gold pleated skirt and blue and gold long thigh high boots. Her bare buttocks, anus and vagina are visible. The man grabs his penis and inserts it into her vagina as she moans. The man's penis penetrates her vagina and he thrusts his hips into her buttocks repeatedly.[Shot 2] The camera pans up to show the woman with blue hair in a pony tail from behind as the man puts his hands on her hips. Her hair sways from the the motion and she turns her head slightly back to the viewer. The lighting is warm and dim, highlighting the smooth texture of her skin. The background consists of a red patterned surface of a bed. She (S1) says <d>[Japanese] mou gaman shi nakute ii yo </d>. \n\noverall_soundscape: The woman moans, plopping sounds are heard from the man's thrusts\n\nnon_diegetic_music: soft jazz bgm",
+      "width": 1152,
+      "height": 960,
+      "length": [
+        "147:150",
+        1
+      ],
+      "ref_image_size": "match",
+      "clip": [
+        "147:128",
+        0
+      ],
+      "vae": [
+        "147:119",
+        0
+      ],
+      "audio_vae": [
+        "147:120",
+        0
+      ],
+      "ref_images.ref_image_0": [
+        "151",
+        0
+      ],
+      "ref_images.ref_image_1": [
+        "152",
+        0
+      ],
+      "ref_images.ref_image_2": [
+        "154",
+        0
+      ],
+      "ref_videos.ref_video_0": [
+        "158",
+        0
+      ],
+      "ref_audios.ref_audio_0": [
+        "160",
+        0
+      ]
+    },
+    "class_type": "MiniMaxH3ReferenceToVideo",
+    "_meta": {
+      "title": "MiniMax H3 参考转视频"
+    }
+  },
+  "147:121": {
+    "inputs": {
+      "samples": [
+        "147:125",
+        0
+      ],
+      "vae": [
+        "147:120",
+        0
+      ]
+    },
+    "class_type": "VAEDecodeAudio",
+    "_meta": {
+      "title": "VAE解码（音频）"
+    }
+  },
+  "147:122": {
+    "inputs": {
+      "samples": [
+        "147:125",
+        0
+      ],
+      "vae": [
+        "147:119",
+        0
+      ]
+    },
+    "class_type": "VAEDecode",
+    "_meta": {
+      "title": "VAE解码"
+    }
+  },
+  "147:123": {
+    "inputs": {
+      "sampler_name": "res_multistep"
+    },
+    "class_type": "KSamplerSelect",
+    "_meta": {
+      "title": "K采样器选择"
+    }
+  },
+  "147:124": {
+    "inputs": {
+      "scheduler": "simple",
+      "steps": 6,
+      "denoise": 1,
+      "model": [
+        "147:145",
+        0
+      ]
+    },
+    "class_type": "BasicScheduler",
+    "_meta": {
+      "title": "基本调度器"
+    }
+  },
+  "147:126": {
+    "inputs": {
+      "model": [
+        "147:145",
+        0
+      ],
+      "conditioning": [
+        "147:136",
+        0
+      ]
+    },
+    "class_type": "BasicGuider",
+    "_meta": {
+      "title": "基本引导器"
+    }
+  },
+  "147:129": {
+    "inputs": {
+      "noise_seed": 259898266532844
+    },
+    "class_type": "RandomNoise",
+    "_meta": {
+      "title": "随机噪波"
+    }
+  },
+  "147:130": {
+    "inputs": {
+      "fps": 24,
+      "bit_depth": 8,
+      "color_space": "sRGB",
+      "codec": "none",
+      "images": [
+        "147:122",
+        0
+      ],
+      "audio": [
+        "147:121",
+        0
+      ]
+    },
+    "class_type": "CreateVideo",
+    "_meta": {
+      "title": "创建视频"
+    }
+  },
+  "147:125": {
+    "inputs": {
+      "noise": [
+        "147:129",
+        0
+      ],
+      "guider": [
+        "147:126",
+        0
+      ],
+      "sampler": [
+        "147:123",
+        0
+      ],
+      "sigmas": [
+        "147:124",
+        0
+      ],
+      "latent_image": [
+        "147:136",
+        1
+      ]
+    },
+    "class_type": "SamplerCustomAdvanced",
+    "_meta": {
+      "title": "自定义采样器（高级）"
+    }
+  },
+  "147:149": {
+    "inputs": {
+      "value": 5
+    },
+    "class_type": "PrimitiveFloat",
+    "_meta": {
+      "title": "Float (duration)"
+    }
+  },
+  "147:150": {
+    "inputs": {
+      "expression": "max(5, round(a * 24)) + (5 - (max(5, round(a * 24)) % 17)) % 17",
+      "values.a": [
+        "147:149",
+        0
+      ]
+    },
+    "class_type": "ComfyMathExpression",
+    "_meta": {
+      "title": "数学表达式"
+    }
+  }
+}

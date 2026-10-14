@@ -60,5 +60,9 @@ apps/agent/build/
 apps/agent/dist/
 __pycache__/
 *.pyc
+# 内置 FFmpeg 由固定版本准备脚本获取；大体积二进制与上游说明不入库。
+/apps/electron/bin/ffmpeg/*
+!/apps/electron/bin/ffmpeg/README.md
+!/apps/electron/bin/ffmpeg/.gitkeep
 # pip install -e . 的元数据副产物（运行时不需要，见 apps/agent/README.md）
 *.egg-info/

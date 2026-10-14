@@ -18,6 +18,7 @@ import {
   PROMPT_EDITOR_SCROLL_CLASS,
 } from "@/utils/layout";
 import { cn } from "@/utils/cn";
+import { PromptAssistantToolbar } from "@/components/prompt-assistant/prompt-assistant-toolbar";
 
 /** 反向提示词编辑器 id（生成时按 id 读取内容） */
 export const NEGATIVE_PROMPT_EDITOR_ID = "negative-prompt-editor";
@@ -114,11 +115,12 @@ export function NegativePromptSection() {
               </div>
             </div>
 
+            <div className="relative">
             <div
               id={NEGATIVE_PROMPT_EDITOR_ID}
               className={cn(
                 /** 见 PromptSection 同处的说明：深色下的底色走 `--background`，别再借 primary-foreground */
-                "min-h-[72px] whitespace-pre-wrap break-words rounded-lg bg-background px-3 py-2 text-sm outline-none focus-visible:ring-1",
+                "min-h-[72px] whitespace-pre-wrap break-words rounded-lg bg-background px-3 pb-10 pt-2 text-sm outline-none focus-visible:ring-1",
                 PROMPT_EDITOR_SCROLL_CLASS,
                 ACCENT_FOCUS_RING_CLASS,
                 INPUT_BORDER_CLASS
@@ -127,6 +129,9 @@ export function NegativePromptSection() {
               suppressContentEditableWarning
               data-placeholder={t("create.negativePromptSection.placeholder")}
             />
+            {/* 界面：反向提示词的翻译与撤销工具 */}
+            <PromptAssistantToolbar contextId={NEGATIVE_PROMPT_EDITOR_ID} read={() => readEditableText(NEGATIVE_PROMPT_EDITOR_ID)} write={value => setEditableText(NEGATIVE_PROMPT_EDITOR_ID, value)} />
+            </div>
           </div>
         </CollapsiblePanel>
       </div>

@@ -83,7 +83,7 @@ export async function pickOutputFolder(
 /** 未选择输出文件夹时的回退：走系统「保存文件」对话框，直接选定单个文件 */
 export async function pickOutputFile(
   defaultName?: string,
-  kind: "video" | "gif" = "video"
+  kind: "video" | "gif" | "image" = "video"
 ): Promise<string | null> {
   if (!isElectronEnvironment() || !window.electronAPI?.videoPickOutput) {
     return null;

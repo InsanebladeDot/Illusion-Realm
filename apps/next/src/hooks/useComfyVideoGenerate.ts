@@ -11,12 +11,24 @@ import type { ComfyGeneratedVideo } from "@/types/comfy";
 import { buildVideoPrompt } from "@/utils/comfy/videoWorkflow";
 import { isElectronEnvironment } from "@/utils/electronBridge";
 import { unwrapIpcOr } from "@/utils/ipcResult";
+import type { VideoModelOverrides } from "@/utils/comfy/video-workflow-models";
+import type { VideoLora } from "@/utils/comfy/video-workflow-loras";
+import type { VideoGenerationSettings } from "@/utils/comfy/video-generation-settings";
+import { resolveVideoPromptModels } from "@/utils/comfy/resolve-video-models";
+import type { VideoResolutionSettings } from "@/utils/comfy/video-resolution";
+import { orderedReferences, type VideoReferenceFile, type UploadedVideoReference } from "@/utils/comfy/video-reference-media";
 
 type VideoGenerateInput = {
   workflowId: string;
   prompt: string;
   durationSeconds?: number;
-  imageFile: File;
+  imageFile?: File | null;
+  referenceMedia?: VideoReferenceFile[];
+  lastImageFile?: File | null;
+  modelOverrides?: VideoModelOverrides;
+  loras?: VideoLora[];
+  generationSettings?: VideoGenerationSettings;
+  resolution?: VideoResolutionSettings;
 };
 
 const MIME_EXT: Record<string, string> = {
@@ -77,18 +89,23 @@ export function useComfyVideoGenerate() {
     async (input: VideoGenerateInput) => {
       setGenerating(true);
       try {
-        const uploaded = await uploadImageToComfy(
-          input.imageFile,
-          comfyServerUrl
-        );
-        const imageName = uploaded.name || input.imageFile.name;
+        const imageName = input.imageFile ? await uploadVideoFrame(input.imageFile, "first", comfyServerUrl) : undefined;
+        const lastImageName = input.lastImageFile ? await uploadVideoFrame(input.lastImageFile, "last", comfyServerUrl) : undefined;
+        const referenceMedia = await uploadReferences(input.referenceMedia ?? [], comfyServerUrl);
 
         const prompt = buildVideoPrompt({
           workflowId: input.workflowId,
           prompt: input.prompt,
           durationSeconds: input.durationSeconds,
           imageName,
+          lastImageName,
+          referenceMedia,
+          modelOverrides: input.modelOverrides,
+          loras: input.loras,
+          generationSettings: input.generationSettings,
+          resolution: input.resolution,
         });
+        await resolveVideoPromptModels(prompt, comfyServerUrl);
 
         const result = await generateVideoWithComfy(prompt, {
           serverAddress: comfyServerUrl,
@@ -114,4 +131,21 @@ export function useComfyVideoGenerate() {
   );
 
   return { generating, videoUrl, generate };
+}
+function uploadedImageName(uploaded: { name: string; subfolder: string }, file: File) {
+  return [uploaded.subfolder, uploaded.name || file.name].filter(Boolean).join("/");
+}
+async function uploadVideoFrame(file: File, role: string, server: string) {
+  // ComfyUI uploads overwrite names: unique names keep identically named first/last files independent.
+  const extension = /\.[a-z0-9]+$/i.exec(file.name)?.[0] || ".png";
+  const named = new File([file], `${role}_${crypto.randomUUID()}${extension}`, { type: file.type });
+  return uploadedImageName(await uploadImageToComfy(named, server), named);
+}
+async function uploadReferences(media: VideoReferenceFile[], server: string): Promise<UploadedVideoReference[]> {
+  const uploaded: UploadedVideoReference[] = [];
+  // 同一上传通道支持三种文件；顺序上传限制大视频同时转 base64 的内存占用。
+  for (const item of orderedReferences(media)) {
+    uploaded.push({ kind: item.kind, number: item.number, name: await uploadVideoFrame(item.file, item.kind, server) });
+  }
+  return uploaded;
 }

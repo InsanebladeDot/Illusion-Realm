@@ -7,15 +7,22 @@
 import type { ComfyApiPrompt, ComfyApiNode } from "@/types/comfy";
 import minimaxJson from "@/data/comfy/videoWorkflower/minnimax/minimax h3 图生视频-首尾帧.json";
 import wanJson from "@/data/comfy/videoWorkflower/wan2.2/wan2.2-Remix-NSFW.json";
+import referenceJson from "@/data/comfy/videoWorkflower/minnimax/minimax h3 参考视频.json";
+import { isMinimaxWorkflow } from "@/data/videoForm";
+import { applyVideoReferences, type UploadedVideoReference } from "./video-reference-media";
 import { t } from "@/i18n";
 import { cloneComfyPrompt } from "@/utils/comfy/workflowToApi";
+import { applyVideoModelOverrides, type VideoModelOverrides } from "./video-workflow-models";
+import { applyVideoLoras, type VideoLora } from "./video-workflow-loras";
+import { applyVideoGenerationSettings, type VideoGenerationSettings } from "./video-generation-settings";
+import { applyVideoResolution, type VideoResolutionSettings } from "./video-resolution";
 
 /**
- * 视频工作流注册表：底层模型/VAE/CLIP/采样器均固定，用户仅提供
- * 提示词、时长（wan2.2）、起始图片。参数注入按 class_type/_meta.title 定位节点。
+ * 工作流保持模板默认配置；用户可按加载节点覆盖模型名，参数按节点类型和连线注入。
  */
 const VIDEO_WORKFLOWS: Record<string, ComfyApiPrompt> = {
   minimax: minimaxJson as ComfyApiPrompt,
+  "minimax-reference": referenceJson as ComfyApiPrompt,
   "wan2.2": wanJson as ComfyApiPrompt,
 };
 
@@ -66,64 +73,77 @@ export type VideoGenerateInput = {
   workflowId: string;
   /** 正向提示词 */
   prompt: string;
-  /** 时长（秒），仅 wan2.2 需要 */
+  /** 时长（秒），不提供则保持模板值 */
   durationSeconds?: number;
   /** 已上传到 ComfyUI 输入目录的图片文件名 */
-  imageName: string;
+  imageName?: string;
+  referenceMedia?: UploadedVideoReference[];
+  lastImageName?: string;
+  modelOverrides?: VideoModelOverrides;
+  loras?: VideoLora[];
+  generationSettings?: VideoGenerationSettings;
+  resolution?: VideoResolutionSettings;
 };
 
-export function buildVideoPrompt(input: VideoGenerateInput): ComfyApiPrompt {
-  const base = VIDEO_WORKFLOWS[input.workflowId];
-  if (!base) {
-    throw new Error(
-      t("errors.videoWorkflow.unknownWorkflow", { workflowId: input.workflowId })
-    );
-  }
-  const prompt = cloneComfyPrompt(base);
-
-  if (input.workflowId === "minimax") {
-    // 提示词注入 MiniMaxH3ImageToVideo.prompt
-    setInput(
-      findNodeByClass(prompt, "MiniMaxH3ImageToVideo"),
-      "prompt",
-      input.prompt
-    );
-    // 首帧 + 尾帧都使用上传图片（单图驱动）
-    setInput(
-      findNodeByClass(prompt, "LoadImage", NODE_TITLE.firstFrame),
-      "image",
-      input.imageName
-    );
-    setInput(
-      findNodeByClass(prompt, "LoadImage", NODE_TITLE.lastFrame),
-      "image",
-      input.imageName
-    );
-  } else {
-    // wan2.2：正向提示词注入 Positive CLIPTextEncode
-    setInput(
-      findNodeByClass(prompt, "CLIPTextEncode", "Positive"),
-      "text",
-      input.prompt
-    );
-    // 时长
-    if (input.durationSeconds != null) {
-      const durationNode =
-        findNodeByClass(prompt, "PrimitiveFloat", "Duration") ??
-        findNodeByClass(prompt, "PrimitiveFloat", NODE_TITLE.duration);
-      setInput(durationNode, "value", input.durationSeconds);
+export function getVideoWorkflowTemplate(workflowId: string): ComfyApiPrompt {
+  const base = VIDEO_WORKFLOWS[workflowId];
+  if (!base) throw new Error(t("errors.videoWorkflow.unknownWorkflow", { workflowId }));
+  const template = cloneComfyPrompt(base);
+  // 视频不替用户预选 LoRA；移除节点时会把调度器和引导器重新接回 UNet。
+  if (isMinimaxWorkflow(workflowId)) applyVideoLoras(template, [], workflowId);
+  return template;
+}
+function requiredNode(prompt: ComfyApiPrompt, classType: string, titleKeyword?: string): NonNullable<NodeRef> {
+  const node = findNodeByClass(prompt, classType, titleKeyword);
+  if (!node) throw new Error(t("create.videoModels.missingNode", { name: classType }));
+  return node;
+}
+function applyMinimaxInputs(prompt: ComfyApiPrompt, input: VideoGenerateInput) {
+  if (!input.imageName) throw new Error(t("create.videoCreatePanel.startImageRequired"));
+  const video = requiredNode(prompt, "MiniMaxH3ImageToVideo").node;
+  video.inputs.prompt = input.prompt;
+  // 首帧沿用模板连接；新版模板没有尾帧节点时按需创建，不上传尾帧就移除对应输入。
+  for (const [name, image] of [["first_frame", input.imageName], ["last_frame", input.lastImageName]] as const) {
+    if (!image) { delete video.inputs[name]; continue; }
+    const link = video.inputs[name];
+    const node = Array.isArray(link) && typeof link[0] === "string" ? prompt[link[0]] : undefined;
+    if (node?.class_type === "LoadImage") node.inputs.image = image;
+    else {
+      let id = `ir_${name}`;
+      while (prompt[id]) id += "_";
+      prompt[id] = { class_type: "LoadImage", inputs: { image } };
+      video.inputs[name] = [id, 0];
     }
-    // 起始图片：新增 LoadImage 节点并接到 WanImageToVideo.image
-    prompt["start_image"] = {
-      class_type: "LoadImage",
-      inputs: { image: input.imageName },
-    };
-    setInput(
-      findNodeByClass(prompt, "WanImageToVideo"),
-      "image",
-      ["start_image", 0]
-    );
   }
+  if (input.durationSeconds != null) {
+    const math = requiredNode(prompt, "ComfyMathExpression").node;
+    const link = math.inputs["values.a"];
+    const duration = Array.isArray(link) && typeof link[0] === "string" ? prompt[link[0]] : undefined;
+    if (duration?.class_type !== "PrimitiveFloat") throw new Error(t("create.videoModels.missingNode", { name: "PrimitiveFloat" }));
+    duration.inputs.value = input.durationSeconds;
+  }
+}
+function applyWanInputs(prompt: ComfyApiPrompt, input: VideoGenerateInput) {
+  if (!input.imageName) throw new Error(t("create.videoCreatePanel.startImageRequired"));
+  setInput(requiredNode(prompt, "CLIPTextEncode", "Positive"), "text", input.prompt);
+  if (input.durationSeconds != null) {
+    const durationNode = findNodeByClass(prompt, "PrimitiveFloat", "Duration") ?? requiredNode(prompt, "PrimitiveFloat", NODE_TITLE.duration);
+    setInput(durationNode, "value", input.durationSeconds);
+  }
+  prompt["start_image"] = { class_type: "LoadImage", inputs: { image: input.imageName } };
+  setInput(requiredNode(prompt, "WanImageToVideo"), "image", ["start_image", 0]);
+}
 
+export function buildVideoPrompt(input: VideoGenerateInput): ComfyApiPrompt {
+  const prompt = getVideoWorkflowTemplate(input.workflowId);
+  if (input.workflowId === "minimax-reference") {
+    requiredNode(prompt, "MiniMaxH3ReferenceToVideo").node.inputs.prompt = input.prompt;
+    applyVideoReferences(prompt, input.referenceMedia ?? []);
+  } else if (input.workflowId === "minimax") applyMinimaxInputs(prompt, input);
+  else applyWanInputs(prompt, input);
+  applyVideoModelOverrides(prompt, input.modelOverrides, input.workflowId);
+  applyVideoLoras(prompt, input.loras, input.workflowId);
+  applyVideoGenerationSettings(prompt, input.generationSettings);
+  applyVideoResolution(prompt, input.resolution);
   return prompt;
 }

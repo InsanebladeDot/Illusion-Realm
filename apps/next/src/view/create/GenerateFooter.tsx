@@ -30,7 +30,6 @@ export function GenerateFooter({
       <button
         type="button"
         data-generate-button
-        disabled={generating}
         onClick={() => onGenerate?.(imageCount)}
         className={cn(
           "inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl px-8 text-base font-semibold shadow transition-colors active:scale-[0.99] sm:h-14",
@@ -38,7 +37,7 @@ export function GenerateFooter({
           PRIMARY_BUTTON_CLASS
         )}
       >
-        {generating ? t("create.progress.generating") : t("create.generateButton.label")}
+        {generating ? t("create.generationTasks.add") : t("create.generateButton.label")}
       </button>
     </div>
   );

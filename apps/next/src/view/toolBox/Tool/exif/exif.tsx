@@ -390,8 +390,8 @@ export default function ExifEditorPage() {
     if (files.length !== 1) return null;
     const target = buildRenamedName(files[0].name, singleRenamePrefix, singleRenameNum);
     return (
-      <p className="truncate font-mono text-xs text-gray-700">
-        {files[0].name} → <span className="font-bold text-purple-600">{target}</span>
+      <p className="truncate font-mono text-xs text-foreground">
+        {files[0].name} → <span className="font-bold text-sky-700 dark:text-sky-300">{target}</span>
       </p>
     );
   }, [files, singleRenamePrefix, singleRenameNum]);
@@ -407,10 +407,10 @@ export default function ExifEditorPage() {
           return (
             <span
               key={file.id}
-              className="max-w-[200px] truncate rounded border border-gray-200 bg-white px-2 py-1 font-mono text-xs text-gray-700"
+              className="max-w-[200px] truncate rounded border border-border bg-background px-2 py-1 font-mono text-xs text-foreground"
             >
               {file.name} →{" "}
-              <span className="font-bold text-purple-600">
+              <span className="font-bold text-sky-700 dark:text-sky-300">
                 {buildRenamedName(file.name, renamePrefix, sequence)}
               </span>
             </span>
@@ -423,8 +423,8 @@ export default function ExifEditorPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold text-gray-900">{t("toolBox.exif.title")}</h2>
-        <p className="mt-1 text-gray-500">
+        <h2 className="text-2xl font-bold text-foreground">{t("toolBox.exif.title")}</h2>
+        <p className="mt-1 text-muted-foreground">
           {isSingleMode
             ? t("toolBox.exif.subtitleSingle")
             : isBatchMode
@@ -438,8 +438,8 @@ export default function ExifEditorPage() {
           className={cn(
             "result-banner-in flex items-start gap-3 rounded-xl border p-4",
             lastResult.failed === 0
-              ? "border-green-200 bg-green-50 text-green-800"
-              : "border-amber-200 bg-amber-50 text-amber-800"
+              ? "border-green-500/30 bg-green-500/10 text-green-700 dark:text-green-300"
+              : "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300"
           )}
         >
           {lastResult.failed === 0 ? (
@@ -526,7 +526,7 @@ export default function ExifEditorPage() {
             onStartNumberChange={setSingleRenameNum}
             preview={
               <>
-                <p className="mb-2 text-xs font-medium text-gray-500">{t("toolBox.exif.renamePreview")}</p>
+                <p className="mb-2 text-xs font-medium text-muted-foreground">{t("toolBox.exif.renamePreview")}</p>
                 {singlePreview}
               </>
             }
@@ -539,8 +539,8 @@ export default function ExifEditorPage() {
           <div
             className={`rounded-lg border p-4 ${
               consistency.passed
-                ? "border-green-200 bg-green-50 text-green-800"
-                : "border-amber-200 bg-amber-50 text-amber-800"
+                ? "border-green-500/30 bg-green-500/10 text-green-700 dark:text-green-300"
+                : "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300"
             }`}
           >
             <div className="flex items-start gap-3">
@@ -585,7 +585,7 @@ export default function ExifEditorPage() {
             onAscendingChange={setRenameAscending}
             preview={
               <>
-                <p className="mb-2 text-xs font-medium text-gray-500">
+                <p className="mb-2 text-xs font-medium text-muted-foreground">
                   {t("toolBox.exif.batchRenamePreview")}
                 </p>
                 {batchPreview}

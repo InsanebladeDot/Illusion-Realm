@@ -1,3 +1,4 @@
+import type { ModelDownloadLocation, ModelDownloadRequest, ModelDownloadTarget, ModelDownloadTask, LocalModelCategoryTarget, MoveModelCategoryRequest } from "./model-download";
 import type {
   AgentEventMessage,
   AgentHostCall,
@@ -84,8 +85,8 @@ export type VideoGifOptions = {
 };
 
 export type VideoEditJob = {
-  /** single（默认）：单片段剪辑；concat：多片段拼接；gif：多片段合成动图 */
-  mode?: "single" | "concat" | "gif";
+  /** single（默认）：单片段剪辑；concat：拼接；gif：动图；frame：导出原始视频单帧 */
+  mode?: "single" | "concat" | "gif" | "frame";
   /** 单片段模式使用 */
   inputPath?: string;
   /** 拼接 / GIF 模式使用（顺序即输出顺序） */
@@ -97,10 +98,12 @@ export type VideoEditJob = {
   fps?: number;
   /** 源视频总时长（用于进度换算） */
   sourceDuration?: number;
+  /** frame 模式使用，原始视频时间轴上的位置（秒） */
+  frameTime?: number;
   trim?: { start: number; end: number };
   speed?: number;
   crop?: VideoCropOptions;
-  /** 强制重新编码以获得帧级精确剪切（默认无损流拷贝、按关键帧对齐） */
+  /** 默认 true，重新编码以获得帧级精确剪切；false 为按关键帧对齐的无损流拷贝 */
   accurateCut?: boolean;
   /** GIF 模式使用 */
   gif?: VideoGifOptions;
@@ -125,9 +128,29 @@ export type VideoProgressEvent = {
  * 失败信息以 `{ success: false, error, code? }` 返回；`on*` 订阅类方法返回取消订阅函数。
  */
 export type ElectronAPI = {
+  transformPrompt: (request: import("./prompt-assistant").PromptTransformRequest) => Promise<IpcResult<string>>;
+  promptSecretStatus: (connection: import("./prompt-assistant").PromptConnection) => Promise<IpcResult<import("./prompt-assistant").PromptSecretStatus>>;
+  promptSetSecret: (connection: import("./prompt-assistant").PromptConnection, key: string) => Promise<IpcResult<import("./prompt-assistant").PromptSecretStatus>>;
+  promptClearSecret: (connection: import("./prompt-assistant").PromptConnection) => Promise<IpcResult<import("./prompt-assistant").PromptSecretStatus>>;
   isElectron: boolean;
-  selectFolder: () => Promise<IpcResult<string | null>>;
+  hasCustomTitleBar: boolean;
+  onWindowChromeVisibility: (callback: (visible: boolean) => void) => () => void;
+  selectFolder: (defaultPath?: string) => Promise<IpcResult<string | null>>;
   scanModels: (dirPath: string, type: LocalModelType) => Promise<IpcResult<LocalModel[]>>;
+  modelDownloadTarget: (location: ModelDownloadLocation) => Promise<IpcResult<ModelDownloadTarget>>;
+  startModelDownload: (request: ModelDownloadRequest) => Promise<IpcResult<ModelDownloadTask>>;
+  cancelModelDownload: (id: string) => Promise<IpcResult<boolean>>;
+  retryModelDownload: (id: string) => Promise<IpcResult<ModelDownloadTask>>;
+  removeModelDownload: (id: string) => Promise<IpcResult<boolean>>;
+  listModelDownloads: () => Promise<IpcResult<ModelDownloadTask[]>>;
+  changeModelLogo: (folderPath: string) => Promise<IpcResult<string | null>>;
+  localModelCategoryTarget: (folderPath: string) => Promise<IpcResult<LocalModelCategoryTarget>>;
+  moveModelCategory: (request: MoveModelCategoryRequest) => Promise<IpcResult<string>>;
+  operateLocalModels: (request: import("./model-download").LocalModelBatchRequest) => Promise<IpcResult<import("./model-download").LocalModelBatchResult>>;
+  civitaiKeyStatus: () => Promise<IpcResult<{ configured: boolean; protection: "safeStorage" | "plain" | ""; tail: string }>>;
+  civitaiKeySet: (apiKey: string) => Promise<IpcResult<{ configured: boolean; protection: "safeStorage" | "plain" | ""; tail: string }>>;
+  civitaiKeyClear: () => Promise<IpcResult<{ configured: boolean; protection: "safeStorage" | "plain" | ""; tail: string }>>;
+  onModelDownloadProgress: (callback: (task: ModelDownloadTask) => void) => () => void;
   readLocalImage: (filePath: string | null) => Promise<IpcResult<string | null>>;
   listImageFiles: (
     dirPath: string
@@ -149,10 +172,7 @@ export type ElectronAPI = {
   comfyListModels: (
     serverAddress: string
   ) => Promise<
-    IpcResult<{
-      checkpoints: string[];
-      loras: string[];
-    }>
+    IpcResult<import("./comfy").ComfyModelLists>
   >;
   getDefaultOutputPath: () => Promise<IpcResult<string>>;
   saveGeneratedImages: (
@@ -268,7 +288,7 @@ export type ElectronAPI = {
   /** 保存单个文件（未选择输出文件夹时的回退路径） */
   videoPickOutput: (
     defaultName?: string,
-    kind?: "video" | "gif"
+    kind?: "video" | "gif" | "image"
   ) => Promise<IpcResult<string | null>>;
   videoProbe: (payload: {
     inputPath: string;

@@ -10,4 +10,4 @@ import { z } from 'zod';
 /** 非空路径字符串（跨平台，不强制绝对路径以便测试桩使用相对路径） */
 export const nonEmptyPathSchema = z.string().min(1).max(4096);
 
-export const localModelTypeSchema = z.enum(['checkpoint', 'lora']);
+export const localModelTypeSchema = z.enum(['checkpoint', 'lora', 'embedding']);

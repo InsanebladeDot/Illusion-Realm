@@ -203,11 +203,46 @@ export function useClipEditor({
     }
   }, [clips.length, ffmpegPath, isDesktop, showToast]);
 
-  const selectClip = useCallback((id: string) => {
-    setSelectedId(id);
+  /** 同源的不同区间不会触发 video 重新加载，切换时主动跳到新区间起点。 */
+  const activateClip = useCallback((clip: ClipItem) => {
+    videoRef.current?.pause();
+    pendingSeekRef.current = null;
+    lastSeekAtRef.current = 0;
+    setSelectedId(clip.id);
     setPlaying(false);
-    setPlayhead(0);
-  }, []);
+    setPlayhead(clip.trim.start);
+    if (clip.path === selectedClip?.path) flushSeek(clip.trim.start);
+  }, [flushSeek, selectedClip?.path]);
+
+  const selectClip = useCallback((id: string) => {
+    const clip = clips.find((item) => item.id === id);
+    if (clip) activateClip(clip);
+  }, [activateClip, clips]);
+
+  /** 同一个源视频可重复出现在处理列表中，每个区间拥有独立 ID 和起终点。 */
+  const addRange = useCallback(() => {
+    if (!selectedClip) return;
+    const sourceRanges = clips.filter((clip) => clip.path === selectedClip.path);
+    const minimum = Math.max(0.05, 1 / Math.max(1, selectedClip.fps));
+    const ordered = [...sourceRanges].sort((a, b) => a.trim.start - b.trim.start);
+    const gaps = ordered.reduce<{ start: number; end: number }[]>((result, range, index) => {
+      const previousEnd = index === 0 ? 0 : ordered[index - 1].trim.end;
+      if (range.trim.start - previousEnd >= minimum) result.push({ start: previousEnd, end: range.trim.start });
+      return result;
+    }, []);
+    const tail = ordered.at(-1)?.trim.end ?? 0;
+    if (selectedClip.duration - tail >= minimum) gaps.push({ start: tail, end: selectedClip.duration });
+    const gap = gaps.sort((a, b) => b.end - b.start - (a.end - a.start))[0];
+    const splitAt = selectedClip.trim.start + (selectedClip.trim.end - selectedClip.trim.start) / 2;
+    const addedTrim = gap
+      ? { start: gap.start, end: gap.end }
+      : { start: splitAt, end: selectedClip.trim.end };
+    const adjustedSelected = gap ? selectedClip : { ...selectedClip, trim: { start: selectedClip.trim.start, end: splitAt } };
+    const added: ClipItem = { ...selectedClip, id: createClipId(), trim: addedTrim };
+    setClips((previous) => previous.map((clip) => clip.id === selectedClip.id ? adjustedSelected : clip).concat(added));
+    activateClip(added);
+    callbacksRef.current.onClipsAdded?.([added], false);
+  }, [activateClip, clips, selectedClip]);
 
   const removeClip = useCallback(
     (id: string) => {
@@ -221,9 +256,9 @@ export function useClipEditor({
       }
       // 首段被移除时输出尺寸基准随之改变
       if (id === clips[0].id) callbacksRef.current.onFirstClipChange?.(next[0]);
-      if (id === selectedId) setSelectedId(next[0].id);
+      if (id === selectedId) activateClip(next[0]);
     },
-    [clips, selectedId]
+    [activateClip, clips, selectedId]
   );
 
   /** 拖拽调整顺序：顺序即处理顺序；首段变化时需要更新尺寸基准 */
@@ -242,11 +277,21 @@ export function useClipEditor({
     (start: number, end: number) => {
       if (!selectedClip) return;
       const id = selectedClip.id;
+      const frame = Math.max(0.05, 1 / Math.max(1, selectedClip.fps));
+      const others = clips.filter((clip) => clip.path === selectedClip.path && clip.id !== id)
+        .sort((a, b) => a.trim.start - b.trim.start);
+      const desired = Math.max(frame, Math.min(selectedClip.duration, end - start));
+      const previousEnd = others.filter((clip) => clip.trim.end <= selectedClip.trim.start + frame / 2)
+        .reduce((value, clip) => Math.max(value, clip.trim.end), 0);
+      const followingStart = others.filter((clip) => clip.trim.start >= selectedClip.trim.end - frame / 2)
+        .reduce((value, clip) => Math.min(value, clip.trim.start), selectedClip.duration);
+      const nextStart = Math.max(previousEnd, Math.min(start, followingStart - frame));
+      const nextEnd = Math.min(followingStart, Math.max(nextStart + frame, nextStart + desired));
       setClips((prev) =>
-        prev.map((clip) => (clip.id === id ? { ...clip, trim: { start, end } } : clip))
+        prev.map((clip) => (clip.id === id ? { ...clip, trim: { start: nextStart, end: nextEnd } } : clip))
       );
     },
-    [selectedClip]
+    [clips, selectedClip]
   );
 
   const togglePlay = useCallback(() => {
@@ -319,6 +364,7 @@ export function useClipEditor({
     selectionDuration,
     importClips,
     selectClip,
+    addRange,
     removeClip,
     reorderClips,
     setTrim,

@@ -196,8 +196,8 @@ export default function GifConverterPage() {
   return (
     <div className="space-y-5">
       <header>
-        <h2 className="text-2xl font-bold text-gray-900">{t("toolBox.gif.title")}</h2>
-        <p className="mt-1 text-gray-500">
+        <h2 className="text-2xl font-bold text-foreground">{t("toolBox.gif.title")}</h2>
+        <p className="mt-1 text-muted-foreground">
           {t("toolBox.gif.description")}
         </p>
       </header>
@@ -251,11 +251,11 @@ export default function GifConverterPage() {
           />
 
           {selectedClip && (
-            <section className="space-y-3 rounded-xl border border-gray-200 bg-white p-5">
-              <header className="flex items-center justify-between border-b border-gray-100 pb-3">
-                <h3 className="text-base font-semibold text-gray-900">
+            <section className="space-y-3 rounded-xl border border-border bg-background p-5">
+              <header className="flex items-center justify-between border-b border-border/60 pb-3">
+                <h3 className="text-base font-semibold text-foreground">
                   {t("toolBox.gif.trimSection")}
-                  <span className="ml-2 truncate text-xs font-normal text-gray-500">
+                  <span className="ml-2 truncate text-xs font-normal text-muted-foreground">
                     {/* i18n: 拼装点待收口到 toolBox.gif 的 helper */}
 {t("toolBox.gif.segmentPrefix")} {selectedIndex + 1}{" "}
                     {t("toolBox.gif.segmentMiddle")} {selectedClip.name}
@@ -309,7 +309,7 @@ export default function GifConverterPage() {
             onOpenResult={() => void handleOpenResult()}
           />
 
-          <p className="text-xs text-gray-500">
+          <p className="text-xs text-muted-foreground">
             {/* i18n: 拼装点待收口到 toolBox.gif 的 helper */}
 {t("toolBox.gif.durationPrefix")} {clips.length}{" "}
             {t("toolBox.gif.durationMiddle")} {formatTime(selectionDuration, true)}

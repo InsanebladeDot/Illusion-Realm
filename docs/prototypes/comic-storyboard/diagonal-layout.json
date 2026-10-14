@@ -1,0 +1,19 @@
+{
+  "format": "illusion-realm-comic-layout-prototype",
+  "version": 3,
+  "baseShape": "polygon",
+  "canvas": { "width": 1200, "height": 1600 },
+  "panelOrder": ["panel-a", "panel-b", "panel-d", "panel-c"],
+  "renderOrder": ["panel-a", "panel-b", "panel-c", "panel-d"],
+  "panels": [
+    { "id": "panel-a", "edge": "torn", "preset": "photo", "roughness": 24, "seed": 9137, "generatorVersion": 2, "cropFocusY": 0.05, "frame": { "x": 0.04, "y": 0.035, "width": 0.92, "height": 0.29 } },
+    { "id": "panel-b", "edge": "torn", "preset": "memory", "roughness": 24, "seed": 12361, "generatorVersion": 2, "cropFocusY": 0.14, "frame": { "x": 0.04, "y": 0.355, "width": 0.92, "height": 0.29 } },
+    { "id": "panel-c", "edge": "torn", "preset": "impact", "roughness": 24, "seed": 43781, "generatorVersion": 2, "cropFocusY": 0.10, "frame": { "x": 0.04, "y": 0.675, "width": 0.92, "height": 0.29 } }
+  ],
+  "overlay": { "direction": "down-right", "width": 180, "offset": 0, "visible": true, "edge": "torn", "preset": "photo", "roughness": 36, "seed": 7319, "generatorVersion": 2 },
+  "composition": {
+    "basePanelIds": ["panel-a", "panel-b", "panel-c"],
+    "overlayPanelId": "panel-d",
+    "minimumBaseVisibleRatio": 0.3
+  }
+}

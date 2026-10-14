@@ -38,6 +38,8 @@ import {
 } from "@/utils/layout";
 import { cn } from "@/utils/cn";
 import type { PromptTabToolId } from "@/types/promptTabs";
+import { PromptAssistantToolbar } from "@/components/prompt-assistant/prompt-assistant-toolbar";
+import { readEditableText, setEditableText } from "@/utils/promptEditor";
 
 /**
  * 工具 id → 图标（**表现层**，不进数据层）；
@@ -248,6 +250,8 @@ export function PromptSection({
                 advancedPrompt && "bg-muted/30 text-muted-foreground"
               )}
             />
+            {/* 界面：输入框内的半透明提示词助手；组装模式在各分类输入框使用 */}
+            {!advancedPrompt && <PromptAssistantToolbar contextId="prompt-editor" read={() => readEditableText("prompt-editor")} write={value => setEditableText("prompt-editor", value)} />}
           </CollapsiblePanel>
 
         </div>

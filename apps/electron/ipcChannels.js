@@ -10,12 +10,24 @@
 const IPC_CHANNELS = {
   // window
   WINDOW_SET_FULL_SCREEN: "window:setFullScreen",
+  WINDOW_CHROME_VISIBILITY: "window:chromeVisibility",
   // theme
   THEME_SET_THEME_SOURCE: "theme:setThemeSource",
   // dialog
   DIALOG_SELECT_FOLDER: "dialog:selectFolder",
   // models
   MODELS_SCAN: "models:scan",
+  MODELS_DOWNLOAD_TARGET: "models:downloadTarget",
+  MODELS_DOWNLOAD_START: "models:downloadStart",
+  MODELS_DOWNLOAD_CANCEL: "models:downloadCancel",
+  MODELS_DOWNLOAD_RETRY: "models:downloadRetry",
+  MODELS_DOWNLOAD_REMOVE: "models:downloadRemove",
+  MODELS_DOWNLOAD_LIST: "models:downloadList",
+  MODELS_CHANGE_LOGO: "models:changeLogo",
+  MODELS_CATEGORY_TARGET: "models:categoryTarget",
+  MODELS_MOVE_CATEGORY: "models:moveCategory",
+  MODELS_BATCH: "models:batch",
+  MODELS_DOWNLOAD_PROGRESS: "models:downloadProgress",
   // files
   FILES_READ_IMAGE_DATA_URL: "files:readImageDataUrl",
   FILES_LIST_IMAGE_FILES: "files:listImageFiles",
@@ -69,6 +81,13 @@ const IPC_CHANNELS = {
   AGENT_SECRET_STATUS: "agent:secretStatus",
   AGENT_SECRET_SET: "agent:secretSet",
   AGENT_SECRET_CLEAR: "agent:secretClear",
+  CIVITAI_KEY_STATUS: "civitai:keyStatus",
+  CIVITAI_KEY_SET: "civitai:keySet",
+  CIVITAI_KEY_CLEAR: "civitai:keyClear",
+  PROMPT_TRANSFORM: "prompt:transform",
+  PROMPT_SECRET_STATUS: "prompt:secretStatus",
+  PROMPT_SECRET_SET: "prompt:secretSet",
+  PROMPT_SECRET_CLEAR: "prompt:secretClear",
 };
 
 module.exports = { IPC_CHANNELS };

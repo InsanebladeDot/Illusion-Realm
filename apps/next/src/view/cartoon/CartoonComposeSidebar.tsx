@@ -271,7 +271,7 @@ export function CartoonComposeSidebar({
                   type="button"
                   onClick={onBubbleDelete}
                   title={t("cartoon.compose.bubbleListDeleteTitle")}
-                  className="inline-flex items-center gap-1 rounded-md border border-red-500/40 px-2 py-1 text-xs text-red-600 hover:bg-red-500/10"
+                  className="inline-flex items-center gap-1 rounded-md border border-red-500/40 px-2 py-1 text-xs text-red-700 dark:text-red-300 hover:bg-red-500/10"
                 >
                   <Trash2 className="h-3 w-3" />
                   {t("common.delete")}
@@ -323,7 +323,7 @@ export function CartoonComposeSidebar({
                     className={cn(
                       "w-full rounded-lg border px-2 py-1.5 text-left text-xs transition-colors",
                       selectedText?.id === item.id
-                        ? "border-violet-500/50 bg-violet-500/10"
+                        ? "border-sky-500/50 bg-sky-500/10"
                         : "border-border hover:bg-muted/40"
                     )}
                   >
@@ -426,7 +426,7 @@ export function CartoonComposeSidebar({
                 type="button"
                 onClick={onTextItemDelete}
                 title={t("cartoon.compose.textDeleteTitle")}
-                className="inline-flex items-center gap-1 rounded-md border border-red-500/40 px-2 py-1 text-xs text-red-600 hover:bg-red-500/10"
+                className="inline-flex items-center gap-1 rounded-md border border-red-500/40 px-2 py-1 text-xs text-red-700 dark:text-red-300 hover:bg-red-500/10"
               >
                 <Trash2 className="h-3 w-3" />
                 {t("common.delete")}
@@ -444,8 +444,8 @@ export function CartoonComposeSidebar({
                 className={cn(
                   "text-[11px]",
                   dialogueHint.level === "ok" && "text-muted-foreground",
-                  dialogueHint.level === "warn" && "text-amber-600",
-                  dialogueHint.level === "over" && "text-red-600"
+                  dialogueHint.level === "warn" && "text-amber-700 dark:text-amber-300",
+                  dialogueHint.level === "over" && "text-red-700 dark:text-red-300"
                 )}
               >
                 {t("cartoon.compose.charCount")} {dialogueHint.count}
@@ -576,7 +576,7 @@ export function CartoonComposeSidebar({
                     className={cn(
                       "h-6 w-6 rounded border border-border/80",
                       selectedText.color.toLowerCase() === color.toLowerCase() &&
-                        "ring-2 ring-violet-500 ring-offset-1"
+                        "ring-2 ring-sky-500 ring-offset-1"
                     )}
                     style={{ backgroundColor: color }}
                   />
@@ -623,7 +623,7 @@ export function CartoonComposeSidebar({
                 onChange={(event) =>
                   patchSelected({ lineHeightScale: Number(event.target.value) })
                 }
-                className="w-full accent-violet-600"
+                className="w-full accent-sky-600"
               />
             </div>
 
@@ -641,7 +641,7 @@ export function CartoonComposeSidebar({
                 onChange={(event) =>
                   patchSelected({ letterSpacing: Number(event.target.value) })
                 }
-                className="w-full accent-violet-600"
+                className="w-full accent-sky-600"
               />
             </div>
 
@@ -659,7 +659,7 @@ export function CartoonComposeSidebar({
                 onChange={(event) =>
                   patchSelected({ strokeWidth: Number(event.target.value) })
                 }
-                className="w-full accent-violet-600"
+                className="w-full accent-sky-600"
               />
               {selectedText.strokeWidth > 0 ? (
                 <input
@@ -688,12 +688,12 @@ export function CartoonComposeSidebar({
                 onChange={(event) =>
                   patchSelected({ textRotation: Number(event.target.value) })
                 }
-                className="w-full accent-violet-600"
+                className="w-full accent-sky-600"
               />
             </div>
 
-            <div className="space-y-3 rounded-lg border border-violet-500/30 bg-violet-500/5 p-3">
-              <p className="text-xs font-medium text-violet-900 dark:text-violet-100">
+            <div className="space-y-3 rounded-lg border border-sky-500/30 bg-sky-500/5 p-3">
+              <p className="text-xs font-medium text-sky-700 dark:text-sky-300">
                 {t("cartoon.compose.textBoxSection")}
               </p>
               <div>
@@ -715,7 +715,7 @@ export function CartoonComposeSidebar({
                       ),
                     })
                   }
-                  className="w-full accent-violet-600"
+                  className="w-full accent-sky-600"
                 />
               </div>
               <div>
@@ -737,7 +737,7 @@ export function CartoonComposeSidebar({
                       ),
                     })
                   }
-                  className="w-full accent-violet-600"
+                  className="w-full accent-sky-600"
                 />
               </div>
             </div>

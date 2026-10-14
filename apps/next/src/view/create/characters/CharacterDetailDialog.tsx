@@ -9,6 +9,7 @@ import { useToastStore } from "@/stores/useToastStore";
 import type { AnimadexCharacter, AnimadexLora } from "@/types/character";
 import { copyText, formatCount } from "@/utils/charactersFormat";
 import { cn } from "@/utils/cn";
+import { PRIMARY_BUTTON_CLASS } from "@/utils/layout";
 
 type CharacterDetailDialogProps = {
   character: AnimadexCharacter | null;
@@ -19,9 +20,7 @@ type CharacterDetailDialogProps = {
   onOpenChange: (open: boolean) => void;
 };
 
-const ACCENT = "#8B5CF6";
-
-/** 线框按钮（白底 + 1px 浅灰边框 + 深灰文字，悬浮变主题色边框） */
+/** 线框按钮：复用主题背景、文字与强调色描边。 */
 function OutlineAction({
   icon,
   label,
@@ -34,8 +33,8 @@ function OutlineAction({
   href?: string;
 }) {
   const className = cn(
-    "inline-flex h-9 items-center justify-center gap-1.5 rounded-lg border border-[#E5E7EB] bg-white px-3 text-sm text-[#333333] transition-colors",
-    "hover:border-[#C4B5FD] hover:text-[#6D28D9]"
+    "inline-flex h-9 items-center justify-center gap-1.5 rounded-lg border border-border bg-background px-3 text-sm text-foreground transition-colors",
+    "hover:border-accent-stroke hover:text-foreground"
   );
 
   if (href) {
@@ -101,7 +100,7 @@ export function CharacterDetailDialog({
       titleId="character-detail-dialog-title"
       description={
         <span className="inline-flex items-center gap-2">
-          <span className="rounded-md bg-[#F0F0F0] px-1.5 py-0.5 text-[11px] text-[#666666]">
+          <span className="rounded-md bg-muted px-1.5 py-0.5 text-[11px] text-muted-foreground">
             {character.copyrightName || character.copyright || t("characters.detail.unknownWork")}
           </span>
           <span>{character.tags.length}{t("characters.detail.tagUnit")}</span>
@@ -112,7 +111,7 @@ export function CharacterDetailDialog({
     >
       <div className="mx-auto flex max-w-4xl flex-col gap-5 lg:flex-row">
         {/* 主图 */}
-        <div className="relative min-h-[240px] w-full shrink-0 overflow-hidden rounded-xl border border-[#E8E8E8] bg-[#F3F4F6] lg:w-72">
+        <div className="relative min-h-[240px] w-full shrink-0 overflow-hidden rounded-xl border border-border bg-muted lg:w-72">
           {character.imageUrl || character.thumbUrl ? (
             <Image
               src={character.imageUrl || character.thumbUrl}
@@ -122,7 +121,7 @@ export function CharacterDetailDialog({
               className="object-cover"
             />
           ) : (
-            <div className="flex h-64 items-center justify-center text-xs text-[#9CA3AF]">
+            <div className="flex h-64 items-center justify-center text-xs text-muted-foreground">
               {t("characters.detail.noPreview")}
             </div>
           )}
@@ -131,13 +130,13 @@ export function CharacterDetailDialog({
         <div className="min-w-0 flex-1 space-y-5">
           {/* Trigger 触发词 */}
           <div className="space-y-1.5">
-            <p className="text-xs font-medium text-[#888888]">
+            <p className="text-xs font-medium text-muted-foreground">
               {t("characters.detail.triggerLabel")}
             </p>
             <div className="flex items-center gap-2">
               <div
                 data-character-trigger
-                className="h-10 min-w-0 flex-1 truncate rounded-lg border-0 bg-[#F5F6F8] px-3 text-sm leading-10 text-[#333333]"
+                className="h-10 min-w-0 flex-1 truncate rounded-lg border-0 bg-muted px-3 text-sm leading-10 text-foreground"
                 title={character.trigger}
               >
                 {character.trigger || t("characters.detail.noTrigger")}
@@ -147,8 +146,7 @@ export function CharacterDetailDialog({
                 data-character-add-lora
                 aria-expanded={lorasOpen}
                 onClick={() => setLorasOpen((prev) => !prev)}
-                className="shrink-0 rounded-full px-3 py-2 text-xs font-medium text-white transition-opacity hover:opacity-90"
-                style={{ background: ACCENT }}
+                className={cn("shrink-0 rounded-full px-3 py-2 text-xs font-medium transition-colors", PRIMARY_BUTTON_CLASS)}
               >
                 + LoRA{loras.length > 0 ? `（${loras.length}）` : ""}
               </button>
@@ -157,10 +155,10 @@ export function CharacterDetailDialog({
             {lorasOpen && (
               <div
                 data-character-lora-list
-                className="space-y-2 rounded-lg border border-[#E8E8E8] bg-white p-2"
+                className="space-y-2 rounded-lg border border-border bg-background p-2"
               >
                 {loras.length === 0 ? (
-                  <p className="px-1 py-2 text-xs text-[#9CA3AF]">
+                  <p className="px-1 py-2 text-xs text-muted-foreground">
                     {t("characters.detail.noLora")}
                   </p>
                 ) : (
@@ -170,7 +168,7 @@ export function CharacterDetailDialog({
                       href={lora.url || "#"}
                       target="_blank"
                       rel="noreferrer"
-                      className="flex items-center gap-2 rounded-md p-1.5 transition-colors hover:bg-[#F8F9FA]"
+                      className="flex items-center gap-2 rounded-md p-1.5 transition-colors hover:bg-muted"
                     >
                       {lora.thumb ? (
                         <Image
@@ -181,14 +179,14 @@ export function CharacterDetailDialog({
                           className="h-10 w-10 shrink-0 rounded object-cover"
                         />
                       ) : (
-                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded bg-[#F0F0F0] text-[#9CA3AF]">
+                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded bg-muted text-muted-foreground">
                           <ImageIcon className="h-4 w-4" />
                         </span>
                       )}
-                      <span className="min-w-0 flex-1 truncate text-xs text-[#333333]">
+                      <span className="min-w-0 flex-1 truncate text-xs text-foreground">
                         {lora.name}
                       </span>
-                      <ExternalLink className="h-3.5 w-3.5 shrink-0 text-[#9CA3AF]" />
+                      <ExternalLink className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                     </a>
                   ))
                 )}
@@ -198,7 +196,7 @@ export function CharacterDetailDialog({
 
           {/* TAGS */}
           <div className="space-y-2">
-            <p className="text-sm font-light text-[#6B7280]">
+            <p className="text-sm font-light text-muted-foreground">
               TAGS · {character.tags.length}
             </p>
             <div
@@ -206,14 +204,14 @@ export function CharacterDetailDialog({
               className="flex flex-wrap gap-1.5"
             >
               {character.tags.length === 0 ? (
-                <span className="text-xs text-[#9CA3AF]">
+                <span className="text-xs text-muted-foreground">
                   {t("characters.detail.noTags")}
                 </span>
               ) : (
                 character.tags.map((tag) => (
                   <span
                     key={tag}
-                    className="rounded-md border border-[#EDEDED] bg-[#FAFAFA] px-2 py-0.5 text-xs text-[#555555]"
+                    className="rounded-md border border-border bg-muted px-2 py-0.5 text-xs text-muted-foreground"
                   >
                     {tag}
                   </span>
@@ -244,7 +242,7 @@ export function CharacterDetailDialog({
                 <Heart
                   className={cn(
                     "h-4 w-4",
-                    favorite && "fill-[#8B5CF6] text-[#8B5CF6]"
+                    favorite && "fill-accent-fill text-accent-fill"
                   )}
                 />
               }
@@ -258,7 +256,7 @@ export function CharacterDetailDialog({
           </div>
 
           {/* 底部信息栏 */}
-          <div className="flex items-center gap-5 border-t border-[#EFEFEF] pt-3 text-xs text-[#999999]">
+          <div className="flex items-center gap-5 border-t border-border pt-3 text-xs text-muted-foreground">
             <span className="inline-flex items-center gap-1">
               <Heart className="h-3.5 w-3.5" />
               {formatCount(character.favCount)}

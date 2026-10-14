@@ -17,6 +17,7 @@ import {
 
 /** 图像工作流系列（与 imageWorkflow 的 ImageWorkflowSeries 一致，避免循环依赖此处用字面量） */
 type ImageWorkflowSeriesLike = "anima" | "sdxl";
+export type LocalResourceSeries = ImageWorkflowSeriesLike | "minimax";
 
 export const LOCAL_CHECKPOINT_PREFIX = "local-checkpoint:";
 export const LOCAL_LORA_PREFIX = "local-lora:";
@@ -99,26 +100,98 @@ export function localCheckpointToCreateModel(
   };
 }
 
-export function localLoraToCreateExtension(
-  model: LocalModel,
-  scanRoot = ""
-): CreateExtension {
-  const cover = model.iconPath ?? "";
-  const primaryVersion = model.versions?.[0];
+function resolveLoraScanRoot(paths?: SettingsPaths): string {
+  if (!paths) return "";
+  const searchRoot = paths.searchPath.trim().replace(/[\\/]+$/, "");
+  return searchRoot
+    ? `${searchRoot}/loras`
+    : resolveScanRootForType(paths, "lora");
+}
+
+interface LoraFolderLocation {
+  category: string;
+  series: LocalResourceSeries | null;
+}
+
+function getRelativeFolderSegments(scanRoot: string, folderPath: string) {
+  const folder = folderPath.replace(/\\/g, "/");
+  if (!scanRoot) {
+    const segments = folder.split("/").filter(Boolean);
+    const lorasIndex = segments.findLastIndex(
+      (segment) => segment.toLowerCase() === "loras"
+    );
+    return lorasIndex >= 0 ? segments.slice(lorasIndex + 1) : segments.slice(-2);
+  }
+
+  const root = scanRoot.replace(/\\/g, "/").replace(/\/+$/, "");
+  if (!folder.toLowerCase().startsWith(`${root.toLowerCase()}/`)) return [];
+  return folder.slice(root.length).split("/").filter(Boolean);
+}
+
+function parseLoraFolderLocation(
+  scanRoot: string,
+  folderPath: string
+): LoraFolderLocation | null {
+  const segments = getRelativeFolderSegments(scanRoot, folderPath);
+  if (segments.length === 2 && segments[0].toLowerCase() === "minimax") {
+    return { category: segments[0], series: "minimax" };
+  }
+  if (segments.length === 2) {
+    return { category: segments[0], series: null };
+  }
+  if (segments.length !== 3) return null;
+
+  const series = segments[0].toLowerCase();
+  if (series !== "anima" && series !== "sdxl" && series !== "minimax") return null;
+  return { category: segments[1], series };
+}
+
+function createLoraVersion(model: LocalModel) {
+  const file = model.versions[0];
+  if (!file) return null;
   return {
-    id: makeLocalLoraId(model.filePath),
-    name: model.name,
-    seriesTag: DEFAULT_SERIES_TAG,
-    cover,
-    versionLabel: primaryVersion?.name ?? "",
-    isLocal: true,
-    filePath: model.filePath,
-    category: getFirstLevelCategory(scanRoot, model.filePath),
-    versions: (model.versions ?? []).map((version) => ({
-      id: makeLocalLoraId(version.filePath),
-      label: version.name,
-    })),
+    id: makeLocalLoraId(file.filePath),
+    label: model.name,
+    detailLabel: file.name,
+    cover: model.iconPath ?? "",
   };
+}
+
+function createLoraCategoryExtension(
+  category: string,
+  models: LocalModel[]
+): CreateExtension | null {
+  const sorted = [...models].sort((a, b) =>
+    a.name.localeCompare(b.name, "zh-CN")
+  );
+  const versions = sorted
+    .map(createLoraVersion)
+    .filter((version): version is NonNullable<typeof version> => version !== null);
+  if (versions.length === 0) return null;
+
+  return {
+    id: `local-lora-category:${category}`,
+    name: category,
+    seriesTag: DEFAULT_SERIES_TAG,
+    cover: versions[0].cover ?? "",
+    versionLabel: versions[0].label,
+    isLocal: true,
+    filePath: sorted[0].filePath,
+    category,
+    versions,
+  };
+}
+
+function isLoraLocationVisible(
+  location: LoraFolderLocation,
+  series: LocalResourceSeries | undefined,
+  hasSeriesFolder: boolean
+): boolean {
+  if (!series) return true;
+  if (series === "minimax") return location.series === "minimax";
+  return hasSeriesFolder
+    ? location.series === series
+    : location.series === null;
 }
 
 export function buildCreateModelsFromLocal(
@@ -128,19 +201,36 @@ export function buildCreateModelsFromLocal(
   const scanRoot = paths
     ? resolveScanRootForType(paths, "checkpoint")
     : "";
-  return filterLocalModelsByType(localModels, "checkpoint").map((model) =>
+  return filterLocalModelsByType(localModels, "checkpoint").filter((model) => !isNonDiffusionModelPath(`${model.filePath}/model`)).map((model) =>
     localCheckpointToCreateModel(model, scanRoot)
   );
 }
 
 export function buildCreateExtensionsFromLocal(
   localModels: LocalModel[],
-  paths?: SettingsPaths
+  paths?: SettingsPaths,
+  series?: LocalResourceSeries
 ): CreateExtension[] {
-  const scanRoot = paths ? resolveScanRootForType(paths, "lora") : "";
-  return filterLocalModelsByType(localModels, "lora").map((model) =>
-    localLoraToCreateExtension(model, scanRoot)
+  const scanRoot = resolveLoraScanRoot(paths);
+  const located = filterLocalModelsByType(localModels, "lora").flatMap((model) => {
+    const location = parseLoraFolderLocation(scanRoot, model.filePath);
+    return location ? [{ model, location }] : [];
+  });
+  const hasSeriesFolder = Boolean(
+    series && located.some((item) => item.location.series === series)
   );
+  const grouped = new Map<string, LocalModel[]>();
+  for (const item of located) {
+    if (!isLoraLocationVisible(item.location, series, hasSeriesFolder)) continue;
+    const bucket = grouped.get(item.location.category) ?? [];
+    bucket.push(item.model);
+    grouped.set(item.location.category, bucket);
+  }
+
+  return [...grouped.entries()]
+    .map(([category, models]) => createLoraCategoryExtension(category, models))
+    .filter((extension): extension is CreateExtension => extension !== null)
+    .sort((a, b) => a.name.localeCompare(b.name, "zh-CN"));
 }
 
 export function filterAndSortLocalCreateModels(

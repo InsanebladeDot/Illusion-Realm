@@ -39,9 +39,13 @@ type HistoryFolderState = {
   pendingOpenImagePath: string | null;
   /** 图片区视图档位（网格 / 堆栈 / 收藏） */
   viewMode: HistoryViewMode;
+  outputMode: "free" | "fixed";
+  fixedOutputPath: string;
   setSelectedFolderId: (folderId: string) => void;
   openFolder: (folderId: string) => void;
   setViewMode: (viewMode: HistoryViewMode) => void;
+  setOutputMode: (mode: "free" | "fixed") => void;
+  setFixedOutputPath: (path: string) => void;
   refreshGeneratedImages: () => void;
   refreshFolders: () => void;
   requestOpenImage: (filePath: string) => void;
@@ -64,6 +68,8 @@ export const useHistoryFolderStore = create<HistoryFolderState>()(
       foldersRefreshVersion: 0,
       pendingOpenImagePath: null,
       viewMode: "grid",
+      outputMode: "free",
+      fixedOutputPath: "",
       setSelectedFolderId: (folderId) =>
         set({ selectedFolderId: normalizeFolderId(folderId) }),
       openFolder: (folderId) => {
@@ -71,6 +77,9 @@ export const useHistoryFolderStore = create<HistoryFolderState>()(
         set({ selectedFolderId: normalized, openedFolderId: normalized });
       },
       setViewMode: (viewMode) => set({ viewMode }),
+      setOutputMode: (outputMode) => set({ outputMode }),
+      setFixedOutputPath: (fixedOutputPath) =>
+        set({ fixedOutputPath: fixedOutputPath.trim() }),
       refreshGeneratedImages: () =>
         set((state) => ({
           imagesRefreshVersion: state.imagesRefreshVersion + 1,
@@ -89,6 +98,8 @@ export const useHistoryFolderStore = create<HistoryFolderState>()(
       partialize: (state): UserDataHistoryFolders => ({
         selectedFolderId: state.selectedFolderId,
         openedFolderId: state.openedFolderId,
+        outputMode: state.outputMode,
+        fixedOutputPath: state.fixedOutputPath,
       }),
       skipHydration: true,
     }

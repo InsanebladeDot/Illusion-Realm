@@ -11,6 +11,7 @@ import {
   TAG_LIBRARY_PAGE_SIZE,
   buildTagPrompt,
   filterTagItems,
+  formatTagPreview,
   type TagSortMode,
 } from "@/utils/tagLibrary";
 import type { StaticTagItem } from "@/types/staticTagLibrary";
@@ -55,6 +56,7 @@ export function TagLibraryDialog({
   const [sort, setSort] = useState<TagSortMode>("default");
   const [multi, setMulti] = useState(true);
   const [selectedOnly, setSelectedOnly] = useState(false);
+  const [displayMode, setDisplayMode] = useState<"card" | "text">("card");
   const [page, setPage] = useState(1);
   const [selected, setSelected] = useState<StaticTagItem[]>([]);
 
@@ -74,6 +76,7 @@ export function TagLibraryDialog({
       setCategory("");
       setSort("default");
       setSelectedOnly(false);
+      setDisplayMode("card");
       setSelected([]);
       setPage(1);
     }
@@ -175,6 +178,8 @@ export function TagLibraryDialog({
             setPage(1);
           }}
           onClearSelected={() => setSelected([])}
+          displayMode={displayMode}
+          onDisplayModeChange={setDisplayMode}
         />
       }
       bodyPadded={false}
@@ -262,16 +267,30 @@ export function TagLibraryDialog({
           ) : (
             <div
               {...{ [`data-${prefix}-grid`]: "true" }}
-              className="grid grid-cols-2 content-start gap-3 sm:grid-cols-3 lg:grid-cols-4"
+              className={
+                displayMode === "text"
+                  ? "flex content-start flex-wrap gap-2"
+                  : "grid grid-cols-2 content-start gap-3 sm:grid-cols-3 lg:grid-cols-4"
+              }
             >
               {visible.map((item) => (
-                <TagLibraryCard
-                  key={item.id}
-                  item={item}
-                  prefix={prefix}
-                  selected={selectedIds.includes(item.id)}
-                  onOpen={() => toggleItem(item)}
-                />
+                displayMode === "text" ? (
+                  <TagLibraryTextItem
+                    key={item.id}
+                    item={item}
+                    prefix={prefix}
+                    selected={selectedIds.includes(item.id)}
+                    onOpen={() => toggleItem(item)}
+                  />
+                ) : (
+                  <TagLibraryCard
+                    key={item.id}
+                    item={item}
+                    prefix={prefix}
+                    selected={selectedIds.includes(item.id)}
+                    onOpen={() => toggleItem(item)}
+                  />
+                )
               ))}
             </div>
           )}
@@ -300,4 +319,55 @@ export function TagLibraryDialog({
       </section>
     </ResourceDialogShell>
   );
+}
+
+function TagLibraryTextItem({
+  item,
+  prefix,
+  selected,
+  onOpen,
+}: {
+  item: StaticTagItem;
+  prefix: string;
+  selected: boolean;
+  onOpen: () => void;
+}) {
+  const { t } = useTranslation();
+  const prompt = formatTagPreview(item.tags, 1) || item.name;
+  const color = textTagColor(item.categories?.[0] || item.id);
+
+  return (
+    <button
+      type="button"
+      {...{ [`data-${prefix}-card`]: item.id }}
+      {...{ [`data-${prefix}-selected`]: selected ? "true" : "false" }}
+      aria-label={t("characters.card.select", { name: item.name_zh || item.name })}
+      aria-pressed={selected}
+      title={`${item.name_zh || item.name} ${prompt}`}
+      onClick={onOpen}
+      className={cn(
+        "inline-flex min-h-9 max-w-full items-center gap-1.5 rounded-lg border bg-white px-3 py-1.5 text-left text-xs transition-colors hover:bg-[#FAFAFA]",
+        selected
+          ? "border-[#A78BFA] bg-[#F5F3FF] ring-1 ring-[#A78BFA]"
+          : "border-[#D1D5DB]"
+      )}
+    >
+      <span
+        aria-hidden
+        className="h-2 w-2 shrink-0 rounded-full"
+        style={{ backgroundColor: color }}
+      />
+      <span className="max-w-[14rem] truncate font-semibold text-[#222222]">
+        {item.name_zh || item.name}
+      </span>
+      <span className="max-w-[18rem] truncate text-[#666666]">{prompt}</span>
+    </button>
+  );
+}
+
+function textTagColor(id: string): string {
+  const colors = ["#EAB308", "#F97316", "#38BDF8", "#A78BFA", "#34D399"];
+  let hash = 0;
+  for (const char of id) hash = (hash * 31 + char.charCodeAt(0)) | 0;
+  return colors[Math.abs(hash) % colors.length];
 }

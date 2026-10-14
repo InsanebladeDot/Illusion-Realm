@@ -14,9 +14,36 @@ const { parseInitialLocale } = require("./initialLocale");
  */
 const api = {
   isElectron: true,
-  selectFolder: () => ipcRenderer.invoke(IPC_CHANNELS.DIALOG_SELECT_FOLDER),
+  hasCustomTitleBar: process.argv.includes("--illusion-custom-titlebar"),
+  onWindowChromeVisibility: (callback) => {
+    /** @param {Electron.IpcRendererEvent} _event @param {unknown} visible */
+    const listener = (_event, visible) => { if (typeof visible === "boolean") callback(visible); };
+    ipcRenderer.on(IPC_CHANNELS.WINDOW_CHROME_VISIBILITY, listener);
+    return () => ipcRenderer.removeListener(IPC_CHANNELS.WINDOW_CHROME_VISIBILITY, listener);
+  },
+  selectFolder: (defaultPath) =>
+    ipcRenderer.invoke(IPC_CHANNELS.DIALOG_SELECT_FOLDER, defaultPath),
   scanModels: (dirPath, type) =>
     ipcRenderer.invoke(IPC_CHANNELS.MODELS_SCAN, dirPath, type),
+  modelDownloadTarget: (location) => ipcRenderer.invoke(IPC_CHANNELS.MODELS_DOWNLOAD_TARGET, location),
+  startModelDownload: (request) => ipcRenderer.invoke(IPC_CHANNELS.MODELS_DOWNLOAD_START, request),
+  cancelModelDownload: (id) => ipcRenderer.invoke(IPC_CHANNELS.MODELS_DOWNLOAD_CANCEL, id),
+  retryModelDownload: (id) => ipcRenderer.invoke(IPC_CHANNELS.MODELS_DOWNLOAD_RETRY, id),
+  removeModelDownload: (id) => ipcRenderer.invoke(IPC_CHANNELS.MODELS_DOWNLOAD_REMOVE, id),
+  listModelDownloads: () => ipcRenderer.invoke(IPC_CHANNELS.MODELS_DOWNLOAD_LIST),
+  changeModelLogo: (folderPath) => ipcRenderer.invoke(IPC_CHANNELS.MODELS_CHANGE_LOGO, folderPath),
+  localModelCategoryTarget: (folderPath) => ipcRenderer.invoke(IPC_CHANNELS.MODELS_CATEGORY_TARGET, folderPath),
+  moveModelCategory: (request) => ipcRenderer.invoke(IPC_CHANNELS.MODELS_MOVE_CATEGORY, request),
+  operateLocalModels: (request) => ipcRenderer.invoke(IPC_CHANNELS.MODELS_BATCH, request),
+  civitaiKeyStatus: () => ipcRenderer.invoke(IPC_CHANNELS.CIVITAI_KEY_STATUS),
+  civitaiKeySet: (apiKey) => ipcRenderer.invoke(IPC_CHANNELS.CIVITAI_KEY_SET, apiKey),
+  civitaiKeyClear: () => ipcRenderer.invoke(IPC_CHANNELS.CIVITAI_KEY_CLEAR),
+  onModelDownloadProgress: (callback) => {
+    /** @param {Electron.IpcRendererEvent} _event @param {import("@illusion-realm/shared").ModelDownloadTask} task */
+    const listener = (_event, task) => callback(task);
+    ipcRenderer.on(IPC_CHANNELS.MODELS_DOWNLOAD_PROGRESS, listener);
+    return () => ipcRenderer.removeListener(IPC_CHANNELS.MODELS_DOWNLOAD_PROGRESS, listener);
+  },
   readLocalImage: (filePath) =>
     ipcRenderer.invoke(IPC_CHANNELS.FILES_READ_IMAGE_DATA_URL, filePath),
   listImageFiles: (dirPath) =>
@@ -133,6 +160,10 @@ const api = {
   agentSetSecret: (apiKey) =>
     ipcRenderer.invoke(IPC_CHANNELS.AGENT_SECRET_SET, apiKey),
   agentClearSecret: () => ipcRenderer.invoke(IPC_CHANNELS.AGENT_SECRET_CLEAR),
+  transformPrompt: (request) => ipcRenderer.invoke(IPC_CHANNELS.PROMPT_TRANSFORM, request),
+  promptSecretStatus: (connection) => ipcRenderer.invoke(IPC_CHANNELS.PROMPT_SECRET_STATUS, connection),
+  promptSetSecret: (connection, key) => ipcRenderer.invoke(IPC_CHANNELS.PROMPT_SECRET_SET, connection, key),
+  promptClearSecret: (connection) => ipcRenderer.invoke(IPC_CHANNELS.PROMPT_SECRET_CLEAR, connection),
   onAgentEvent: (callback) => {
     /**
      * @param {Electron.IpcRendererEvent} _event

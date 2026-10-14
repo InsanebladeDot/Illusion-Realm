@@ -17,7 +17,7 @@ const { scanModelsInDirectory } = require("../modelScanner");
  * 因此新增模型类型时，必须同步这里。
  * @type {ScanModelType[]}
  */
-const MODEL_TYPES = ["checkpoint", "lora"];
+const MODEL_TYPES = ["checkpoint", "lora", "embedding"];
 
 /** 运行期查表用。显式 Set<string>：数组那边已经承担漂移约束，这里只需能接受任意 string */
 const MODEL_TYPE_SET = /** @type {Set<string>} */ (new Set(MODEL_TYPES));

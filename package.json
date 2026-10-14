@@ -4,6 +4,9 @@
   "private": true,
   "packageManager": "pnpm@11.7.0",
   "scripts": {
+    "prepare:ffmpeg": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/prepare-ffmpeg.ps1",
+    "check:ffmpeg": "node apps/electron/scripts/check-ffmpeg-bundle.cjs",
+    "verify:ffmpeg": "electron scripts/verify-bundled-ffmpeg.js",
     "dev": "concurrently -k \"pnpm --filter @illusion-realm/next dev\" \"pnpm --filter @illusion-realm/electron dev\"",
     "dev:next": "pnpm --filter @illusion-realm/next dev",
     "dev:electron": "pnpm --filter @illusion-realm/electron dev",

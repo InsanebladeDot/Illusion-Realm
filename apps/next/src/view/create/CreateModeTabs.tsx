@@ -9,7 +9,8 @@ import {
 } from "lucide-react";
 import type { CreateMode } from "@/types/createMode";
 import { useTranslation, type MessageKey } from "@/i18n";
-import { ACCENT_TAB_ACTIVE_CLASS, THIN_DIVIDER_CLASS } from "@/utils/layout";
+import { THIN_DIVIDER_CLASS } from "@/utils/layout";
+import { IconTabButton } from "@/components/icon-tab-button";
 import { cn } from "@/utils/cn";
 
 type CreateModeTabsProps = {
@@ -41,32 +42,21 @@ export function CreateModeTabs({ value, onChange }: CreateModeTabsProps) {
       )}
     >
       <div className="flex overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        {TABS.map((tab) => {
-          const Icon = tab.icon;
-          const active = value === tab.id;
-
-          return (
-            <button
+        {/* 界面：创建模式标签，与参考素材分类共用图标标签按钮。 */}
+        {TABS.map((tab) => (
+            <IconTabButton
               key={tab.id}
-              type="button"
+              active={value === tab.id}
+              icon={tab.icon}
+              label={t(tab.label)}
               onClick={() => onChange(tab.id)}
-              className={cn(
-                "flex shrink-0 items-center justify-center gap-1 border-b-2 px-3 py-2 text-xs font-medium transition-colors sm:px-4",
-                active
-                  ? ACCENT_TAB_ACTIVE_CLASS
-                  : "border-transparent text-muted-foreground hover:text-foreground"
-              )}
-            >
-              <Icon className="h-3.5 w-3.5 shrink-0" />
-              <span className="whitespace-nowrap">{t(tab.label)}</span>
-              {tab.badge && (
+              trailing={tab.badge && (
                 <span className="rounded bg-red-500/10 px-1 text-[8px] font-bold leading-normal text-red-600 dark:text-red-400">
                   {tab.badge}
                 </span>
               )}
-            </button>
-          );
-        })}
+            />
+        ))}
       </div>
     </div>
   );

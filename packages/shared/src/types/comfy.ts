@@ -5,6 +5,14 @@ export type ComfyApiNode = {
 };
 
 export type ComfyApiPrompt = Record<string, ComfyApiNode>;
+/** Optional extended lists keep older Electron bridges compatible with image generation. */
+export interface ComfyModelLists {
+  checkpoints: string[];
+  loras: string[];
+  diffusionModels?: string[];
+  clips?: string[];
+  vaes?: string[];
+}
 
 export type ComfyQueueResponse = {
   prompt_id: string;

@@ -630,6 +630,15 @@ if (animadex) {
 
 // ---- 真正注册 IPC，并验证 handler 存在 ----
 const { ipcMain } = require("electron");
+const { registerModelDownloadHandlers } = require("../apps/electron/ipc-handlers/model-download.handlers");
+try { registerModelDownloadHandlers(); check("registerModelDownloadHandlers() 调用不抛错", true); }
+catch (error) { check("registerModelDownloadHandlers() 调用不抛错", false, error.message); }
+const { registerCivitaiHandlers } = require("../apps/electron/ipc-handlers/civitai.handlers");
+const { registerPromptAssistantHandlers } = require("../apps/electron/ipc-handlers/prompt-assistant.handlers");
+try { registerPromptAssistantHandlers(); check("registerPromptAssistantHandlers() registers without throwing", true); }
+catch (error) { check("registerPromptAssistantHandlers() registers without throwing", false, error.message); }
+try { registerCivitaiHandlers(); check("registerCivitaiHandlers() 调用不抛错", true); }
+catch (error) { check("registerCivitaiHandlers() 调用不抛错", false, error.message); }
 
 /**
  * Agent 域一并注册：`registerAllIpcHandlers` 在 main.js 里调用，这里单独跑一次，
@@ -666,6 +675,9 @@ if (animadex?.registerAnimadexIpc) {
 
 {
   const channels = [
+    "models:downloadTarget", "models:downloadStart", "models:downloadCancel", "models:downloadRetry", "models:downloadRemove", "models:downloadList", "models:changeLogo", "models:categoryTarget", "models:moveCategory", "models:batch",
+    "civitai:keyStatus", "civitai:keySet", "civitai:keyClear",
+    "prompt:transform", "prompt:secretStatus", "prompt:secretSet", "prompt:secretClear",
     "video:ffmpegStatus",
     "video:selectFfmpeg",
     "video:pickVideo",

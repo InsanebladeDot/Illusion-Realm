@@ -11,7 +11,7 @@ const fs = require("fs");
 const os = require("os");
 const path = require("path");
 const { createSmokeHarness } = require("./lib/smoke-harness");
-const { app, BrowserWindow, ipcMain: realIpcMain } = require("electron");
+const { app, BrowserWindow, nativeTheme, ipcMain: realIpcMain } = require("electron");
 const { registerAppProtocol } = require("../apps/electron/appProtocol");
 
 /**
@@ -40,6 +40,7 @@ const ipcMain = {
 };
 
 registerAppProtocol();
+nativeTheme.themeSource = "light";
 
 /** 可观测性骨架（看门狗 124 / 单步超时 125 / 日志留档 / 进程树终止） */
 const smoke = createSmokeHarness({ name: "characters" });
@@ -81,11 +82,13 @@ ipcMain.handle("userData:write", async (_event, data) => {
 });
 ipcMain.handle("userData:getDefaultPath", async () => userDataFile);
 ipcMain.handle("models:scan", async () => []);
+ipcMain.handle("models:downloadList", async () => []);
+ipcMain.handle("paths:getDefaultOutput", async () => path.join(workDir, "output"));
 ipcMain.handle("files:listGeneratedImages", async () => []);
 ipcMain.handle("files:listOutputFolders", async () => []);
 ipcMain.handle("changelog:read", async () => null);
 /**
- * 主题：本套件不测主题，但页面加载时 AppShell 会调它。
+ * 主题 IPC：页面加载时 AppShell 会调用；样式切换段直接切 nativeTheme 验证媒体查询。
  * 不补这个空 handler，主进程会打印 `No handler registered for 'theme:setThemeSource'` ——
  * 那条日志长得像失败，会被后来的人误读（该套件只注册自己需要的那几个 handler）。
  */
@@ -840,6 +843,7 @@ app.whenReady().then(async () => {
         pageSuffix: nav.querySelector('[data-character-page-suffix]')?.textContent.trim() ?? '',
         indicatorBg: indicator ? getComputedStyle(indicator).backgroundColor : '',
         indicatorBorder: indicator ? getComputedStyle(indicator).borderTopColor : '',
+        buttonBorder: next ? getComputedStyle(next).borderTopColor : '',
         firstDisabled: first.disabled,
         prevDisabled: prev.disabled,
         nextDisabled: next.disabled,
@@ -867,7 +871,7 @@ app.whenReady().then(async () => {
     check("中间为「1 / N 页」页码指示，风格与左右分页按钮一致",
       pagination.pageValue === "1" && pagination.pageSuffix === "/ 2 页" &&
         pagination.indicatorBg === "rgb(255, 255, 255)" &&
-        pagination.indicatorBorder === "rgb(229, 231, 235)",
+        pagination.indicatorBorder === pagination.buttonBorder,
       `${pagination.pageValue} ${pagination.pageSuffix} / ${pagination.indicatorBg} / ${pagination.indicatorBorder}`);
     check("第 1 页时「首页 / 上一页」禁用，「下一页 / 尾页」可用",
       pagination.firstDisabled === true && pagination.prevDisabled === true &&
@@ -1037,6 +1041,58 @@ app.whenReady().then(async () => {
       detail.trigger.includes("character 1") && detail.hasLoraPill === true &&
         detail.tags === 3 && detail.hasInsert === true,
       JSON.stringify(detail));
+
+    // 打开状态下切换主题：验证真实计算样式，覆盖列表、操作区和嵌套详情。
+    await run(`document.querySelector('[data-character-add-lora]').click(); true`);
+    await clickCard("character_1");
+    const readThemeColors = () => run(`(() => {
+      const probe = document.createElement('span');
+      probe.style.backgroundColor = 'var(--background)';
+      probe.style.color = 'var(--foreground)';
+      document.body.append(probe);
+      const expected = { bg: getComputedStyle(probe).backgroundColor, fg: getComputedStyle(probe).color };
+      probe.style.backgroundColor = 'var(--muted)';
+      expected.muted = getComputedStyle(probe).backgroundColor;
+      probe.remove();
+      const selectors = ['[data-character-sidebar]', '[data-character-card]', '[data-character-pagination]',
+        '[data-character-page-indicator]', '[data-character-lora-list]', '[data-character-apply-trigger]'];
+      const regions = selectors.map(selector => {
+        const element = document.querySelector(selector);
+        return { selector, bg: element && getComputedStyle(element).backgroundColor };
+      });
+      const name = document.querySelector('[data-character-card] h3');
+      const dialog = document.querySelector('[data-resource-dialog="character-detail-dialog-title"]');
+      return { expected, regions, nameColor: getComputedStyle(name).color,
+        dialogBg: getComputedStyle(dialog).backgroundColor,
+        titleColor: getComputedStyle(document.getElementById('character-detail-dialog-title')).color,
+        selected: document.querySelectorAll('[data-character-checked]').length,
+        detailOpen: Boolean(document.querySelector('[data-character-trigger]')) };
+    })()`);
+    for (const theme of ["light", "dark", "light"]) {
+      nativeTheme.themeSource = theme;
+      check(`角色库 ${theme}：媒体查询切换完成`,
+        await waitFor(`matchMedia('(prefers-color-scheme: dark)').matches === ${theme === "dark"}`));
+      const deadline = Date.now() + 3000;
+      let colors = await readThemeColors();
+      while (colors.regions.some(region => region.bg !== colors.expected.bg) && Date.now() < deadline) {
+        await sleep(80);
+        colors = await readThemeColors();
+      }
+      check(`角色库 ${theme}：各区域背景和文字跟随主题`,
+        colors.regions.every(region => region.bg === colors.expected.bg) && colors.nameColor === colors.expected.fg,
+        JSON.stringify(colors));
+      check(`角色库 ${theme}：选中标记与详情保持`, colors.selected > 0 && colors.detailOpen);
+      check(`角色库 ${theme}：详情外壳和标题跟随主题`,
+        colors.dialogBg === (theme === "dark" ? colors.expected.muted : colors.expected.bg) &&
+          colors.titleColor === colors.expected.fg, JSON.stringify(colors));
+      if (process.env.CHARACTER_THEME_SCREENSHOTS) {
+        fs.mkdirSync(process.env.CHARACTER_THEME_SCREENSHOTS, { recursive: true });
+        // 计算样式先于合成帧更新；截图等颜色过渡和实际绘制完成。
+        await sleep(500);
+        const image = await win.webContents.capturePage();
+        fs.writeFileSync(path.join(process.env.CHARACTER_THEME_SCREENSHOTS, `${theme}.png`), image.toPNG());
+      }
+    }
 
     const beforeInsert = await run(`document.getElementById('prompt-editor')?.textContent ?? ''`);
     await run(`(() => {

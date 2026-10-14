@@ -38,8 +38,8 @@ export function FfmpegStatusBar({
     <div
       className={`flex flex-wrap items-center gap-3 rounded-xl border p-3 text-sm ${
         ok
-          ? "border-green-200 bg-green-50 text-green-800"
-          : "border-amber-200 bg-amber-50 text-amber-800"
+          ? "border-green-500/30 bg-green-500/10 text-green-700 dark:text-green-300"
+          : "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300"
       }`}
     >
       {ok ? (
@@ -81,7 +81,7 @@ export function FfmpegStatusBar({
           type="button"
           onClick={onPickManually}
           disabled={!isDesktop}
-          className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-current/30 bg-white/60 px-3 text-xs font-medium transition-colors hover:bg-white disabled:opacity-50"
+          className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-current/30 bg-background/60 px-3 text-xs font-medium transition-colors hover:bg-background disabled:opacity-50"
         >
           <FolderSearch className="h-3.5 w-3.5" />
           {t("toolBox.videoEdit.ffmpeg.pickManually")}
@@ -90,7 +90,7 @@ export function FfmpegStatusBar({
           type="button"
           onClick={onRedetect}
           disabled={!isDesktop || checking}
-          className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-current/30 bg-white/60 px-3 text-xs font-medium transition-colors hover:bg-white disabled:opacity-50"
+          className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-current/30 bg-background/60 px-3 text-xs font-medium transition-colors hover:bg-background disabled:opacity-50"
         >
           <RefreshCw className={`h-3.5 w-3.5 ${checking ? "animate-spin" : ""}`} />
           {t("toolBox.videoEdit.ffmpeg.redetect")}

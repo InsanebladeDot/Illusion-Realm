@@ -1,0 +1,37 @@
+/* 漫画编辑器外围使用全局主题 token；纸张与图片保持实际导出色。 */
+.comic-editor { color: var(--foreground); background: var(--background); }
+.comic-workspace { position: relative; isolation: isolate; overflow: hidden; }
+.comic-window { position: absolute; min-width: 0; min-height: 0; display: flex; flex-direction: column; color: var(--foreground); background: var(--background); border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
+.comic-window-docked { z-index: 20; }
+.comic-window-heading { display: flex; align-items: center; gap: 6px; padding: 3px 6px; flex-shrink: 0; border-bottom: 1px solid var(--border); background: var(--muted); touch-action: none; user-select: none; cursor: grab; }
+.comic-window-content { min-height: 0; min-width: 0; overflow: auto; overscroll-behavior: contain; flex: 1; }
+.comic-native-heading, .comic-tool-drag-surface { touch-action: none; user-select: none; cursor: default; }
+.comic-window-floating .comic-native-heading { display: none; }
+.comic-window[data-window-armed="true"] { outline: 2px solid var(--primary); outline-offset: -2px; cursor: grabbing; }
+.comic-window[data-window-armed="true"] [data-comic-drag-surface] { cursor: grabbing; }
+.comic-workspace > [data-comic-pane="stage"] { position: absolute; top: 0; left: var(--comic-left); right: var(--comic-right); bottom: var(--comic-bottom); margin: 0 5px; }
+.comic-window-floating { z-index: 45; width: min(286px, 100%); max-width: 100%; max-height: 100%; height: min(480px, 100%); box-shadow: 0 12px 36px #0003, 0 2px 8px #0002; }
+.comic-window-floating:focus-within { z-index: 46; }
+.comic-window-tools.comic-window-floating { width: min(216px, 100%); height: auto; }
+.comic-window-tools, .comic-window-tools .comic-window-content { overflow: visible; }
+.comic-window-tools:focus-within { z-index: 47; }
+.comic-snap-preview { pointer-events: none; position: absolute; z-index: 50; border: 2px solid var(--primary); background: color-mix(in srgb, var(--primary) 16%, transparent); border-radius: 6px; }
+.comic-stage-dots { background-color: var(--muted); background-image: radial-gradient(circle, color-mix(in srgb, var(--muted-foreground) 45%, transparent) 1px, transparent 1px); background-size: 22px 22px; }
+.comic-editor input:not([type="file"]):not([type="range"]), .comic-editor textarea { background: var(--background); color: var(--foreground); }
+.comic-editor input:disabled { background: var(--muted); color: var(--muted-foreground); }
+.comic-editor button:focus-visible, .comic-editor summary:focus-visible, .comic-editor input:focus-visible, .comic-editor textarea:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
+@media (max-width: 1279px) {
+  .comic-window-floating { width: min(286px, calc(100% - 40px)); max-width: calc(100% - 40px); }
+  .comic-workspace > [data-comic-pane="stage"] { left: 0; right: 40px; bottom: 94px; margin: 0; }
+  .comic-workspace:has(.comic-window-tools.comic-window-floating) > [data-comic-pane="stage"] { bottom: 0; }
+  .comic-window-outline.comic-window-docked, .comic-window-side.comic-window-docked { left: auto !important; right: 40px !important; top: 0 !important; bottom: 94px !important; height: auto !important; width: min(286px, calc(100% - 40px)) !important; z-index: 42; box-shadow: 0 8px 24px #0003; }
+  .comic-window-outline.comic-window-docked.comic-window-inactive, .comic-window-side.comic-window-docked.comic-window-inactive { display: none; }
+  .comic-window-tools.comic-window-docked { left: 0 !important; right: 40px !important; top: auto !important; bottom: 0 !important; height: 94px !important; width: auto !important; }
+  .comic-window-tools [data-image-blur-panel] { background: var(--background); border: 1px solid var(--border); border-radius: 6px; }
+  .comic-window-tools.comic-window-docked [data-image-blur-panel] { position: absolute; bottom: 94px; right: 0; width: min(216px, 100%); }
+}
+@media (max-width: 479px) {
+  [data-comic-view-pin] { top: 160px; }
+  .comic-window-heading { min-height: 30px; }
+  .comic-stage-dots { background-size: 18px 18px; }
+}

@@ -560,9 +560,7 @@ app.whenReady().then(async () => {
       folderChosen.autoName === "clip-a_x2.mp4", folderChosen.autoName);
 
     await run(`(() => {
-      const btn = Array.from(document.querySelectorAll('button')).find(
-        (b) => b.textContent.includes('开始处理')
-      );
+      const btn = document.querySelector('[data-testid="video-export-run"]');
       btn.click();
       return true;
     })()`);
@@ -622,9 +620,7 @@ app.whenReady().then(async () => {
     check("提示实际导出文件名（自动补 .mp4）", renamed.hint === true);
 
     await run(`(() => {
-      const btn = Array.from(document.querySelectorAll('button')).find(
-        (b) => b.textContent.includes('开始处理')
-      );
+      const btn = document.querySelector('[data-testid="video-export-run"]');
       btn.click();
       return true;
     })()`);
@@ -674,9 +670,7 @@ app.whenReady().then(async () => {
 
     // 回归：导出完成后「开始处理」按钮必须停止转圈
     const buttonState = await run(`(() => {
-      const btn = Array.from(document.querySelectorAll('button')).find(
-        (b) => b.textContent.includes('开始处理')
-      );
+      const btn = document.querySelector('[data-testid="video-export-run"]');
       if (!btn) return { found: false };
       return {
         found: true,
@@ -758,9 +752,7 @@ app.whenReady().then(async () => {
 
     // ---------- 6. 按新顺序再次导出：目标尺寸应随首段变化，文件名随之更新 ----------
     await run(`(() => {
-      const btn = Array.from(document.querySelectorAll('button')).find(
-        (b) => b.textContent.includes('开始处理')
-      );
+      const btn = document.querySelector('[data-testid="video-export-run"]');
       btn.click();
       return true;
     })()`);

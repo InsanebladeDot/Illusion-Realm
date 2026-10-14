@@ -12,6 +12,7 @@ export const nav = {
   "create": "Create",
   "inspect": "Inspect",
   "cartoon": "Comic Dialog",
+  "comic": "Comic Storyboard",
   "tags": "Tags",
   "profile": "Profile",
   "updates": "Updates",

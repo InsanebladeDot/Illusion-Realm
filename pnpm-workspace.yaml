@@ -2,7 +2,11 @@ packages:
   - 'apps/*'
   - 'packages/*'
 allowBuilds:
-  electron-winstaller: set this to true or false
-  exifreader: set this to true or false
-  sharp: set this to true or false
-  unrs-resolver: set this to true or false
+  # 必须是 true：electron 的 postinstall 负责下载 electron.exe（~100MB）。
+  # 留成 "set this to true or false" 会让 `pnpm install` 以 ERR_PNPM_IGNORED_BUILDS 退出 1；
+  # 改成 false 则 install 通过、但没有二进制，`pnpm dev` 静默不弹窗。
+  electron: true
+  electron-winstaller: true
+  exifreader: true
+  sharp: true
+  unrs-resolver: true

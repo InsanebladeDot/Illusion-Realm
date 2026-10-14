@@ -1,7 +1,5 @@
-import GifConverterPage from '@/view/toolBox/Tool/gif/gif'
+import { ToolRouteRedirect } from "@/components/tool-route-redirect";
 
-export default function GifPage() {
-  return (
-   <GifConverterPage/>
-  );
+export default function Page() {
+  return <ToolRouteRedirect href="/tools/video/gif" />;
 }

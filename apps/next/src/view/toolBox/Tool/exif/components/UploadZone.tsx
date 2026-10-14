@@ -35,13 +35,13 @@ function FolderRow({
   const { t } = useTranslation();
 
   return (
-    <div className="flex items-center gap-3 rounded-lg border border-gray-200 bg-white px-4 py-3">
-      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gray-100 text-gray-500">
+    <div className="flex items-center gap-3 rounded-lg border border-border bg-background px-4 py-3">
+      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
         {icon}
       </span>
       <div className="min-w-0 flex-1">
-        <p className="text-xs font-medium text-gray-500">{label}</p>
-        <p className="truncate text-sm text-gray-800" title={folder ?? undefined}>
+        <p className="text-xs font-medium text-muted-foreground">{label}</p>
+        <p className="truncate text-sm text-foreground" title={folder ?? undefined}>
           {folder ?? t("toolBox.exif.uploadZone.none")}
         </p>
       </div>
@@ -49,7 +49,7 @@ function FolderRow({
         type="button"
         onClick={onPick}
         disabled={disabled}
-        className="shrink-0 rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+        className="shrink-0 rounded-lg border border-border px-3 py-1.5 text-sm font-medium text-foreground transition-colors hover:bg-muted/40 disabled:cursor-not-allowed disabled:opacity-50"
       >
         {buttonText}
       </button>
@@ -81,22 +81,22 @@ export function UploadZone({
         onClick={onBrowse}
         className={`cursor-pointer rounded-xl border-2 border-dashed p-12 text-center transition-all duration-200 ${
           isDragging
-            ? "border-blue-500 bg-blue-50"
-            : "border-gray-300 bg-white hover:border-gray-400"
+            ? "border-blue-500 bg-blue-500/10"
+            : "border-border bg-background hover:border-muted-foreground/50"
         }`}
       >
         {importing ? (
           <Loader2 className="mx-auto mb-4 h-12 w-12 animate-spin text-blue-500" />
         ) : (
-          <Upload className="mx-auto mb-4 h-12 w-12 text-gray-400" />
+          <Upload className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
         )}
-        <p className="text-lg font-medium text-gray-700">
+        <p className="text-lg font-medium text-foreground">
           {importing ? (
             t("toolBox.exif.uploadZone.importing")
           ) : (
             <>
               {t("toolBox.exif.uploadZone.dropHint")}{" "}
-              <span className="text-blue-600">{t("toolBox.exif.uploadZone.browse")}</span>
+              <span className="text-blue-700 dark:text-blue-300">{t("toolBox.exif.uploadZone.browse")}</span>
             </>
           )}
         </p>
@@ -122,7 +122,7 @@ export function UploadZone({
       </div>
 
       {!isDesktop && (
-        <p className="rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-700">
+        <p className="rounded-lg bg-amber-500/10 px-3 py-2 text-xs text-amber-700 dark:text-amber-300">
           {t("toolBox.exif.uploadZone.desktopOnly")}
         </p>
       )}

@@ -8,7 +8,7 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 import { ChevronLeft, Copy, RefreshCcw, X } from "lucide-react";
-import { LocalFileImage } from "@/components/LocalFileImage";
+import { ImagePreviewTrigger } from "@/components/ImagePreviewOverlay";
 import type { GeneratedImageFile } from "@/types/historyFolder";
 import type { GeneratedImageMetaDocument } from "@/types/generatedImageMeta";
 import { useSettingsStore } from "@/stores/useSettingsStore";
@@ -36,7 +36,7 @@ type GeneratedImageDetailDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onImageContextMenu?: (
-    event: ReactMouseEvent<HTMLDivElement>,
+    event: ReactMouseEvent<HTMLElement>,
     image: GeneratedImageFile
   ) => void;
 };
@@ -91,7 +91,7 @@ function MetaField({
         <div className="text-xs font-medium text-muted-foreground">{label}</div>
         {copyValue != null ? <CopyButton value={copyValue} label={label} /> : null}
       </div>
-      <div className={cn("text-sm", mono && "font-mono")}>{value}</div>
+      <div className={cn("break-words text-sm [overflow-wrap:anywhere]", mono && "font-mono")}>{value}</div>
     </div>
   );
 }
@@ -122,6 +122,7 @@ export function GeneratedImageDetailDialog({
    */
   /** 首帧就取值：本弹窗只在打开时挂载，用 `useMediaQuery` 会先渲染一帧紧凑版式（见 hook 注释） */
   const isCompact = !useMediaQueryAfterHydration("(min-width: 1024px)");
+  const isExtraWide = useMediaQueryAfterHydration("(min-width: 1280px)");
   const navExpanded = useSidebarStore((state) => state.expanded);
   const hasDesktopNav = useMediaQueryAfterHydration("(min-width: 768px)");
   const navOffset = hasDesktopNav
@@ -178,6 +179,8 @@ export function GeneratedImageDetailDialog({
     if (!open) return;
 
     const handleKeyDown = (event: KeyboardEvent) => {
+      // 大图预览在详情上方：Esc 先关闭预览，保留下面的详情。
+      if (document.querySelector("[data-image-preview-overlay]")) return;
       if (event.key === "Escape") onOpenChange(false);
     };
 
@@ -251,6 +254,7 @@ export function GeneratedImageDetailDialog({
         role="dialog"
         aria-modal="true"
         aria-labelledby="generated-image-detail-title"
+        data-generated-image-detail
         data-image-detail-panel={isCompact ? "" : undefined}
         className={cn(
           "z-[90] overflow-hidden bg-background outline-none",
@@ -266,11 +270,14 @@ export function GeneratedImageDetailDialog({
                 "bottom-0"
               )
             : cn(
-                "fixed left-1/2 top-1/2 w-full max-w-[86vw] -translate-x-1/2 -translate-y-1/2 rounded-xl border-0 p-0 shadow-lg",
+                cn(
+                  "fixed left-1/2 top-1/2 w-full -translate-x-1/2 -translate-y-1/2 rounded-xl border-0 p-0 shadow-lg",
+                  isExtraWide ? "max-w-[min(1400px,92vw)]" : "max-w-[86vw]"
+                ),
                 "h-[calc(85dvh-env(safe-area-inset-top))] max-h-[calc(95dvh-env(safe-area-inset-top))]"
               )
         )}
-        style={isCompact ? { left: navOffset } : undefined}
+        style={isCompact ? { left: navOffset, top: "var(--window-chrome-height)" } : undefined}
       >
         {/**
          * 窄屏标题栏与「已生成图片」那一页**同一条**：◀ 返回 + 文件名。
@@ -312,7 +319,14 @@ export function GeneratedImageDetailDialog({
 
         <div
           className={cn(
-            isCompact ? "flex min-h-0 flex-1 flex-col" : "h-full overflow-y-auto"
+            isCompact
+              ? "flex min-h-0 flex-1 flex-col"
+              : cn(
+                  "grid h-full min-h-0 grid-rows-[minmax(0,1fr)] overflow-hidden",
+                  isExtraWide
+                    ? "xl:grid-cols-[minmax(0,1fr)_minmax(480px,0.84fr)]"
+                    : "lg:grid-cols-[minmax(0,1.1fr)_minmax(380px,0.9fr)]"
+                )
           )}
         >
           <div
@@ -320,25 +334,20 @@ export function GeneratedImageDetailDialog({
               "bg-background",
               isCompact
                 ? "flex min-h-0 flex-1 flex-col"
-                : "grid gap-6 p-4 pt-14 sm:p-6 lg:h-full lg:grid-cols-2 lg:pt-6"
+                : "contents"
             )}
           >
             {/**
-             * 图片区（**高度驱动**，不是形状驱动）。
-             *
-             * 原来这里是 `aspect-square max-h-[…]`：容器高度由**宽度**决定，而它处在
-             * `grid-cols-2` 的左列（宽屏约 600px 宽）——于是竖图被 `object-contain`
-             * 缩进一个方形里，左右各留一大片空白（「大面积留白、很丑」的成因）。
-             * 现在改为「吃掉这一格的高度、宽度自适应」，图片按 `max-h-full max-w-full`
-             * 等比撑满可用空间；`bg-muted/40` 让不可避免的留白看起来是**有意的画框**，
-             * 而不是没画好的空白。
+             * 界面：详情图片，点击复用 stage 的大图预览。
+             * 图片栏高度由弹窗约束，参数只在右栏滚动，图片始终等比完整显示。
              */}
             <div
+              data-image-detail-preview
               className={cn(
-                "relative flex items-center justify-center overflow-hidden rounded-xl bg-muted/40",
+                "relative flex min-w-0 items-center justify-center overflow-hidden rounded-xl bg-muted/40",
                 isCompact
                   ? "m-3 h-[32dvh] max-h-[380px] shrink-0"
-                  : "h-full min-h-0"
+                  : "h-full min-h-0 rounded-none p-4 sm:p-6 lg:p-8"
               )}
               onContextMenu={(event) => {
                 if (!onImageContextMenu) return;
@@ -346,25 +355,33 @@ export function GeneratedImageDetailDialog({
                 onImageContextMenu(event, image);
               }}
             >
-              <LocalFileImage
-                filePath={image.filePath}
-                alt={image.fileName}
-                className="max-h-full max-w-full object-contain"
+              <ImagePreviewTrigger
+                key={image.filePath}
+                items={[{ key: image.filePath, filePath: image.filePath, alt: image.fileName }]}
+                index={0}
+                onItemContextMenu={(event) => {
+                  event.stopPropagation();
+                  onImageContextMenu?.(event, image);
+                }}
               />
             </div>
 
             <div
               className={cn(
-                "space-y-4",
-                isCompact && "min-h-0 flex-1 overflow-y-auto px-4 pb-4 pt-1"
+                "flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden",
+                isCompact
+                  ? "px-4 pb-4 pt-1"
+                  : "p-4 pt-14 sm:p-6 lg:p-8 lg:pt-8"
               )}
             >
-              <div className="space-y-1">
+              {/* 界面：固定文件名与参数来源，保持可见；下面仅生成数据滚动。 */}
+              <div data-image-detail-header className="shrink-0 space-y-1 pb-4">
                 {/** 窄屏的标题在标题栏里（同一个 id 只能有一个：那边拿它做 aria-labelledby） */}
                 {isCompact ? null : (
                   <h2
                     id="generated-image-detail-title"
-                    className="break-all pr-12 text-lg font-semibold leading-snug"
+                    className="truncate pr-12 text-lg font-semibold leading-snug"
+                    title={image.fileName}
                   >
                     {image.fileName}
                   </h2>
@@ -378,133 +395,135 @@ export function GeneratedImageDetailDialog({
                 </p>
               </div>
 
-              {!loadingMeta && !meta ? (
-                <div
-                  data-generated-image-not-ours
-                  /** 警告卡片同样不描边：琥珀底色本身就说明问题，加线只是多一道边（填充略提亮补回分量） */
-                  className="space-y-1 rounded-2xl bg-amber-500/15 p-3 text-xs leading-relaxed text-amber-700 dark:text-amber-300"
-                >
-                  <p className="font-medium">
-                    {t("create.generatedImageDetailDialog.notOurs")}
-                  </p>
-                  <p>
-                    {t("create.generatedImageDetailDialog.notOursDescription")}
-                  </p>
-                </div>
-              ) : null}
-
-              {params ? (
-                /** 同样不描边：分组靠标题字号与内层字段的浅色底，不靠线 */
-                <div className="space-y-3 rounded-2xl p-3">
-                  <div className="flex h-8 items-center justify-between">
-                    <h3 className="font-medium">
-                      {t("create.generatedImageDetailDialog.generatedData")}
-                    </h3>
-                    <button
-                      type="button"
-                      onClick={handleRemix}
-                      disabled={!meta}
-                      className="inline-flex h-8 items-center justify-center gap-1 rounded-xl bg-purple-500 px-3 text-xs font-medium text-white shadow hover:bg-purple-600 disabled:cursor-not-allowed disabled:opacity-50"
-                    >
-                      <RefreshCcw className="h-4 w-4" />
-                      <span className="text-sm font-medium">
-                        {t("create.generatedImageDetailDialog.remix")}
-                      </span>
-                    </button>
+              <div data-image-detail-metadata className="min-h-0 min-w-0 flex-1 space-y-4 overflow-y-auto overscroll-contain [scrollbar-gutter:stable]">
+                {!loadingMeta && !meta ? (
+                  <div
+                    data-generated-image-not-ours
+                    /** 警告卡片同样不描边：琥珀底色本身就说明问题，加线只是多一道边（填充略提亮补回分量） */
+                    className="space-y-1 rounded-2xl bg-amber-500/15 p-3 text-xs leading-relaxed text-amber-700 dark:text-amber-300"
+                  >
+                    <p className="font-medium">
+                      {t("create.generatedImageDetailDialog.notOurs")}
+                    </p>
+                    <p>
+                      {t("create.generatedImageDetailDialog.notOursDescription")}
+                    </p>
                   </div>
+                ) : null}
 
-                  <div className="space-y-3 text-sm">
-                    {params.checkpointName ? (
-                      <div className="space-y-2">
-                        <div className="text-xs font-medium text-muted-foreground">
-                          {t("create.generatedImageDetailDialog.model")}
-                        </div>
-                        <div className="rounded-lg bg-muted/50 p-2 text-xs font-medium">
-                          {displayModelFileName(params.checkpointName)}
-                        </div>
-                      </div>
-                    ) : null}
+                {params ? (
+                  /** 同样不描边：分组靠标题字号与内层字段的浅色底，不靠线 */
+                  <div className="space-y-3 rounded-2xl p-3">
+                    <div className="flex h-8 items-center justify-between">
+                      <h3 className="font-medium">
+                        {t("create.generatedImageDetailDialog.generatedData")}
+                      </h3>
+                      <button
+                        type="button"
+                        onClick={handleRemix}
+                        disabled={!meta}
+                        className="inline-flex h-8 items-center justify-center gap-1 rounded-xl bg-purple-500 px-3 text-xs font-medium text-white shadow hover:bg-purple-600 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        <RefreshCcw className="h-4 w-4" />
+                        <span className="text-sm font-medium">
+                          {t("create.generatedImageDetailDialog.remix")}
+                        </span>
+                      </button>
+                    </div>
 
-                    {params.loras.length > 0 ? (
-                      <div className="space-y-2">
-                        <div className="text-xs font-medium text-muted-foreground">
-                          {t("create.generatedImageDetailDialog.extensionLora")}
-                        </div>
+                    <div className="space-y-3 text-sm">
+                      {params.checkpointName ? (
                         <div className="space-y-2">
-                          {params.loras.map((lora) => (
-                            <LoraStrengthRow
-                              key={`${lora.name}-${lora.strength}`}
-                              name={lora.name}
-                              strength={lora.strength}
-                            />
-                          ))}
-                        </div>
-                      </div>
-                    ) : null}
-
-                    <MetaField
-                      label={t("create.generatedImageDetailDialog.prompt")}
-                      value={params.positivePrompt}
-                      copyValue={params.positivePrompt}
-                      mono
-                    />
-
-                    <MetaField
-                      label={t("create.generatedImageDetailDialog.negativePrompt")}
-                      value={params.negativePrompt}
-                      copyValue={params.negativePrompt}
-                      mono
-                    />
-
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="flex items-center justify-between rounded-lg bg-muted/50 p-3">
-                        <div>
                           <div className="text-xs font-medium text-muted-foreground">
-                            {t("create.generatedImageDetailDialog.seed")}
+                            {t("create.generatedImageDetailDialog.model")}
                           </div>
-                          <div className="font-mono">{params.seed}</div>
+                          <div className="rounded-lg bg-muted/50 p-2 text-xs font-medium">
+                            {displayModelFileName(params.checkpointName)}
+                          </div>
                         </div>
-                        <CopyButton
-                          value={String(params.seed)}
-                          label={t("create.generatedImageDetailDialog.seed")}
-                        />
-                      </div>
-                      <div className="rounded-lg bg-muted/50 p-3">
-                        <div className="text-xs font-medium text-muted-foreground">
-                          {t("create.generatedImageDetailDialog.steps")}
+                      ) : null}
+
+                      {params.loras.length > 0 ? (
+                        <div className="space-y-2">
+                          <div className="text-xs font-medium text-muted-foreground">
+                            {t("create.generatedImageDetailDialog.extensionLora")}
+                          </div>
+                          <div className="space-y-2">
+                            {params.loras.map((lora) => (
+                              <LoraStrengthRow
+                                key={`${lora.name}-${lora.strength}`}
+                                name={lora.name}
+                                strength={lora.strength}
+                              />
+                            ))}
+                          </div>
                         </div>
-                        <div>{params.steps}</div>
-                      </div>
-                      <div className="rounded-lg bg-muted/50 p-3">
-                        <div className="text-xs font-medium text-muted-foreground">
-                          {t("create.generatedImageDetailDialog.cfgRatio")}
+                      ) : null}
+
+                      <MetaField
+                        label={t("create.generatedImageDetailDialog.prompt")}
+                        value={params.positivePrompt}
+                        copyValue={params.positivePrompt}
+                        mono
+                      />
+
+                      <MetaField
+                        label={t("create.generatedImageDetailDialog.negativePrompt")}
+                        value={params.negativePrompt}
+                        copyValue={params.negativePrompt}
+                        mono
+                      />
+
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="flex items-center justify-between rounded-lg bg-muted/50 p-3">
+                          <div>
+                            <div className="text-xs font-medium text-muted-foreground">
+                              {t("create.generatedImageDetailDialog.seed")}
+                            </div>
+                            <div className="font-mono">{params.seed}</div>
+                          </div>
+                          <CopyButton
+                            value={String(params.seed)}
+                            label={t("create.generatedImageDetailDialog.seed")}
+                          />
                         </div>
-                        <div>{params.cfg}</div>
-                      </div>
-                      <div className="rounded-lg bg-muted/50 p-3">
-                        <div className="text-xs font-medium text-muted-foreground">
-                          {t("create.generatedImageDetailDialog.sampler")}
+                        <div className="rounded-lg bg-muted/50 p-3">
+                          <div className="text-xs font-medium text-muted-foreground">
+                            {t("create.generatedImageDetailDialog.steps")}
+                          </div>
+                          <div>{params.steps}</div>
                         </div>
-                        <div className="truncate">{params.samplerName}</div>
-                      </div>
-                      <div className="rounded-lg bg-muted/50 p-3">
-                        <div className="text-xs font-medium text-muted-foreground">
-                          {t("create.generatedImageDetailDialog.size")}
+                        <div className="rounded-lg bg-muted/50 p-3">
+                          <div className="text-xs font-medium text-muted-foreground">
+                            {t("create.generatedImageDetailDialog.cfgRatio")}
+                          </div>
+                          <div>{params.cfg}</div>
                         </div>
-                        <div>
-                          {params.width} × {params.height}
+                        <div className="rounded-lg bg-muted/50 p-3">
+                          <div className="text-xs font-medium text-muted-foreground">
+                            {t("create.generatedImageDetailDialog.sampler")}
+                          </div>
+                          <div className="truncate">{params.samplerName}</div>
                         </div>
-                      </div>
-                      <div className="rounded-lg bg-muted/50 p-3">
-                        <div className="text-xs font-medium text-muted-foreground">
-                          {t("create.generatedImageDetailDialog.batch")}
+                        <div className="rounded-lg bg-muted/50 p-3">
+                          <div className="text-xs font-medium text-muted-foreground">
+                            {t("create.generatedImageDetailDialog.size")}
+                          </div>
+                          <div>
+                            {params.width} × {params.height}
+                          </div>
                         </div>
-                        <div>{params.batchSize}</div>
+                        <div className="rounded-lg bg-muted/50 p-3">
+                          <div className="text-xs font-medium text-muted-foreground">
+                            {t("create.generatedImageDetailDialog.batch")}
+                          </div>
+                          <div>{params.batchSize}</div>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              ) : null}
+                ) : null}
+              </div>
             </div>
           </div>
         </div>

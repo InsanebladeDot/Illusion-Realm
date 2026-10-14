@@ -46,35 +46,35 @@ export function FileList({
   const { t } = useTranslation();
 
   return (
-    <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
-      <div className="flex items-center justify-between border-b border-gray-100 bg-gray-50 px-6 py-4">
-        <h3 className="font-semibold text-gray-900">
+    <div className="overflow-hidden rounded-xl border border-border bg-background">
+      <div className="flex items-center justify-between border-b border-border/60 bg-muted/40 px-6 py-4">
+        <h3 className="font-semibold text-foreground">
           {t("toolBox.exif.fileList.listLabel")}{files.length})
         </h3>
         <button
           type="button"
           onClick={onClear}
-          className="flex items-center gap-1 text-sm text-red-500 hover:text-red-700"
+          className="flex items-center gap-1 text-sm text-red-500 hover:text-red-700 dark:text-red-300"
         >
           <Trash2 className="h-4 w-4" /> {t("toolBox.exif.fileList.clear")}
         </button>
       </div>
 
-      <div className="max-h-96 divide-y divide-gray-100 overflow-y-auto">
+      <div className="max-h-96 divide-y divide-border overflow-y-auto">
         {files.map((file) => (
           <div
             key={file.id}
-            className="flex items-center gap-4 p-4 transition-colors hover:bg-gray-50"
+            className="flex items-center gap-4 p-4 transition-colors hover:bg-muted/40"
           >
-            <div className="h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg border border-gray-200 bg-gray-100">
+            <div className="h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg border border-border bg-muted">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={file.preview} alt="" className="h-full w-full object-cover" />
             </div>
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-medium text-gray-900">
+              <p className="truncate text-sm font-medium text-foreground">
                 {file.name}
               </p>
-              <p className="mt-1 text-xs text-gray-500">
+              <p className="mt-1 text-xs text-muted-foreground">
                 {formatBytes(file.originalSize)}
                 {file.cleanSize !== undefined && (
                   <span className="ml-2">→ {formatBytes(file.cleanSize)}</span>
@@ -84,7 +84,7 @@ export function FileList({
                 )}
               </p>
               {file.errorMessage && (
-                <p className="mt-1 flex items-center gap-1 text-xs text-amber-600">
+                <p className="mt-1 flex items-center gap-1 text-xs text-amber-700 dark:text-amber-300">
                   <FileWarning className="h-3 w-3" /> {file.errorMessage}
                 </p>
               )}
@@ -94,8 +94,8 @@ export function FileList({
         ))}
       </div>
 
-      <div className="flex items-center justify-between gap-3 border-t border-gray-200 bg-gray-50 p-4">
-        <p className="min-w-0 truncate text-xs text-gray-500">
+      <div className="flex items-center justify-between gap-3 border-t border-border bg-muted/40 p-4">
+        <p className="min-w-0 truncate text-xs text-muted-foreground">
           {outputFolder
             ? t("toolBox.exif.fileList.outputTo", { path: outputFolder })
             : t("toolBox.exif.fileList.noOutputFolder")}

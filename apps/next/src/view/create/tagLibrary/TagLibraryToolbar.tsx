@@ -1,11 +1,12 @@
 "use client";
 
-import { Copy, Eye, Search, Trash2 } from "lucide-react";
+import { Copy, Eye, Grid2X2, List, Search, Trash2 } from "lucide-react";
 import { useTranslation } from "@/i18n";
 import { TAG_SORT_OPTIONS, type TagSortMode } from "@/utils/tagLibrary";
 import { cn } from "@/utils/cn";
 
 type TagLibraryToolbarProps = {
+  displayMode: "card" | "text";
   query: string;
   sort: TagSortMode;
   multi: boolean;
@@ -19,6 +20,7 @@ type TagLibraryToolbarProps = {
   onCopySelected: () => void;
   onToggleSelectedOnly: () => void;
   onClearSelected: () => void;
+  onDisplayModeChange: (mode: "card" | "text") => void;
 };
 
 /**
@@ -26,6 +28,7 @@ type TagLibraryToolbarProps = {
  * （搜索框固定宽度左浮动，其余控件整体右浮动）。
  */
 export function TagLibraryToolbar({
+  displayMode,
   query,
   sort,
   multi,
@@ -39,6 +42,7 @@ export function TagLibraryToolbar({
   onCopySelected,
   onToggleSelectedOnly,
   onClearSelected,
+  onDisplayModeChange,
 }: TagLibraryToolbarProps) {
   const { t } = useTranslation();
 
@@ -113,6 +117,44 @@ export function TagLibraryToolbar({
         </button>
 
         <div className="flex items-center gap-1.5">
+          <div
+            role="group"
+            aria-label={t("characters.tagLibrary.displayModeLabel")}
+            className="flex overflow-hidden rounded-lg border border-[#E5E7EB]"
+          >
+            <button
+              type="button"
+              {...{ [`data-${prefix}-display-mode`]: "card" }}
+              aria-label={t("characters.tagLibrary.cardMode")}
+              aria-pressed={displayMode === "card"}
+              onClick={() => onDisplayModeChange("card")}
+              className={cn(
+                "inline-flex h-8 items-center gap-1.5 px-2.5 text-xs transition-colors",
+                displayMode === "card"
+                  ? "bg-[#F5F3FF] font-medium text-[#6D28D9]"
+                  : "bg-white text-[#333333] hover:bg-[#F8F9FA]"
+              )}
+            >
+              <Grid2X2 className="h-3.5 w-3.5" />
+              {t("characters.tagLibrary.cardMode")}
+            </button>
+            <button
+              type="button"
+              {...{ [`data-${prefix}-display-mode`]: "text" }}
+              aria-label={t("characters.tagLibrary.textMode")}
+              aria-pressed={displayMode === "text"}
+              onClick={() => onDisplayModeChange("text")}
+              className={cn(
+                "inline-flex h-8 items-center gap-1.5 border-l border-[#E5E7EB] px-2.5 text-xs transition-colors",
+                displayMode === "text"
+                  ? "bg-[#F5F3FF] font-medium text-[#6D28D9]"
+                  : "bg-white text-[#333333] hover:bg-[#F8F9FA]"
+              )}
+            >
+              <List className="h-3.5 w-3.5" />
+              {t("characters.tagLibrary.textMode")}
+            </button>
+          </div>
           <ToolbarButton
             dataAttr={`data-${prefix}-copy-selected`}
             icon={<Copy className="h-3.5 w-3.5" />}

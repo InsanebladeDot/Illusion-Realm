@@ -119,6 +119,9 @@ function findBundled(binName) {
     // ignore
   }
 
+  // Packaged builds must use shipped resources, never a development tree on this machine.
+  if (app.isPackaged) return candidates.find(isFile) || null;
+
   // 开发态：apps/electron/bin/ffmpeg/（monorepo 新结构）
   candidates.push(path.join(__dirname, "..", "bin", "ffmpeg", binName));
 

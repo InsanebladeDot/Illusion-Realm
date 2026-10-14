@@ -3,7 +3,6 @@ import {
   Home,
   Languages,
   Megaphone,
-  MessageSquare,
   ScanSearch,
   Settings,
   SunMoon,
@@ -39,13 +38,6 @@ export const MAIN_NAV_ITEMS: LocalizedNavItem[] = [
     icon: ScanSearch,
     implemented: true,
   },
-  {
-    id: "cartoon",
-    label: "nav.cartoon",
-    href: "/cartoon",
-    icon: MessageSquare,
-    implemented: true,
-  },
   { id: "tags", label: "nav.tags", href: "/tags", icon: Tag, implemented: false },
   { id: "profile", label: "nav.profile", href: "/profile", icon: User, implemented: true },
 ];
@@ -54,7 +46,7 @@ export const BOTTOM_NAV_ITEMS: LocalizedBottomNavItem[] = [
   { id: "updates", label: "nav.updates", href: "/updates", icon: Megaphone, implemented: true },
   { id: "settings", label: "nav.settings", href: "/settings", icon: Settings, implemented: true },
   { id: "language", label: "nav.language", icon: Languages, implemented: false },
-  { id: "toolBox", label: "nav.toolBox", href: "/toolBox", icon: Box, implemented: true },
+  { id: "toolBox", label: "nav.toolBox", href: "/tools", icon: Box, implemented: true },
   { id: "theme", label: "nav.theme", icon: SunMoon, implemented: false },
 ];
 

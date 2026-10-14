@@ -15,12 +15,20 @@ import type {
   AgentSecretStatus,
 } from "@illusion-realm/shared";
 import { t } from "@/i18n";
+import { CivitaiApiKeySchema } from "@illusion-realm/shared";
 import { unwrapIpc, unwrapIpcOr } from "@/utils/ipcResult";
 
 function getElectronAPI() {
   if (typeof window === "undefined") return null;
   const api = window.electronAPI;
   if (!api) return null;
+  return api;
+}
+
+/** Native model downloads require a matching preload/main-process version. */
+export function getModelDownloadAPI() {
+  const api = getElectronAPI();
+  if (!api?.startModelDownload) throw new Error("desktop");
   return api;
 }
 
@@ -80,10 +88,16 @@ export function unwrapIpcError(error: unknown): Error {
   return error;
 }
 
-export async function selectLocalFolder(): Promise<string | null> {
+export async function selectLocalFolder(
+  defaultPath?: string
+): Promise<string | null> {
   const api = getElectronAPI();
   if (typeof api?.selectFolder !== "function") return null;
-  return unwrapIpcOr(await api.selectFolder(), null, "selectFolder");
+  return unwrapIpcOr(
+    await api.selectFolder(defaultPath),
+    null,
+    "selectFolder"
+  );
 }
 
 /**
@@ -221,6 +235,24 @@ export async function clearAgentSecret(): Promise<AgentSecretStatus> {
   };
   if (typeof api?.agentClearSecret !== "function") return fallback;
   return unwrapIpcOr(await api.agentClearSecret(), fallback, "agentClearSecret");
+}
+
+export interface CivitaiKeyStatus { configured: boolean; protection: "safeStorage" | "plain" | ""; tail: string }
+const CIVITAI_KEY_FALLBACK: CivitaiKeyStatus = { configured: false, protection: "", tail: "" };
+export async function getCivitaiKeyStatus(): Promise<CivitaiKeyStatus> {
+  const api = getElectronAPI();
+  if (typeof api?.civitaiKeyStatus !== "function") return CIVITAI_KEY_FALLBACK;
+  return unwrapIpcOr(await api.civitaiKeyStatus(), CIVITAI_KEY_FALLBACK, "civitaiKeyStatus");
+}
+export async function setCivitaiKey(key: string): Promise<CivitaiKeyStatus> {
+  const api = getElectronAPI();
+  if (typeof api?.civitaiKeySet !== "function") throw new Error(t("errors.desktopOnly.agentUnavailable"));
+  return unwrapIpc(await api.civitaiKeySet(CivitaiApiKeySchema.parse(key)));
+}
+export async function clearCivitaiKey(): Promise<CivitaiKeyStatus> {
+  const api = getElectronAPI();
+  if (typeof api?.civitaiKeyClear !== "function") return CIVITAI_KEY_FALLBACK;
+  return unwrapIpc(await api.civitaiKeyClear());
 }
 
 export async function getDefaultOutputPath(): Promise<string | null> {

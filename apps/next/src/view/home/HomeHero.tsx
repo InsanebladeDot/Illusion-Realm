@@ -237,7 +237,7 @@ export function HomeHero() {
         <button
           type="button"
           data-home-hero-explore
-          onClick={() => go("/toolBox")}
+          onClick={() => go("/tools")}
           className={cn(
             "mt-3 flex w-full items-center justify-between rounded-2xl bg-white/25 px-4 py-3 text-left text-sm font-medium text-white backdrop-blur transition-colors hover:bg-white/35",
             "border border-white/30"

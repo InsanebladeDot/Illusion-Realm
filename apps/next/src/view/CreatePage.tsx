@@ -32,7 +32,6 @@
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-  ChevronDown,
   ChevronLeft,
   Bookmark,
   GalleryVertical,
@@ -40,7 +39,6 @@ import {
   ImageIcon,
   Mic,
   Music2,
-  Plus,
   Video as VideoIcon,
 } from "lucide-react";
 import {
@@ -50,6 +48,7 @@ import {
 import { AdvancedSettings } from "@/view/create/AdvancedSettings";
 import { CreateModeTabs } from "@/view/create/CreateModeTabs";
 import { ExtensionSelectDialog } from "@/view/create/ExtensionSelectDialog";
+import { filterAndSortExtensions } from "@/data/extensions";
 import { GenerateFooter } from "@/view/create/GenerateFooter";
 import { ImageSizeSection } from "@/view/create/ImageSizeSection";
 import { NegativePromptSection } from "@/view/create/NegativePromptSection";
@@ -59,10 +58,11 @@ import {
   PromptGuideButton,
   PromptGuideDialog,
 } from "@/view/create/PromptGuideDialog";
-import { SelectedExtensionRow } from "@/view/create/SelectedExtensionRow";
+import { SelectedExtensions } from "@/view/create/selected-extensions";
 import { RoleCoverPanel } from "@/view/create/RoleCoverPanel";
 import { RoleTtsPanel } from "@/view/create/RoleTtsPanel";
 import { VideoCreatePanel } from "@/view/create/VideoCreatePanel";
+import { MaskEditorPanel } from "@/view/create/mask-editor-panel";
 import { CreateHistorySidebar } from "@/view/create/CreateHistorySidebar";
 import {
   GeneratedImageActionLayer,
@@ -73,7 +73,7 @@ import {
   DEFAULT_SELECTED_MODEL,
   getSelectedModelDisplay,
 } from "@/data/models";
-import { ResourceCoverImage } from "@/components/ResourceCoverImage";
+import { ModelCoverSelect } from "@/view/create/model-cover-select";
 import { ImagePreviewTrigger } from "@/components/ImagePreviewOverlay";
 import type { ImagePreviewItem } from "@/components/ImagePreviewOverlay";
 import { useSettingsStore } from "@/stores/useSettingsStore";
@@ -87,6 +87,7 @@ import { useCreateRemixStore } from "@/stores/useCreateRemixStore";
 import { useToastStore } from "@/stores/useToastStore";
 import { useTranslation } from "@/i18n";
 import type { MessageKey } from "@/i18n";
+import type { Translator } from "@/i18n/translate";
 import { resolveImageDimensions } from "@/utils/imageSize";
 import { findImageSizePresetBySize } from "@/data/imageSizes";
 import { useComfyGenerate } from "@/hooks/useComfyGenerate";
@@ -106,6 +107,7 @@ import {
   type SelectedExtension,
 } from "@/types/extension";
 import { displayModelFileName } from "@/utils/buildGeneratedImageMeta";
+import type { RemixApplyResult } from "@/utils/remixFromMeta";
 import {
   ACCENT_TOGGLE_ON_CLASS,
   THIN_BORDER_CLASS,
@@ -130,6 +132,28 @@ const HISTORY_VIEW_OPTIONS: ReadonlyArray<{
   { mode: "stack", labelKey: "create.createHistorySidebar.stackView", Icon: GalleryVertical },
   { mode: "bookmark", labelKey: "create.createHistorySidebar.bookmarkView", Icon: Bookmark },
 ];
+
+function getRemixToastMessage(
+  payload: RemixApplyResult,
+  translate: Translator
+): string {
+  const warnings: string[] = [];
+  if (payload.unmatchedCheckpoint) {
+    warnings.push(translate("create.page.modelNotFound", {
+      name: displayModelFileName(payload.unmatchedCheckpoint),
+    }));
+  }
+  if (payload.unmatchedLoras.length > 0) {
+    warnings.push(translate("create.page.loraNotFound", {
+      count: payload.unmatchedLoras.length,
+    }));
+  }
+  return warnings.length > 0
+    ? translate("create.page.remixFilledWithWarnings", {
+        warnings: warnings.join(", "),
+      })
+    : translate("create.page.remixFilled");
+}
 
 export function CreatePage() {
   const { t } = useTranslation();
@@ -393,66 +417,36 @@ export function CreatePage() {
     [localModels, seriesId, setAdvancedSettings, setAspectRatio, setCustomSize]
   );
 
-  /**
-   * 渲染期同步：收到新的二创请求（remixRequestId 变化）时把参数填入创作表单。
-   *
-   * 表单字段是 React state，属「外部请求 → 本地状态」的同步，因此走渲染期同步；
-   * 下面那个 effect 只保留真正的副作用（写提示词编辑器 DOM、toast、消费请求）。
-   * 用 remixRequestId 作守卫而非 payload 引用：clearRemix() 只把 payload 置 null、
-   * 保留自增后的 requestId，正好是「同一个请求只应用一次」所需的单调 key。
-   */
-  const [appliedRemixRequestId, setAppliedRemixRequestId] = useState(remixRequestId);
-  if (remixPayload && remixRequestId !== appliedRemixRequestId) {
-    setAppliedRemixRequestId(remixRequestId);
-    if (remixPayload.selectedModel) {
-      setSelectedModel(remixPayload.selectedModel);
-    }
-    setSelectedExtensions(remixPayload.selectedExtensions);
-    setAspectRatio(remixPayload.aspectRatio);
-    setAdvancedSettings({
-      steps: remixPayload.steps,
-      cfg: remixPayload.cfg,
-      sampler: remixPayload.sampler,
-      scheduler: remixPayload.scheduler,
-      seedMode: "custom",
-      customSeed: remixPayload.seed,
-    });
-    setGenerationContext({
-      generationKind: "text2img",
-      sourceImagePath: null,
-    });
-    setCreateMode("image");
-  }
-
+  const appliedRemixRequestIdRef = useRef<number | null>(null);
   useEffect(() => {
-    if (!remixPayload) return;
-    setPromptText(remixPayload.positivePrompt);
-    setEditableText("negative-prompt-editor", remixPayload.negativePrompt);
+    if (
+      !remixPayload ||
+      appliedRemixRequestIdRef.current === remixRequestId
+    ) return;
 
-    const warnings: string[] = [];
-    if (remixPayload.unmatchedCheckpoint) {
-      warnings.push(
-        t("create.page.modelNotFound", {
-          name: displayModelFileName(remixPayload.unmatchedCheckpoint),
-        })
-      );
-    }
-    if (remixPayload.unmatchedLoras.length > 0) {
-      warnings.push(
-        t("create.page.loraNotFound", {
-          count: remixPayload.unmatchedLoras.length,
-        })
-      );
-    }
+    // 提交后再应用外部请求；计时器在窗口不可见时仍会执行，不能改成 rAF。
+    const timer = window.setTimeout(() => {
+      appliedRemixRequestIdRef.current = remixRequestId;
+      if (remixPayload.selectedModel) setSelectedModel(remixPayload.selectedModel);
+      setSelectedExtensions(remixPayload.selectedExtensions);
+      setAspectRatio(remixPayload.aspectRatio);
+      setAdvancedSettings({
+        steps: remixPayload.steps,
+        cfg: remixPayload.cfg,
+        sampler: remixPayload.sampler,
+        scheduler: remixPayload.scheduler,
+        seedMode: "custom",
+        customSeed: remixPayload.seed,
+      });
+      setGenerationContext({ generationKind: "text2img", sourceImagePath: null });
+      setCreateMode("image");
+      setPromptText(remixPayload.positivePrompt);
+      setEditableText("negative-prompt-editor", remixPayload.negativePrompt);
+      showToast(getRemixToastMessage(remixPayload, t));
+      clearRemix();
+    }, 0);
 
-    showToast(
-      warnings.length > 0
-        ? t("create.page.remixFilledWithWarnings", {
-            warnings: warnings.join(", "),
-          })
-        : t("create.page.remixFilled")
-    );
-    clearRemix();
+    return () => window.clearTimeout(timer);
   }, [
     remixRequestId,
     remixPayload,
@@ -482,6 +476,7 @@ export function CreatePage() {
         aspectRatio,
         customWidth: formState.customWidth,
         customHeight: formState.customHeight,
+        scale: formState.sizeScale,
       });
       const baseParams = buildGenerateParams({
         positivePrompt,
@@ -502,18 +497,8 @@ export function CreatePage() {
       });
 
       try {
-        let lastSavedPath: string | undefined;
-
-        for (let index = 0; index < imageCount; index += 1) {
-          const result = await generate({
-            ...baseParams,
-            seed:
-              index === 0
-                ? baseParams.seed
-                : Math.floor(Math.random() * 4_294_967_295),
-          });
-          lastSavedPath = result.savedPaths[0] ?? lastSavedPath;
-        }
+        const result = await generate(baseParams, imageCount);
+        const lastSavedPath = result.savedPaths[0];
 
         if (!lastSavedPath && isElectronEnvironment()) {
           showToast(t("create.page.saveFailed"));
@@ -601,7 +586,8 @@ export function CreatePage() {
       <section
         className={cn(
           /** 挂载时淡入：从别的页面切回来不再是「啪」地出现 */
-          "motion-fade-in flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden border-border md:border-r xl:w-[31.25%] xl:shrink-0",
+          "motion-fade-in flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden border-border md:border-r",
+          createMode !== "edit" && "xl:w-[31.25%] xl:shrink-0",
           /** 挂载保留（`hidden` 而不是条件卸载）：提示词框是 contenteditable，卸载会丢编辑现场 */
           showHistoryPage && "hidden"
         )}
@@ -621,50 +607,8 @@ export function CreatePage() {
             <div className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto [scrollbar-gutter:stable]">
               <div className="flex min-w-0 max-w-full flex-col gap-4 px-2 pb-3 pt-2 sm:px-3 sm:pt-3">
                 <div className="space-y-1.5">
-                  <div
-                    className="relative cursor-pointer"
-                    role="button"
-                    tabIndex={0}
-                    onClick={() => setModelDialogOpen(true)}
-                    onKeyDown={(event) => {
-                      if (event.key === "Enter" || event.key === " ") {
-                        event.preventDefault();
-                        setModelDialogOpen(true);
-                      }
-                    }}
-                  >
-                    <div
-                      className={cn(
-                        "relative isolate flex h-16 justify-between gap-3 overflow-hidden rounded-xl bg-muted p-2 sm:h-20 sm:p-2 md:h-[72px] md:p-3",
-                        THIN_BORDER_CLASS
-                      )}
-                    >
-                      {/* 界面：模型卡片上的封面大图（整张卡片可点 = 打开选择模型弹窗） */}
-                      <ResourceCoverImage
-                        cover={modelDisplay.cover}
-                        alt={modelDisplay.name}
-                        fill
-                        sizes="(max-width: 768px) 100vw, 50vw"
-                        className="absolute inset-0 -z-10 h-full w-full object-cover"
-                        priority
-                      />
-                      <div className="absolute inset-0 -z-10 bg-gradient-to-t from-gray-900/70 via-gray-900/50 to-gray-900/10 sm:from-gray-900/60 sm:via-gray-900/40 sm:to-gray-900/0" />
-                      <div className="absolute inset-0 -z-10 rounded-md ring-1 ring-inset ring-gray-900/10 sm:rounded-lg md:rounded-xl" />
-                      <div className="flex w-full min-w-0 items-end">
-                        <div className="flex w-full min-w-0 flex-col">
-                          <span className="text-xs font-semibold text-white sm:text-sm">
-                            {t("create.page.model")}
-                          </span>
-                          <div className="flex w-full items-end justify-between gap-2 text-base font-semibold leading-tight text-white sm:text-lg sm:leading-6">
-                            <h3 className="truncate" title={modelDisplay.name}>
-                              {modelDisplay.name}
-                            </h3>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 text-white drop-shadow" />
-                  </div>
+                  {/* 界面：「模型」卡片，与视频模型选择共用 */}
+                  <ModelCoverSelect name={modelDisplay.name} cover={modelDisplay.cover} label={t("create.page.model")} onClick={() => setModelDialogOpen(true)} priority />
                   {/* 界面：模型卡片里的「如何为 Anima / SDXL 编写提示词？」按钮 */}
                   <PromptGuideButton
                     series={seriesId === "sdxl" ? "sdxl" : "anima"}
@@ -673,45 +617,8 @@ export function CreatePage() {
                 </div>
 
                 <div className="hidden md:block">
-                  {selectedExtensions.map((extension) => (
-                    /* 界面：已选扩展（LoRA）列表里的一行 */
-                    <SelectedExtensionRow
-                      key={extension.extensionId}
-                      extensionId={extension.extensionId}
-                      weight={extension.weight}
-                      onWeightChange={(weight) => {
-                        setSelectedExtensions((prev) =>
-                          prev.map((item) =>
-                            item.extensionId === extension.extensionId
-                              ? { ...item, weight }
-                              : item
-                          )
-                        );
-                      }}
-                      onRemove={() => {
-                        setSelectedExtensions((prev) =>
-                          prev.filter(
-                            (item) => item.extensionId !== extension.extensionId
-                          )
-                        );
-                      }}
-                    />
-                  ))}
-                  <button
-                    type="button"
-                    /** 数据钩子：冒烟量完「紧凑/宽屏两态下工具栏搜索框」的尺寸要用它开弹窗 */
-                    data-extension-picker-trigger
-                    onClick={() => setExtensionDialogOpen(true)}
-                    className="flex w-full cursor-pointer items-center gap-3 rounded-xl px-2 py-3 text-left hover:bg-muted"
-                  >
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted">
-                      {/* 界面：「添加扩展」按钮左侧的 + 图标 */}
-                      <Plus className="h-6 w-6 text-muted-foreground/60" />
-                    </div>
-                    <div className="text-sm font-medium text-muted-foreground/60">
-                      {t("create.page.addExtension")}
-                    </div>
-                  </button>
+                  {/* 界面：「已选扩展 / 添加扩展」图片与视频复用同一个组件 */}
+                  <SelectedExtensions value={selectedExtensions} onChange={setSelectedExtensions} onAdd={() => setExtensionDialogOpen(true)} />
                 </div>
 
                 {/* 界面：「提示词」区（普通模式是单一输入框；含高级组装开关与工具行） */}
@@ -742,14 +649,13 @@ export function CreatePage() {
           /* 界面：Role TTS 模式下的面板 */
           <RoleTtsPanel />
         ) : (
-          <div className="flex flex-1 items-center justify-center p-6 text-sm text-muted-foreground">
-            {t("create.page.editComingSoon")}
-          </div>
+          /* 界面：Edit 蒙版快速验证，原图尺寸导出并复用 ComfyUI 上传接口 */
+          <MaskEditorPanel />
         )}
       </section>
 
       {/* stage：中栏图片显示区（点开是大图预览层） */}
-      <article className="hidden min-h-0 min-w-0 flex-1 xl:flex">
+      <article className={cn("hidden min-h-0 min-w-0 flex-1", createMode !== "edit" && "xl:flex")}>
         <div className="flex h-full w-full items-center justify-center p-3">
           <div
             className="relative flex aspect-[832/1216] max-h-full max-w-full flex-col items-center justify-center overflow-hidden bg-muted dark:bg-zinc-900"
@@ -889,21 +795,13 @@ export function CreatePage() {
       <ExtensionSelectDialog
         open={extensionDialogOpen}
         selectedIds={selectedExtensions.map((item) => item.extensionId)}
-        series={seriesId === "sdxl" ? "sdxl" : "anima"}
+        resources={filterAndSortExtensions("", localModels, paths, null, seriesId === "sdxl" ? "sdxl" : "anima")}
         onOpenChange={setExtensionDialogOpen}
-        onSelect={(extensionId) => {
-          setSelectedExtensions((prev) =>
-            prev.some((item) => item.extensionId === extensionId)
-              ? prev
-              : [
-                  ...prev,
-                  {
-                    extensionId,
-                    weight: DEFAULT_EXTENSION_WEIGHT,
-                  },
-                ]
-          );
-        }}
+        onConfirm={(models) => setSelectedExtensions((prev) => [
+          ...prev,
+          ...models.filter((model) => !prev.some((item) => item.extensionId === model.id))
+            .map((model) => ({ extensionId: model.id, weight: DEFAULT_EXTENSION_WEIGHT })),
+        ])}
       />
 
       {/* 无界面外壳：图片右键菜单 / 改名 / 删除确认（stage 与图库共用同一个实例） */}

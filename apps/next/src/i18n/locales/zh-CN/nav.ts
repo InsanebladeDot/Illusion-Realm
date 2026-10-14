@@ -5,6 +5,7 @@ export const nav = {
   create: "创建",
   inspect: "本地解析",
   cartoon: "漫画对话框",
+  comic: "漫画分镜",
   tags: "标签",
   profile: "我的主页",
   updates: "更新",

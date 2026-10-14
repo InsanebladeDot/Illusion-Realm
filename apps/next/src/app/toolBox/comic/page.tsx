@@ -1,7 +1,5 @@
-import ComicGeneratorPage from '@/view/toolBox/Tool/comic/comic'
+import { ToolRouteRedirect } from "@/components/tool-route-redirect";
 
-export default function ComicPage() {
-  return (
-   <ComicGeneratorPage/>
-  );
+export default function Page() {
+  return <ToolRouteRedirect href="/tools/image/comic" />;
 }

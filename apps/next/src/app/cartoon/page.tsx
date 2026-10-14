@@ -1,10 +1,5 @@
-import { AppShell } from "@/components/AppShell";
-import { CartoonBubblePage } from "@/view/cartoon/CartoonBubblePage";
+import { ToolRouteRedirect } from "@/components/tool-route-redirect";
 
 export default function Page() {
-  return (
-    <AppShell fillViewport>
-      <CartoonBubblePage />
-    </AppShell>
-  );
+  return <ToolRouteRedirect href="/tools/image/cartoon" />;
 }

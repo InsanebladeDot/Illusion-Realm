@@ -1,7 +1,7 @@
 {
   "1": {
     "inputs": {
-      "clip_name": "qwen_3_06b_base\\qwen_3_06b_base.safetensors",
+      "clip_name": "Anima\\anima_baseV10_txt\\anima_baseV10_txt.safetensors",
       "type": "stable_diffusion",
       "device": "default"
     },
@@ -12,7 +12,7 @@
   },
   "2": {
     "inputs": {
-      "vae_name": "qwen_image_vae\\qwen_image_vae.safetensors"
+      "vae_name": "Anima\\qwen_image_vae\\qwen_image_vae.safetensors"
     },
     "class_type": "VAELoader",
     "_meta": {
@@ -104,7 +104,7 @@
         0
       ]
     },
-    "class_type": "SaveImage",
+    "class_type": "PreviewImage",
     "_meta": {
       "title": "保存图像"
     }

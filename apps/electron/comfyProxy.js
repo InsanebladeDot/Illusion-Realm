@@ -97,7 +97,28 @@ async function fetchHistory(serverAddress, promptId) {
 }
 
 /**
- * 上传图片到 ComfyUI 输入目录，返回 { name, subfolder, type }
+ * 构造共用上传表单，三类素材都通过官方 /upload/image 原样写入 input。
+ * @param {string} filename
+ * @param {string} dataBase64
+ * @param {unknown} subfolder
+ */
+function createUploadForm(filename, dataBase64, subfolder) {
+  const extension = /\.[a-z0-9]+$/i.exec(filename)?.[0].toLowerCase() || "";
+  /** @type {Record<string, string>} */
+  const mime = {
+    ".mp4": "video/mp4", ".webm": "video/webm", ".mov": "video/quicktime",
+    ".wav": "audio/wav", ".mp3": "audio/mpeg", ".flac": "audio/flac", ".ogg": "audio/ogg", ".m4a": "audio/mp4",
+    ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".webp": "image/webp", ".png": "image/png",
+  };
+  const form = new FormData();
+  form.append("image", new Blob([Buffer.from(dataBase64, "base64")], { type: mime[extension] || "application/octet-stream" }), filename);
+  form.append("overwrite", "true");
+  if (typeof subfolder === "string" && subfolder) form.append("subfolder", subfolder);
+  return form;
+}
+
+/**
+ * 上传素材到 ComfyUI 输入目录，返回 { name, subfolder, type }，沿用图片上传 IPC 契约。
  * @param {string} serverAddress
  * @param {{ filename: unknown, dataBase64: unknown, subfolder: unknown }} payload
  * @returns {Promise<object>}
@@ -113,15 +134,9 @@ async function uploadImageToComfy(serverAddress, { filename, dataBase64, subfold
     throw new Error("缺少上传图片数据");
   }
 
-  const buffer = Buffer.from(dataBase64, "base64");
-  const form = new FormData();
-  form.append("image", new Blob([buffer], { type: "image/png" }), filename);
-  form.append("overwrite", "true");
-  if (typeof subfolder === "string" && subfolder) form.append("subfolder", subfolder);
-
   const response = await fetch(`${buildBase(serverAddress)}/upload/image`, {
     method: "POST",
-    body: form,
+    body: createUploadForm(filename, dataBase64, subfolder),
   });
 
   if (!response.ok) {
@@ -319,28 +334,33 @@ async function waitForHistory(serverAddress, promptId, abortSignal) {
 /**
  * 拉取某一类模型清单
  * @param {string} serverAddress
- * @param {string} category checkpoints / loras
+ * @param {string} category ComfyUI model directory name
  * @returns {Promise<string[]>}
  */
 async function fetchModelList(serverAddress, category) {
   const response = await fetch(
-    `${buildBase(serverAddress)}/models/${category}`
+    `${buildBase(serverAddress)}/models/${category}`, { signal: AbortSignal.timeout(10000) }
   );
   if (!response.ok) return [];
-  return response.json();
+  const values = await response.json();
+  return Array.isArray(values) ? values.filter((value) => typeof value === "string") : [];
 }
 
 /**
  * 拉取 Checkpoint 与 LoRA 清单
  * @param {string} serverAddress
- * @returns {Promise<{ checkpoints: string[], loras: string[] }>}
+ * @returns {Promise<import("@illusion-realm/shared").ComfyModelLists>}
  */
 async function listComfyModels(serverAddress) {
-  const [checkpoints, loras] = await Promise.all([
+  const [checkpoints, loras, diffusionModels, clip, textEncoders, vaes] = await Promise.all([
     fetchModelList(serverAddress, "checkpoints"),
     fetchModelList(serverAddress, "loras"),
+    fetchModelList(serverAddress, "diffusion_models"),
+    fetchModelList(serverAddress, "clip"),
+    fetchModelList(serverAddress, "text_encoders"),
+    fetchModelList(serverAddress, "vae"),
   ]);
-  return { checkpoints, loras };
+  return { checkpoints, loras, diffusionModels, clips: [...new Set([...clip, ...textEncoders])], vaes };
 }
 
 /**

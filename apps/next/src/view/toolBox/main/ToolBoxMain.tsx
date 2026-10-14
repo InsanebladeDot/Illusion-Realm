@@ -4,84 +4,106 @@ import {
   FileEdit,
   Film,
   Images,
-  PenTool,
+  MessageSquare,
+  PanelsTopLeft,
+  Puzzle,
 } from "lucide-react";
 import Link from "next/link";
 import { useTranslation } from "@/i18n";
+import { useToolBoxStore } from "@/stores/useToolBoxStore";
 
 // 建议改名为 ToolBoxHome，因为它渲染的是"全部工具"这个子路由的内容
 export function ToolBoxMain() {
   const { t } = useTranslation();
+  const { category, query } = useToolBoxStore();
   const tools = [
     {
       name: t("toolBox.main.exifName"),
       description: t("toolBox.main.exifDescription"),
       icon: FileEdit,
-      color: "bg-rose-50 text-rose-600",
       badge: t("toolBox.main.exifBadge"),
-      href: "/toolBox/exif", // 添加路由路径
+      href: "/tools/image/exif", // 添加路由路径
+      category: "image",
     },
     {
       name: t("toolBox.main.videoName"),
       description: t("toolBox.main.videoDescription"),
       icon: Film,
-      color: "bg-blue-50 text-blue-600",
       badge: null,
-      href: "/toolBox/video", // 添加路由路径
+      href: "/tools/video/editor", // 添加路由路径
+      category: "video",
     },
     {
       name: t("toolBox.main.gifName"),
       description: t("toolBox.main.gifDescription"),
       icon: Images,
-      color: "bg-amber-50 text-amber-600",
       badge: t("toolBox.main.gifBadge"),
-      href: "/toolBox/gif", // 添加路由路径
+      href: "/tools/video/gif", // 添加路由路径
+      category: "video",
     },
     {
-      name: t("toolBox.main.comicName"),
+      name: t("nav.comic"),
       description: t("toolBox.comic.description"),
-      icon: PenTool,
-      color: "bg-violet-50 text-violet-600",
+      icon: PanelsTopLeft,
       badge: t("toolBox.main.comicBadge"),
-      href: "/toolBox/comic", // 添加路由路径
+      href: "/tools/image/comic",
+      category: "image",
+    },
+    {
+      name: t("nav.cartoon"),
+      description: t("toolBox.main.cartoonDescription"),
+      icon: MessageSquare,
+      badge: null,
+      href: "/tools/image/cartoon",
+      category: "image",
+    },
+    {
+      name: t("toolBox.civitai.title"),
+      description: t("toolBox.civitai.description"),
+      icon: Puzzle,
+      badge: null,
+      href: "/tools/models/civitai",
+      category: "models",
     },
   ];
+  const filteredTools = tools.filter((tool) => (category === "all" || tool.category === category) && `${tool.name} ${tool.description}`.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase()));
 
   return (
     <>
-      {/* 工具网格 */}
+      {/* 界面：工具箱工具入口 */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        {tools.map((tool) => {
+        {filteredTools.map((tool) => {
           const IconComponent = tool.icon;
           return (
             <Link
               key={tool.name}
               href={tool.href}
-              className="group relative p-6 bg-white border border-gray-200 rounded-xl hover:shadow-lg hover:border-gray-300 transition-all duration-200"
+              data-tool-entry={tool.href}
+              className="group relative p-6 bg-background border border-border rounded-xl hover:shadow-lg hover:border-sky-500/50 transition-all duration-200"
             >
               {tool.badge && (
-                <span className="absolute top-4 right-4 px-2 py-0.5 text-xs font-medium bg-blue-50 text-blue-600 rounded-full">
+                <span className="absolute top-4 right-4 px-2 py-0.5 text-xs font-medium bg-sky-500/10 text-sky-700 dark:text-sky-300 rounded-full">
                   {tool.badge}
                 </span>
               )}
 
               <div className="flex items-start justify-between mb-4">
-                <div className={`p-3 rounded-lg ${tool.color}`}>
+                <div className="p-3 rounded-lg bg-sky-500/10 text-sky-700 dark:text-sky-300">
                   <IconComponent className="h-6 w-6" />
                 </div>
               </div>
 
-              <h3 className="text-lg font-semibold text-gray-900 mb-1 group-hover:text-blue-600 transition-colors">
+              <h3 className="text-lg font-semibold text-foreground mb-1 group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-colors">
                 {tool.name}
               </h3>
-              <p className="text-sm text-gray-500 leading-relaxed">
+              <p className="text-sm text-muted-foreground leading-relaxed">
                 {tool.description}
               </p>
 
-              <div className="mt-4 pt-4 border-t border-gray-100 flex items-center justify-between">
-                <span className="text-xs text-gray-400">{t("toolBox.main.openHint")}</span>
+              <div className="mt-4 pt-4 border-t border-border flex items-center justify-between">
+                <span className="text-xs text-muted-foreground">{t("toolBox.main.openHint")}</span>
                 <svg
-                  className="h-4 w-4 text-gray-300 group-hover:text-blue-500 group-hover:translate-x-1 transition-all"
+                  className="h-4 w-4 text-muted-foreground group-hover:text-sky-600 dark:group-hover:text-sky-400 group-hover:translate-x-1 transition-all"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -98,6 +120,7 @@ export function ToolBoxMain() {
           );
         })}
       </div>
+      {filteredTools.length === 0 && <p role="status" className="py-12 text-center text-sm text-muted-foreground">{t("toolBox.main.empty")}</p>}
     </>
   );
 }

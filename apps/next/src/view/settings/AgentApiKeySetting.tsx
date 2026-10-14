@@ -8,6 +8,7 @@ import { useToastStore } from "@/stores/useToastStore";
 import { useIsElectronEnvironment } from "@/hooks/useIsElectronEnvironment";
 import { INPUT_BORDER_CLASS } from "@/utils/layout";
 import { cn } from "@/utils/cn";
+import { SiliconFlowSetupHelp } from "./siliconflow-setup-help";
 
 const BUTTON_BASE =
   "inline-flex h-9 items-center justify-center gap-2 rounded-xl px-4 text-sm font-medium transition-all active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50";
@@ -81,6 +82,8 @@ export function AgentApiKeySetting() {
 
   return (
     <div className="space-y-3">
+      {/* 界面：硅基流动官网入口与注册配置指引。 */}
+      <SiliconFlowSetupHelp />
       <div className="flex items-center gap-2">
         <span
           data-agent-key-status={status.configured ? "configured" : "missing"}
