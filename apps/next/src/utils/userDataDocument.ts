@@ -19,6 +19,7 @@ function mergeDocument(partial: Partial<UserDataDocument> | null): UserDataDocum
   return {
     ...DEFAULT_USER_DATA_DOCUMENT,
     ...partial,
+    entrySession: partial.entrySession ?? { guest: null },
     sidebar: {
       ...DEFAULT_USER_DATA_DOCUMENT.sidebar,
       ...(partial.sidebar ?? {}),

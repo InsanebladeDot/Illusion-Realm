@@ -2,7 +2,6 @@
 
 import { usePathname, useRouter } from "next/navigation";
 import { ArrowRight, ImageIcon, Video } from "lucide-react";
-import { AppLogo } from "@/assets/AppLogo";
 import { useTranslation } from "@/i18n";
 import { resolvePageDirection, startPageNavigation } from "@/utils/pageTransition";
 import { THIN_BORDER_CLASS } from "@/utils/layout";
@@ -183,18 +182,16 @@ export function HomeHero() {
     });
 
   return (
-    <section data-home-hero className="relative min-h-[100dvh] w-full">
+    <section data-home-hero className="relative min-h-[var(--app-content-height,100dvh)] w-full">
       {/**
-       * 背景与装饰用 **fixed** 铺满整个视口（用户要求）：
-       * 图永远盖住整屏，下面的内容滚动时从图上滑过去 —— 这也是原项目那套做法的位置关系
-       * （`.header` 绝对定位在视口底部、内容区带自己的底色在后面盖上来）。
+       * 界面：首页背景随首页内容铺满 main；不再 fixed 到窗口，避免越过应用外壳的圆角与留白。
        */}
       {/**
        * 这一层**不能**用负 z-index：AppShell 的根节点自带不透明的 `bg-background`，
        * 负值会把图和波浪推到那层底色后面 —— 症状就是「图和 SVG 都不见了，只剩文字」。
        * 用 z-0 + 内容层 z-10 的正常叠序即可。
        */}
-      <div className="fixed inset-0 z-0 overflow-hidden">
+      <div data-home-backdrop className="absolute inset-0 z-0 overflow-hidden">
         <HeroBackdrop />
         <HeroDecorations />
         <HeroWaves />
@@ -205,7 +202,7 @@ export function HomeHero() {
       </div>
 
       {/** 品牌层：压在图上，白字 + 投影保证任何底色上都读得清 */}
-      <div className="relative z-10 flex min-h-[100dvh] flex-col items-start justify-center px-8 pb-[16vh] text-left text-white drop-shadow-[0_2px_12px_rgba(15,23,42,0.6)] sm:px-14 lg:px-20">
+      <div className="relative z-10 flex min-h-[var(--app-content-height,100dvh)] flex-col items-start justify-center px-8 pb-[16vh] text-left text-white drop-shadow-[0_2px_12px_rgba(15,23,42,0.6)] sm:px-14 lg:px-20">
         <div className="w-full max-w-[560px]">
         <p className="text-[10px] font-medium tracking-[0.28em] text-white/80">
           {t("home.hero.studio")}

@@ -1,8 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
+import { AlertCircle, CheckCircle2 } from "lucide-react";
 import { DEFAULT_FOLDER_ID } from "@/data/historyFolders";
 import { useGenerationNoticeStore } from "@/stores/useGenerationNoticeStore";
 import { useHistoryFolderStore } from "@/stores/useHistoryFolderStore";
@@ -17,7 +17,7 @@ import { cn } from "@/utils/cn";
 /**
  * 全局生成状态通知（右上角）。
  *
- * - 生成中：宽屏显示变速转圈；所有宽度都显示 `生成中.` / `生成中..` / `生成中...` 循环
+ * - 生成中：不显示悬浮提示，创建页 stage 展示动态文字，任务管理保留进度。
  * - 生成完成：短暂显示「图片已生成」，可点「查看图片」直接进入详情主区页
  * - 生成失败：短暂显示错误
  */
@@ -33,17 +33,6 @@ export function GenerationNotice() {
   const requestOpenImage = useHistoryFolderStore(
     (state) => state.requestOpenImage
   );
-  const [dots, setDots] = useState(1);
-
-  useEffect(() => {
-    if (status !== "generating") return;
-
-    const timer = setInterval(() => {
-      setDots((previous) => (previous % 3) + 1);
-    }, 420);
-
-    return () => clearInterval(timer);
-  }, [status]);
 
   const openGeneratedImage = useCallback(() => {
     if (!filePath) return;
@@ -69,7 +58,7 @@ export function GenerationNotice() {
     router,
   ]);
 
-  if (status === "idle") return null;
+  if (status === "idle" || status === "generating") return null;
 
   return (
     <div
@@ -84,17 +73,6 @@ export function GenerationNotice() {
         role="status"
         aria-live="polite"
       >
-        {status === "generating" ? (
-          <>
-            <Loader2 className="generation-spin hidden h-4 w-4 shrink-0 text-muted-foreground xl:block" />
-            <span className="tabular-nums">
-              {t("components.generationNotice.generating", {
-                dots: ".".repeat(dots),
-              })}
-            </span>
-          </>
-        ) : null}
-
         {status === "success" ? (
           <>
             <CheckCircle2 className="h-4 w-4 shrink-0 text-green-600 dark:text-green-400" />

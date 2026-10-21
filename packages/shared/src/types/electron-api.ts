@@ -12,6 +12,7 @@ import type { ComfyApiPrompt } from "./comfy";
 import type { AnimadexSearchParams, AnimadexSearchResult } from "./character";
 import type { OutputFolderEntry } from "./historyFolder";
 import type { IpcResult } from "../ipc-result";
+import type { LocalModelMetadataEntry } from "../schemas/local-model-metadata.schema";
 
 type ComfyRemoteImage = {
   nodeId: string;
@@ -65,13 +66,17 @@ export type VideoCropOptions = {
   y: number;
 };
 
-/** 拼接用的单个片段输入 */
+/** 单个区间的变速、音量、静音及倒放设置，由共享 schema 推导。 */
+export type VideoClipEffects = import("zod").infer<typeof import("../schemas/media.schema").VideoClipEffectsSchema>;
+
+/** 拼接用的单个片段输入，效果只作用于该片段的剪切窗口。 */
 export type VideoClipInput = {
   inputPath: string;
   /** 源片段总时长 */
   duration: number;
   hasAudio: boolean;
   trim?: { start: number; end: number };
+  effects?: VideoClipEffects;
 };
 
 /** GIF 制作参数（视频 → 动图） */
@@ -85,8 +90,8 @@ export type VideoGifOptions = {
 };
 
 export type VideoEditJob = {
-  /** single（默认）：单片段剪辑；concat：拼接；gif：动图；frame：导出原始视频单帧 */
-  mode?: "single" | "concat" | "gif" | "frame";
+  /** single：剪辑；concat：拼接；gif：动图；frame：单帧；reframe：整片按帧重排 */
+  mode?: "single" | "concat" | "gif" | "frame" | "reframe";
   /** 单片段模式使用 */
   inputPath?: string;
   /** 拼接 / GIF 模式使用（顺序即输出顺序） */
@@ -95,6 +100,7 @@ export type VideoEditJob = {
   /** 拼接目标尺寸/帧率（取首段） */
   width?: number;
   height?: number;
+  /** reframe 模式：按此帧率重新排列全部原始帧，范围 1–120 的整数。 */
   fps?: number;
   /** 源视频总时长（用于进度换算） */
   sourceDuration?: number;
@@ -102,6 +108,7 @@ export type VideoEditJob = {
   frameTime?: number;
   trim?: { start: number; end: number };
   speed?: number;
+  effects?: VideoClipEffects;
   crop?: VideoCropOptions;
   /** 默认 true，重新编码以获得帧级精确剪切；false 为按关键帧对齐的无损流拷贝 */
   accurateCut?: boolean;
@@ -128,6 +135,17 @@ export type VideoProgressEvent = {
  * 失败信息以 `{ success: false, error, code? }` 返回；`on*` 订阅类方法返回取消订阅函数。
  */
 export type ElectronAPI = {
+  accountRegister: (request: { email: string; password: string; displayName: string }) => Promise<IpcResult<import("./account").AccountApiResponse>>;
+  accountVerifyEmail: (token: string) => Promise<IpcResult<import("./account").AccountApiResponse>>;
+  accountResendVerification: (email: string) => Promise<IpcResult<import("./account").AccountApiResponse>>;
+  accountLogin: (request: { email: string; password: string; deviceName: string }) => Promise<IpcResult<import("./account").AccountApiResponse>>;
+  accountMe: () => Promise<IpcResult<import("./account").AccountApiResponse>>;
+  accountLogout: () => Promise<IpcResult<import("./account").AccountApiResponse>>;
+  cloudImageUpload: (request: import("../schemas/cloud-image.schema").CloudImageUpload) => Promise<IpcResult<import("./account").AccountApiResponse>>;
+  cloudLibraryRequest: (request: import("../schemas/cloud-image.schema").CloudLibraryRequest) => Promise<IpcResult<import("./account").AccountApiResponse>>;
+  cloudImageGet: (id: string) => Promise<IpcResult<import("./account").AccountApiResponse>>;
+  cloudCollectionGet: (id: string) => Promise<IpcResult<import("./account").AccountApiResponse>>;
+  cloudCollectionItems: (request: { id: string; cursor?: string }) => Promise<IpcResult<import("./account").AccountApiResponse>>;
   transformPrompt: (request: import("./prompt-assistant").PromptTransformRequest) => Promise<IpcResult<string>>;
   promptSecretStatus: (connection: import("./prompt-assistant").PromptConnection) => Promise<IpcResult<import("./prompt-assistant").PromptSecretStatus>>;
   promptSetSecret: (connection: import("./prompt-assistant").PromptConnection, key: string) => Promise<IpcResult<import("./prompt-assistant").PromptSecretStatus>>;
@@ -137,6 +155,7 @@ export type ElectronAPI = {
   onWindowChromeVisibility: (callback: (visible: boolean) => void) => () => void;
   selectFolder: (defaultPath?: string) => Promise<IpcResult<string | null>>;
   scanModels: (dirPath: string, type: LocalModelType) => Promise<IpcResult<LocalModel[]>>;
+  readLocalModelMetadata: (filePaths: string[]) => Promise<IpcResult<LocalModelMetadataEntry[]>>;
   modelDownloadTarget: (location: ModelDownloadLocation) => Promise<IpcResult<ModelDownloadTarget>>;
   startModelDownload: (request: ModelDownloadRequest) => Promise<IpcResult<ModelDownloadTask>>;
   cancelModelDownload: (id: string) => Promise<IpcResult<boolean>>;
@@ -157,7 +176,8 @@ export type ElectronAPI = {
   ) => Promise<IpcResult<Array<{ filePath: string; fileName: string }>>>;
   comfyGenerate: (
     prompt: ComfyApiPrompt,
-    serverAddress: string
+    serverAddress: string,
+    requestId?: string
   ) => Promise<
     IpcResult<{
       promptId: string;
@@ -165,6 +185,7 @@ export type ElectronAPI = {
       videos: ComfyRemoteVideo[];
     }>
   >;
+  comfyCancel: (requestId: string) => Promise<IpcResult<boolean>>;
   comfyUploadImage: (
     serverAddress: string,
     payload: { filename: string; dataBase64: string; subfolder?: string }
@@ -314,7 +335,8 @@ export type ElectronAPI = {
   setFullScreen: (flag: boolean) => Promise<IpcResult<boolean>>;
   /** 深色 / 浅色 / 跟随系统：主进程转发到 `nativeTheme.themeSource`，返回生效值 */
   setThemeSource: (
-    source: "system" | "light" | "dark"
+    source: "system" | "light" | "dark",
+    shellColor?: string
   ) => Promise<IpcResult<string>>;
 
   // 角色库（animadex）

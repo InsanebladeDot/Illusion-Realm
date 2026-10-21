@@ -39,7 +39,6 @@ export const components = {
     recommended: "推荐",
   },
   generationNotice: {
-    generating: "生成中{dots}",
     success: "图片已生成",
     failed: "生成失败",
     view: "查看图片",

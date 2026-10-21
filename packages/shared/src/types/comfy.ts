@@ -68,6 +68,7 @@ export type ComfyGenerateResult = {
 
 export type ComfyGenerateOptions = {
   serverAddress?: string;
+  requestId?: string;
   clientId?: string;
   signal?: AbortSignal;
   onExecuting?: (nodeId: string | null) => void;

@@ -32,6 +32,7 @@ delete process.env.ILLUSION_AGENT_API_KEY;
 
 registerAppProtocol();
 registerAllIpcHandlers();
+require("./lib/guest-session-fixture").installGuestDocumentFixture();
 
 const smoke = createSmokeHarness({ name: "agent-key" });
 smoke.installConsoleTee();

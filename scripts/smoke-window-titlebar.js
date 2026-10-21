@@ -18,7 +18,7 @@ smoke.setWorkDir(temp);
 smoke.installWatchdog(app);
 require("../apps/electron/appProtocol").registerAppProtocol();
 require("../apps/electron/ipc-handlers/window.handlers").registerThemeHandlers();
-registerHandle(C.USER_DATA_READ, () => ({ data: { version: 1, settings: { paths: {}, theme, locale: "zh-CN" } }, filePath: "", isNew: false }));
+registerHandle(C.USER_DATA_READ, () => ({ data: require("./lib/guest-session-fixture").withGuestSession({ version: 1, settings: { paths: {}, theme, locale: "zh-CN" } }), filePath: "", isNew: false }));
 registerHandle(C.USER_DATA_WRITE, () => undefined);
 registerHandle(C.USER_DATA_GET_DEFAULT_PATH, () => "");
 registerHandle(C.PATHS_GET_DEFAULT_OUTPUT, () => temp);
@@ -42,7 +42,9 @@ async function load(route) {
   await win.loadURL("app://app" + route);
   await win.webContents.debugger.sendCommand("Emulation.setEmulatedMedia", { features: [{ name: "prefers-reduced-motion", value: "no-preference" }] });
   await wait("document.querySelector('[data-window-titlebar]')");
+  await wait("document.querySelector('[aria-labelledby=update-announcement-title]')");
   await run("document.querySelector('[aria-labelledby=update-announcement-title] button')?.click()");
+  await wait("!document.querySelector('[aria-labelledby=update-announcement-title]')");
   await delay(300);
   await run(`(() => {
     const original = document.startViewTransition.bind(document);
@@ -115,11 +117,54 @@ async function checkRoute(route, name) {
   })()`));
   await finishTransition();
   smoke.check(name + ": temporary snapshot name is cleaned up", await run("getComputedStyle(document.querySelector('[data-window-titlebar]')).viewTransitionName === 'none'"));
+  await checkSharedMain(name);
+}
+
+// 界面：圆角和留白属于应用父组件，所有路由必须共享；满高工具保留自己的内部滚动。
+async function checkSharedMain(name) {
+  smoke.check(name + ": route uses the shared rounded main inside the application shell", await run(`(() => {
+    const main = document.querySelector('[data-app-main]'), header = document.querySelector('[data-window-titlebar]');
+    const box = main.getBoundingClientRect(), style = getComputedStyle(main);
+    return main.parentElement.hasAttribute('data-app-content-layout') && style.borderRadius === '8px'
+      && box.top === header.getBoundingClientRect().bottom + 12 && box.right <= innerWidth - 12
+      && box.bottom <= innerHeight - 12 && main.scrollWidth <= main.clientWidth + 1;
+  })()`));
+  smoke.check(name + ": main corners reveal the continuous shell background", await mainCornersAreClipped());
+  if (await run("Boolean(document.querySelector('[data-home-backdrop]'))")) {
+    smoke.check(name + ": homepage background stays inside main", await run("(()=>{const m=document.querySelector('[data-app-main]').getBoundingClientRect(),b=document.querySelector('[data-home-backdrop]'),r=b.getBoundingClientRect();return getComputedStyle(b).position==='absolute'&&r.top>=m.top&&r.left>=m.left&&r.right<=m.right+1})()"));
+  }
+  smoke.check(name + ": main preserves the route's scrolling mode", await run(`(() => {
+    const main = document.querySelector('[data-app-main]'), style = getComputedStyle(main);
+    if (main.dataset.fillViewport !== 'true') return style.overflowY === 'auto';
+    return style.overflowY === 'hidden' && main.scrollHeight <= main.clientHeight + 1
+      && main.firstElementChild.getBoundingClientRect().bottom <= main.getBoundingClientRect().bottom + 1;
+  })()`));
+  if (process.env.SMOKE_CAPTION_SCREENSHOTS) {
+    fs.mkdirSync(process.env.SMOKE_CAPTION_SCREENSHOTS, { recursive: true });
+    fs.writeFileSync(path.join(process.env.SMOKE_CAPTION_SCREENSHOTS, name + "-layout.png"), (await win.webContents.capturePage()).toPNG());
+  }
+}
+
+async function mainCornersAreClipped() {
+  const value = await run("(()=>{const r=document.querySelector('[data-app-main]').getBoundingClientRect();return {left:r.left,top:r.top,right:r.right,bottom:r.bottom,width:innerWidth,color:getComputedStyle(document.querySelector('[data-app-shell]')).backgroundColor.match(/\\d+/g).slice(0,3).map(Number)}})()");
+  // DOM 收尾信号先于 Chromium 撤下转场快照；从主进程有界等到实际像素提交。
+  for (let attempt = 0; attempt < 8; attempt++) {
+    const image = await win.webContents.capturePage(), bitmap = image.toBitmap();
+    const width = image.getSize().width, scale = width / value.width;
+    const clipped = [[value.left + 1, value.top + 1], [value.right - 2, value.top + 1], [value.left + 1, value.bottom - 2], [value.right - 2, value.bottom - 2]].every(([x, y]) => {
+      const offset = (Math.round(y * scale) * width + Math.round(x * scale)) * 4;
+      return Math.abs(bitmap[offset] - value.color[2]) <= 2 && Math.abs(bitmap[offset + 1] - value.color[1]) <= 2 && Math.abs(bitmap[offset + 2] - value.color[0]) <= 2;
+    });
+    if (clipped) return true;
+    await delay(50);
+  }
+  return false;
 }
 
 async function checkNegativeControl() {
   await load("/tools");
-  const style = await win.webContents.insertCSS("html.page-transition [data-window-titlebar] { view-transition-name: none !important; }");
+  // 仅负向对照恢复旧版全窗口背景，证明顶栏快照保护仍能识别原来的遮挡问题。
+  const style = await win.webContents.insertCSS("html.page-transition [data-window-titlebar] { view-transition-name: none !important; } html.page-transition [data-home-backdrop] { position: fixed !important; inset: 0 !important; }");
   try {
     await navigate("/");
     smoke.check("Negative control: DOM z-index alone cannot protect caption from homepage snapshot", !(await captionPixelsMatch("negative-control")));
@@ -192,6 +237,7 @@ async function checkNarrow() {
   win.setContentSize(390, 844);
   await win.webContents.debugger.sendCommand("Emulation.setDeviceMetricsOverride", { width: 390, height: 844, deviceScaleFactor: 1.25, mobile: false });
   await load("/");
+  await checkSharedMain("narrow-home");
   smoke.check("Narrow fixture uses 390px viewport at DPR 1.25", await run("innerWidth === 390 && devicePixelRatio === 1.25"));
   await wait("document.querySelector('[data-home-hero-explore]')");
   await run("window.__captionReady=false;document.querySelector('[data-home-hero-explore]').click()");
@@ -206,6 +252,7 @@ async function main() {
   try {
     await checkNegativeControl();
     await checkThemes();
+    await load("/settings"); await checkSharedMain("settings");
     await checkNarrow();
     await checkVisibility();
   } finally { occlusion.dispose(); win.destroy(); }

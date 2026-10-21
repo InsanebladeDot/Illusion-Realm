@@ -1,8 +1,8 @@
 /**
  * 图片生成队列：提交时冻结参数、模型路径和输出目录，按 FIFO 执行并独立保存状态。
- * 队列由模块持有，页面卸载不取消；单个任务失败后继续执行后续任务。
+ * 队列由模块持有，页面卸载不取消；普通失败继续，断连/停止未确认时终止待执行任务。
  */
-import { generateWithComfy, revokeComfyImages } from "@/api/comfyui";
+import { cancelComfyGeneration, generateWithComfy, revokeComfyImages } from "@/api/comfyui";
 import { t } from "@/i18n";
 import { DEFAULT_FOLDER_ID } from "@/data/historyFolders";
 import { useSettingsStore } from "@/stores/useSettingsStore";
@@ -17,6 +17,7 @@ import { buildGeneratedImageMeta } from "@/utils/buildGeneratedImageMeta";
 import { isPathWithinOutputRoot, resolveSaveOutputPath } from "@/utils/generatedImages";
 import { resolveEffectiveOutputPath } from "@/utils/electronBridge";
 import { saveGeneratedImagesToDisk } from "@/utils/saveGeneratedImages";
+import { IpcCallError } from "@/utils/ipcResult";
 
 export interface ImageGenerationResult { promptId: string; savedPaths: string[] }
 interface Snapshot {
@@ -28,8 +29,63 @@ interface Snapshot {
   fixed: boolean;
   folderId: string;
 }
-const pending: Array<() => Promise<void>> = [];
+interface Job {
+  id: string;
+  controller: AbortController;
+  run: () => Promise<void>;
+  reject: (error: unknown) => void;
+}
+const pending: Job[] = [];
+const jobs = new Map<string, Job>();
 let draining = false;
+
+function cancelledError() { return new DOMException(t("create.generationTasks.cancelled"), "AbortError"); }
+function errorCode(error: unknown) {
+  return error && typeof error === "object" && "code" in error ? error.code : undefined;
+}
+function taskError(error: unknown) {
+  const code = errorCode(error);
+  if (code === "COMFY_DISCONNECTED") return t("create.generationTasks.disconnected");
+  if (code === "COMFY_STOP_FAILED") return t("create.generationTasks.stopFailed");
+  if (code === "COMFY_TIMEOUT") return t("create.generationTasks.timeout");
+  if (code === "COMFY_EXECUTION_FAILED") return t("create.generationTasks.executionFailed");
+  return error instanceof Error ? error.message : t("create.page.generateFailed");
+}
+function cancelPending(message?: string) {
+  for (const job of pending.splice(0)) {
+    job.controller.abort(cancelledError());
+    useGenerationTaskStore.getState().update(job.id, { status: "cancelled", error: message ?? null });
+    jobs.delete(job.id);
+    job.reject(cancelledError());
+  }
+}
+
+/** 排队任务直接撤回；运行任务等待主进程确认远端停止，保存中的图片保留。 */
+export async function cancelImageGeneration(id: string): Promise<void> {
+  const job = jobs.get(id);
+  if (!job || job.controller.signal.aborted) return;
+  const index = pending.indexOf(job);
+  job.controller.abort(cancelledError());
+  if (index >= 0) {
+    pending.splice(index, 1);
+    jobs.delete(id);
+    useGenerationTaskStore.getState().update(id, { status: "cancelled", error: null });
+    job.reject(cancelledError());
+    return;
+  }
+  useGenerationTaskStore.getState().update(id, { status: "cancelling" });
+  try { await cancelComfyGeneration(id); }
+  catch (error) {
+    cancelPending(t("create.generationTasks.queueStopped"));
+    useGenerationTaskStore.getState().update(id, { error: taskError(error) });
+    throw new Error(taskError(error));
+  }
+}
+
+export async function cancelAllImageGeneration(): Promise<void> {
+  cancelPending();
+  for (const id of jobs.keys()) await cancelImageGeneration(id);
+}
 
 function snapshot(params: ImageWorkflowParams): Snapshot {
   const settings = useSettingsStore.getState();
@@ -48,12 +104,14 @@ async function saveTarget(input: Snapshot) {
     ? null : input.folderPath;
   return { path: resolveSaveOutputPath(root ?? input.outputPath, folderPath), folderId: folderPath ?? DEFAULT_FOLDER_ID };
 }
-async function generateImage(id: string, params: ImageWorkflowParams, input: Snapshot, path: string) {
+async function generateImage(id: string, params: ImageWorkflowParams, input: Snapshot, path: string, signal: AbortSignal) {
   const update = useGenerationTaskStore.getState().update;
   const prompt = buildImagePrompt(params.series ?? "anima", params);
   update(id, { status: "generating" });
-  const result = await generateWithComfy(prompt, { serverAddress: input.server });
+  signal.throwIfAborted();
+  const result = await generateWithComfy(prompt, { serverAddress: input.server, requestId: id });
   try {
+    signal.throwIfAborted();
     if (!result.images.length) throw new Error(t("create.page.generateFailed"));
     update(id, { status: "saving" });
     const savedPaths = await saveGeneratedImagesToDisk(result.images, result.promptId, path,
@@ -72,7 +130,7 @@ function updatePreview(id: string, result: ComfyGenerateResult) {
   revokeComfyImages(result.images.slice(1));
   store.update(id, { previewUrl: result.images[0]?.objectUrl ?? null });
 }
-async function execute(id: string, input: Snapshot, count: number): Promise<ImageGenerationResult> {
+async function execute(id: string, input: Snapshot, count: number, signal: AbortSignal): Promise<ImageGenerationResult> {
   const update = useGenerationTaskStore.getState().update;
   update(id, { status: "generating" });
   useGenerationNoticeStore.getState().start();
@@ -82,14 +140,16 @@ async function execute(id: string, input: Snapshot, count: number): Promise<Imag
   let promptId = "";
   const savedPaths: string[] = [];
   for (let index = 0; index < count; index++) {
+    signal.throwIfAborted();
     const params = { ...base, seed: index === 0 ? base.seed : Math.floor(Math.random() * 4_294_967_295) };
-    const result = await generateImage(id, params, input, target.path);
+    const result = await generateImage(id, params, input, target.path, signal);
     promptId = result.promptId;
     savedPaths.push(...result.savedPaths);
     updatePreview(id, result);
     update(id, { completed: index + 1, savedPaths: [...savedPaths] });
     useHistoryFolderStore.getState().refreshGeneratedImages();
   }
+  signal.throwIfAborted();
   update(id, { status: "completed" });
   useGenerationNoticeStore.getState().succeed({ filePath: savedPaths[0] ?? null, folderId: target.folderId });
   return { promptId, savedPaths };
@@ -97,7 +157,7 @@ async function execute(id: string, input: Snapshot, count: number): Promise<Imag
 async function drain(): Promise<void> {
   if (draining) return;
   draining = true;
-  try { while (pending.length) await pending.shift()!(); }
+  try { while (pending.length) await pending.shift()!.run(); }
   finally { draining = false; }
 }
 export function enqueueImageGeneration(params: ImageWorkflowParams, count = 1): Promise<ImageGenerationResult> {
@@ -108,14 +168,26 @@ export function enqueueImageGeneration(params: ImageWorkflowParams, count = 1): 
     model: params.checkpointName ?? params.series ?? "Anima", width: params.width ?? 0, height: params.height ?? 0,
     total, completed: 0, createdAt: Date.now(), previewUrl: null, savedPaths: [], folderId: input.folderId, error: null });
   return new Promise((resolve, reject) => {
-    pending.push(async () => {
-      try { resolve(await execute(id, input, total)); }
-      catch (error) {
-        useGenerationTaskStore.getState().update(id, { status: "failed", error: error instanceof Error ? error.message : t("create.page.generateFailed") });
-        useGenerationNoticeStore.getState().fail();
-        reject(error);
-      }
-    });
+    const controller = new AbortController();
+    const job = { id, controller, reject, run: async () => {
+      try { resolve(await execute(id, input, total, controller.signal)); }
+      catch (error) { reject(finishFailure(job, error)); }
+      finally { jobs.delete(id); }
+    } };
+    jobs.set(id, job);
+    pending.push(job);
     void drain().catch(reject);
   });
+}
+
+function finishFailure(job: Job, error: unknown): unknown {
+  const code = errorCode(error);
+  const cancelled = code === "COMFY_CANCELLED" || (error instanceof DOMException && error.name === "AbortError");
+  useGenerationTaskStore.getState().update(job.id, { status: cancelled ? "cancelled" : "failed", error: cancelled ? null : taskError(error) });
+  if (cancelled) useGenerationNoticeStore.getState().dismiss();
+  else useGenerationNoticeStore.getState().fail();
+  if (["COMFY_DISCONNECTED", "COMFY_STOP_FAILED", "COMFY_TIMEOUT"].includes(String(code))) {
+    cancelPending(t("create.generationTasks.queueStopped"));
+  }
+  return cancelled ? cancelledError() : new IpcCallError(taskError(error), typeof code === "string" ? code : undefined);
 }

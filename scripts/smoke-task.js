@@ -50,6 +50,11 @@ app.whenReady().then(async () => {
   };
 
   try {
+    // 界面：先通过真实游客入口，再测历史业务页面；不绕过生产入口检查。
+    await win.loadURL("app://app/login");
+    await sleep(2500);
+    await win.webContents.executeJavaScript("document.querySelector('[data-auth-guest]')?.click(); true");
+    await sleep(1500);
     // ---------- 设置页 ----------
     await win.loadURL("app://app/settings");
     await sleep(2500);

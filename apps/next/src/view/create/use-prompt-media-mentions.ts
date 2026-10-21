@@ -3,8 +3,9 @@
 // 素材补全交互：以纯文本光标位置识别 @ 查询，浮层挂到 body 避免滚动容器裁切；不读取全局素材。
 import { useCallback, useEffect, useId, useRef, useState, type KeyboardEvent, type RefObject } from "react";
 import { editorSelectionOffset } from "@/utils/image-prompt-references";
-import { filterPromptMedia, getMediaMentionQuery, mediaReferenceToken, type MediaMentionQuery, type PromptReferenceMedia } from "@/utils/prompt-media-references";
-import type { MediaMenuPosition } from "./prompt-media-menu";
+import { filterPromptMedia, getMediaMentionQuery, mediaReferenceToken, type MediaMentionQuery, type PromptMediaKind, type PromptReferenceMedia } from "@/utils/prompt-media-references";
+import { REFERENCE_MEDIA_KINDS } from "@/utils/comfy/video-reference-media";
+import type { MediaMenuEntry, MediaMenuPosition } from "./prompt-media-menu";
 
 interface MentionState extends MediaMentionQuery { position: MediaMenuPosition }
 interface Props {
@@ -49,11 +50,10 @@ function handleMentionKey(event: KeyboardEvent<HTMLDivElement>, count: number, a
   else choose();
   return true;
 }
-export function usePromptMediaMentions({ ref, media, disabled, replace }: Props) {
+/** 查询状态与分类导航分开：移动光标只重算查询，分类点击不改提示词。 */
+function useMentionQuery({ ref, disabled }: Pick<Props, "ref" | "disabled">) {
   const [state, setState] = useState<MentionState | null>(null);
-  const [active, setActive] = useState(0);
   const ignored = useRef("");
-  const id = useId();
   const close = useCallback(() => { setState(null); }, []);
   useMentionDismiss(ref, close);
   const update = () => {
@@ -63,15 +63,46 @@ export function usePromptMediaMentions({ ref, media, disabled, replace }: Props)
     if (!root || !query) { ignored.current = ""; close(); return; }
     if (ignored.current === JSON.stringify(query)) { close(); return; }
     ignored.current = "";
-    setState({ ...query, position: menuPosition(root) }); setActive(0);
-  };
-  const items = state ? filterPromptMedia(media, state.query) : [];
-  const activeIndex = Math.min(active, Math.max(0, items.length - 1));
-  const choose = (item: PromptReferenceMedia) => {
-    if (state) { const suffix = ref.current?.textContent?.slice(state.end) ?? ""; replace(state.start, state.end, mediaReferenceToken(item) + (/^\s/.test(suffix) ? "" : " ")); }
-    close();
+    setState({ ...query, position: menuPosition(root) });
   };
   const escape = () => { ignored.current = JSON.stringify(state && { start: state.start, end: state.end, query: state.query }); close(); };
-  const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => Boolean(state && !disabled && handleMentionKey(event, items.length, activeIndex, setActive, () => { if (items[activeIndex]) choose(items[activeIndex]); }, escape));
-  return { id, state, items, active: activeIndex, update, close, choose, onKeyDown };
+  return { state, close, update, escape };
+}
+
+function useMentionNavigation(state: MentionState | null, media: Props["media"], choose: (item: PromptReferenceMedia) => void, escape: () => void) {
+  const [active, setActive] = useState(0);
+  const [category, setCategory] = useState<PromptMediaKind | null>(null);
+  const searching = Boolean(state?.query);
+  const items = state ? filterPromptMedia(media, state.query).filter((item) => searching || !category || item.kind === category) : [];
+  const entries: MediaMenuEntry[] = !searching && !category
+    ? REFERENCE_MEDIA_KINDS.map((kind) => ({ kind: "category", category: kind, count: media.filter((item) => item.kind === kind).length }))
+    : items.map((item) => ({ kind: "media", item }));
+  const activeIndex = Math.min(active, Math.max(0, entries.length - 1));
+  const back = () => { setCategory(null); setActive(0); };
+  const chooseEntry = (entry: MediaMenuEntry) => {
+    if (entry.kind === "category") { setCategory(entry.category); setActive(0); }
+    else choose(entry.item);
+  };
+  const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    if (event.key === "ArrowLeft" && category) { event.preventDefault(); back(); return true; }
+    if (event.key === "ArrowRight" && entries[activeIndex]?.kind === "category") { event.preventDefault(); chooseEntry(entries[activeIndex]); return true; }
+    return handleMentionKey(event, entries.length, activeIndex, setActive, () => { if (entries[activeIndex]) chooseEntry(entries[activeIndex]); }, escape);
+  };
+  return { entries, category: searching ? null : category, back, chooseEntry, active: activeIndex, onKeyDown };
+}
+
+export function usePromptMediaMentions({ ref, media, disabled, replace }: Props) {
+  const id = useId();
+  const query = useMentionQuery({ ref, disabled });
+  const choose = (item: PromptReferenceMedia) => {
+    if (query.state) {
+      const suffix = ref.current?.textContent?.slice(query.state.end) ?? "";
+      replace(query.state.start, query.state.end, mediaReferenceToken(item) + (/^\s/.test(suffix) ? "" : " "));
+    }
+    query.close();
+  };
+  const menu = useMentionNavigation(query.state, media, choose, query.escape);
+  const update = () => { menu.back(); query.update(); };
+  const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => Boolean(query.state && !disabled && menu.onKeyDown(event));
+  return { ...menu, id, state: query.state, update, close: query.close, onKeyDown };
 }

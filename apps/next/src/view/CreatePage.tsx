@@ -46,10 +46,13 @@ import {
   ModelSeriesSelector,
 } from "@/view/create/ModelSeriesSelector";
 import { AdvancedSettings } from "@/view/create/AdvancedSettings";
+import { CannyEnableToggle, CannyPreviewPanel } from "@/view/create/canny-preview-panel";
+import { useCannyPreview } from "@/view/create/use-canny-preview";
 import { CreateModeTabs } from "@/view/create/CreateModeTabs";
 import { ExtensionSelectDialog } from "@/view/create/ExtensionSelectDialog";
 import { filterAndSortExtensions } from "@/data/extensions";
 import { GenerateFooter } from "@/view/create/GenerateFooter";
+import { GeneratingStatus } from "@/view/create/generating-status";
 import { ImageSizeSection } from "@/view/create/ImageSizeSection";
 import { NegativePromptSection } from "@/view/create/NegativePromptSection";
 import { ModelSelectDialog } from "@/view/create/ModelSelectDialog";
@@ -157,6 +160,7 @@ function getRemixToastMessage(
 
 export function CreatePage() {
   const { t } = useTranslation();
+  const canny = useCannyPreview();
   const localModels = useSettingsStore((state) => state.models);
   const paths = useSettingsStore((state) => state.paths);
   const outputPath = useSettingsStore((state) => state.outputPath);
@@ -621,10 +625,14 @@ export function CreatePage() {
                   <SelectedExtensions value={selectedExtensions} onChange={setSelectedExtensions} onAdd={() => setExtensionDialogOpen(true)} />
                 </div>
 
+                {/* 界面：「检测边缘」原图与结果预览，由高级设置启用。 */}
+                <CannyPreviewPanel state={canny} />
+
                 {/* 界面：「提示词」区（普通模式是单一输入框；含高级组装开关与工具行） */}
                 <PromptSection
-        series={seriesId === "sdxl" ? "sdxl" : "anima"}
-      />
+                  series={seriesId === "sdxl" ? "sdxl" : "anima"}
+                  loraIds={selectedExtensions.map(item => item.extensionId)}
+                />
 
                 {/* 界面：「反向提示词」区 */}
                 <NegativePromptSection />
@@ -632,7 +640,9 @@ export function CreatePage() {
                 {/* 界面：「图片尺寸」区（比例 / 宽高 / 预设） */}
                 <ImageSizeSection />
                 {/* 界面：「高级设置」区（采样器 / 步数 / CFG / 种子…） */}
-                <AdvancedSettings series={seriesId === "sdxl" ? "sdxl" : "anima"} />
+                <AdvancedSettings series={seriesId === "sdxl" ? "sdxl" : "anima"}>
+                  <CannyEnableToggle state={canny} />
+                </AdvancedSettings>
               </div>
             </div>
 
@@ -658,7 +668,7 @@ export function CreatePage() {
       <article className={cn("hidden min-h-0 min-w-0 flex-1", createMode !== "edit" && "xl:flex")}>
         <div className="flex h-full w-full items-center justify-center p-3">
           <div
-            className="relative flex aspect-[832/1216] max-h-full max-w-full flex-col items-center justify-center overflow-hidden bg-muted dark:bg-zinc-900"
+            className="relative flex aspect-[832/1216] max-h-full max-w-full flex-col items-center justify-center overflow-hidden bg-muted dark:bg-background"
             style={{ height: "min(1216px, 100%)" }}
           >
             {previewGalleryItems.length > 0 ? (
@@ -685,11 +695,8 @@ export function CreatePage() {
             ) : (
               previewIcon
             )}
-            {generating && (
-              <div className="absolute inset-0 flex items-center justify-center bg-black/40 text-sm font-medium text-white">
-                {t("create.page.generating")}
-              </div>
-            )}
+            {/* 界面：生成状态直接放在 stage，省略号循环变化。 */}
+            {generating && <GeneratingStatus />}
           </div>
         </div>
       </article>

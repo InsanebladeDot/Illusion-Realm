@@ -3,6 +3,33 @@
  * 命名约定：`settings.<语义>`，例如 `settings.outputPath.title`。
  */
 export const settings = {
+  contentAccess: {
+    title: "内容访问",
+    label: "允许访问 NSFW 内容",
+    description: "允许 C 站模型搜索与预览显示成人内容。默认关闭，开启前须阅读并同意访问协议。",
+    viewAgreement: "查看内容访问协议",
+    agreementTitle: "NSFW 内容访问协议",
+    agreementVersion: "协议版本：{version}",
+    age: "我确认已满 18 周岁，并达到所在地访问成人内容的法定年龄；未成年人不得开启。",
+    content: "开启后，C 站模型搜索和预览可能包含裸露、性暗示等成人内容。我了解内容性质，并自愿选择访问。",
+    lawful: "我将遵守所在地法律及来源平台的使用规则，不访问、制作或传播涉及未成年人性内容、非自愿私密影像等违法内容。",
+    scope: "此设置仅控制本软件的 C 站模型搜索与预览，不会同步网站偏好，也不会绕过来源平台的登录、权限或地区限制。可随时关闭，关闭不会删除已下载的文件。",
+    acknowledge: "我已阅读并同意以上协议，确认符合年龄和访问条件。",
+    accept: "同意并开启",
+  },
+  appearance: {
+    title: "外观设置",
+    description: "调整主题、强调色和字体，让工作台更合你的习惯。",
+    theme: "主题预设",
+    colorsTitle: "颜色预设",
+    colorsHint: "同步调整顶栏、侧栏底色及重点文字、按钮，不改变作品颜色。",
+    font: "全局字体",
+    fontHint: "应用于整体界面；代码、图标与作品内的专用字体保持不变。",
+    autoSave: "选择后即时生效，自动保存到本机。",
+    reset: "恢复默认外观",
+    colors: { default: "默认", sand: "暖砂", rose: "玫瑰花园", teal: "湖光", sunset: "日落霞光", forest: "森林低语", ocean: "海风", graphite: "石墨" },
+    fonts: { auto: "自动", sans: "无衬线", serif: "衬线" },
+  },
   theme: {
     system: "跟随系统",
     light: "浅色",

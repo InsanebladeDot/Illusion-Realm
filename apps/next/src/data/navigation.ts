@@ -7,7 +7,6 @@ import {
   Settings,
   SunMoon,
   Tag,
-  User,
   WandSparkles,
   Box
 } from "lucide-react";
@@ -39,7 +38,6 @@ export const MAIN_NAV_ITEMS: LocalizedNavItem[] = [
     implemented: true,
   },
   { id: "tags", label: "nav.tags", href: "/tags", icon: Tag, implemented: false },
-  { id: "profile", label: "nav.profile", href: "/profile", icon: User, implemented: true },
 ];
 
 export const BOTTOM_NAV_ITEMS: LocalizedBottomNavItem[] = [

@@ -1,5 +1,21 @@
+/** ComfyUI IPC：校验请求及取消标识，按发送窗口隔离生成会话。 */
 const { IPC_CHANNELS } = require("../ipcChannels");
 const { registerHandle } = require("../ipcHandlers");
+const generation = require("../services/comfy-generation");
+
+/** @param {unknown} value */
+function validRequestId(value) {
+  return typeof value === "string" && /^[A-Za-z0-9_-]{1,128}$/.test(value);
+}
+
+/** 与 ComfyApiPromptSchema 等价；不在主进程引入开发依赖 zod。 @param {unknown} value */
+function validPrompt(value) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+  return Object.values(value).every((node) => node && typeof node === "object" && !Array.isArray(node)
+    && typeof node.class_type === "string" && node.class_type.length > 0
+    && node.inputs && typeof node.inputs === "object" && !Array.isArray(node.inputs)
+    && (node._meta === undefined || (node._meta && typeof node._meta === "object" && !Array.isArray(node._meta))));
+}
 
 const DEFAULT_SERVER = "127.0.0.1:8188";
 const PROXY_UNAVAILABLE =
@@ -43,19 +59,29 @@ function registerComfyHandlers() {
   registerHandle(
     IPC_CHANNELS.COMFY_GENERATE,
     /**
-     * @param {Electron.IpcMainInvokeEvent} _event
+     * @param {Electron.IpcMainInvokeEvent} event
      * @param {object} prompt ComfyUI API 工作流
      * @param {string} [serverAddress]
+     * @param {string} [requestId]
      * @returns {Promise<object>}
      */
-    async (_event, prompt, serverAddress) =>
-      getComfyProxy().generateWithComfy(serverAddress || DEFAULT_SERVER, prompt),
+    async (event, prompt, serverAddress, requestId) =>
+      generation.generate(event.sender.id, prompt, serverAddress || DEFAULT_SERVER, requestId),
     /** @param {unknown[]} args @returns {string | null} */
     (args) => {
-      const [prompt] = args;
-      if (!prompt || typeof prompt !== "object") return "无效的 ComfyUI prompt";
+      const [prompt, server, requestId] = args;
+      if (!validPrompt(prompt)) return "无效的 ComfyUI prompt";
+      if (args.length > 3) return "Invalid ComfyUI arguments";
+      if (server !== undefined && (typeof server !== "string" || !server || server.length > 255)) return "Invalid ComfyUI server";
+      if (requestId !== undefined && !validRequestId(requestId)) return "Invalid ComfyUI request ID";
       return null;
     }
+  );
+
+  registerHandle(IPC_CHANNELS.COMFY_CANCEL,
+    /** @param {Electron.IpcMainInvokeEvent} event @param {string} requestId */
+    (event, requestId) => generation.cancel(event.sender.id, requestId),
+    (args) => args.length === 1 && validRequestId(args[0]) ? null : "Invalid ComfyUI request ID"
   );
 
   registerHandle(

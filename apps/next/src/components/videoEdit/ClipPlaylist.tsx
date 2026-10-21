@@ -19,6 +19,7 @@ import { Film, GripVertical, Trash2 } from "lucide-react";
 import { useTranslation } from "@/i18n";
 import { formatBytes } from "@/utils/format";
 import { formatTime } from "@/utils/video/time";
+import { getClipEffects, getClipOutputDuration } from "@/utils/video/clip-effects";
 import type { ClipItem } from "@/components/videoEdit/types";
 
 type ClipPlaylistProps = {
@@ -30,6 +31,7 @@ type ClipPlaylistProps = {
   onSelect: (id: string) => void;
   onReorder: (clips: ClipItem[]) => void;
   onRemove: (id: string) => void;
+  onContextMenu?: (event: React.MouseEvent<HTMLElement>, id: string) => void;
 };
 
 function SortableClipCard({
@@ -40,6 +42,7 @@ function SortableClipCard({
   onSelect,
   onRemove,
   rangeIndex,
+  onContextMenu,
 }: {
   clip: ClipItem;
   index: number;
@@ -48,14 +51,17 @@ function SortableClipCard({
   onSelect: () => void;
   onRemove: () => void;
   rangeIndex?: number;
+  onContextMenu?: (event: React.MouseEvent<HTMLElement>) => void;
 }) {
   const { t } = useTranslation();
+  const effects = getClipEffects(clip);
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: clip.id, disabled });
 
   return (
     <div
       ref={setNodeRef}
+      onContextMenu={event => { if (!disabled) onContextMenu?.(event); }}
       style={{ transform: CSS.Transform.toString(transform), transition }}
       className={`flex items-center gap-2 rounded-xl border bg-background p-3 transition-colors ${
         selected ? "border-blue-500 ring-1 ring-blue-500" : "border-border"
@@ -99,6 +105,12 @@ function SortableClipCard({
             （{formatTime(Math.max(0, clip.trim.end - clip.trim.start), true)}）
             · {clip.width}×{clip.height} · {formatBytes(clip.size)}
             {clip.hasAudio ? "" : t("toolBox.videoEdit.playlist.noAudio")}
+            {rangeIndex !== undefined && <span className="ml-2 text-primary" data-clip-effects={clip.id}>
+              {t("toolBox.video.clipMenu.effects", { speed: effects.speed, volume: Math.round(effects.volume * 100) })}
+              {effects.muted && ` · ${t("toolBox.video.clipMenu.mutedLabel")}`}
+              {effects.reverse && ` · ${t("toolBox.video.clipMenu.reverseLabel")}`}
+              {` · ${formatTime(getClipOutputDuration(clip), true)}`}
+            </span>}
           </span>
         </span>
       </button>
@@ -125,6 +137,7 @@ export function ClipPlaylist({
   onSelect,
   onReorder,
   onRemove,
+  onContextMenu,
 }: ClipPlaylistProps) {
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 4 } })
@@ -162,6 +175,7 @@ export function ClipPlaylist({
               rangeIndex={showRanges ? clips.slice(0, index + 1).filter((item) => item.path === clip.path).length : undefined}
               onSelect={() => onSelect(clip.id)}
               onRemove={() => onRemove(clip.id)}
+              onContextMenu={event => onContextMenu?.(event, clip.id)}
             />
           ))}
         </div>

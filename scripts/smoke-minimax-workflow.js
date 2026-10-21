@@ -7,8 +7,10 @@ const assert = require("node:assert/strict");
 const { app, BrowserWindow, nativeImage } = require("electron");
 const { IPC_CHANNELS: C } = require("../apps/electron/ipcChannels");
 const { registerHandle } = require("../apps/electron/ipcHandlers");
+const { windowChromeOptions, windowChromeArguments } = require("../apps/electron/window-chrome");
 const smoke = require("./lib/smoke-harness").createSmokeHarness({ name: "minimax-workflow", timeoutMs: 60000 });
 const root = fs.mkdtempSync(path.join(os.tmpdir(), "ir-minimax-ui-"));
+smoke.setWorkDir(root);
 const modelsRoot = path.join(root, "models");
 const template = JSON.parse(fs.readFileSync(path.join(__dirname, "../apps/next/src/data/comfy/videoWorkflower/minnimax/minimax h3 图生视频-首尾帧.json"), "utf8"));
 const referenceTemplate = JSON.parse(fs.readFileSync(path.join(__dirname, "../apps/next/src/data/comfy/videoWorkflower/minnimax/minimax h3 参考视频.json"), "utf8"));
@@ -24,20 +26,21 @@ responses.loras.push('Minimax\\Turbo\\Adapter\\turbo-local.safetensors', 'Minima
 responses.diffusion_models.push('Minimax\\Style\\First Model\\first.safetensors', 'Minimax\\Style\\Second Model\\second-unet.safetensors');
 const requests = [], prompts = [], uploads = [], errors = [];
 let server, win, modelListCalls = 0, failLists = false;
-let imageExtensionUi, imageParameterUi, imageSizeUi;
+let imageExtensionUi, imageParameterUi, imageSizeUi, videoFixtureBytes;
 app.disableHardwareAcceleration(); app.setPath("userData", path.join(root, "browser")); smoke.installWatchdog(app);
 require("../apps/electron/appProtocol").registerAppProtocol();
 const settings = { paths: { searchPath: modelsRoot, diffusionModelsPath: path.join(modelsRoot, "diffusion_models") }, theme: "light", outputPath: root };
 require("../apps/electron/userData").readUserData = () => ({ data: { settings } });
 require("../apps/electron/ipc-handlers/models.handlers").registerModelHandlers();
 require("../apps/electron/ipc-handlers/window.handlers").registerThemeHandlers();
-registerHandle(C.USER_DATA_READ, () => ({ data: { settings }, filePath: "", isNew: false }));
+registerHandle(C.USER_DATA_READ, () => ({ data: require("./lib/guest-session-fixture").withGuestSession({ settings }), filePath: "", isNew: false }));
 registerHandle(C.USER_DATA_WRITE, () => undefined);
 registerHandle(C.USER_DATA_GET_DEFAULT_PATH, () => "");
 registerHandle(C.PATHS_GET_DEFAULT_OUTPUT, () => root);
 registerHandle(C.FILES_LIST_GENERATED_IMAGES, () => []);
 registerHandle(C.FILES_LIST_OUTPUT_FOLDERS, () => []);
 registerHandle(C.CHANGELOG_READ, () => "");
+registerHandle(C.ACCOUNT_ME, () => ({ status: 401, body: { success: false, code: "UNAUTHORIZED" } }));
 registerHandle(C.MODELS_DOWNLOAD_LIST, () => []);
 registerHandle(C.AGENT_SECRET_STATUS, () => ({ configured: false, source: "none", protection: "", tail: "" }));
 registerHandle(C.PROMPT_SECRET_STATUS, () => ({ configured: false, source: "none", protection: "", tail: "" }));
@@ -52,7 +55,7 @@ async function wait(source) {
   for (let i = 0; i < 100; i++) { if (await run(`Boolean(${source})`)) return; await delay(100); }
   throw new Error("Minimax UI timeout: " + source);
 }
-async function click(selector) { await run(`document.querySelector(${JSON.stringify(selector)}).click()`); await delay(100); }
+async function click(selector) { await require("./lib/sidebar-menu-fixture").revealSidebarPreference(run, selector); await run(`document.querySelector(${JSON.stringify(selector)}).click()`); await delay(100); }
 async function dismissAnnouncement() {
   await wait("document.querySelector('[aria-labelledby=update-announcement-title]')");
   await click("[aria-labelledby=update-announcement-title] button");
@@ -78,16 +81,31 @@ async function upload(selector, name, mime = 'image/png') {
   const bytes = [...nativeImage.createFromBitmap(Buffer.from([20, 100, 180, 255]), { width: 1, height: 1 }).toPNG()];
   await run(`(()=>{const el=document.querySelector(${JSON.stringify(selector)});const data=new DataTransfer();data.items.add(new File([new Uint8Array(${JSON.stringify(bytes)})],${JSON.stringify(name)},{type:${JSON.stringify(mime)}}));el.files=data.files;el.dispatchEvent(new Event('change',{bubbles:true}));})()`); await delay(100);
 }
-async function importMediaBatch(kind, files, drop = false) {
-  await click(`[data-reference-tab=${kind}]`);
-  const selector = `[data-reference-kind=${kind}] input[multiple]`;
+async function importMediaBatch(files, drop = false) {
+  const selector = '[data-reference-import]';
   await wait(`document.querySelector('${selector}')`);
   const bytes = [...nativeImage.createFromBitmap(Buffer.from([20, 100, 180, 255]), { width: 1, height: 1 }).toPNG()];
-  await run(`(()=>{const el=document.querySelector('${selector}'),data=new DataTransfer();for(const [name,mime] of ${JSON.stringify(files)})data.items.add(new File([new Uint8Array(${JSON.stringify(bytes)})],name,{type:mime}));if(${drop})el.parentElement.querySelector('button').dispatchEvent(new DragEvent('drop',{bubbles:true,dataTransfer:data}));else{el.files=data.files;el.dispatchEvent(new Event('change',{bubbles:true}));}})()`);
+  await run(`(()=>{const el=document.querySelector('${selector}'),data=new DataTransfer();for(const [name,mime] of ${JSON.stringify(files)})data.items.add(new File([new Uint8Array(mime.startsWith('video/')?${JSON.stringify(videoFixtureBytes)}:${JSON.stringify(bytes)})],name,{type:mime}));if(${drop})document.querySelector('[data-reference-drop]').dispatchEvent(new DragEvent('drop',{bubbles:true,dataTransfer:data}));else{el.files=data.files;el.dispatchEvent(new Event('change',{bubbles:true}));}})()`);
   await delay(100);
 }
 async function removeReference(kind, number) {
-  await click(`[data-reference-kind=${kind}] [data-reference-number="${number}"] button[aria-label]`);
+  await click(`[data-reference-kind=${kind}][data-reference-number="${number}"] [data-reference-remove]`);
+}
+// 真实浏览器录制小视频，验证解码首帧；不能把 PNG 改名成视频来冒充成功。
+async function createVideoFixture() {
+  return run(`new Promise((resolve,reject)=>{
+    const canvas=document.createElement('canvas');canvas.width=64;canvas.height=48;
+    const context=canvas.getContext('2d');context.fillStyle='rgb(20,100,180)';context.fillRect(0,0,64,48);
+    const stream=canvas.captureStream(0),track=stream.getVideoTracks()[0];
+    const recorder=new MediaRecorder(stream,{mimeType:'video/webm;codecs=vp8'}),chunks=[];
+    const timer=setTimeout(()=>{track.stop();reject(new Error('Video fixture timed out'))},3000);
+    recorder.ondataavailable=event=>chunks.push(event.data);
+    recorder.onerror=()=>{clearTimeout(timer);track.stop();reject(new Error('Video fixture recording failed'))};
+    recorder.onstop=async()=>{clearTimeout(timer);track.stop();try{resolve([...new Uint8Array(await new Blob(chunks).arrayBuffer())])}catch(error){reject(error)}};
+    recorder.start();track.requestFrame();
+    setTimeout(()=>{context.fillStyle='rgb(200,40,60)';context.fillRect(0,0,64,48);track.requestFrame()},120);
+    setTimeout(()=>recorder.stop(),250);
+  })`);
 }
 async function submit() {
   const before = prompts.length;
@@ -137,8 +155,10 @@ function extensionUiSnapshot() {
 function parameterUiSnapshot() {
   return run("(()=>{const row=document.querySelector('[data-generation-parameter=steps]');return [row,...row.querySelectorAll('*')].map(el=>{const s=getComputedStyle(el);return {tag:el.tagName,classes:el.getAttribute('class'),fontSize:s.fontSize,fontWeight:s.fontWeight,color:s.color,background:s.backgroundColor,borderColor:s.borderColor,borderRadius:s.borderRadius,gap:s.gap,padding:s.padding,width:el.matches('input[type=number]')?s.width:null}})})()");
 }
-function sizeUiSnapshot() {
+async function sizeUiSnapshot() {
   // 比对元素、排序后的属性和实际样式；SSR 的注释与属性顺序不属于 UI 差异。
+  // 真实点击素材菜单后指针会留在尺寸按钮上，先移出，确保两侧比较的都是非 hover 状态。
+  win.webContents.sendInputEvent({ type: 'mouseMove', x: 0, y: 0 }); await delay(350);
   return run("(()=>{const root=document.querySelector('[data-size-selector]');return [root,...root.querySelectorAll('*')].map(el=>{const s=getComputedStyle(el);return {tag:el.tagName,text:el.textContent,attributes:[...el.attributes].filter(a=>a.name!=='style').map(a=>[a.name,a.value]).sort((a,b)=>a[0].localeCompare(b[0])),value:el instanceof HTMLInputElement?el.value:null,color:s.color,background:s.backgroundColor,fontSize:s.fontSize,borderRadius:s.borderRadius}})})()");
 }
 async function chooseSlot(id, name) {
@@ -211,6 +231,8 @@ async function verifyMediaMentions() {
   await run("document.querySelector('[data-video-prompt]').scrollIntoView({block:'center'})"); await delay(100);
   await typeMention('prefix @ suffix', 8);
   await wait("document.querySelector('[data-prompt-media-menu]')");
+  smoke.check("Bare @ opens image/video/audio categories", await run("document.querySelectorAll('[data-prompt-media-category]').length===3&&!document.querySelector('[data-prompt-media-option]')"));
+  await click('[data-prompt-media-category=image]');
   smoke.check("At-sign opens a rectangular list of only current-task imported images with thumbnails", await run("document.querySelectorAll('[data-prompt-media-option]').length===2&&document.querySelectorAll('[data-prompt-media-option] img').length===2&&document.querySelector('[data-prompt-media-menu]').parentElement===document.body"));
   fs.writeFileSync(path.join(root, 'minimax-mention-search.png'), (await win.webContents.capturePage(undefined, { stayHidden: true, stayAwake: true })).toPNG());
   const bounds = await run("(()=>{const r=document.querySelector('[data-prompt-media-option=\"image-2\"]').getBoundingClientRect();return {x:Math.round(r.x+r.width/2),y:Math.round(r.y+r.height/2)}})()");
@@ -224,6 +246,7 @@ async function verifyMediaMentions() {
   await run("document.querySelector('[data-video-prompt]').dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',bubbles:true}))"); await delay(100);
   smoke.check("Enter confirms the filtered reference without inserting a newline", await run("document.querySelector('[data-video-prompt]').textContent==='@image2 '&&!document.querySelector('[data-prompt-media-menu]')"));
   await typeMention('@');
+  await run("document.querySelector('[data-video-prompt]').dispatchEvent(new KeyboardEvent('keydown',{key:'ArrowRight',bubbles:true}))"); await delay(100);
   await run("document.querySelector('[data-video-prompt]').dispatchEvent(new KeyboardEvent('keydown',{key:'ArrowDown',bubbles:true}))"); await delay(100);
   await run("document.querySelector('[data-video-prompt]').dispatchEvent(new KeyboardEvent('keydown',{key:'Tab',bubbles:true}))"); await delay(100);
   smoke.check("Arrow keys and Tab select the second imported image", await run("document.querySelector('[data-video-prompt]').textContent==='@image2 '"));
@@ -234,6 +257,7 @@ async function verifyMediaMentions() {
   await run("document.querySelector('[data-video-prompt]').dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}))"); await delay(100);
   smoke.check("Escape closes suggestions and preserves the query", await run("!document.querySelector('[data-prompt-media-menu]')&&document.querySelector('[data-video-prompt]').textContent==='@not-found'"));
   await click('[data-video-frame-mode=first]'); await typeMention('@');
+  await click('[data-prompt-media-category=image]');
   smoke.check("Disabled last-frame mode excludes that image from suggestions", await run("document.querySelectorAll('[data-prompt-media-option]').length===1"));
   await click('[data-video-frame-mode=both]'); await setPrompt('A character walks towards the door.');
 }
@@ -430,8 +454,9 @@ async function verifyFailureAndReset() {
   failLists = false;
   await click("[data-theme-trigger]");
   await click("[data-theme-option=dark]");
-  await wait("document.documentElement.dataset.theme==='dark'&&matchMedia('(prefers-color-scheme: dark)').matches&&getComputedStyle(document.querySelector('[data-video-model-settings]')).backgroundColor==='rgb(10, 10, 10)'");
+  await wait("document.documentElement.dataset.theme==='dark'&&matchMedia('(prefers-color-scheme: dark)').matches&&getComputedStyle(document.querySelector('[data-video-model-settings]')).backgroundColor==='rgb(30, 30, 30)'");
   smoke.check("Model controls follow the native dark theme through the actual theme selector", true);
+  await require("./lib/sidebar-menu-fixture").closeAppearance(run);
   win.setSize(390, 844);
   await wait("innerWidth<=390");
   await delay(300);
@@ -444,7 +469,7 @@ async function verifyFailureAndReset() {
   await verifyNarrowMainModelDialog();
   await run("document.querySelector('[data-video-prompt]').scrollIntoView({block:'center'})"); await delay(100);
   await typeMention('@');
-  smoke.check("Media menu stays inside the narrow viewport and follows dark theme", await run("(()=>{const el=document.querySelector('[data-prompt-media-menu]'),r=el.getBoundingClientRect();return r.left>=0&&r.right<=innerWidth&&r.top>=40&&r.bottom<=innerHeight&&getComputedStyle(el).backgroundColor==='rgb(10, 10, 10)'})()"));
+  smoke.check("Media menu stays inside the narrow viewport and follows dark theme", await run("(()=>{const el=document.querySelector('[data-prompt-media-menu]'),r=el.getBoundingClientRect();return r.left>=0&&r.right<=innerWidth&&r.top>=40&&r.bottom<=innerHeight&&getComputedStyle(el).backgroundColor==='rgb(28, 28, 28)'})()"));
   fs.writeFileSync(path.join(root, 'minimax-mention-narrow-dark.png'), (await win.webContents.capturePage(undefined, { stayHidden: true, stayAwake: true })).toPNG());
   await run("document.querySelector('[data-size-preset=\"16:9\"]').dispatchEvent(new PointerEvent('pointerdown',{bubbles:true}))");
   await click('[data-size-preset="16:9"]');
@@ -458,7 +483,7 @@ async function verifyNarrowLoraDialog() {
   await click('[data-video-loras] [data-extension-picker-trigger]');
   await click('[data-lora-model-picker]');
   await wait("document.querySelector('[data-lora-model-option] img')");
-  smoke.check('Nested LoRA popup fits the narrow viewport and follows the dark theme', await run("(()=>{const el=document.querySelector('[aria-labelledby=model-version-dialog-title]'),r=el.getBoundingClientRect();return r.left>=0&&r.right<=innerWidth&&r.top>=0&&r.bottom<=innerHeight&&getComputedStyle(el).backgroundColor==='rgb(10, 10, 10)'})()"));
+  smoke.check('Nested LoRA popup fits the narrow viewport and follows the dark theme', await run("(()=>{const el=document.querySelector('[aria-labelledby=model-version-dialog-title]'),r=el.getBoundingClientRect();return r.left>=0&&r.right<=innerWidth&&r.top>=0&&r.bottom<=innerHeight&&getComputedStyle(el).backgroundColor==='rgb(28, 28, 28)'})()"));
   await captureSettings('minimax-lora-model-cards-narrow-dark.png','[aria-labelledby=model-version-dialog-title]');
   await click('[aria-labelledby=model-version-dialog-title] button[aria-label]');
   smoke.check('Closing the nested popup keeps the category library open and scrolling locked', await run("Boolean(document.querySelector('[aria-labelledby=extension-select-dialog-title]'))&&document.body.style.overflow==='hidden'"));
@@ -473,7 +498,7 @@ async function verifyNarrowMainModelDialog() {
   smoke.check('All shared toolbar controls remain visible and the search moves below the category controls on narrow screens', await run("(()=>{const el=document.querySelector('[aria-labelledby=model-select-dialog-title]'),group=el.querySelector('[aria-label=\"字体大小\"]'),r=group.getBoundingClientRect(),input=el.querySelector('input').getBoundingClientRect();return input.top>=r.bottom&&[...el.querySelectorAll('[role=group] button')].every(button=>{const b=button.getBoundingClientRect();return b.left>=0&&b.right<=innerWidth})})()"));
   await click('[data-resource-model-picker]');
   await wait("document.querySelector('[data-resource-model-option] img')");
-  smoke.check('Main model popup fits the narrow viewport and follows the dark theme', await run("(()=>{const el=document.querySelector('[aria-labelledby=model-version-dialog-title]'),r=el.getBoundingClientRect();return r.left>=0&&r.right<=innerWidth&&r.top>=0&&r.bottom<=innerHeight&&getComputedStyle(el).backgroundColor==='rgb(10, 10, 10)'})()"));
+  smoke.check('Main model popup fits the narrow viewport and follows the dark theme', await run("(()=>{const el=document.querySelector('[aria-labelledby=model-version-dialog-title]'),r=el.getBoundingClientRect();return r.left>=0&&r.right<=innerWidth&&r.top>=0&&r.bottom<=innerHeight&&getComputedStyle(el).backgroundColor==='rgb(28, 28, 28)'})()"));
   await captureSettings('main-model-cards-narrow-dark.png', '[aria-labelledby=model-version-dialog-title]');
   await click('[aria-labelledby=model-version-dialog-title] button[aria-label]');
   await click('[aria-labelledby=model-select-dialog-title] button[aria-label="关闭"]');
@@ -510,27 +535,59 @@ async function importReferenceFixture() {
   await verifyReferenceBatchImports();
   await run("document.querySelector('[data-video-prompt]').scrollIntoView({block:'center'})"); await delay(200);
   await typeMention('@');
-  smoke.check('The @ menu lists all three images plus current-task video and audio', await run("document.querySelectorAll('[data-prompt-media-menu] [role=option]').length===5&&document.querySelector('[data-prompt-media-menu]').textContent.includes('@video1')&&document.querySelector('[data-prompt-media-menu]').textContent.includes('@audio1')"));
+  smoke.check('The @ menu starts with three resource categories', await run("document.querySelectorAll('[data-prompt-media-category]').length===3&&!document.querySelector('[data-prompt-media-option]')"));
+  await click('[data-prompt-media-category=video]');
+  smoke.check('Video category shows only the current task video with its first-frame thumbnail', await run("document.querySelectorAll('[data-prompt-media-option]').length===1&&Boolean(document.querySelector('[data-prompt-media-option=video-1] img'))"));
+  await click('[data-prompt-media-back]'); await click('[data-prompt-media-category=audio]');
+  await click('[data-prompt-media-option=audio-1]');
+  smoke.check('Selecting an audio resource inserts its stable token', await run("document.querySelector('[data-video-prompt]').textContent==='@audio1 '&&!document.querySelector('[data-prompt-media-menu]')"));
+  await typeMention('@image');
+  smoke.check('Typing a category alias directly filters its imported resources', await run("document.querySelectorAll('[data-prompt-media-option]').length===3"));
 }
-// 通过生产文件选择 / 拖放事件验证容量、类型过滤与稳定编号，而非直接写组件状态。
+// 通过生产文件选择 / 拖放事件验证超过原上限的导入、类型过滤与稳定编号，不直接写组件状态。
 async function verifyReferenceBatchImports() {
-  smoke.check('Reference import shows three compact tabs and only one upload group', await run("document.querySelectorAll('[data-reference-tab]').length===3&&document.querySelectorAll('[data-reference-kind]').length===1&&Boolean(document.querySelector('[data-reference-kind=image] input[multiple]'))"));
-  await importMediaBatch('video', [['motion.mp4','video/mp4'],['extra2.mp4','video/mp4'],['extra3.mp4','video/mp4'],['overflow.mp4','video/mp4'],['wrong.png','image/png']]);
-  smoke.check('Video batch import fills three slots, skips unsupported/excess files and reports the result', await run("document.querySelector('[data-reference-tab=video]').textContent.includes('3/3')&&document.querySelectorAll('[data-reference-kind=video] [data-reference-number]').length===3&&!document.querySelector('[data-reference-kind=video] input[multiple]')&&document.body.textContent.includes('另有 2 个')"));
-  await removeReference('video',2); await removeReference('video',3);
-  await importMediaBatch('audio', [['speech.wav','audio/wav'],['extra2.wav','audio/wav'],['extra3.wav','audio/wav'],['overflow.wav','audio/wav']], true);
-  smoke.check('Audio supports batch drag/drop and caps imports at three slots', await run("document.querySelector('[data-reference-tab=audio]').textContent.includes('3/3')&&document.querySelectorAll('[data-reference-kind=audio] [data-reference-number]').length===3"));
-  await removeReference('audio',2); await removeReference('audio',3);
-  await importMediaBatch('image', [['ref1.png','image/png'],['ref2.png','image/png'],['ref3.png','image/png']]);
-  smoke.check('Image batch import assigns stable image1/image2/image3 references without replacing files', await run("document.querySelector('[data-reference-tab=image]').textContent.includes('3/9')&&[1,2,3].every(n=>Boolean(document.querySelector('[data-reference-kind=image] [data-reference-number=\"'+n+'\"] img')))&&!document.querySelector('[data-reference-number=\"1\"] input').multiple"));
-  await importMediaBatch('image', Array.from({length:7},(_,i)=>[`extra${i+4}.png`,'image/png']));
-  smoke.check('Image batch import cannot exceed the nine-image workflow limit', await run("document.querySelector('[data-reference-tab=image]').textContent.includes('9/9')&&document.querySelectorAll('[data-reference-kind=image] img').length===9&&!document.querySelector('[data-reference-kind=image] input[multiple]')"));
-  for (let number=4;number<=9;number++) await removeReference('image',number);
-  await click('[data-reference-tab=image]');
-  await run("document.querySelector('[data-reference-tab=image]').dispatchEvent(new KeyboardEvent('keydown',{key:'ArrowRight',bubbles:true}))"); await delay(100);
-  smoke.check('Keyboard tab switching opens video imports without losing image counts', await run("document.querySelector('[data-reference-tab=video]').getAttribute('aria-selected')==='true'&&document.activeElement.matches('[data-reference-tab=video]')&&document.querySelector('[data-reference-tab=image]').textContent.includes('3/9')&&document.querySelectorAll('[data-reference-kind]').length===1"));
-  await click('[data-reference-tab=image]');
-  await captureSettings('reference-import-tabs.png','[data-video-reference-inputs]');
+  smoke.check('Unified resource import replaces the three tabs', await run("!document.querySelector('[data-reference-tab]')&&Boolean(document.querySelector('[data-reference-import][multiple]'))"));
+  videoFixtureBytes = await createVideoFixture();
+  await importMediaBatch([['speech.wav','audio/wav'],['motion.webm','video/webm'],['ref1.png','image/png'],['ref2.png','image/png'],['ref3.png','']]);
+  await wait("document.querySelector('[data-reference-kind=video] img')?.naturalWidth>0");
+  smoke.check('Mixed import classifies files automatically, including MIME-less images, and sorts images before video and audio', await run("[...document.querySelectorAll('[data-reference-grid] [data-reference-kind]')].map(el=>el.dataset.referenceKind).join(',')==='image,image,image,video,audio'"));
+  smoke.check('Video cover is its first frame rather than its last frame', await run("(()=>{const img=document.querySelector('[data-reference-kind=video] img'),canvas=document.createElement('canvas');canvas.width=1;canvas.height=1;const ctx=canvas.getContext('2d');ctx.drawImage(img,0,0,1,1);const [r,g,b]=ctx.getImageData(0,0,1,1).data;return Math.abs(r-20)<15&&Math.abs(g-100)<15&&Math.abs(b-180)<15})()"));
+  await importMediaBatch([['extra2.webm','video/webm'],['extra3.webm','video/webm'],['extra4.webm','video/webm'],['wrong.txt','text/plain']]);
+  smoke.check('Video import accepts more than three and skips only unsupported files', await run("document.querySelector('[data-reference-count=video]').textContent.trim()==='视频 4'&&document.querySelectorAll('[data-reference-kind=video]').length===4&&document.body.textContent.includes('另有 1 个因格式不支持而跳过')"));
+  await importMediaBatch([['extra2.wav','audio/wav'],['extra3.wav','audio/wav'],['extra4.wav','audio/wav']], true);
+  smoke.check('Batch drag/drop accepts more than three audio references', await run("document.querySelector('[data-reference-count=audio]').textContent.trim()==='音频 4'&&document.querySelectorAll('[data-reference-kind=audio]').length===4"));
+  smoke.check('Image imports have stable references and replacement inputs are single-file', await run("[...document.querySelectorAll('[data-reference-kind=image]')].map(el=>el.dataset.referenceNumber).join(',')==='1,2,3'&&document.querySelectorAll('[data-reference-kind=image] img').length===3&&!document.querySelector('[data-reference-kind=image] input').multiple"));
+  await importMediaBatch(Array.from({length:9},(_,i)=>[`extra${i+4}.png`,'image/png']));
+  smoke.check('Image batch import accepts twelve references and all counts have no limit denominator', await run("document.querySelector('[data-reference-count=image]').textContent.trim()==='图片 12'&&document.querySelectorAll('[data-reference-kind=image] img').length===12&&[...document.querySelectorAll('[data-reference-count]')].every(el=>!el.textContent.includes('/'))"));
+  smoke.check('Resource thumbnails are square, arranged horizontally and wrap to a new row', await run("(()=>{const tiles=[...document.querySelectorAll('[data-reference-grid] [data-reference-kind]')].map(el=>el.getBoundingClientRect());return tiles.every(r=>Math.abs(r.width-r.height)<1)&&tiles[1].left>tiles[0].left&&tiles.at(-1).top>tiles[0].top})()"), await run("JSON.stringify([...document.querySelectorAll('[data-reference-grid] [data-reference-kind]')].map(el=>{const r=el.getBoundingClientRect();return {kind:el.dataset.referenceKind,w:r.width,h:r.height,x:r.x,y:r.y}}))"));
+  await verifyExpandedReferenceGraph();
+  for (let number=4;number<=12;number++) await removeReference('image',number);
+  for (const kind of ['video','audio']) for (let number=2;number<=4;number++) await removeReference(kind,number);
+  await captureSettings('reference-import-grid.png','[data-video-reference-inputs]');
+}
+// 超过原 9/3/3 上限后，检查真实上传结果、动态端口和视频 IMAGES 连接；高编号图片仍能预览。
+async function verifyExpandedReferenceGraph() {
+  await upload('[data-reference-kind=image][data-reference-number="12"] input','replacement12.png');
+  smoke.check('Replacing an image beyond the old limit keeps its reference number', await run("document.querySelector('[data-reference-kind=image][data-reference-number=\"12\"] button').title.includes('replacement12.png')"));
+  await setPrompt('@image12 @video4 @audio4');
+  await click('[data-video-prompt] [data-image-reference="12"]');
+  await wait("document.querySelector('[data-image-preview-overlay]')");
+  smoke.check('The twelfth image opens the shared image preview', await run("document.querySelector('[data-image-preview-overlay]').textContent.includes('12 / 12')"));
+  await click('[aria-label=关闭预览]');
+  const before = uploads.length;
+  const graph = await submit(), inputs = graph['147:136'].inputs;
+  smoke.check('References beyond the old limits normalize and all twenty files upload', inputs.prompt === '<Picture 12> <Video 4> <Audio 4>' && uploads.length === before + 20);
+  for (const [kind, group, count] of [['image','images',12],['video','videos',4],['audio','audios',4]]) {
+    const ports = Object.keys(inputs).filter(key=>key.startsWith(`ref_${group}.`));
+    assert.equal(ports.length,count);
+    for (let index=0;index<count;index++) {
+      const node = graph[inputs[`ref_${group}.ref_${kind}_${index}`][0]];
+      assert.equal(node.class_type,kind === 'image' ? 'LoadImage' : kind === 'video' ? 'GetVideoComponents' : 'LoadAudio');
+      if (kind === 'video') assert.equal(graph[node.inputs.video[0]].class_type,'LoadVideo');
+      assert.equal(inputs[`ref_${group}.ref_${kind}_${index}`][1],0);
+    }
+    smoke.check(`${count} ${kind} references create consecutive dynamic ports with the correct loader chain`,true);
+  }
 }
 async function verifyReferenceGraph() {
   await setPrompt('@图1, @IMAGE2, IMAGE3. Follow @视频1 and @audio1.');
@@ -544,7 +601,7 @@ async function verifyReferenceGraph() {
     if (kind === 'video') {
       assert.equal(loader.class_type,'GetVideoComponents');
       assert.equal(multi[loader.inputs.video[0]].class_type,'LoadVideo');
-      assert.match(multi[loader.inputs.video[0]].inputs.file,/\.mp4$/);
+      assert.match(multi[loader.inputs.video[0]].inputs.file,/\.webm$/);
     } else {
       assert.equal(loader.class_type,kind === 'image' ? 'LoadImage' : 'LoadAudio');
       assert.match(loader.inputs[kind === 'image' ? 'image' : 'audio'],kind === 'image' ? /\.png$/ : /\.wav$/);
@@ -559,7 +616,7 @@ async function verifyReferenceGraph() {
   await captureSettings('minimax-reference-media.png','[data-video-reference-inputs]');
 }
 async function verifyReferenceRemoval() {
-  await click('[data-reference-kind=image] [data-reference-number="2"] button[aria-label]');
+  await removeReference('image',2);
   await setPrompt('@image1 with @image3 and @video1, @audio1.');
   const sparse = await submit();
   smoke.check('Removing a middle image keeps UI IDs stable and compacts official ordinals at submission', sparse['147:136'].inputs.prompt === '<Picture 1> with <Picture 2> and <Video 1>, <Audio 1>.' && !sparse['147:136'].inputs['ref_images.ref_image_2']);
@@ -612,7 +669,7 @@ async function main() {
         assert.equal(filename, input.filename);
         assert.ok(body.includes(Buffer.from(input.dataBase64, 'base64')), 'Upload preserves reference file bytes');
         const ext = path.extname(filename);
-        const mime = { '.png': 'image/png', '.mp4': 'video/mp4', '.wav': 'audio/wav' }[ext];
+        const mime = { '.png': 'image/png', '.mp4': 'video/mp4', '.webm': 'video/webm', '.wav': 'audio/wav' }[ext];
         if (mime) assert.ok(body.toString().includes('Content-Type: ' + mime), 'Upload sends the correct media MIME');
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ name: `uploaded-${uploads.length}${ext}`, subfolder: 'frames', type: 'input' }));
@@ -622,7 +679,7 @@ async function main() {
     res.writeHead(200, { "Content-Type": "application/json" }); res.end(JSON.stringify(responses[req.url.split("/").pop()] || []));
   });
   await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
-  win = new BrowserWindow({ show: false, width: 1500, height: 980, webPreferences: { offscreen: true, preload: path.join(__dirname, "../apps/electron/preload.js"), contextIsolation: true, nodeIntegration: false, sandbox: false, backgroundThrottling: false } });
+  win = new BrowserWindow({ ...windowChromeOptions(), show: false, width: 1500, height: 980, webPreferences: { additionalArguments: windowChromeArguments(), offscreen: true, preload: path.join(__dirname, "../apps/electron/preload.js"), contextIsolation: true, nodeIntegration: false, sandbox: false, backgroundThrottling: false } });
   win.webContents.debugger.attach("1.3");
   win.webContents.on("console-message", (event) => { if (event.level === "error" && /React|hydration|render|Minified/i.test(event.message)) errors.push(event.message); });
   try {

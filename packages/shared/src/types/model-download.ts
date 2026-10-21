@@ -24,7 +24,10 @@ export interface ModelDownloadRequest extends ModelDownloadLocation {
   sha256: string;
   previewUrl: string;
   logoDataUrl?: string;
+  /** 旧调用可省略；新下载提供来源快照，用于逐文件保存 .civitai.json。 */
+  source?: ModelDownloadSource;
 }
+export type ModelDownloadSource = import("zod").infer<typeof import("../schemas/model-download.schema").ModelDownloadSourceSchema>;
 export type ModelDownloadStatus = "downloading" | "saving" | "completed" | "failed" | "cancelled" | "removed";
 export type ModelDownloadError = "configuration" | "invalid" | "exists" | "network" | "auth" | "redirect" | "timeout" | "response" | "integrity" | "io";
 export interface ModelDownloadTask {

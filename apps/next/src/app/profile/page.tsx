@@ -3,7 +3,7 @@ import { ProfilePage } from "@/view/ProfilePage";
 
 export default function Page() {
   return (
-    <AppShell>
+    <AppShell fillViewport>
       <ProfilePage />
     </AppShell>
   );

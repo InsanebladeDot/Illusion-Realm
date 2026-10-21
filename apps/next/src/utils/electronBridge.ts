@@ -17,6 +17,15 @@ import type {
 import { t } from "@/i18n";
 import { CivitaiApiKeySchema } from "@illusion-realm/shared";
 import { unwrapIpc, unwrapIpcOr } from "@/utils/ipcResult";
+import { LocalModelMetadataEntrySchema, ReadLocalModelMetadataArgsSchema, type LocalModelMetadataEntry } from "@illusion-realm/shared";
+
+/** 模型来源 JSON 和 LoRA 触发词共用这条只读链路，旧版 preload 明确失败而不是伪装为空。 */
+export async function readLocalModelMetadata(filePaths: string[]): Promise<LocalModelMetadataEntry[]> {
+  const api = getElectronAPI();
+  if (!api?.readLocalModelMetadata) throw new Error("desktop");
+  const [paths] = ReadLocalModelMetadataArgsSchema.parse([filePaths]);
+  return LocalModelMetadataEntrySchema.array().parse(unwrapIpc(await api.readLocalModelMetadata(paths)));
+}
 
 function getElectronAPI() {
   if (typeof window === "undefined") return null;
@@ -107,11 +116,12 @@ export async function selectLocalFolder(
  * 不抛错：主题是个「尽力而为」的偏好，不是业务流程，失败不该打断任何操作。
  */
 export async function applyNativeThemeSource(
-  source: "system" | "light" | "dark"
+  source: "system" | "light" | "dark",
+  shellColor?: string
 ): Promise<string | null> {
   const api = getElectronAPI();
   if (typeof api?.setThemeSource !== "function") return null;
-  return unwrapIpcOr(await api.setThemeSource(source), null, "setThemeSource");
+  return unwrapIpcOr(await api.setThemeSource(source, shellColor), null, "setThemeSource");
 }
 
 export async function scanLocalModels(

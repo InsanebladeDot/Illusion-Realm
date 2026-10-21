@@ -31,7 +31,10 @@ function scheduleSave(): void {
   pendingSave = true;
   if (saveTimer) clearTimeout(saveTimer);
   saveTimer = setTimeout(() => {
-    void flushUserDataSave();
+    void flushUserDataSave().catch(() => {
+      // 定时写盘失败不能变成未处理的 Promise，也不能输出用户文档或私人路径。
+      console.warn("[user-data] Could not persist local changes.");
+    });
   }, 300);
 }
 

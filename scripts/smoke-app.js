@@ -14,7 +14,7 @@
  * 接入只会增加耦合。若将来它开始断言渲染时序或媒体查询，必须重新评估并接入。
  *
  * 例外（已重估，故点名豁免）：本文件用 `getComputedStyle` 读**静态样式**
- * （协议加载后 nav / body 的颜色、display 等），不涉及过渡中间态 ——
+ * （协议加载后登录卡片 / body 的颜色等），不涉及过渡中间态 ——
  * 遮挡下 `getComputedStyle` 会强制同步样式重算，读到的是当前值，因此上述结论仍成立。
  * smoke-rules-allow: getComputedStyle（仅静态样式断言，不涉及过渡中间态）
  */
@@ -40,7 +40,7 @@ app.whenReady().then(async () => {
     await new Promise((resolve) => setTimeout(resolve, 2500));
 
     const result = await win.webContents.executeJavaScript(`(() => {
-      const nav = document.querySelector('nav');
+      const nav = document.querySelector('[data-auth-card]');
       const navStyle = nav ? getComputedStyle(nav) : null;
       const bodyStyle = getComputedStyle(document.body);
       return {
@@ -48,8 +48,8 @@ app.whenReady().then(async () => {
         stylesheetCount: document.styleSheets.length,
         // Tailwind preflight：未加载 CSS 时 body 默认 margin=8px；加载后为 0
         bodyMarginTop: bodyStyle.marginTop,
-        // nav 的 fixed 定位与背景色只可能来自 Tailwind 工具类
-        navPosition: navStyle ? navStyle.position : 'no-nav',
+        // 登录卡片的圆角与背景色只可能来自 Tailwind 工具类
+        navPosition: navStyle ? navStyle.borderRadius : 'no-card',
         navBg: navStyle ? navStyle.backgroundColor : 'no-nav',
         bodyBg: bodyStyle.backgroundColor,
         hasLogo: !!document.querySelector('img[alt="Illusion Realm"]'),
@@ -61,7 +61,7 @@ app.whenReady().then(async () => {
     const styled =
       result.stylesheetCount > 0 &&
       result.bodyMarginTop === "0px" &&
-      result.navPosition === "fixed" &&
+      result.navPosition === "24px" &&
       result.navBg &&
       result.navBg !== "rgba(0, 0, 0, 0)" &&
       result.navBg !== "transparent";

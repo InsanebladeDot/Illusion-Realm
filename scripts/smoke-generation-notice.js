@@ -1,4 +1,4 @@
-/** Exercise the real creation notice with deferred fixture generation; verify caption clearance at every viewport/state. */
+/** Exercise stage generation text and terminal notices with deferred fixture generation; verify queue behavior and caption clearance. */
 const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
@@ -15,12 +15,14 @@ require("../apps/electron/appProtocol").registerAppProtocol();
 require("../apps/electron/ipc-handlers/window.handlers").registerThemeHandlers();
 const settings = { paths: {}, theme: "light", outputPath: root };
 let userData = { version: 1, settings };
-registerHandle(C.USER_DATA_READ, () => ({ data: userData, filePath: "", isNew: false }));
+registerHandle(C.USER_DATA_READ, () => ({ data: require("./lib/guest-session-fixture").withGuestSession(userData), filePath: "", isNew: false }));
 registerHandle(C.USER_DATA_WRITE, (_event, data) => { userData = data; return { data, filePath: "" }; });
 registerHandle(C.USER_DATA_GET_DEFAULT_PATH, () => "");
+registerHandle(C.ACCOUNT_ME, () => ({ status: 401, body: { success: false, code: "UNAUTHORIZED" } }));
 registerHandle(C.PATHS_GET_DEFAULT_OUTPUT, () => root);
 registerHandle(C.AGENT_SECRET_STATUS, () => ({ configured: false, source: "none", protection: "", tail: "" }));
 registerHandle(C.CIVITAI_KEY_STATUS, () => ({ configured: false, source: "none", protection: "", tail: "" }));
+registerHandle(C.PROMPT_SECRET_STATUS, () => ({ configured: false, source: "none", protection: "", tail: "" }));
 const changedOutput = path.join(root, "changed-output");
 registerHandle(C.DIALOG_SELECT_FOLDER, () => changedOutput);
 registerHandle(C.CHANGELOG_READ, () => "");
@@ -43,6 +45,8 @@ registerHandle(C.COMFY_LIST_MODELS, () => ({ checkpoints: [], loras: [] }));
 let complete;
 let win;
 const prompts = [];
+const cancelledRequests = [];
+let currentRequestId;
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const run = (source) => win.webContents.executeJavaScript(source, true);
 async function wait(source) {
@@ -56,33 +60,49 @@ async function assertPosition(name, top) {
 async function begin() {
   complete = undefined;
   await run("(()=>{const input=document.querySelector('#prompt-editor');input.textContent='test portrait';input.dispatchEvent(new Event('input',{bubbles:true}));document.querySelector('[data-generate-button]').click()})()");
-  await wait("document.querySelector('[data-generation-notice=generating]')");
+  await wait("document.querySelector('[data-stage-generating]')");
   for (let i = 0; i < 100 && !complete; i++) await delay(100);
   if (!complete) throw new Error("Fixture generation handler was not reached");
 }
 async function main() {
   await app.whenReady(); smoke.assertBuildFresh({ app });
   const png = nativeImage.createFromBitmap(Buffer.from([42, 100, 200, 255]), { width: 1, height: 1 }).toDataURL();
-  registerHandle(C.COMFY_GENERATE, (_event, prompt) => new Promise((resolve, reject) => { prompts.push(prompt); const id = `notice-${prompts.length}`; complete = (fail) => fail ? reject(new Error("fixture")) : resolve({ promptId: id, images: [{ nodeId: "9", filename: "fixture.png", subfolder: "", folderType: "output", dataUrl: png }], videos: [] }); }));
+  registerHandle(C.COMFY_GENERATE, (_event, prompt, _server, requestId) => new Promise((resolve, reject) => {
+    prompts.push(prompt); currentRequestId = requestId; const id = `notice-${prompts.length}`;
+    complete = (fail) => fail ? reject(Object.assign(new Error("fixture"), { code: typeof fail === "string" ? fail : undefined }))
+      : resolve({ promptId: id, images: [{ nodeId: "9", filename: "fixture.png", subfolder: "", folderType: "output", dataUrl: png }], videos: [] });
+  }));
+  registerHandle(C.COMFY_CANCEL, (_event, requestId) => {
+    if (requestId !== currentRequestId) return false;
+    cancelledRequests.push(requestId); complete("COMFY_CANCELLED"); return true;
+  });
   win = new BrowserWindow({ ...windowChromeOptions(), show: false, width: 1500, height: 960, webPreferences: { additionalArguments: windowChromeArguments(), offscreen: true, preload: path.join(__dirname, "../apps/electron/preload.js"), contextIsolation: true, nodeIntegration: false, sandbox: false, backgroundThrottling: false } });
   registerWindowChrome(win); win.webContents.debugger.attach("1.3");
   try {
     await win.loadURL("app://app/create"); await wait("document.querySelector('[data-generate-button]')");
     await run("document.querySelector('[aria-labelledby=update-announcement-title] button')?.click()");
-    await delay(500); await begin(); await assertPosition("Generating notice clears desktop caption by 16px", 48);
+    await delay(500); await begin();
+    const states = new Set();
+    for (let i = 0; i < 22; i++) { states.add(await run("document.querySelector('[data-stage-generating] [aria-hidden=true]').textContent")); await delay(100); }
+    smoke.check("Stage status cycles through zero to three dots", ["", ".", "..", "..."].every(dots => states.has("正在生成" + dots)) && states.size === 4);
+    smoke.check("Generating floating notice is removed", await run("!document.querySelector('[data-generation-notice=generating]')"));
     smoke.check("Generate button remains available while a task runs", await run("!document.querySelector('[data-generate-button]').disabled"));
     await win.webContents.debugger.sendCommand("Emulation.setDeviceMetricsOverride", { width: 390, height: 844, deviceScaleFactor: 1, mobile: true });
-    await assertPosition("Narrow notice stays below caption and inside viewport", 48);
+    smoke.check("Narrow viewport has no generating floating notice", await run("!document.querySelector('[data-generation-notice=generating]')"));
+    await win.webContents.debugger.sendCommand("Emulation.clearDeviceMetricsOverride");
+    complete(false);
+    await wait("document.querySelector('[data-generation-notice=success]')"); await assertPosition("Completion notice shares the corrected offset", 48);
+    smoke.check("Stage status disappears on completion", await run("!document.querySelector('[data-stage-generating]')"));
     win.webContents.send(C.WINDOW_CHROME_VISIBILITY, false); await assertPosition("Fullscreen/native chrome preserves the original 16px inset", 16);
     win.webContents.send(C.WINDOW_CHROME_VISIBILITY, true); await assertPosition("Restored caption moves a mounted notice back down", 48);
-    await win.webContents.debugger.sendCommand("Emulation.clearDeviceMetricsOverride");
-    await wait("document.querySelector('[data-generation-notice=generating]')"); complete(false);
-    await wait("document.querySelector('[data-generation-notice=success]')"); await assertPosition("Completion notice shares the corrected offset", 48);
     await begin(); complete(true); await wait("document.querySelector('[data-generation-notice=error]')");
     await assertPosition("Failure notice shares the corrected offset", 48);
+    smoke.check("Stage status disappears on failure", await run("!document.querySelector('[data-stage-generating]')"));
     await checkQueue();
     await checkBatch();
     await checkTaskTheme();
+    await checkCancellation();
+    await checkDisconnectedQueue();
   } finally { win.destroy(); }
   smoke.finish({ app, ok: smoke.allPassed() });
 }
@@ -99,6 +119,7 @@ async function checkQueue() {
   smoke.check("Second click queues an independent task without interrupting the first", prompts.length === before);
   smoke.check("Caption badge counts running and queued tasks", await run("document.querySelector('[data-window-generation-count]').textContent==='2'"));
   smoke.check("Task panel stays below caption", await run("document.querySelector('[data-window-generation-center]').getBoundingClientRect().top>=document.querySelector('[data-window-titlebar]').getBoundingClientRect().bottom"));
+  await checkTaskPresentation();
   await run("document.querySelector('#prompt-editor').textContent='changed after submission'");
   first(true);
   await wait("document.querySelector('[data-generation-task-status=generating]')");
@@ -119,6 +140,81 @@ async function checkQueue() {
   await run("document.querySelector('[data-window-download]').click()");
   await wait("document.querySelector('[data-window-download-center]')");
   smoke.check("Download center still works and only one task panel is open", await run("!document.querySelector('[data-window-generation-center]')"));
+}
+async function openTasks() {
+  if (!await run("Boolean(document.querySelector('[data-window-generation-center]'))")) {
+    await run("document.querySelector('[data-window-generation]').click()");
+  }
+  await wait("document.querySelector('[data-window-generation-center]')");
+}
+async function selectTaskTab(tab) {
+  await run(`document.querySelector('[data-generation-tab="${tab}"]').click()`);
+  await wait(`document.querySelector('[data-generation-tab="${tab}"]').getAttribute('aria-selected')==='true'`);
+}
+async function checkTaskPresentation() {
+  smoke.check("Generation summary separates running and queued counts", await run("document.querySelector('[data-window-generation-center] header [role=status]').textContent==='1 个生成中 · 1 个排队中'"));
+  smoke.check("In-progress tab contains only active tasks in FIFO order", await run("(()=>{const tasks=[...document.querySelectorAll('#generation-active-panel [data-generation-task]')];return tasks.length===2&&tasks[0].dataset.generationTaskStatus==='generating'&&tasks[1].dataset.generationTaskStatus==='queued'})()"));
+  await run("document.querySelector('#generation-active-panel [data-generation-parameters] summary').click()");
+  smoke.check("Parameter disclosure exposes the submitted snapshot", await run("(()=>{const d=document.querySelector('#generation-active-panel [data-generation-parameters]');return d.open&&d.textContent.includes('test portrait')&&d.querySelectorAll('dd').length===4})()"));
+  await run("document.querySelector('#generation-active-panel [data-generation-parameters] summary').click()");
+  await captureTasks("generation-queue-light");
+  await run("document.querySelector('[data-generation-tab=active]').dispatchEvent(new KeyboardEvent('keydown',{key:'ArrowRight',bubbles:true}))");
+  await wait("document.querySelector('[data-generation-tab=history]').getAttribute('aria-selected')==='true'");
+  smoke.check("Arrow keys move tab focus and show only historical tasks", await run("document.activeElement.dataset.generationTab==='history'&&document.querySelector('#generation-active-panel').hidden&&[...document.querySelectorAll('#generation-history-panel [data-generation-task]')].every(task=>['completed','failed','cancelled'].includes(task.dataset.generationTaskStatus))"));
+  await captureTasks("generation-history-light");
+  await selectTaskTab("active");
+}
+async function captureTasks(name) {
+  await wait("!document.documentElement.classList.contains('page-transition')&&!document.documentElement.classList.contains('theme-ripple')");
+  await delay(100);
+  const rect = await run("(()=>{const r=document.querySelector('[data-window-generation-center]').getBoundingClientRect();return{x:Math.floor(r.x),y:Math.floor(r.y),width:Math.ceil(r.width),height:Math.ceil(r.height)}})()");
+  const target = path.join(root, name + ".png");
+  fs.writeFileSync(target, (await win.webContents.capturePage(rect)).toPNG());
+  console.log("GENERATION_TASK_SCREENSHOT", target);
+}
+function taskElement(text) {
+  return `Array.from(document.querySelectorAll('[data-generation-task]')).find(item=>item.textContent.includes(${JSON.stringify(text)}))`;
+}
+async function checkCancellation() {
+  await run("document.querySelector('a[href=\"/create\"]').click()");
+  await wait("document.querySelector('[data-generate-button]')"); await chooseCount(1); await begin();
+  const before = prompts.length, stopped = cancelledRequests.length;
+  await submit("cancel queued fixture"); await openTasks();
+  await wait(`${taskElement("cancel queued fixture")}?.dataset.generationTaskStatus==='queued'`);
+  await captureTasks("generation-stop-controls");
+  await run(`${taskElement("cancel queued fixture")}.querySelector('[data-generation-cancel]').click()`);
+  await wait(`${taskElement("cancel queued fixture")}.dataset.generationTaskStatus==='cancelled'`);
+  smoke.check("Cancelling queued task neither submits nor interrupts a running request", prompts.length === before && cancelledRequests.length === stopped);
+  await run(`document.querySelector('[data-generation-cancel="${currentRequestId}"]').click()`);
+  await wait("!document.querySelector('[data-window-generation-count]')");
+  smoke.check("Stopping a running task reaches main and settles as cancelled", cancelledRequests.length === stopped + 1 && prompts.length === before);
+  smoke.check("Stopped tasks remove the generating indicator", await run("!document.querySelector('[data-stage-generating]')"));
+  await chooseCount(2); const savedBefore = saved.length;
+  await submit("cancel partial batch"); await nextPrompt(before);
+  complete(false); await nextPrompt(before + 1);
+  await submit("cancel all queued fixture");
+  const accepted = prompts.length;
+  await run("document.querySelector('[data-generation-cancel-all]').click()");
+  await wait("!document.querySelector('[data-window-generation-count]')");
+  smoke.check("Stop all cancels queued work without another submission", prompts.length === accepted && await run(`${taskElement("cancel all queued fixture")}.dataset.generationTaskStatus==='cancelled'`));
+  smoke.check("Stopping a partial batch retains the saved image and 1 of 2 count", saved.length === savedBefore + 1 && await run(`${taskElement("cancel partial batch")}.dataset.generationTaskStatus==='cancelled'&&${taskElement("cancel partial batch")}.textContent.includes('1 / 2')&&Boolean(${taskElement("cancel partial batch")}.querySelector('button'))`));
+  await selectTaskTab("history");
+  await captureTasks("generation-stopped-partial");
+  await selectTaskTab("active");
+}
+async function checkDisconnectedQueue() {
+  await chooseCount(2); const before = prompts.length, savedBefore = saved.length;
+  await submit("disconnect partial batch"); await nextPrompt(before);
+  complete(false); await nextPrompt(before + 1);
+  await submit("disconnect pending fixture"); await openTasks();
+  complete("COMFY_DISCONNECTED");
+  await wait("!document.querySelector('[data-window-generation-count]')");
+  smoke.check("Disconnect fails current task with a readable connection error", await run(`${taskElement("disconnect partial batch")}.dataset.generationTaskStatus==='failed'&&${taskElement("disconnect partial batch")}.textContent.includes('连接已断开')`));
+  smoke.check("Disconnect terminates queued tasks without submitting them", prompts.length === before + 2 && await run(`${taskElement("disconnect pending fixture")}.dataset.generationTaskStatus==='cancelled'`));
+  smoke.check("Disconnect retains already completed images", saved.length === savedBefore + 1 && await run(`${taskElement("disconnect partial batch")}.textContent.includes('1 / 2')`));
+  await chooseCount(1); await submit("manual resubmit after disconnect"); await nextPrompt(before + 2);
+  complete(false); await wait("!document.querySelector('[data-window-generation-count]')");
+  smoke.check("User may explicitly submit again after checking the service", await run(`${taskElement("manual resubmit after disconnect")}.dataset.generationTaskStatus==='completed'`));
 }
 async function chooseCount(count) {
   await run("document.querySelector('[data-generate-button]').parentElement.querySelector('[aria-haspopup=menu]').click()");
@@ -168,21 +264,37 @@ async function checkPartialBatch() {
   smoke.check("New submissions use the updated output directory", saved.slice(savedBefore).every(file => file.outputPath === changedOutput), saved.slice(savedBefore).map(file => file.outputPath === root ? "original root" : file.outputPath === changedOutput ? "updated root" : "other root").join(", "));
 }
 async function checkTaskTheme() {
+  if (!await run("Boolean(document.querySelector('[data-window-generation-center]'))")) {
+    await run("document.querySelector('[data-window-generation]').click()");
+    await wait("document.querySelector('[data-window-generation-center]')");
+  }
   const panelColors = () => run("(()=>{const css=getComputedStyle(document.querySelector('[data-window-generation-center]'));return {background:css.backgroundColor,text:css.color}})()");
   const light = await panelColors();
+  await require("./lib/sidebar-menu-fixture").revealSidebarPreference(run, "[data-theme-trigger]");
   await run("document.querySelector('[data-theme-trigger]').click()");
   await wait("document.querySelector('[data-theme-option=dark]')");
   await run("document.querySelector('[data-theme-option=dark]').click()");
   await wait("document.documentElement.dataset.theme==='dark'");
+  await require("./lib/sidebar-menu-fixture").closeAppearance(run);
+  await run("document.querySelector('[data-window-generation]').click()");
+  await wait("document.querySelector('[data-window-generation-center]')");
   const dark = await panelColors();
   smoke.check("Generation panel follows dark theme for surfaces and text", light.background !== dark.background && light.text !== dark.text);
+  await selectTaskTab("history");
+  await captureTasks("generation-history-dark");
   await win.webContents.debugger.sendCommand("Emulation.setDeviceMetricsOverride", { width: 390, height: 844, deviceScaleFactor: 1, mobile: true });
   smoke.check("Task panel fits a narrow viewport without horizontal overflow", await run("(()=>{const r=document.querySelector('[data-window-generation-center]').getBoundingClientRect();return r.left>=0&&r.right<=innerWidth&&r.bottom<=innerHeight})()"));
+  smoke.check("History scrolls within its panel and keeps footer visible", await run("(()=>{const p=document.querySelector('#generation-history-panel'),f=document.querySelector('[data-window-generation-center] footer');return p.scrollHeight>p.clientHeight&&p.scrollWidth<=p.clientWidth&&f.getBoundingClientRect().bottom<=innerHeight})()"));
+  await captureTasks("generation-history-narrow");
   await win.webContents.debugger.sendCommand("Emulation.clearDeviceMetricsOverride");
+  await require("./lib/sidebar-menu-fixture").revealSidebarPreference(run, "[data-theme-trigger]");
   await run("document.querySelector('[data-theme-trigger]').click()");
   await wait("document.querySelector('[data-theme-option=light]')");
   await run("document.querySelector('[data-theme-option=light]').click()");
   await wait("document.documentElement.dataset.theme==='light'");
+  await require("./lib/sidebar-menu-fixture").closeAppearance(run);
+  await run("document.querySelector('[data-window-generation]').click()");
+  await wait("document.querySelector('[data-window-generation-center]')");
   const restored = await panelColors();
   smoke.check("Generation panel restores its light theme", restored.background === light.background && restored.text === light.text);
 }

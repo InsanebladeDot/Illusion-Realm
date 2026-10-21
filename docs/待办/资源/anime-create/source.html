@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="light">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Illusion Realm · 幻想创作台</title><style>/* CSS */</style></head>
+<body data-mobile-view="edit">
+  <!-- 界面：全局标题栏 -->
+  <header class="app-header flex items-center justify-between gap-3 px-5">
+    <a href="#create" class="brand flex min-w-0 items-center gap-3" aria-label="Illusion Realm 创作页">
+      <span class="brand-mark"><i data-icon="sparkles"></i></span><strong class="whitespace-nowrap text-[19px] font-bold tracking-tight">Illusion Realm</strong><span class="brand-tagline truncate text-xs">AI 绘图 · 创造属于你的幻想世界</span>
+    </a>
+    <div class="flex shrink-0 items-center gap-2">
+      <button class="icon-button" id="theme-toggle" type="button" title="切换主题" aria-label="切换深色主题"><i data-icon="sun"></i></button>
+      <button class="icon-button header-optional" id="notifications" type="button" title="通知" aria-label="通知"><i data-icon="bell"></i></button>
+      <button class="icon-button header-optional" id="settings" type="button" title="设置" aria-label="设置"><i data-icon="settings"></i></button>
+      <button class="icon-button library-trigger" type="button" data-mobile="files" aria-label="打开文件管理" title="文件管理"><i data-icon="folder"></i></button>
+      <span class="header-divider"></span>
+      <button id="account-menu" class="account-button flex items-center gap-2 rounded-lg px-1 py-1" type="button" aria-label="游客菜单"><img src="assets/avatar.webp" alt="" width="28" height="28" class="size-7 rounded-full"><span class="text-xs font-semibold">guest</span><span class="small-icon"><i data-icon="down"></i></span></button>
+      <span class="window-chrome" aria-hidden="true"><span>−</span><span>□</span><span>×</span></span>
+    </div>
+  </header>
+
+  <!-- 界面：手机端工作区切换 -->
+  <div class="mobile-tabs" role="tablist" aria-label="创作工作区"><button type="button" role="tab" aria-selected="true" data-mobile="edit">编辑</button><button type="button" role="tab" aria-selected="false" data-mobile="preview">预览</button><button type="button" role="tab" aria-selected="false" data-mobile="files">文件</button></div>
+
+  <main class="workspace" id="create">
+    <!-- nav：应用导航与透明角色立绘，资源来自项目 role.png -->
+    <aside class="nav-column">
+      <nav aria-label="主导航" class="space-y-2 pt-3">
+        <button type="button" class="nav-item active" data-nav="创作" aria-current="page"><i data-icon="wand"></i><span>创作</span></button>
+        <button type="button" class="nav-item" data-nav="首页"><i data-icon="home"></i><span>首页</span></button>
+        <button type="button" class="nav-item" data-nav="Agent"><i data-icon="bot"></i><span>Agent</span></button>
+        <button type="button" class="nav-item" data-nav="本地解析"><i data-icon="camera"></i><span>本地解析</span></button>
+        <button type="button" class="nav-item" data-nav="云端图片"><i data-icon="cloud"></i><span>云端图片</span></button>
+        <button type="button" class="nav-item" data-nav="收藏夹"><i data-icon="heart"></i><span>收藏夹</span></button>
+      </nav>
+      <img src="assets/sidebar.webp" class="sidebar-art" alt="蓝发角色与让想象成为现实的插画装饰" width="440" height="624">
+    </aside>
+
+    <!-- rail：创建页左栏 = 创建表单 -->
+    <section class="panel rail" aria-label="创作表单">
+      <div class="mode-tabs" role="tablist" aria-label="创作模式">
+        <button type="button" class="mode-tab active" role="tab" aria-selected="true" data-mode="图片"><i data-icon="image"></i>图片</button>
+        <button type="button" class="mode-tab" role="tab" aria-selected="false" data-mode="视频"><i data-icon="video"></i>视频</button>
+        <button type="button" class="mode-tab" role="tab" aria-selected="false" data-mode="编辑"><i data-icon="edit"></i>编辑</button>
+        <button type="button" class="mode-tab" role="tab" aria-selected="false" data-mode="角色"><i data-icon="users"></i>角色</button>
+        <button type="button" class="mode-tab" role="tab" aria-selected="false" data-mode="Role TTS"><i data-icon="mic"></i>Role TTS</button>
+      </div>
+      <div class="rail-scroll scroll-area">
+        <section class="form-section">
+          <div class="section-heading"><h2>模型选择 <button type="button" class="help-button" data-help="模型选择" aria-label="模型选择说明"><i data-icon="info"></i></button></h2><button class="collapse-button" type="button" data-collapse="model-content" aria-expanded="true" aria-label="折叠模型选择"><i data-icon="up"></i></button></div>
+          <div id="model-content">
+            <button id="model-select" type="button" class="model-card" aria-label="选择模型，当前 anima aesthetic V11"><img src="assets/model-cover.webp" alt="" class="model-cover"><span class="model-shade"></span><span class="relative z-1 block text-left"><strong class="block text-[23px] leading-8">anima</strong><span id="model-name" class="block text-[18px] leading-6 font-semibold">anima aesthetic V11</span></span><span class="model-chevron"><i data-icon="down"></i></span><span class="model-badge">SDXL</span></button>
+            <button type="button" id="prompt-guide" class="mt-2 inline-flex min-h-7 items-center gap-1.5 text-xs font-medium text-[var(--accent)]"><span class="small-icon"><i data-icon="book"></i></span>如何为 Anima 编写提示词?</button>
+          </div>
+        </section>
+
+        <section class="form-section">
+          <div class="section-heading prompt-heading"><h2>提示词 <button type="button" class="help-button" data-help="提示词" aria-label="提示词说明"><i data-icon="info"></i></button></h2><div class="prompt-options flex flex-wrap items-center gap-3"><label class="switch-label"><button type="button" class="switch" role="switch" aria-checked="true" id="autocomplete" aria-label="自动补全"></button><span>自动补全</span></label><label class="switch-label"><button type="button" class="switch" role="switch" aria-checked="false" id="advanced" aria-label="高级提示词"></button><span>高级</span></label><button class="outline-button" type="button" id="assemble"><span class="small-icon"><i data-icon="plus"></i></span>组合</button></div><button class="collapse-button" type="button" data-collapse="prompt-content" aria-expanded="true" aria-label="折叠提示词"><i data-icon="up"></i></button></div>
+          <div id="prompt-content">
+            <div class="textarea-wrap"><textarea id="prompt" maxlength="2000" placeholder="描述你想创作的内容..." aria-label="提示词" spellcheck="false"></textarea><span class="char-counter"><span id="prompt-count">0</span>/2000</span></div>
+            <div class="prompt-tools" aria-label="提示词工具">
+              <button type="button" data-tool="图片"><i data-icon="image"></i><span>图片</span></button><button type="button" data-tool="人物"><i data-icon="users"></i><span>人物</span></button><button type="button" data-tool="动作"><i data-icon="wand"></i><span>动作</span></button><button type="button" data-tool="服饰"><i data-icon="shirt"></i><span>服饰</span></button><button type="button" data-tool="背景"><i data-icon="mountain"></i><span>背景</span></button><button type="button" data-tool="表情"><i data-icon="smile"></i><span>表情</span></button><button type="button" data-tool="3D 视角"><i data-icon="camera"></i><span>3D 视角</span></button>
+            </div>
+          </div>
+        </section>
+
+        <section class="form-section">
+          <div class="section-heading"><h2>反向提示词 <button type="button" class="help-button" data-help="反向提示词" aria-label="反向提示词说明"><i data-icon="info"></i></button></h2><button class="collapse-button" type="button" data-collapse="negative-content" aria-expanded="true" aria-label="折叠反向提示词"><i data-icon="up"></i></button></div>
+          <div id="negative-content"><div class="preset-bar flex items-center justify-between gap-2"><span class="min-w-0 truncate">使用中：<span id="preset-label">禁用 / 融合修正（加权）</span></span><button type="button" id="negative-presets" class="flex shrink-0 items-center gap-1"><span class="tiny-icon"><i data-icon="sliders"></i></span>反向提示词预设</button></div><div class="textarea-wrap negative-wrap"><textarea id="negative" maxlength="1000" aria-label="反向提示词" spellcheck="false">(worst quality, low quality, normal quality, lowres, bad jpeg:1.4), (bad anatomy, bad proportions, disfigured, deformed, ugly, extra limbs, mutated:1.3), (bad hands, missing fingers, extra fingers, fused fingers, mutated hands, poorly drawn hands:1.3), (multiple people, crowd, group, 2girls, 3girls, 2boys, 3boys:1.2)</textarea><span class="char-counter"><span id="negative-count">0</span>/1000</span></div></div>
+        </section>
+
+        <section class="form-section dimensions-section">
+          <div class="flex flex-wrap items-center gap-3"><h2 class="text-base font-semibold">尺寸</h2><label class="ratio-select"><span class="small-icon"><i data-icon="image"></i></span><select id="ratio" aria-label="图片比例"><option value="1:1">1:1</option><option value="2:3">2:3</option><option value="3:2">3:2</option><option value="16:9">16:9</option><option value="9:16">9:16</option></select></label><button id="dimensions-toggle" type="button" class="flex min-h-8 flex-1 items-center justify-between gap-2 text-xs text-[var(--muted)]" aria-expanded="false"><span id="dimension-label">1024 × 1024</span><span class="small-icon"><i data-icon="down"></i></span></button></div>
+          <div id="dimension-fields" hidden class="mt-3 grid grid-cols-2 gap-3"><label class="text-xs">宽度<input id="image-width" type="number" min="256" max="2048" step="8" value="1024" class="thin-input mt-1 w-full" aria-label="图片宽度"></label><label class="text-xs">高度<input id="image-height" type="number" min="256" max="2048" step="8" value="1024" class="thin-input mt-1 w-full" aria-label="图片高度"></label></div>
+        </section>
+      </div>
+      <!-- 界面：生成操作固定在表单底部 -->
+      <footer class="generate-footer"><button type="button" id="generate" class="generate-button"><span class="generate-star"><i data-icon="sparkles"></i></span><span id="generate-label">生成</span></button><button class="seed-button" type="button" id="random-seed" title="随机种子" aria-label="随机种子"><i data-icon="dice"></i></button></footer>
+    </section>
+
+    <!-- stage：预览、参考缩略图与生成结果 -->
+    <section class="panel stage" aria-label="作品预览">
+      <header class="stage-toolbar"><h2 class="flex items-center gap-2 text-base font-semibold"><span class="title-marker"></span>预览 <button type="button" class="help-button" data-help="预览" aria-label="预览说明"><i data-icon="info"></i></button></h2><div class="flex items-center gap-2"><label class="zoom-select"><span>放大</span><select id="zoom" aria-label="预览缩放"><option value="1">100%</option><option value="1.25">125%</option><option value="1.5">150%</option><option value="2">200%</option></select></label><button class="icon-button" id="zoom-in" type="button" aria-label="放大预览" title="放大预览"><i data-icon="zoom"></i></button><button class="icon-button" id="fullscreen" type="button" aria-label="全屏查看图片" title="全屏查看"><i data-icon="expand"></i></button></div></header>
+      <div class="stage-scroll scroll-area">
+        <button id="hero-trigger" class="hero-frame" type="button" aria-label="查看参考图片大图"><img id="hero" src="assets/hero.webp" width="479" height="468" alt="蓝色花饰与长发的动漫少女，来自参考截图" fetchpriority="high" draggable="false"></button>
+        <div class="carousel"><button type="button" class="carousel-arrow" id="previous-image" aria-label="上一张参考图片"><i data-icon="left"></i></button><div class="thumbnails" id="thumbnails"><button class="thumbnail selected" type="button" data-gallery="0" aria-label="参考图片 1" aria-pressed="true"><img src="assets/thumb-1.webp" alt="蓝发角色参考图一"></button><button class="thumbnail" type="button" data-gallery="1" aria-label="参考图片 2" aria-pressed="false"><img src="assets/thumb-2.webp" alt="蓝发角色参考图二" loading="lazy"></button><button class="thumbnail" type="button" data-gallery="2" aria-label="参考图片 3" aria-pressed="false"><img src="assets/thumb-3.webp" alt="蓝发角色参考图三" loading="lazy"></button><button class="thumbnail" type="button" data-gallery="3" aria-label="参考图片 4" aria-pressed="false"><img src="assets/thumb-4.webp" alt="灰蓝角色参考图" loading="lazy"></button><button class="thumbnail" type="button" data-gallery="4" aria-label="参考图片 5" aria-pressed="false"><img src="assets/thumb-5.webp" alt="深蓝角色参考图" loading="lazy"></button></div><button type="button" class="carousel-arrow" id="next-image" aria-label="下一张参考图片"><i data-icon="right"></i></button></div>
+        <div class="result-area" id="result-area"><div id="result-empty" class="empty-state"><span class="empty-picture"><i data-icon="image"></i></span><p class="mt-3 text-sm font-semibold">暂无生成结果</p><p class="mt-1 text-xs text-[var(--muted)]">开始创作，欣赏你的作品吧</p></div><div id="result-content" hidden class="p-4"><div class="mb-3 flex items-center justify-between gap-2"><span class="text-xs font-semibold text-[var(--ink)]">演示结果</span><button type="button" id="download-result" class="text-xs text-[var(--accent)] hover:underline">下载图片</button></div><img id="result-image" alt="使用截图素材呈现的本地演示结果" class="mx-auto max-h-48 rounded-lg object-contain"><p class="mt-2 text-center text-[11px] text-[var(--muted)]">截图素材演示 · 未连接生成服务</p></div></div>
+      </div>
+    </section>
+
+    <!-- side：文件管理 -->
+    <aside class="panel file-panel" id="file-panel" aria-label="文件管理">
+      <div class="file-top"><div class="mb-3 flex items-center justify-between gap-3"><h2 class="text-base font-semibold">文件管理</h2><div class="flex gap-1"><button type="button" id="focus-search" class="icon-button" aria-label="搜索文件"><i data-icon="search"></i></button><button type="button" id="close-library" class="icon-button close-library" aria-label="关闭文件管理"><i data-icon="x"></i></button></div></div><input id="file-search" class="thin-input w-full" type="search" placeholder="搜索文件名、标签..." aria-label="搜索文件名、标签"><div class="upload-split"><button type="button" id="upload"><span class="small-icon"><i data-icon="upload"></i></span>上传</button><button type="button" id="upload-more" aria-label="更多上传操作"><i data-icon="down"></i></button></div><input id="file-input" hidden type="file" accept="image/*" multiple></div>
+      <div class="folder-list" aria-label="文件夹"><button type="button" class="folder active" data-folder="all" aria-pressed="true"><span class="small-icon"><i data-icon="image"></i></span><span>全部</span><span class="folder-count" id="count-all">12</span></button><button type="button" class="folder" data-folder="test" aria-pressed="false"><span class="small-icon"><i data-icon="folder"></i></span><span>测试</span><span class="folder-count" id="count-test">8</span></button><button type="button" class="folder" data-folder="albion" aria-pressed="false"><span class="small-icon"><i data-icon="folder"></i></span><span>Albion</span><span class="folder-count" id="count-albion">4</span></button><div id="custom-folders"></div><button type="button" id="new-folder" class="new-folder"><span class="small-icon"><i data-icon="plus"></i></span>新建文件夹</button></div>
+      <div class="files-toolbar"><button type="button" id="sort-files" class="flex min-w-0 items-center gap-1 text-xs" aria-label="切换修改时间排序"><span class="title-marker"></span><span id="sort-label">按修改时间</span><span class="tiny-icon"><i data-icon="down"></i></span></button><div class="flex items-center gap-1"><button type="button" class="icon-button" id="view-grid" aria-label="网格视图" aria-pressed="false"><i data-icon="grid"></i></button><button type="button" class="icon-button active" id="view-list" aria-label="列表视图" aria-pressed="true"><i data-icon="list"></i></button><button type="button" class="icon-button" id="file-preview" aria-label="查看当前文件"><i data-icon="search"></i></button></div></div>
+      <div class="file-list scroll-area" id="file-list" data-view="list" aria-live="polite"></div>
+      <footer class="pagination"><span id="file-total" class="text-xs text-[var(--muted)]">共 12 个文件</span><div class="flex items-center gap-2"><button type="button" class="icon-button" id="previous-page" aria-label="上一页文件"><i data-icon="left"></i></button><span id="page-label" class="page-label">1 / 2</span><button type="button" class="icon-button" id="next-page" aria-label="下一页文件"><i data-icon="right"></i></button></div></footer>
+    </aside>
+  </main>
+  <footer class="app-status"><span class="status-dot"></span>界面交互样例 · 角色立绘与参考截图素材<span class="status-shortcut">Ctrl / ⌘ + Enter 演示生成</span></footer>
+  <div id="library-backdrop" class="library-backdrop" hidden></div>
+  <div id="toast" class="toast" role="status" hidden></div>
+  <dialog id="app-dialog" aria-labelledby="dialog-title"><header class="dialog-header"><h2 id="dialog-title" class="text-base font-semibold"></h2><button id="close-dialog" type="button" class="icon-button" aria-label="关闭对话框"><i data-icon="x"></i></button></header><div id="dialog-body" class="dialog-body"></div></dialog>
+  <script>/* SCRIPT */</script>
+</body></html>

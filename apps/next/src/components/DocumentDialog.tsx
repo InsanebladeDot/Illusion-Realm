@@ -18,6 +18,9 @@ type DocumentDialogProps = {
   footer?: ReactNode;
   /** 主按钮文案 */
   confirmLabel?: string;
+  /** 可选容器样式；沿用同一份固定头尾与正文滚动结构。 */
+  className?: string;
+  overlayClassName?: string;
 };
 
 /**
@@ -33,6 +36,8 @@ export function DocumentDialog({
   children,
   footer,
   confirmLabel,
+  className,
+  overlayClassName,
 }: DocumentDialogProps) {
   const { t } = useTranslation();
   // 可选文案的回退值放在这里而不是解构默认值：默认值在 hook 之外求值，拿不到 t
@@ -42,7 +47,7 @@ export function DocumentDialog({
 
   return (
     <>
-      <div className="fixed inset-0 z-[88] bg-black/50" aria-hidden onClick={onClose} />
+      <div className={cn("fixed inset-0 z-[88] bg-black/50", overlayClassName)} aria-hidden onClick={onClose} />
 
       <div
         role="dialog"
@@ -50,7 +55,8 @@ export function DocumentDialog({
         aria-labelledby={titleId}
         className={cn(
           "fixed left-1/2 top-1/2 z-[89] flex max-h-[min(85dvh,calc(100vh-2rem))] w-[calc(100vw-2rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-xl border bg-background shadow-lg outline-none dark:bg-muted",
-          THIN_BORDER_CLASS
+          THIN_BORDER_CLASS,
+          className
         )}
       >
         <div className="flex shrink-0 items-start justify-between gap-3 border-b border-border/60 px-5 py-4">

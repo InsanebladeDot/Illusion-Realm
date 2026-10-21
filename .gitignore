@@ -20,6 +20,8 @@ out/
 # electron-builder output
 dist/
 release/
+# Windows ICO 在 beforePack 从 icon.png 自动生成。
+/apps/electron/icon.ico
 # 打包产物的压缩包（体积远超 GitHub 单文件上限，不入库）
 release.zip
 
@@ -50,6 +52,9 @@ logs/
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+# OpenCV 运行时由 prepare-opencv.mjs 从锁定依赖复制，随 Next 静态资源分发。
+/apps/next/public/vendor/opencv/
+/apps/next/public/workers/canny.js
 
 # generated images (dev default output sibling folder)
 * Output/

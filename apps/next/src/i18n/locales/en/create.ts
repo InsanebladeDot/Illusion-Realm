@@ -6,6 +6,10 @@
  * 因此「翻了哪些」是可以机检的数字，不靠人记。
  */
 export const create = {
+  loraTriggers: {
+    apply: "Apply triggers", hint: "Append selected LoRA trigger words and skip duplicates. Advanced mode writes to the active category.",
+    applied: "Added {count} trigger words", unchanged: "These trigger words are already present",
+  },
   maskEditor: {
     title: "Mask editor · Quick validation", import: "Import image", empty: "Import an image and paint the area to redraw",
     hint: "Painted areas are used for redraw; color affects the preview only. Exports retain the original dimensions. Switching modes ends this edit.",
@@ -37,9 +41,22 @@ export const create = {
     desktopOnly: "Use the prompt assistant in the desktop app", presetInvalid: "Enter a preset name and system instruction", presetSaved: "Custom preset saved",
   },
   generationTasks: {
+    summary: "{running} generating · {queued} queued", categories: "Task categories",
+    tabs: { active: "In progress", history: "History" }, current: "Current generation",
+    emptyActive: "No tasks in progress", emptyHistory: "No task history",
+    serialHint: "Tasks run in submission order", queuePosition: "Waiting · Queue position {position}",
+    generatingImage: "Generating image {number}", details: "View parameters", noPrompt: "No prompt provided",
+    prompt: "Prompt", model: "Model", dimensions: "Image size", quantity: "Image count",
     title: "Generation tasks", active: "{count} active tasks", empty: "No generation tasks",
     add: "Add generation task", progress: "Completed {completed} / {total} images", view: "View image",
-    status: { queued: "Queued", generating: "Generating", saving: "Saving", completed: "Completed", failed: "Failed" },
+    cancel: "Stop generation", cancelQueued: "Cancel queued task", cancelAll: "Stop all", cancelled: "Generation stopped",
+    disconnected: "ComfyUI disconnected or a request timed out. Check the service and submit again.",
+    queueStopped: "The queue was stopped. Check ComfyUI and submit again.",
+    stopFailed: "ComfyUI has not confirmed stopping. Pending tasks were cancelled. Check the server task.",
+    stopUnavailable: "The stop API is unavailable. Fully quit and restart the app.",
+    timeout: "Generation timed out and the queue was stopped. Check the task on ComfyUI.",
+    executionFailed: "ComfyUI workflow execution failed. Check models, parameters and the server log.",
+    status: { queued: "Queued", generating: "Generating", saving: "Saving", cancelling: "Stopping", cancelled: "Stopped", completed: "Completed", failed: "Failed" },
   },
   "addImagesToFolderDialog": {
     "titlePrefix": "Add images to “",
@@ -303,7 +320,7 @@ export const create = {
     "generateFailed": "ComfyUI 生成失败",
     "model": "模型",
     "addExtension": "添加扩展",
-    "generating": "正在生成…",
+    "generating": "Generating{dots}",
     "mediaVideo": "Videos",
     "mediaRoleCover": "Cover songs",
     "mediaRoleTts": "Speech",
@@ -465,16 +482,26 @@ export const create = {
     invalid: "Invalid video settings. Check steps, FPS, duration and total frames.",
   },
   mediaReferences: {
+    back: "Back to categories",
     title: "Search imported media",
     empty: "No matching media. Import media into the current task first.",
     image: "Image", video: "Video", audio: "Audio",
   },
   videoReferences: {
-    tabs: "Reference media type",
-    addFiles: "Add {kind} files",
+    importResources: "Import resources",
+    resources: "Resources",
+    mixedSkipped: "Added {count} resources; skipped {skipped} due to unsupported formats.",
     batchHint: "Select or drop multiple files",
-    skipped: "Added {count} {kind} files; skipped {skipped} due to unsupported formats or the file limit.",
     hint: "Import images, videos or audio as needed. Type @ in the prompt to choose media. Reference videos use frames only; import sound separately as reference audio.",
     missing: "Media reference {token} is unavailable. Import the media or remove the reference.",
+  },
+  canny: {
+    title: "Edge detection", invert: "Invert", thresholds: "Detection thresholds", lower: "Lower detection threshold", upper: "Upper detection threshold",
+    original: "Original", result: "Detected edges", preview: "Preview", loading: "Loading image…",
+    pending: "Upload an original image to detect edges",
+    outputHint: "The detected image is the default conversion output. Preview or download the original-size PNG. Edge control is not connected to the generation workflow yet.",
+    processing: "Detecting edges…", processingFailed: "Edge detection failed. Please retry.", retry: "Retry detection", download: "Download PNG",
+    tooLarge: "Use an image with sides up to 8192 pixels and no more than 16 megapixels.",
+    invalidImage: "Select a PNG, JPEG or WebP image", loadFailed: "Unable to load this image. Please select it again.",
   },
 } as const;

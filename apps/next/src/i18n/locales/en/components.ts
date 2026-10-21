@@ -39,7 +39,6 @@ export const components = {
     "recommended": "Recommended"
   },
   "generationNotice": {
-    "generating": "Generating{dots}",
     "success": "Image generated",
     "failed": "Generation failed",
     "view": "View image"

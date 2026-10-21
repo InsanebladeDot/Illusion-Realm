@@ -25,6 +25,7 @@ if (imageTool) {
 
 registerAppProtocol();
 registerAllIpcHandlers();
+require("./lib/guest-session-fixture").installGuestDocumentFixture();
 
 const smoke = createSmokeHarness({ name: "agent-images" });
 smoke.installConsoleTee();

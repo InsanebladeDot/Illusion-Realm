@@ -17,6 +17,7 @@ import {
 } from "@/utils/profile";
 import { INPUT_BORDER_CLASS } from "@/utils/layout";
 import { cn } from "@/utils/cn";
+import { AvatarCropEditor } from "./avatar-crop-editor";
 
 type EditProfileDialogProps = {
   open: boolean;
@@ -38,6 +39,7 @@ export function EditProfileDialog({
 
   const [bio, setBio] = useState(profile.bio);
   const [avatarDataUrl, setAvatarDataUrl] = useState(profile.avatarDataUrl);
+  const [cropSource, setCropSource] = useState<string | null>(null);
   const [socialLinks, setSocialLinks] = useState<ProfileSocialLink[]>(
     profile.socialLinks
   );
@@ -54,6 +56,7 @@ export function EditProfileDialog({
   const fillKey = `${open}|${profile.bio}|${profile.avatarDataUrl ?? ""}|${profile.socialLinks.length}`;
   if (fillKey !== previousFillKey) {
     setPreviousFillKey(fillKey);
+    setCropSource(null);
     if (open) {
       setBio(profile.bio);
       setAvatarDataUrl(profile.avatarDataUrl);
@@ -65,7 +68,7 @@ export function EditProfileDialog({
     if (!open) return;
 
     const handleEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onOpenChange(false);
+      if (event.key === "Escape") { if (cropSource) setCropSource(null); else onOpenChange(false); }
     };
 
     const previousOverflow = document.body.style.overflow;
@@ -76,13 +79,13 @@ export function EditProfileDialog({
       document.body.style.overflow = previousOverflow;
       document.removeEventListener("keydown", handleEscape);
     };
-  }, [open, onOpenChange]);
+  }, [open, onOpenChange, cropSource]);
 
   const handlePickAvatar = useCallback(async (file: File | null) => {
     if (!file) return;
     try {
       const dataUrl = await readImageFileAsDataUrl(file);
-      setAvatarDataUrl(dataUrl);
+      setCropSource(dataUrl);
     } catch (error) {
       const message = error instanceof Error ? error.message : t("profile.edit.uploadFailed");
       showToast(message);
@@ -117,18 +120,20 @@ export function EditProfileDialog({
       <div
         className="fixed inset-0 z-[89] bg-black/50"
         aria-hidden
-        onClick={() => onOpenChange(false)}
+        onClick={() => { if (cropSource) setCropSource(null); else onOpenChange(false); }}
       />
 
       <div
         role="dialog"
         aria-modal="true"
-        aria-labelledby="edit-profile-title"
+        aria-labelledby={cropSource ? "avatar-crop-title" : "edit-profile-title"}
         className={cn(
           "fixed left-1/2 top-1/2 z-[90] flex max-h-[min(90dvh,calc(100dvh-env(safe-area-inset-top)-env(safe-area-inset-bottom)))] w-[calc(100vw-2rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 flex-col gap-4 overflow-hidden border bg-background p-6 shadow-lg outline-none sm:max-w-[625px] sm:rounded-xl",
           INPUT_BORDER_CLASS
         )}
       >
+        {/* 界面：沿用编辑资料弹窗外壳，在同一窗口完成头像裁剪。 */}
+        {cropSource ? <AvatarCropEditor key={cropSource} source={cropSource} onCancel={() => setCropSource(null)} onConfirm={dataUrl => { setAvatarDataUrl(dataUrl); setCropSource(null); }} /> : <>
         <div className="shrink-0 space-y-1.5">
           <h2 id="edit-profile-title" className="text-lg font-semibold">
             {t("profile.edit.title")}
@@ -305,10 +310,11 @@ export function EditProfileDialog({
           </button>
         </div>
 
+        </>}
         <button
           type="button"
           aria-label={t("common.close")}
-          onClick={() => onOpenChange(false)}
+          onClick={() => { if (cropSource) setCropSource(null); else onOpenChange(false); }}
           className="absolute right-4 top-4 rounded-sm opacity-70 transition-opacity hover:opacity-100"
         >
           <X className="h-4 w-4" />

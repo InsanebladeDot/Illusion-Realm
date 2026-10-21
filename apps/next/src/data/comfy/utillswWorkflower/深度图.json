@@ -1,0 +1,82 @@
+{
+  "91": {
+    "inputs": {
+      "image": "坠落之间3 (1).jpg"
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "加载图像"
+    }
+  },
+  "92": {
+    "inputs": {
+      "images": [
+        "690:687",
+        0
+      ]
+    },
+    "class_type": "PreviewImage",
+    "_meta": {
+      "title": "预览图像"
+    }
+  },
+  "693": {
+    "inputs": {
+      "resize_type": "scale total pixels",
+      "resize_type.megapixels": 1,
+      "scale_method": "lanczos",
+      "input": [
+        "91",
+        0
+      ]
+    },
+    "class_type": "ResizeImageMaskNode",
+    "_meta": {
+      "title": "调整图像/掩码大小"
+    }
+  },
+  "690:687": {
+    "inputs": {
+      "output": "depth",
+      "output.normalization": "raw",
+      "output.apply_sky_clip": false,
+      "da3_geometry": [
+        "690:688",
+        0
+      ]
+    },
+    "class_type": "DA3Render",
+    "_meta": {
+      "title": "渲染Depth Anything 3"
+    }
+  },
+  "690:688": {
+    "inputs": {
+      "resolution": 504,
+      "resize_method": "upper_bound_resize",
+      "mode": "mono",
+      "da3_model": [
+        "690:689",
+        0
+      ],
+      "image": [
+        "693",
+        0
+      ]
+    },
+    "class_type": "DA3Inference",
+    "_meta": {
+      "title": "运行Depth Anything 3"
+    }
+  },
+  "690:689": {
+    "inputs": {
+      "model_name": "depth_anything_3_mono_large.safetensors",
+      "weight_dtype": "default"
+    },
+    "class_type": "LoadDA3Model",
+    "_meta": {
+      "title": "加载Depth Anything 3"
+    }
+  }
+}

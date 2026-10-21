@@ -41,13 +41,14 @@ function ModelCatalog({ models, selected, select, status, next, load }: ReturnTy
     <div data-civitai-pagination role="status" className="flex min-h-12 items-center justify-center gap-2 py-4 text-xs text-muted-foreground">{status === "error" ? <button type="button" onClick={() => { void load(next); }} className="rounded-lg border border-border px-4 py-2 hover:bg-muted">{t("toolBox.civitai.retry")}</button> : status === "loading" ? <><LoaderCircle size={14} className="animate-spin" aria-hidden="true" />{t("toolBox.civitai.loading")}</> : next ? t("toolBox.civitai.scrollMore") : models.length > 0 ? t("toolBox.civitai.allLoaded") : null}</div>
   </div>;
 }
-function OnlineModelLibrary({ switcher }: { switcher: ReactNode }) {
+function OnlineModelLibrary({ switcher, allowNsfw }: { switcher: ReactNode; allowNsfw: boolean }) {
   const { t } = useTranslation();
   const [filters, setFilters] = useState(INITIAL_FILTERS);
   const [selected, setSelected] = useState<CivitaiModel | null>(null);
   const [open, setOpen] = useState(false);
   const wide = useMediaQuery("(min-width: 1280px)");
-  const catalog = useCivitaiModels(filters);
+  const requestFilters = useMemo(() => ({ ...filters, allowNsfw }), [filters, allowNsfw]);
+  const catalog = useCivitaiModels(requestFilters);
   const bases = useMemo(() => [...new Set([...INITIAL_BASES, filters.base, ...catalog.models.flatMap((model) => model.baseModels)])].filter(Boolean).sort(), [catalog.models, filters.base]);
   function updateFilters(next: CivitaiFilters) { setSelected(null); setOpen(false); setFilters(next); }
   function select(model: CivitaiModel) { setSelected(model); setOpen(true); }
@@ -62,10 +63,12 @@ function OnlineModelLibrary({ switcher }: { switcher: ReactNode }) {
 
 export function CivitaiPage() {
   const { t } = useTranslation();
+  const allowNsfw = useSettingsStore((state) => state.civitaiContentAccess.enabled);
   const [view, setView] = useState("online");
   const switcher = <div className="flex w-fit shrink-0 gap-1 rounded-lg border border-border bg-muted/40 p-1">{["online", "local"].map((value) => <button key={value} type="button" data-model-library={value} aria-pressed={view === value} onClick={() => setView(value)} className={`whitespace-nowrap rounded-md px-3 py-2 text-xs ${view === value ? "bg-background text-sky-700 shadow-sm dark:text-sky-300" : "text-muted-foreground hover:text-foreground"}`}>{t(value === "online" ? "toolBox.civitai.online" : "toolBox.civitai.local")}</button>)}</div>;
   return <div className="flex h-full min-h-0 min-w-0 flex-col">
     {/* 界面：模型库共用标题栏与切换入口 */}
-    {view === "online" ? <OnlineModelLibrary switcher={switcher} /> : <LocalModelLibrary switcher={switcher} />}
+    {/* 内容偏好变化时重新挂载在线库，立即清空旧封面、详情与在途请求。 */}
+    {view === "online" ? <OnlineModelLibrary key={String(allowNsfw)} allowNsfw={allowNsfw} switcher={switcher} /> : <LocalModelLibrary switcher={switcher} />}
   </div>;
 }

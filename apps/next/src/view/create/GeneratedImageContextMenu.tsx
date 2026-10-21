@@ -1,10 +1,8 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { ContextMenuShell } from "@/components/context-menu-shell";
 import { Download, Pencil, Trash2 } from "lucide-react";
 import { useTranslation } from "@/i18n";
-import { INPUT_BORDER_CLASS } from "@/utils/layout";
-import { cn } from "@/utils/cn";
 
 type GeneratedImageContextMenuProps = {
   x: number;
@@ -32,47 +30,8 @@ export function GeneratedImageContextMenu({
   onClose,
 }: GeneratedImageContextMenuProps) {
   const { t } = useTranslation();
-  const menuRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const handlePointerDown = (event: MouseEvent) => {
-      if (!menuRef.current?.contains(event.target as Node)) {
-        onClose();
-      }
-    };
-
-    const handleEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onClose();
-    };
-
-    const handleScroll = () => onClose();
-
-    document.addEventListener("mousedown", handlePointerDown);
-    document.addEventListener("keydown", handleEscape);
-    window.addEventListener("scroll", handleScroll, true);
-
-    return () => {
-      document.removeEventListener("mousedown", handlePointerDown);
-      document.removeEventListener("keydown", handleEscape);
-      window.removeEventListener("scroll", handleScroll, true);
-    };
-  }, [onClose]);
-
-  const left =
-    typeof window === "undefined" ? x : Math.min(x, window.innerWidth - 196);
-  const top =
-    typeof window === "undefined" ? y : Math.min(y, window.innerHeight - 172);
-
   return (
-    <div
-      ref={menuRef}
-      role="menu"
-      style={{ top: Math.max(8, top), left: Math.max(8, left) }}
-      className={cn(
-        "fixed z-[120] min-w-[188px] rounded-lg border bg-background py-1 shadow-lg",
-        INPUT_BORDER_CLASS
-      )}
-    >
+    <ContextMenuShell x={x} y={y} label={imageName} onClose={onClose} className="w-[188px] py-1">
       <button
         type="button"
         role="menuitem"
@@ -113,6 +72,6 @@ export function GeneratedImageContextMenu({
       <p className="truncate px-3 pb-1 pt-1 text-[11px] text-muted-foreground">
         {imageName}
       </p>
-    </div>
+    </ContextMenuShell>
   );
 }

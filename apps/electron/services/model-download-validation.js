@@ -17,11 +17,18 @@ function validateLocation(args) {
   const value = args[0];
   return args.length === 1 && validLocation(value) && isRecord(value) && Object.keys(value).every((key) => ["modelType", "baseModel"].includes(key)) ? null : "invalid";
 }
+/** 来源快照只接收已知字段和有界文本，与 shared schema 保持一致。 @param {unknown} value */
+function validSource(value) {
+  if (!isRecord(value) || Object.keys(value).some((key) => !["modelId", "versionId", "versionName", "creator", "trainedWords", "description", "versionDescription"].includes(key))) return false;
+  if (![value.modelId, value.versionId].every((id) => typeof id === "number" && Number.isSafeInteger(id) && id > 0)) return false;
+  return isString(value.versionName, 240) && isString(value.creator, 240) && isString(value.description, 200000) && isString(value.versionDescription, 200000) &&
+    Array.isArray(value.trainedWords) && value.trainedWords.length <= 256 && value.trainedWords.every((word) => isString(word, 4096));
+}
 /** @param {unknown[]} args */
 function validateDownload(args) {
   const value = args[0];
   if (args.length !== 1 || !isRecord(value) || !validLocation(value)) return "invalid";
-  const keys = ["modelType", "baseModel", "modelName", "fileName", "downloadUrl", "category", "sha256", "previewUrl", "logoDataUrl"];
+  const keys = ["modelType", "baseModel", "modelName", "fileName", "downloadUrl", "category", "sha256", "previewUrl", "logoDataUrl", "source"];
   if (Object.keys(value).some((key) => !keys.includes(key))) return "invalid";
   if (!isString(value.modelName, 240) || !value.modelName.trim()) return "invalid";
   if (!isString(value.fileName, 240) || !safeName(value.fileName) || !/\.(safetensors|ckpt|pt|pth|gguf)$/i.test(value.fileName)) return "invalid";
@@ -30,6 +37,8 @@ function validateDownload(args) {
   if (!isString(value.downloadUrl, 4096) || !/^https:\/\/civitai\.(red|com)\/api\/download\/models\/\d+(\?[^#]*)?$/.test(value.downloadUrl)) return "invalid";
   if (!isString(value.previewUrl, 4096) || (value.previewUrl && !/^https:\/\/([a-z0-9-]+\.)?civitai\.(com|red)\//i.test(value.previewUrl))) return "invalid";
   if (value.logoDataUrl !== undefined && (!isString(value.logoDataUrl, 28 * 1024 * 1024) || !/^data:image\/(png|jpeg|webp);base64,[a-z0-9+/=]+$/i.test(value.logoDataUrl))) return "invalid";
+  if (value.source !== undefined && !validSource(value.source)) return "invalid";
+  if (isRecord(value.source) && value.source.versionId !== Number(new URL(value.downloadUrl).pathname.split("/").pop())) return "invalid";
   return null;
 }
 /** @param {unknown[]} args */

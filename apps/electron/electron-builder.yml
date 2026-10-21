@@ -98,7 +98,8 @@ nodeGypRebuild: false
 electronDist: node_modules/electron/dist
 
 win:
-  icon: icon.png
+  # beforePack 直接将 256px PNG 封装为 ICO，避免打包时依赖 WASM 图标转换器。
+  icon: icon.ico
   target:
     - nsis
 mac:

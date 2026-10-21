@@ -1,0 +1,20 @@
+/** Login entry, account preview and guest-session copy. */
+export const auth = {
+  brandSub: "Bring your inspiration to life", welcome: "Enter your creative world", createAccount: "Create an account", login: "Log in",
+  guest: "Continue as a guest", guestHint: "No account needed. Guest access lasts 1 hour.", social: "Continue with another account", provider: "Log in with {name}",
+  signUpTitle: "Create an Illusion Realm account", loginTitle: "Log in to Illusion Realm", email: "Email", emailPlaceholder: "Enter your email address", displayName: "Display name", displayNamePlaceholder: "Enter your display name",
+  password: "Password", passwordPlaceholder: "Enter your password", confirmPassword: "Confirm password", confirmPlaceholder: "Enter your password again",
+  showPassword: "Show password", hidePassword: "Hide password", forgot: "Forgot password?", back: "Back", haveAccount: "Already have an account?", needAccount: "New here?",
+  recoveryUnavailable: "Password recovery is not available yet. Passwords cannot currently be reset by email. If you remember your password, sign in directly.",
+  verifyRedirect: "Email verified. Returning to sign in in 2 seconds.", returnToLogin: "Return to sign in now",
+  accountId: "Account ID: {id}", emailVerified: "Email verified", emailUnverified: "Email not verified", logoutAccount: "Log out",
+  accountMenu: "Account menu",
+  accountPending: "The account service is temporarily unavailable. Please try again.", socialPending: "{name} login is not connected yet. Please use guest access.",
+  formHint: "After registration, check your email and activate the account before logging in.", mismatch: "The passwords do not match.", passwordHint: "At least 12 characters",
+  registerSuccess: "Registration submitted. Check your email for the verification message.", loginSuccess: "Signed in successfully.", authNetworkError: "Cannot reach the account service. Check its address and try again.",
+  authInvalid: "The submitted information is invalid. Check it and try again.", authUnauthorized: "The email or password is incorrect, or the account is not active.", authRateLimited: "Too many attempts. Please try again later.", authUnavailable: "The account service is temporarily unavailable. Please try again.",
+  verifyTitle: "Verify your email", verifyToken: "Verification credential", verifyTokenPlaceholder: "Paste the complete ve_ credential", verify: "Verify and activate", resend: "Resend verification email", verificationSent: "If this email needs verification, check your inbox.", verifySuccess: "Email verified. Return to sign in.",
+  footer: "A place for every new idea to begin.", privacy: "Passwords are sent only over HTTPS; desktop tokens are stored securely.", entering: "Opening…",
+  accountStatus: "Signed in as {name}", expired: "Your guest session has expired. Please choose how to continue.", sessionSaveFailed: "Cannot save your guest session. Check local storage and retry.",
+  sessionLoadFailed: "Cannot read the saved session. Please retry guest access.", guestStatus: "You are using guest access", logout: "Leave guest mode",
+} as const;

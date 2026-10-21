@@ -21,7 +21,7 @@ require("../apps/electron/ipc-handlers/window.handlers").registerThemeHandlers()
 require("../apps/electron/ipc-handlers/models.handlers").registerModelHandlers();
 require("../apps/electron/ipc-handlers/model-download.handlers").registerModelDownloadHandlers();
 require("../apps/electron/ipc-handlers/civitai.handlers").registerCivitaiHandlers();
-registerHandle(C.USER_DATA_READ, () => ({ data: { settings }, filePath: "", isNew: false }));
+registerHandle(C.USER_DATA_READ, () => ({ data: require("./lib/guest-session-fixture").withGuestSession({ settings }), filePath: "", isNew: false }));
 registerHandle(C.USER_DATA_WRITE, () => undefined);
 registerHandle(C.USER_DATA_GET_DEFAULT_PATH, () => "");
 registerHandle(C.PATHS_GET_DEFAULT_OUTPUT, () => path.join(root, "output"));
@@ -94,7 +94,7 @@ async function configure(id) {
 }
 async function verifyCaptionEntry() {
   await wait("document.querySelector('[data-window-download]')");
-  smoke.check("Caption entry reserves space before native minimize controls", await run("(()=>{const button=document.querySelector('[data-window-download]').getBoundingClientRect();return button.top===0&&button.height===32&&button.right<=innerWidth-130&&document.querySelector('#main-content').getBoundingClientRect().top===32&&getComputedStyle(document.querySelector('[data-window-download]')).getPropertyValue('-webkit-app-region')==='no-drag'})()"));
+  smoke.check("Caption entry reserves space before native minimize controls", await run("(()=>{const button=document.querySelector('[data-window-download]').getBoundingClientRect();return button.top===0&&button.height===32&&button.right<=innerWidth-130&&document.querySelector('#main-content').getBoundingClientRect().top===40&&getComputedStyle(document.querySelector('[data-window-download]')).getPropertyValue('-webkit-app-region')==='no-drag'})()"));
   await click("[data-window-download]"); await wait("document.querySelector('[data-window-download-center]')");
   smoke.check("Download icon opens an empty global center", await run("document.querySelector('[data-window-download-center]').textContent.includes('暂无下载任务')"));
   await screenshot("titlebar-empty-light");

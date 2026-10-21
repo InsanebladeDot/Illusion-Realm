@@ -4,7 +4,6 @@ const path = require("path");
 const { randomUUID } = require("crypto");
 const { dialog, BrowserWindow } = require("electron");
 const { IPC_CHANNELS } = require("../ipcChannels");
-const { findIconInDir } = require("../modelScanner");
 const { resolve: resolveCivitaiKey } = require("../civitai-secret");
 const { downloadTarget, modelFolder, validateLocalFolder } = require("./model-download-paths");
 const { fetchDownload, writeModel, saveLogo, remoteLogo } = require("./model-download-transfer");
@@ -12,6 +11,7 @@ const { downloadFetch } = require("./model-download-network");
 const { resumeValidator } = require("./model-download-resume");
 const { checkFolder, fileIdentity, deleteArtifacts } = require("./model-download-files");
 const { assertFolderUnlocked } = require("./model-folder-locks");
+const { saveDownloadMetadata } = require("./model-download-metadata");
 /** @typedef {import("@illusion-realm/shared").ModelDownloadRequest} Request */
 /** @typedef {import("@illusion-realm/shared").ModelDownloadTask} Task */
 /** @typedef {{task:Task, request:Request, owner:Electron.WebContents, controller:AbortController, lastEmit:number, sampleTime:number, sampleBytes:number, temporary:string, realFolder:string, validator:string, owned:Map<string,string>, running:Promise<void>|null, removing:boolean}} Job */
@@ -31,7 +31,7 @@ function errorCode(error) {
 }
 /** @param {Job} job @param {Request} request */
 async function downloadLogo(job, request) {
-  if (!request.logoDataUrl && (!request.previewUrl || findIconInDir(job.task.folderPath))) return;
+  if (!request.logoDataUrl && !request.previewUrl) return;
   const controller = new AbortController();
   const stop = () => controller.abort();
   job.controller.signal.addEventListener("abort", stop, { once: true });
@@ -39,9 +39,8 @@ async function downloadLogo(job, request) {
   try {
     const bytes = request.logoDataUrl ? Buffer.from(request.logoDataUrl.split(",")[1], "base64") : await remoteLogo(request.previewUrl, controller);
     job.controller.signal.throwIfAborted();
-    // A download may create a cover, but must not replace a cover belonging to another local model.
-    if (fs.existsSync(path.join(job.task.folderPath, "logo.png"))) return;
-    const file = await saveLogo(job.task.folderPath, bytes, false);
+    // 同一模型目录的下一次下载也采用本次选中的预览图；无图时保留已有封面。
+    const file = await saveLogo(job.task.folderPath, bytes, true);
     job.owned.set(file, fileIdentity(file));
   } catch { job.task.logoWarning = true; }
   finally { clearTimeout(timer); controller.abort(); job.controller.signal.removeEventListener("abort", stop); }
@@ -72,15 +71,31 @@ function progress(job, received, total) {
   }
   if (now - job.lastEmit > 250) { job.lastEmit = now; update(job, {}); }
 }
+/** 来源快照先落盘，再提交模型；失败时只回滚本任务创建的快照，旧文件不受影响。 @param {Job} job */
+async function commitModel(job) {
+  checkFolder(job.task.folderPath, job.realFolder);
+  const metadata = await saveDownloadMetadata(job.task.filePath, job.request);
+  const identity = fileIdentity(metadata);
+  job.owned.set(metadata, identity);
+  try {
+    job.controller.signal.throwIfAborted();
+    checkFolder(job.task.folderPath, job.realFolder);
+    await fs.promises.link(job.temporary, job.task.filePath);
+    job.owned.set(job.task.filePath, fileIdentity(job.task.filePath));
+  } catch (error) {
+    checkFolder(job.task.folderPath, job.realFolder);
+    if (fs.existsSync(metadata) && fileIdentity(metadata) === identity) await fs.promises.unlink(metadata);
+    job.owned.delete(metadata);
+    throw error;
+  }
+}
 /** @param {Job} job @param {Request} request @param {string} temporary */
 async function transfer(job, request, temporary) {
   const { response, offset } = await openResponse(job);
   await writeModel(response, temporary, request.sha256, job.controller, (received, total) => progress(job, received, total), offset);
   job.controller.signal.throwIfAborted();
   checkFolder(job.task.folderPath, job.realFolder);
-  // Commit without replacing an existing file, even when another download races us.
-  await fs.promises.link(temporary, job.task.filePath);
-  job.owned.set(job.task.filePath, fileIdentity(job.task.filePath));
+  await commitModel(job);
   update(job, { status: "saving" });
   await downloadLogo(job, request);
   job.controller.signal.throwIfAborted();

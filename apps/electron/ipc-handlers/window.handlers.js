@@ -2,6 +2,16 @@ const { BrowserWindow, dialog, nativeTheme } = require("electron");
 
 const { IPC_CHANNELS } = require("../ipcChannels");
 const { registerHandle } = require("../ipcHandlers");
+const { setWindowChromeColor } = require("../window-chrome");
+
+/** 与 shared/appearance.schema.ts 的主题请求约束保持一致。
+ * @param {unknown[]} args
+ * @returns {string | null} */
+function validateThemeArguments(args) {
+  if (args[0] !== "system" && args[0] !== "light" && args[0] !== "dark") return "themeSource 必须是 system / light / dark";
+  return args[1] === undefined || (typeof args[1] === "string" && /^#[\da-f]{6}$/i.test(args[1]))
+    ? null : "shellColor 必须是十六进制颜色";
+}
 
 /**
  * 无边框化全屏的回退实现（3D 视窗优先用 DOM Fullscreen API）：把当前窗口切到系统全屏
@@ -39,19 +49,18 @@ function registerThemeHandlers() {
   registerHandle(
     IPC_CHANNELS.THEME_SET_THEME_SOURCE,
     /**
-     * @param {Electron.IpcMainInvokeEvent} _event
+     * @param {Electron.IpcMainInvokeEvent} event
      * @param {"system" | "light" | "dark"} source
+     * @param {string | undefined} shellColor
      * @returns {Promise<string>} 生效后的 themeSource
      */
-    async (_event, source) => {
+    async (event, source, shellColor) => {
       nativeTheme.themeSource = source;
+      if (shellColor) setWindowChromeColor(BrowserWindow.fromWebContents(event.sender), shellColor);
       return nativeTheme.themeSource;
     },
     /** @param {unknown[]} args @returns {string | null} */
-    (args) =>
-      args[0] === "system" || args[0] === "light" || args[0] === "dark"
-        ? null
-        : "themeSource 必须是 system / light / dark"
+    validateThemeArguments
   );
 }
 

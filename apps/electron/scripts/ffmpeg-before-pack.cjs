@@ -1,4 +1,8 @@
-/** Stop packaging before a release can silently omit its required native FFmpeg resources. */
+/** Validate bundled FFmpeg resources and prepare the Windows icon before packaging. */
 const { Arch } = require("electron-builder");
 const { validateBundle } = require("./check-ffmpeg-bundle.cjs");
-module.exports = async (context) => validateBundle(undefined, context.electronPlatformName, Arch[context.arch]);
+const { prepareWindowsIcon } = require("./prepare-windows-icon.cjs");
+module.exports = async (context) => {
+  validateBundle(undefined, context.electronPlatformName, Arch[context.arch]);
+  if (context.electronPlatformName === "win32") await prepareWindowsIcon();
+};

@@ -12,15 +12,17 @@ interface VideoTrimRangesProps {
   disabled: boolean;
   onSelect: (id: string) => void;
   onAdd: () => void;
+  onContextMenu?: (event: React.MouseEvent<HTMLElement>, id: string) => void;
 }
 
-export function VideoTrimRanges({ ranges, selectedId, disabled, onSelect, onAdd }: VideoTrimRangesProps) {
+export function VideoTrimRanges({ ranges, selectedId, disabled, onSelect, onAdd, onContextMenu }: VideoTrimRangesProps) {
   const { t } = useTranslation();
   return (
     <div className="flex flex-wrap items-center gap-2" aria-label={t("toolBox.video.rangeList")}>
       <span className="text-xs text-muted-foreground">{t("toolBox.video.sourceRanges", { count: ranges.length })}</span>
       {ranges.map((range, index) => (
         <button key={range.id} type="button" disabled={disabled} onClick={() => onSelect(range.id)}
+          onContextMenu={event => { if (!disabled) onContextMenu?.(event, range.id); }}
           aria-pressed={range.id === selectedId} title={`${formatTime(range.trim.start, true)} → ${formatTime(range.trim.end, true)}`}
           className={`rounded-lg border px-3 py-1.5 text-xs transition-colors disabled:opacity-40 ${range.id === selectedId
             ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground hover:bg-muted"}`}>

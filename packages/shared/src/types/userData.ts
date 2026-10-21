@@ -33,6 +33,11 @@ export type UserDataSettings = {
    * `resolveThemePreference()` 判非法并回退 `system`，而不是靠类型假装它一定合法。
    */
   theme?: string;
+  /** 可选外观字段：旧文档沿用默认配色与自动字体，不改变文档版本或已有业务数据。 */
+  colorPreset?: string;
+  uiFont?: string;
+  /** 可选增量字段：没有当前版本协议确认记录时，NSFW 访问保持关闭。 */
+  civitaiContentAccess?: import("./content-access").CivitaiContentAccess;
 };
 
 export type UserDataSidebar = {
@@ -154,6 +159,8 @@ export type UserDataDocument = {
   characterFavorites: UserDataCharacterFavorites;
   comicTemplates: import("./comic-template").ComicTemplateLibrary;
   promptAssistant?: import("./prompt-assistant").PromptAssistantPreferences;
+  /** v1 的可选增量字段：旧文档缺失时视为未进入，其他资料保持兼容。 */
+  entrySession?: import("./guest-session").UserDataEntrySession;
 };
 
 /** 角色库收藏（animadex 角色 slug） */
@@ -171,6 +178,7 @@ export type UserDataLoadResult = {
 
 export const DEFAULT_USER_DATA_DOCUMENT: UserDataDocument = {
   version: USER_DATA_VERSION,
+  entrySession: { guest: null },
   userDataPath: "",
   sidebar: { expanded: true },
   settings: {
@@ -178,6 +186,8 @@ export const DEFAULT_USER_DATA_DOCUMENT: UserDataDocument = {
     outputPath: "",
     comfyServerUrl: DEFAULT_COMFY_SERVER_URL,
     userDataPath: "",
+    colorPreset: "default",
+    uiFont: "auto",
   },
   profile: { ...DEFAULT_PROFILE },
   historyFolders: {

@@ -147,8 +147,14 @@ export async function generateWithComfy(
   }
 
   return convertRemoteGenerateResult(
-    unwrapIpc(await window.electronAPI!.comfyGenerate!(prompt, serverAddress))
+    unwrapIpc(await window.electronAPI!.comfyGenerate!(prompt, serverAddress, options.requestId))
   );
+}
+
+/** 请求主进程停止指定生成会话；主进程确认远端停止后才返回。 */
+export async function cancelComfyGeneration(requestId: string): Promise<boolean> {
+  if (!window.electronAPI?.comfyCancel) throw new Error(t("create.generationTasks.stopUnavailable"));
+  return unwrapIpc(await window.electronAPI.comfyCancel(requestId));
 }
 
 /** 拉取模型列表：优先 IPC，60s TTL 缓存，避免每次生成都请求 */

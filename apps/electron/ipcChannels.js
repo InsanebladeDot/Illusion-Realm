@@ -17,6 +17,7 @@ const IPC_CHANNELS = {
   DIALOG_SELECT_FOLDER: "dialog:selectFolder",
   // models
   MODELS_SCAN: "models:scan",
+  MODELS_READ_METADATA: "models:readMetadata",
   MODELS_DOWNLOAD_TARGET: "models:downloadTarget",
   MODELS_DOWNLOAD_START: "models:downloadStart",
   MODELS_DOWNLOAD_CANCEL: "models:downloadCancel",
@@ -43,6 +44,7 @@ const IPC_CHANNELS = {
   FILES_LIST_OUTPUT_FOLDERS: "files:listOutputFolders",
   // comfy
   COMFY_GENERATE: "comfy:generate",
+  COMFY_CANCEL: "comfy:cancel",
   COMFY_UPLOAD_IMAGE: "comfy:uploadImage",
   COMFY_LIST_MODELS: "comfy:listModels",
   // paths
@@ -88,6 +90,17 @@ const IPC_CHANNELS = {
   PROMPT_SECRET_STATUS: "prompt:secretStatus",
   PROMPT_SECRET_SET: "prompt:secretSet",
   PROMPT_SECRET_CLEAR: "prompt:secretClear",
+  ACCOUNT_REGISTER: "account:register",
+  ACCOUNT_VERIFY_EMAIL: "account:verifyEmail",
+  ACCOUNT_RESEND_VERIFICATION: "account:resendVerification",
+  ACCOUNT_LOGIN: "account:login",
+  ACCOUNT_ME: "account:me",
+  ACCOUNT_LOGOUT: "account:logout",
+  CLOUD_IMAGE_UPLOAD: "cloudImage:upload",
+  CLOUD_LIBRARY_REQUEST: "cloudLibrary:request",
+  CLOUD_IMAGE_GET: "cloudImage:get",
+  CLOUD_COLLECTION_GET: "cloudCollection:get",
+  CLOUD_COLLECTION_ITEMS: "cloudCollection:items",
 };
 
 module.exports = { IPC_CHANNELS };

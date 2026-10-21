@@ -95,14 +95,14 @@ export function MobileBottomNav() {
   };
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-[60] flex h-[52px] items-center justify-around border-t border-border bg-background px-2 shadow-[0_-4px_12px_rgba(0,0,0,0.04)] transition-transform duration-300 ease-in-out md:hidden">
+    <nav className="fixed bottom-0 left-0 right-0 z-[60] flex h-[52px] items-center justify-around border-t border-border bg-shell px-2 shadow-[0_-4px_12px_rgba(0,0,0,0.04)] transition-transform duration-300 ease-in-out md:hidden">
       {MOBILE_NAV_ITEMS.map((item) => {
         const Icon = item.icon;
         const active = item.type === "link" && item.href === pathname;
         const className = cn(
           "group flex flex-col items-center rounded-md px-2 py-1.5 text-[11px] font-medium transition-colors",
           active
-            ? "text-foreground dark:text-zinc-100"
+            ? "text-accent-text"
             : "text-muted-foreground hover:text-foreground"
         );
 

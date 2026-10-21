@@ -8,10 +8,12 @@ export const SPEED_PRESETS = [0.5, 0.75, 1, 1.5, 2, 4] as const;
 type SpeedPanelProps = {
   speed: number;
   onChange: (speed: number) => void;
+  label?: string;
+  disabled?: boolean;
 };
 
 /** 视频变速：常用倍速预设（变速需要重新编码） */
-export function SpeedPanel({ speed, onChange }: SpeedPanelProps) {
+export function SpeedPanel({ speed, onChange, label, disabled }: SpeedPanelProps) {
   const { t } = useTranslation();
 
   return (
@@ -19,7 +21,7 @@ export function SpeedPanel({ speed, onChange }: SpeedPanelProps) {
       <header className="flex items-center justify-between border-b border-border/60 pb-3">
         <h3 className="flex items-center gap-2 text-base font-semibold text-foreground">
           <Gauge className="h-4 w-4 text-sky-700 dark:text-sky-300" />
-          {t("toolBox.video.speed.title")}
+          {label ?? t("toolBox.video.speed.title")}
         </h3>
         <span className="text-xs text-muted-foreground">
           {speed === 1 ? t("toolBox.video.speed.originalSpeed") : `${speed}×`}
@@ -32,6 +34,7 @@ export function SpeedPanel({ speed, onChange }: SpeedPanelProps) {
             key={preset}
             type="button"
             onClick={() => onChange(preset)}
+            disabled={disabled}
             className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
               speed === preset
                 ? "bg-sky-500/10 text-sky-700 dark:text-sky-300"

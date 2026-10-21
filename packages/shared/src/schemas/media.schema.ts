@@ -4,6 +4,14 @@ import { nonEmptyPathSchema } from './common.schema';
 
 const trimSchema = z.object({ start: z.number(), end: z.number() });
 
+/** 每个剪切区间独立的效果；未传字段保持原速、原音量、正放。 */
+export const VideoClipEffectsSchema = z.object({
+  speed: z.number().finite().min(0.1).max(16).optional(),
+  volume: z.number().finite().min(0).max(4).optional(),
+  muted: z.boolean().optional(),
+  reverse: z.boolean().optional(),
+});
+
 const cropSchema = z.object({
   enabled: z.boolean(),
   width: z.number(),
@@ -17,11 +25,12 @@ const clipInputSchema = z.object({
   duration: z.number(),
   hasAudio: z.boolean(),
   trim: trimSchema.optional(),
+  effects: VideoClipEffectsSchema.optional(),
 });
 
 /** VideoEditJob：single（默认）/ concat / gif / frame */
 export const VideoEditJobSchema = z.object({
-  mode: z.enum(['single', 'concat', 'gif', 'frame']).optional(),
+  mode: z.enum(['single', 'concat', 'gif', 'frame', 'reframe']).optional(),
   inputPath: nonEmptyPathSchema.optional(),
   clips: z.array(clipInputSchema).optional(),
   outputPath: nonEmptyPathSchema,
@@ -32,6 +41,7 @@ export const VideoEditJobSchema = z.object({
   frameTime: z.number().finite().nonnegative().optional(),
   trim: trimSchema.optional(),
   speed: z.number().optional(),
+  effects: VideoClipEffectsSchema.optional(),
   crop: cropSchema.optional(),
   accurateCut: z.boolean().optional(),
   gif: z
@@ -41,7 +51,9 @@ export const VideoEditJobSchema = z.object({
       loop: z.boolean().optional(),
     })
     .optional(),
-}).refine((job) => job.mode !== 'frame' || (job.inputPath !== undefined && job.frameTime !== undefined && /\.png$/i.test(job.outputPath)));
+}).refine((job) => job.mode !== 'frame' || (job.inputPath !== undefined && job.frameTime !== undefined && /\.png$/i.test(job.outputPath)))
+  .refine((job) => job.mode !== 'reframe' || (job.inputPath !== undefined &&
+    Number.isInteger(job.fps) && Number(job.fps) >= 1 && Number(job.fps) <= 120 && /\.(mp4|mkv)$/i.test(job.outputPath)));
 
 /** video:ffmpegStatus */
 export const VideoFfmpegStatusArgsSchema = z.tuple([nonEmptyPathSchema.nullable()]);

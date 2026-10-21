@@ -9,6 +9,7 @@ export const common = {
   delete: "删除",
   copy: "复制",
   close: "关闭",
+  reloadPage: "刷新页面（F5）",
   loading: "加载中…",
   notImplemented: "{label} 暂未开发",
   copyFailed: "复制失败",

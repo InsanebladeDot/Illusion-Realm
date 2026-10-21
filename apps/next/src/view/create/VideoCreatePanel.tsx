@@ -33,7 +33,7 @@ import { VideoFrameInputs } from "./video-frame-inputs";
 import { ImageReferencePrompt } from "./image-reference-prompt";
 import { normalizeImageReferences } from "@/utils/image-prompt-references";
 import type { PromptReferenceMedia } from "@/utils/prompt-media-references";
-import { normalizeVideoReferences, orderedReferences } from "@/utils/comfy/video-reference-media";
+import { normalizeVideoReferences, orderedReferences, referenceImageSources } from "@/utils/comfy/video-reference-media";
 import { useVideoReferenceMedia } from "./use-video-reference-media";
 import { VideoReferenceInputs } from "./video-reference-inputs";
 
@@ -87,7 +87,7 @@ export function VideoCreatePanel() {
   const isReference = workflowId === "minimax-reference";
   const isMinimax = isMinimaxWorkflow(workflowId);
   const referenceImages = useMemo(() => isReference
-    ? Array.from({ length: 9 }, (_, index) => references.media.find((item) => item.kind === "image" && item.number === index + 1)?.src ?? null)
+    ? referenceImageSources(references.media)
     : [startImage.url, bothFrames ? lastImage.url : null], [isReference, references.media, startImage.url, lastImage.url, bothFrames]);
   // 当前任务只有首尾帧：按固定编号提供候选；共用输入框也能接收视频、音频数据。
   const referenceMedia = useMemo<PromptReferenceMedia[]>(() => isReference ? orderedReferences(references.media) : referenceImages.flatMap((src, index) => src ? [{

@@ -1,5 +1,8 @@
 /** 提示词素材引用的纯数据规则：三种素材共用结构，按 @ 后的文字过滤，选择后插入稳定的类型编号。 */
 export type PromptMediaKind = "image" | "video" | "audio";
+export const MEDIA_REFERENCE_LABELS = {
+  image: "create.mediaReferences.image", video: "create.mediaReferences.video", audio: "create.mediaReferences.audio",
+} as const;
 export interface PromptReferenceMedia {
   id: string;
   kind: PromptMediaKind;

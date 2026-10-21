@@ -12,6 +12,7 @@ export const common = {
   "delete": "Delete",
   "copy": "Copy",
   "close": "Close",
+  "reloadPage": "Reload page (F5)",
   "loading": "Loading…",
   "notImplemented": "{label} is not available yet",
   "copyFailed": "Copy failed",

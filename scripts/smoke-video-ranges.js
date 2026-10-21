@@ -22,7 +22,7 @@ const documentPath = path.join(work, "user.json");
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 let userDocument = { version: 1, userDataPath: documentPath, videoTool: { ffmpegPath: ffmpeg, outputFolder: work } };
 registerAppProtocol(); registerVideoToolIpc();
-registerHandle("userData:read", () => ({ filePath: documentPath, data: userDocument, isNew: false }));
+registerHandle("userData:read", () => ({ filePath: documentPath, data: require("./lib/guest-session-fixture").withGuestSession(userDocument), isNew: false }));
 registerHandle("userData:write", (_event, data) => { userDocument = data; return { filePath: documentPath, data }; });
 registerHandle("userData:getDefaultPath", () => documentPath);
 registerHandle("theme:setThemeSource", () => null);
@@ -98,7 +98,12 @@ async function verifyTransport(run, win) {
         inside:bar.left>=area.left && bar.right<=area.right, buttons:document.querySelectorAll('[data-video-transport] button').length }; })()`);
     assert.deepEqual(bounds, { centered:true, bottom:true, inside:true, buttons:5 });
   }
-  win.setSize(1200,900); await delay(250);
+  win.setSize(1200,900);
+  // 隐藏窗口的 resize 通知可能延后；等时间轴确实恢复宽布局，再计算拖动坐标。
+  await waitFor(run, `(() => { const r=document.querySelector('[data-timeline-range]').parentElement.getBoundingClientRect();
+    const key=[r.left,r.width].join(':'); const previous=window.__wideBounds;
+    window.__wideBounds={key,count:previous?.key===key?previous.count+1:0};
+    return innerWidth>=1100 && r.width>700 && window.__wideBounds.count>=6; })()`, "wide timeline layout restored and stable");
   smoke.check("Five transport controls are centered inside the preview and flush with its bottom on wide and narrow screens", true);
 }
 

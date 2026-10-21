@@ -2,6 +2,7 @@
   "name": "illusion-realm",
   "version": "0.1.0",
   "private": true,
+  "license": "SEE LICENSE IN LICENSE",
   "packageManager": "pnpm@11.7.0",
   "scripts": {
     "prepare:ffmpeg": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/prepare-ffmpeg.ps1",
@@ -16,6 +17,8 @@
     "typecheck": "pnpm --filter @illusion-realm/next typecheck && pnpm --filter @illusion-realm/electron exec tsc -p tsconfig.json",
     "lint": "pnpm --filter @illusion-realm/next lint",
     "verify": "electron scripts/verify-electron-modules.js",
+    "check:cloud-images": "node scripts/verify-cloud-images.js",
+    "check:comfy-generation": "node scripts/verify-comfy-generation.js",
     "check": "pnpm typecheck && pnpm verify && pnpm check:gates && pnpm check:outputpath && pnpm check:foldercount && pnpm check:locale && pnpm check:smoke && pnpm check:refs && pnpm check:initlocale && pnpm check:i18n && pnpm check:i18n:en && pnpm check:locale-keys && pnpm check:meta",
     "check:i18n": "pnpm --filter @illusion-realm/next check:i18n",
     "check:i18n:list": "pnpm --filter @illusion-realm/next check:i18n:list",

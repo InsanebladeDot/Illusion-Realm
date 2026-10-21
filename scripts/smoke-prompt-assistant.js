@@ -8,7 +8,7 @@ app.disableHardwareAcceleration(); app.setPath("userData", path.join(root, "brow
 require("../apps/electron/appProtocol").registerAppProtocol(); require("../apps/electron/ipc-handlers/window.handlers").registerThemeHandlers();
 require("../apps/electron/ipc-handlers/prompt-assistant.handlers").registerPromptAssistantHandlers();
 let userData = { version: 1, settings: { paths: {}, theme: "light", outputPath: root }, promptAssistant: { provider: "glm", baseUrl: "https://open.bigmodel.cn/api/paas/v4", model: "glm-4.7-flash", customModel: "", presetId: "translate", presets: Array.from({ length: 24 }, (_, index) => ({ id: `fixture-${index}`, name: `Preset ${index + 1}`, instruction: "Translate to English, preserving the original scene." })) } };
-registerHandle(C.USER_DATA_READ, () => ({ data: userData, filePath: "", isNew: false }));
+registerHandle(C.USER_DATA_READ, () => ({ data: require("./lib/guest-session-fixture").withGuestSession(userData), filePath: "", isNew: false }));
 registerHandle(C.USER_DATA_WRITE, (_event, data) => { userData = data; return { data, filePath: "" }; });
 for (const channel of [C.MODELS_DOWNLOAD_LIST, C.MODELS_SCAN, C.FILES_LIST_GENERATED_IMAGES, C.FILES_LIST_OUTPUT_FOLDERS]) registerHandle(channel, () => []);
 for (const channel of [C.AGENT_SECRET_STATUS, C.CIVITAI_KEY_STATUS]) registerHandle(channel, () => ({ configured: false, source: "none", protection: "", tail: "" }));
@@ -26,7 +26,7 @@ async function fixtureRequest(previous) { for (let i = 0; i < 150 && requests.le
 const TOOL = "[data-prompt-assistant=prompt-editor]";
 const qaDir = process.argv.find(value => value.startsWith("--qa-dir="))?.slice(9);
 async function capture(name) { if (qaDir) { fs.mkdirSync(qaDir, { recursive: true }); await delay(200); fs.writeFileSync(path.join(qaDir, name + ".png"), (await win.webContents.capturePage()).toPNG()); } }
-async function click(selector) { await run(`document.querySelector(${JSON.stringify(selector)}).click()`); }
+async function click(selector) { await require("./lib/sidebar-menu-fixture").revealSidebarPreference(run, selector); await run(`document.querySelector(${JSON.stringify(selector)}).click()`); }
 async function input(selector, text) { await run(`(()=>{const input=document.querySelector(${JSON.stringify(selector)});const setter=Object.getOwnPropertyDescriptor(input instanceof HTMLTextAreaElement?HTMLTextAreaElement.prototype:HTMLInputElement.prototype,'value').set;setter.call(input,${JSON.stringify(text)});input.dispatchEvent(new Event('input',{bubbles:true}))})()`); }
 async function text(value) { await run(`document.querySelector('#prompt-editor').textContent=${JSON.stringify(value)}`); }
 async function options() { await wait("!document.querySelector('[data-prompt-assistant-menu]')"); await click(`${TOOL} [data-assistant-options]`); await wait("document.querySelector('[data-prompt-assistant-menu]')"); }
@@ -125,6 +125,7 @@ async function checkAppearance() {
   const colors = () => run("(()=>{const css=getComputedStyle(document.querySelector('[data-assistant-column=\"0\"]'));return css.backgroundColor+' '+css.color})()");
   const light = await colors(); await click("[data-theme-trigger]"); await wait("document.querySelector('[data-theme-option=dark]')"); await click("[data-theme-option=dark]"); await wait("document.documentElement.dataset.theme==='dark'");
   smoke.check("Menu follows the application's dark theme", light !== await colors());
+  await require("./lib/sidebar-menu-fixture").closeAppearance(run);
   await delay(700); await capture("prompt-assistant-dark");
   await win.webContents.debugger.sendCommand("Emulation.setDeviceMetricsOverride", { width: 390, height: 844, deviceScaleFactor: 1, mobile: true });
   await wait("document.querySelectorAll('[data-prompt-assistant-menu] [role=menu]').length===1");

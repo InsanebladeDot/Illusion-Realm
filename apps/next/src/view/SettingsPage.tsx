@@ -22,6 +22,7 @@ import { AgentApiKeySetting } from "@/view/settings/AgentApiKeySetting";
 import { LocalModelList } from "@/view/settings/LocalModelList";
 import { useIsHydrated } from "@/hooks/useIsHydrated";
 import { CivitaiApiKeySetting } from "@/view/settings/CivitaiApiKeySetting";
+import { CivitaiContentSetting } from "@/view/settings/civitai-content-setting";
 import { PromptApiKeySetting } from "@/view/settings/prompt-api-key-setting";
 
 const PATH_KEYS: SettingsPathKey[] = [
@@ -124,6 +125,12 @@ export function SettingsPage() {
           ))}
         </div>
       </nav>
+
+      {/* 界面：模型插件的内容访问设置，协议同意后才允许显示 NSFW。 */}
+      {show("models") && <section id="content-access" className={cn("space-y-4 rounded-2xl bg-background p-4 sm:p-6", INPUT_BORDER_CLASS)}>
+        <h2 className="text-base font-semibold text-foreground">{t("settings.contentAccess.title")}</h2>
+        <CivitaiContentSetting />
+      </section>}
 
       {show("models") && <section
         className={cn(

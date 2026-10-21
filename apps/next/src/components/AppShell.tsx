@@ -28,7 +28,7 @@ import {
 import { primeUserDataDocument } from "@/utils/userDataStorage";
 import { normalizeLocalModels } from "@/utils/localModelScanner";
 import { isElectronEnvironment } from "@/utils/electronBridge";
-import { AVAILABLE_LOCALES, DEFAULT_LOCALE, useLocaleStore, type Locale } from "@/i18n";
+import { AVAILABLE_LOCALES, DEFAULT_LOCALE, useLocaleStore, t, type Locale } from "@/i18n";
 import { resolveLocale } from "@/utils/localeResolution";
 import { applyLocaleSignals } from "@/utils/localeSignals";
 import { MOBILE_BOTTOM_NAV_HEIGHT } from "@/utils/layout";
@@ -36,9 +36,13 @@ import { cn } from "@/utils/cn";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { applyThemeSignals } from "@/utils/themeSignals";
 import { DEFAULT_THEME_PREFERENCE } from "@/utils/themeResolution";
+import { applyAppearanceSignals } from "@/utils/appearance";
+import { resolveAppliedTheme } from "@/utils/themeSignals";
 import { subscribeAgentHostTools } from "@/utils/agentHostTools";
 import { subscribeModelDownloads } from "@/stores/useModelDownloadStore";
 import { WindowTitlebar } from "@/components/window-titlebar";
+import { AuthGate } from "@/components/auth-gate";
+import { useGuestSessionStore } from "@/stores/useGuestSessionStore";
 import { applyWindowChromeSignals, subscribeWindowChromeSignals } from "@/utils/window-chrome";
 
 /**
@@ -95,6 +99,10 @@ applyLocaleSignals(initialLocaleResolution.locale as Locale);
 applyThemeSignals(DEFAULT_THEME_PREFERENCE);
 applyWindowChromeSignals();
 
+// AppShell 随路由重挂，但用户文档只需启动时水合一次。
+// 否则旧读盘结果会覆盖刚发生的退出 / 设置修改，甚至把已退出的游客重新恢复。
+let initializationPromise: Promise<void> | undefined;
+
 export function AppShell({
   children,
   fillViewport = false,
@@ -113,6 +121,8 @@ export function AppShell({
    */
   const pathname = usePathname();
   const themePreference = useSettingsStore((state) => state.theme);
+  const colorPreset = useSettingsStore(state => state.colorPreset);
+  const uiFont = useSettingsStore(state => state.uiFont);
   /**
    * 主题订阅：`prefersDark` 进依赖是**故意的** —— 选「跟随系统」时，
    * 系统在用户使用过程中切了深浅，这里要重新落一次信号；
@@ -124,6 +134,10 @@ export function AppShell({
     applyThemeSignals(themePreference);
   }, [themePreference, prefersDark]);
 
+  useEffect(() => {
+    applyAppearanceSignals(colorPreset, uiFont, resolveAppliedTheme(themePreference) === "dark", themePreference);
+  }, [colorPreset, uiFont, themePreference, prefersDark]);
+
   /**
    * 宿主工具调用只在 Electron 里存在（主进程 `agent:hostCall` → 这里执行 → 回执）。
    * 挂在 AppShell 而不是 Agent 页：切页后订阅若被卸载，主进程要白等到工具超时才收场。
@@ -133,7 +147,8 @@ export function AppShell({
   useEffect(() => subscribeWindowChromeSignals(), []);
 
   useEffect(() => {
-    void (async () => {
+    if (initializationPromise) return;
+    initializationPromise = (async () => {
       const loaded = await loadUserDataDocument();
       primeUserDataDocument(loaded.data);
 
@@ -165,6 +180,7 @@ export function AppShell({
       await useVideoToolStore.persist.rehydrate();
       await useNegativePresetStore.persist.rehydrate();
       await useView3DStore.persist.rehydrate();
+      await useGuestSessionStore.persist.rehydrate();
 
       useHistoryFolderStore.setState((state) =>
         sanitizePersistedFolderIds(state.selectedFolderId, state.openedFolderId)
@@ -181,27 +197,40 @@ export function AppShell({
       if (isElectronEnvironment()) {
         await useSettingsStore.getState().scanAllModels();
       }
-    })();
+    })().catch(() => {
+      // 启动文档失败仍显示入口，不把用户卡在无限 loading，也不越过游客检查。
+      useGuestSessionStore.setState({ ready: true, guest: null, error: t("auth.sessionLoadFailed") });
+    });
   }, []);
 
   return (
-    <div className="min-h-[100dvh] bg-background pt-[var(--window-chrome-height)] text-foreground">
+    <div data-app-shell className="h-[100dvh] overflow-hidden bg-shell pt-[var(--window-chrome-height)] text-foreground">
       {/* 界面：全局标题栏与下载管理入口 */}
       <WindowTitlebar />
+      {/* 界面：登录入口与游客有效期统一控制应用页面；标题栏始终保留。 */}
+      <AuthGate>
       <Sidebar />
-      <main
-        id="main-content"
+      {/* 界面：所有业务页面共用顶层 main 外壳；留白归外壳，滚动归 main。 */}
+      <div
+        data-app-content-layout
         className={cn(
-          "overflow-x-hidden transition-[padding-left] duration-300 ease-in-out",
-          "pl-0 pb-[var(--mobile-nav-height)] md:pb-0",
-          fillViewport
-            ? "h-[calc(100dvh-var(--window-chrome-height))] overflow-hidden"
-            : "min-h-[calc(100dvh-var(--window-chrome-height))] overflow-y-auto",
-          expanded ? "md:pl-[220px]" : "md:pl-[56px]"
+          "h-[calc(100dvh-var(--window-chrome-height))] min-h-0 overflow-hidden p-3 transition-[padding-left] duration-300 ease-in-out",
+          "pb-[calc(var(--mobile-nav-height)+12px)] md:pb-3",
+          expanded ? "md:pl-[232px]" : "md:pl-[68px]"
         )}
         style={{ "--mobile-nav-height": `${MOBILE_BOTTOM_NAV_HEIGHT}px` } as React.CSSProperties}
       >
-        {/** `data-page-transition` 供冒烟断言「内容区确实带入场动画」（导航不在其中） */}
+        <main
+          id="main-content"
+          data-app-main
+          data-page-transition={pathname}
+          data-fill-viewport={fillViewport}
+          className={cn(
+            "h-full min-h-0 overflow-x-hidden rounded-[8px] bg-background",
+            fillViewport ? "overflow-hidden" : "overflow-y-auto overscroll-contain"
+          )}
+        >
+        {/** 页面转场对 main 整体截图，保留父组件圆角裁切；导航不在其中。 */}
         {/**
          * `bg-background`：内容区自己铺一层底。
          * 一是语义正确（内容区是主表面的所有者），二是页面切换时快照不透明 ——
@@ -209,16 +238,17 @@ export function AppShell({
          */}
         <div
           key={pathname}
-          data-page-transition={pathname}
-          className="h-full bg-background"
+          className={cn("bg-background", fillViewport ? "h-full" : "min-h-full")}
         >
           {children}
         </div>
-      </main>
+        </main>
+      </div>
       <MobileBottomNav />
       <GenerationNotice />
-      <ToastContainer />
       <UpdateAnnouncementHost />
+      </AuthGate>
+      <ToastContainer />
     </div>
   );
 }

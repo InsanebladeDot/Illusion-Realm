@@ -6,6 +6,7 @@ const { dialog } = require("electron");
 const { resolveTools } = require("./locate");
 const { probeVideo } = require("./probe");
 const { startEditJob } = require("./jobs");
+const { validateClipEffects } = require("./edit-validation");
 const { ensureDirectory, ensureUniqueFilePath } = require("../outputPaths");
 const { IPC_CHANNELS } = require("../ipcChannels");
 const { registerHandle } = require("../ipcHandlers");
@@ -15,7 +16,7 @@ const MAX_MODEL_FILE_BYTES = 64 * 1024 * 1024;
 
 /** 已知的任务类型；未知类型通常意味着渲染进程比主进程新（主进程未重启） */
 /** @type {Set<string>} */
-const KNOWN_JOB_MODES = new Set(["single", "concat", "gif", "frame"]);
+const KNOWN_JOB_MODES = new Set(["single", "concat", "gif", "frame", "reframe"]);
 
 /**
  * 校验任务类型是否已知
@@ -38,10 +39,24 @@ function validateFrameRunArgs(args) {
   const payload = args[0];
   if (!payload || typeof payload !== "object" || !("job" in payload)) return null;
   const job = payload.job;
-  if (!job || typeof job !== "object" || !("mode" in job) || job.mode !== "frame") return null;
+  if (job && typeof job === "object") {
+    const error = validateClipEffects(job);
+    if (error) return error;
+  }
+  if (!job || typeof job !== "object" || !("mode" in job)) return null;
+  if (job.mode === "reframe") return validateReframeJob(job);
+  if (job.mode !== "frame") return null;
   if (!("inputPath" in job) || typeof job.inputPath !== "string" || !job.inputPath.trim()) return "单帧导出缺少输入视频";
   if (!("frameTime" in job) || typeof job.frameTime !== "number" || !Number.isFinite(job.frameTime) || job.frameTime < 0) return "单帧导出时间必须是非负有限数字";
   if (!("outputPath" in job) || typeof job.outputPath !== "string" || !/\.png$/i.test(job.outputPath)) return "单帧图片需使用 .png 扩展名";
+  return null;
+}
+
+/** @param {object} job @returns {string | null} */
+function validateReframeJob(job) {
+  if (!("inputPath" in job) || typeof job.inputPath !== "string" || !job.inputPath.trim()) return "缺少输入视频";
+  if (!("fps" in job) || typeof job.fps !== "number" || !Number.isInteger(job.fps) || job.fps < 1 || job.fps > 120) return "帧率必须是 1–120 的整数";
+  if (!("outputPath" in job) || typeof job.outputPath !== "string" || !/\.(mp4|mkv)$/i.test(job.outputPath)) return "输出视频需使用 .mp4 或 .mkv 扩展名";
   return null;
 }
 
@@ -197,13 +212,15 @@ function registerVideoToolIpc() {
       }
     }
 
-    const { ffmpegPath } = resolveTools(manualFfmpegPath);
+    const { ffmpegPath, ffprobePath } = resolveTools(manualFfmpegPath);
     if (!ffmpegPath) {
       throw new Error(
         "未找到 ffmpeg。请安装 ffmpeg 并加入 PATH，或在页面中手动指定 ffmpeg 路径。"
       );
     }
 
+    // 按帧导出以主进程读取的信息为准，不采信渲染进程传来的原始帧率。
+    const sourceInfo = job.mode === "reframe" ? await probeVideo(ffprobePath, job.inputPath || "") : undefined;
     // 输出目录可能还不存在；同名文件自动让位，避免静默覆盖上一次的导出
     ensureDirectory(path.dirname(job.outputPath));
     const effectiveJob = {
@@ -218,6 +235,7 @@ function registerVideoToolIpc() {
       const child = startEditJob({
         ffmpegPath,
         job: effectiveJob,
+        sourceInfo,
         onProgress: (progress) => {
           if (sender.isDestroyed()) return;
           sender.send(IPC_CHANNELS.VIDEO_PROGRESS_EVENT, { jobId, ...progress });
@@ -237,6 +255,7 @@ function registerVideoToolIpc() {
       });
 
       activeJobs.set(jobId, child);
+      if (!sender.isDestroyed()) sender.send(IPC_CHANNELS.VIDEO_PROGRESS_EVENT, { jobId, percent: 0, seconds: 0 });
     });
   }, validateFrameRunArgs);
 

@@ -29,6 +29,7 @@ export const IPC_CHANNELS = {
 
   // models —— 本地模型扫描
   MODELS_SCAN: 'models:scan',
+  MODELS_READ_METADATA: 'models:readMetadata',
   MODELS_DOWNLOAD_TARGET: 'models:downloadTarget',
   MODELS_DOWNLOAD_START: 'models:downloadStart',
   MODELS_DOWNLOAD_CANCEL: 'models:downloadCancel',
@@ -57,6 +58,7 @@ export const IPC_CHANNELS = {
 
   // comfy —— ComfyUI 代理
   COMFY_GENERATE: 'comfy:generate',
+  COMFY_CANCEL: 'comfy:cancel',
   COMFY_UPLOAD_IMAGE: 'comfy:uploadImage',
   COMFY_LIST_MODELS: 'comfy:listModels',
 
@@ -125,6 +127,18 @@ export const IPC_CHANNELS = {
   PROMPT_SECRET_STATUS: 'prompt:secretStatus',
   PROMPT_SECRET_SET: 'prompt:secretSet',
   PROMPT_SECRET_CLEAR: 'prompt:secretClear',
+  // account —— 后端账户认证（令牌只在主进程侧保存）
+  ACCOUNT_REGISTER: 'account:register',
+  ACCOUNT_VERIFY_EMAIL: 'account:verifyEmail',
+  ACCOUNT_RESEND_VERIFICATION: 'account:resendVerification',
+  ACCOUNT_LOGIN: 'account:login',
+  ACCOUNT_ME: 'account:me',
+  ACCOUNT_LOGOUT: 'account:logout',
+  CLOUD_IMAGE_UPLOAD: 'cloudImage:upload',
+  CLOUD_LIBRARY_REQUEST: 'cloudLibrary:request',
+  CLOUD_IMAGE_GET: 'cloudImage:get',
+  CLOUD_COLLECTION_GET: 'cloudCollection:get',
+  CLOUD_COLLECTION_ITEMS: 'cloudCollection:items',
 } as const;
 
 export type IpcChannel = (typeof IPC_CHANNELS)[keyof typeof IPC_CHANNELS];

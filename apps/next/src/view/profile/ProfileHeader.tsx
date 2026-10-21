@@ -1,150 +1,78 @@
 "use client";
 
-import Link from "next/link";
-import { SquarePen } from "lucide-react";
+import { useRef, useState } from "react";
+import { ImagePlus, RotateCcw, SquarePen } from "lucide-react";
 import { useProfileStore } from "@/stores/useProfileStore";
+import { useAccountStore } from "@/stores/useAccountStore";
+import { useToastStore } from "@/stores/useToastStore";
 import { useTranslation } from "@/i18n";
-import { getProfileInitials } from "@/utils/profile";
-import { INPUT_BORDER_CLASS } from "@/utils/layout";
-import { cn } from "@/utils/cn";
+import { getProfileInitials, readImageFileAsDataUrl } from "@/utils/profile";
 
-type ProfileHeaderProps = {
-  onEdit: () => void;
-};
+interface ProfileHeaderProps { onEdit: () => void }
 
-function StatItem({
-  value,
-  label,
-  href,
-}: {
-  value: number;
-  label: string;
-  href?: string;
-}) {
-  const content = (
-    <>
-      <span className="font-bold">{value}</span>
-      <span className="ml-1 text-muted-foreground">{label}</span>
-    </>
-  );
-
-  if (href) {
-    return (
-      <Link href={href} className="transition-opacity hover:opacity-80">
-        {content}
-      </Link>
-    );
+// 界面：封面仅作当前页面的外观预览，不新增账户字段或修改原图。
+function ProfileCover({ onEdit }: ProfileHeaderProps) {
+  const { t } = useTranslation();
+  const [cover, setCover] = useState<string | null>(null);
+  const input = useRef<HTMLInputElement>(null);
+  async function choose(file?: File) {
+    if (!file) return;
+    try { setCover(await readImageFileAsDataUrl(file)); }
+    catch (error) { useToastStore.getState().show(error instanceof Error ? error.message : t("profile.errors.readFailed"), "error"); }
   }
-
-  return <span>{content}</span>;
+  const buttonClass = "inline-flex h-8 items-center gap-1.5 rounded-md border border-border/70 bg-background/90 px-2.5 text-xs font-medium text-foreground backdrop-blur-sm transition-colors hover:bg-background";
+  return <div className="relative h-[108px] overflow-hidden bg-muted sm:h-[132px] lg:h-36" data-profile-cover>
+    {cover ? <img src={cover} alt={t("profile.cover.preview")} className="h-full w-full object-cover" /> : <div aria-hidden="true" className="absolute inset-0 bg-linear-to-br from-sky-500/15 via-transparent to-teal-500/10"><div className="absolute -right-12 -top-20 h-80 w-80 rounded-full border border-foreground/5" /><div className="absolute -right-24 -top-32 h-[440px] w-[440px] rounded-full border border-foreground/5" /></div>}
+    <div className="absolute right-3 top-3 flex flex-wrap justify-end gap-2 sm:right-5 sm:top-4">
+      {cover && <button type="button" onClick={() => setCover(null)} className={buttonClass} aria-label={t("profile.cover.reset")} title={t("profile.cover.reset")}><RotateCcw size={14} /></button>}
+      <button type="button" className={buttonClass} title={t("profile.cover.hint")} onClick={() => input.current?.click()}><ImagePlus size={14} />{t("profile.cover.change")}</button>
+      <button type="button" onClick={onEdit} className={buttonClass}><SquarePen size={14} />{t("profile.edit.title")}</button>
+    </div>
+    <input ref={input} type="file" accept="image/*" className="hidden" aria-label={t("profile.cover.change")} onChange={event => { const file = event.target.files?.[0]; event.target.value = ""; void choose(file); }} />
+    {cover && <p className="absolute bottom-3 right-3 max-w-[60%] rounded bg-background/85 px-2 py-1 text-[11px] text-muted-foreground">{t("profile.cover.hint")}</p>}
+  </div>;
 }
 
-function Avatar({
-  username,
-  avatarDataUrl,
-  className,
-}: {
-  username: string;
-  avatarDataUrl: string | null;
-  className?: string;
-}) {
-  return (
-    <span
-      className={cn(
-        "relative flex shrink-0 overflow-hidden rounded-full border-background bg-muted shadow-lg",
-        className
-      )}
-    >
-      {avatarDataUrl ? (
-        <img
-          src={avatarDataUrl}
-          alt={username}
-          className="aspect-square h-full w-full object-cover"
-        />
-      ) : (
-        <span className="flex h-full w-full items-center justify-center font-medium">
-          {getProfileInitials(username)}
-        </span>
-      )}
-    </span>
-  );
+/** 界面：昵称下的账户信息；仅展示当前登录者自己的资料。 */
+function AccountDetails() {
+  const { t } = useTranslation();
+  const account = useAccountStore(state => state.profile);
+  if (!account) return null;
+  return <div data-profile-account-details className="mt-1 flex min-w-0 flex-wrap gap-x-3 gap-y-1 text-xs leading-relaxed text-muted-foreground">
+    <span className="min-w-0 break-all">{account.email}</span>
+    <span>{t("auth.accountId", { id: account.id })}</span>
+    <span>{t(account.emailVerifiedAt ? "auth.emailVerified" : "auth.emailUnverified")}</span>
+  </div>;
+}
+
+function ProfileStats() {
+  const { t } = useTranslation();
+  const stats = useProfileStore(state => state.stats);
+  return <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+    {(["posts", "followers", "following"] as const).map(key => <span key={key}><strong className="mr-1 font-semibold tabular-nums text-foreground">{stats[key]}</strong>{t(`profile.stats.${key}`)}</span>)}
+  </div>;
 }
 
 export function ProfileHeader({ onEdit }: ProfileHeaderProps) {
-  const { t } = useTranslation();
-  const username = useProfileStore((state) => state.username);
-  const bio = useProfileStore((state) => state.bio);
-  const avatarDataUrl = useProfileStore((state) => state.avatarDataUrl);
-  const stats = useProfileStore((state) => state.stats);
-
-  const editButton = (
-    <button
-      type="button"
-      onClick={onEdit}
-      className={cn(
-        "inline-flex h-8 shrink-0 items-center rounded-md border px-3 text-xs font-medium shadow-sm transition-colors hover:bg-muted",
-        INPUT_BORDER_CLASS
-      )}
-    >
-      <SquarePen className="mr-1.5 h-3.5 w-3.5 md:mr-2 md:h-4 md:w-4" />
-      {t("profile.edit.title")}
-    </button>
-  );
-
-  const statsRow = (
-    <div className="flex items-center gap-3 text-sm md:gap-4">
-      <StatItem value={stats.posts} label={t("profile.stats.posts")} />
-      <StatItem value={stats.followers} label={t("profile.stats.followers")} href="#" />
-      <StatItem value={stats.following} label={t("profile.stats.following")} href="#" />
-    </div>
-  );
-
-  return (
-    <div className="container mx-auto px-4 py-4 md:py-8">
-      <div className="flex flex-col items-start gap-4 md:flex-row md:gap-8">
-        <div className="w-full md:hidden">
-          <div className="flex items-start gap-3">
-            <Avatar
-              username={username}
-              avatarDataUrl={avatarDataUrl}
-              className="h-20 w-20 border-2"
-            />
-            <div className="min-w-0 flex-1">
-              <div className="mb-2 flex items-start justify-between gap-2">
-                <h1 className="text-xl font-bold">{username}</h1>
-                {editButton}
-              </div>
-              {statsRow}
-              {bio ? (
-                <p className="mt-3 whitespace-pre-wrap text-sm text-muted-foreground">
-                  {bio}
-                </p>
-              ) : null}
-            </div>
-          </div>
-        </div>
-
-        <div className="hidden shrink-0 md:block">
-          <Avatar
-            username={username}
-            avatarDataUrl={avatarDataUrl}
-            className="h-32 w-32 border-4 shadow-xl"
-          />
-        </div>
-
-        <div className="hidden min-w-0 flex-1 space-y-4 md:block">
-          <div className="flex items-start justify-between gap-3">
-            <h1 className="text-3xl font-bold">{username}</h1>
-            {editButton}
-          </div>
-          {statsRow}
-          {bio ? (
-            <p className="max-w-2xl whitespace-pre-wrap text-sm leading-relaxed text-muted-foreground">
-              {bio}
-            </p>
-          ) : null}
-        </div>
+  const localUsername = useProfileStore(state => state.username);
+  const accountName = useAccountStore(state => state.profile?.displayName);
+  // 登录账户以服务端昵称为准；游客沿用本地资料，不覆盖用户文档。
+  const username = accountName ?? localUsername;
+  const bio = useProfileStore(state => state.bio);
+  const avatar = useProfileStore(state => state.avatarDataUrl);
+  return <header>
+    <ProfileCover onEdit={onEdit} />
+    {/* 界面：头像叠放在封面下缘，身份信息使用一套响应式布局。 */}
+    <div className="profile-content relative flex items-start gap-3 pb-4 sm:gap-5">
+      <span className="relative -mt-7 flex h-[72px] w-[72px] shrink-0 items-center justify-center overflow-hidden rounded-full border-4 border-background bg-muted text-xl font-semibold shadow-sm sm:-mt-8 sm:h-[88px] sm:w-[88px]">
+        {avatar ? <img src={avatar} alt={username} className="h-full w-full object-cover" /> : getProfileInitials(username)}
+      </span>
+      <div className="min-w-0 flex-1 pt-3">
+        <h1 className="break-words text-xl font-semibold tracking-tight sm:text-2xl">{username}</h1>
+        <AccountDetails />
+        <ProfileStats />
+        {bio && <p className="mt-2 max-w-3xl whitespace-pre-wrap break-words text-sm leading-relaxed text-muted-foreground">{bio}</p>}
       </div>
     </div>
-  );
+  </header>;
 }

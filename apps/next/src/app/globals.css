@@ -5,12 +5,13 @@
   --background: #ffffff;
   --foreground: #171717;
   --muted: #f4f4f5;
+  --shell-background: #f4f4f5;
   --muted-foreground: #71717a;
   --border: #e4e4e7;
   --accent: #f4f4f5;
-  --ring: #a855f7;
+  --ring: #71717a;
   --input: #e4e4e7;
-  --primary: #a855f7;
+  --primary: #171717;
   --primary-foreground: #fafafa;
   --popover: #ffffff;
   /**
@@ -24,6 +25,8 @@
   --accent-stroke: #171717;
   --accent-fill: #18181b;
   --accent-fill-foreground: #ffffff;
+  --accent-text: #171717;
+  --accent-soft: #ffffff;
 }
 
 :root[data-window-chrome="custom"] {
@@ -40,7 +43,7 @@
   max-width: calc(100% - 138px);
   height: var(--window-chrome-height);
   /* 贴合原生按钮区域，覆盖窗口控件叠加层边界可能露出的 1px 缝隙。 */
-  box-shadow: 1px 0 0 var(--muted);
+  box-shadow: 1px 0 0 var(--shell-background);
 }
 
 .window-caption-action,
@@ -51,6 +54,49 @@
 /* 页面内的高层级工具和下拉框不能越过全局顶栏；不改变 fixed 元素的定位参照。 */
 #main-content {
   isolation: isolate;
+  /* 透明滚动条轨道保留父级圆角处的外壳底色，不用原生实色轨道盖住边角。 */
+  scrollbar-color: var(--border) transparent;
+}
+
+/* 首页等整屏内容使用 main 的实际可用高度，扣除标题栏、外边距和移动底栏。 */
+[data-app-content-layout] {
+  --app-content-height: calc(100dvh - var(--window-chrome-height) - var(--mobile-nav-height) - 24px);
+}
+@media (min-width: 768px) {
+  [data-app-content-layout] { --app-content-height: calc(100dvh - var(--window-chrome-height) - 24px); }
+}
+
+/* 滚动从 body 移到主内容后，沿用现有弹窗的 aria-modal / 原生 dialog 状态锁住背景。
+ * 同时覆盖 Portal 和内联弹窗；嵌套弹窗关闭一层时，只要另一层还开着就继续锁定。 */
+body:has([aria-modal="true"]:not([hidden]), dialog[open]) :is(#main-content, [data-profile-scroll]) {
+  overflow-y: hidden;
+}
+
+/* 收藏夹：断点以内容宽度为准，展开侧栏不会把卡片挤出窗口。 */
+/* 个人主页由内部内容区滚动；阻止聚焦、scrollIntoView 连带滚动文档而移走固定头部。 */
+html:has([data-profile-scroll]),
+body:has([data-profile-scroll]) { overflow: clip; }
+/* Chromium 对根元素的 clip 仍允许程序滚动；固定 body 才能阻断聚焦引发的外层位移。 */
+body:has([data-profile-scroll]) { position: fixed; inset: 0; }
+.profile-content { padding-inline: clamp(16px, 2vw, 28px); }
+.collection-layout { container-type: inline-size; }
+.collection-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px 20px; }
+.collection-cover { aspect-ratio: 2 / 1; }
+.collection-list .collection-card { display: grid; grid-template-columns: 88px minmax(0, 1fr); gap: 14px; padding-block: 16px; border-bottom: 1px solid var(--border); }
+.collection-list .collection-cover { aspect-ratio: 11 / 8; }
+.collection-list .collection-cover-caption,
+.collection-list .collection-visibility-label { display: none; }
+@container (min-width: 480px) {
+  .collection-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .collection-grid .collection-cover { aspect-ratio: 1; }
+}
+@container (min-width: 720px) {
+  .collection-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .collection-list .collection-card { grid-template-columns: 144px minmax(0, 1fr); gap: 20px; }
+  .collection-list .collection-cover { aspect-ratio: 18 / 11; }
+}
+@container (min-width: 960px) {
+  .collection-grid .collection-cover { aspect-ratio: 2 / 1; }
 }
 
 .window-download-center {
@@ -62,10 +108,28 @@
   max-height: min(560px, calc(100dvh - var(--window-chrome-height) - 24px));
 }
 
+/* 生成队列：局部淡紫语义色，表面混入全局底色以跟随主题；不影响下载浮窗。 */
+.generation-task-panel {
+  --task-accent: #7955b5;
+  --task-soft: color-mix(in srgb, var(--task-accent) 12%, var(--background));
+  --task-surface: color-mix(in srgb, var(--task-accent) 3%, var(--background));
+  --task-border: color-mix(in srgb, var(--task-accent) 26%, var(--background));
+  width: min(440px, calc(100vw - 24px));
+  max-height: min(680px, calc(100dvh - var(--window-chrome-height) - 24px));
+}
+:root[data-theme="dark"] .generation-task-panel { --task-accent: #c4a3ee; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .generation-task-panel { --task-accent: #c4a3ee; }
+}
+:root[data-color-preset]:not([data-color-preset="default"]) .generation-task-panel {
+  --task-accent: var(--accent-text);
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-muted: var(--muted);
+  --color-shell: var(--shell-background);
   --color-muted-foreground: var(--muted-foreground);
   --color-border: var(--border);
   --color-accent: var(--accent);
@@ -77,7 +141,9 @@
   --color-accent-stroke: var(--accent-stroke);
   --color-accent-fill: var(--accent-fill);
   --color-accent-fill-foreground: var(--accent-fill-foreground);
-  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+  --color-accent-text: var(--accent-text);
+  --color-accent-soft: var(--accent-soft);
+  --font-sans: var(--app-font-family, ui-sans-serif), system-ui, -apple-system, "Segoe UI", Roboto,
     "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC",
     Arial, sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas,
@@ -86,20 +152,28 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
+    --background: #1c1c1c;
     --foreground: #ededed;
     --muted: #27272a;
+    --shell-background: #1c1c1c;
     --muted-foreground: #a1a1aa;
     --border: #3f3f46;
     --accent: #27272a;
     --input: #3f3f46;
-    --primary: #a855f7;
+    --primary: #d4d4d8;
     --primary-foreground: #fafafa;
-    --popover: #0a0a0a;
+    --popover: #1c1c1c;
     /** 深色：柔和的中灰。zinc-500 描边 / zinc-600 填充，够醒目但不刺眼 */
     --accent-stroke: #71717a;
     --accent-fill: #52525b;
     --accent-fill-foreground: #f4f4f5;
+    --accent-text: #ededed;
+    --accent-soft: #0a0a0a;
+  }
+
+  /* 创建页：表单、图库与预览共用柔和深灰底色，沿用 background token 向下继承。 */
+  #main-content[data-page-transition="/create"] {
+    --background: #1e1e1e;
   }
 }
 
@@ -113,6 +187,11 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans);
+}
+
+/* 重点标题走强调色；更高层的文字工具类仍保留作品预览等特殊场景的颜色。 */
+@layer base {
+  :where(:root[data-color-preset]:not([data-color-preset="default"])) :where(h1, h2, h3) { color: var(--accent-text); }
 }
 
 [data-placeholder]:empty::before {

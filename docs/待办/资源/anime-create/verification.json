@@ -1,0 +1,31 @@
+{
+  "checks": [
+    "1566×1004: layout, images and generate action {\"overflow\":false,\"files\":6,\"broken\":0,\"button\":true}",
+    "1440×900: layout, images and generate action {\"overflow\":false,\"files\":6,\"broken\":0,\"button\":true}",
+    "1280×800: layout, images and generate action {\"overflow\":false,\"files\":6,\"broken\":0,\"button\":true}",
+    "1024×768: layout, images and generate action {\"overflow\":false,\"files\":6,\"broken\":0,\"button\":true}",
+    "821×600: layout, images and generate action {\"overflow\":false,\"files\":6,\"broken\":0,\"button\":true}",
+    "390×844: layout, images and generate action {\"overflow\":false,\"files\":6,\"broken\":0,\"button\":true}",
+    "320×568: layout, images and generate action {\"overflow\":false,\"files\":6,\"broken\":0,\"button\":true}",
+    "gallery",
+    "zoom",
+    "collapse",
+    "switch",
+    "prompt template",
+    "long prompt counter",
+    "ratio",
+    "mobile tabs",
+    "folder filter",
+    "empty search",
+    "pagination",
+    "grid view",
+    "sort",
+    "safe new folder",
+    "local upload",
+    "file viewer",
+    "dark theme",
+    "generation simulation",
+    "tablet library overlay"
+  ],
+  "count": 26
+}

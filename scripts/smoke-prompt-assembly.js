@@ -107,7 +107,7 @@ fs.writeFileSync(
 
 ipcMain.handle("userData:read", async () => ({
   filePath: userDataFile,
-  data: JSON.parse(fs.readFileSync(userDataFile, "utf8")),
+    data: require("./lib/guest-session-fixture").withGuestSession(JSON.parse(fs.readFileSync(userDataFile, "utf8"))),
   isNew: false,
 }));
 ipcMain.handle("userData:write", async (_event, data) => {
@@ -322,6 +322,7 @@ app.whenReady().then(async () => {
   };
 
   const clickSelector = async (selector) => {
+    await require("./lib/sidebar-menu-fixture").revealSidebarPreference(run, selector);
     const clicked = await run(
       `(() => { const el = document.querySelector(${JSON.stringify(selector)}); if (el) el.click(); return !!el; })()`
     );
@@ -370,6 +371,7 @@ app.whenReady().then(async () => {
      * `applyLocaleSignals` 是副作用、必然晚于 commit，于是存在一帧
      * 「nav 已变英文、`<html>` 还是 zh-CN」—— 立刻读会得到假红，且与真正的接线故障长得一样。
      */
+    check("设置与语言保留在账户菜单，主题入口迁移到顶栏", await run("!document.querySelector('nav [data-language-trigger]')&&!document.querySelector('nav [data-theme-trigger]')&&!document.querySelector('nav a[href=\"/settings\"]')&&Boolean(document.querySelector('[data-account-menu-trigger]'))&&Boolean(document.querySelector('[data-window-appearance]'))"));
     await clickSelector("[data-language-trigger]");
     const languageDialog = await run(`(() => {
       const root = document.querySelector('[data-language-dialog]');
@@ -382,15 +384,10 @@ app.whenReady().then(async () => {
         languageDialog.labels.every((label) => label.length > 0),
       JSON.stringify(languageDialog.labels));
 
-    /**
-     * 定位断言：弹框必须**锚定在触发按钮上方**（popover），而不是屏幕居中（modal）。
-     * 这一格治的是「按钮在侧栏最底部、弹框出现在屏幕中央 → 视线跨半屏、不知道框从哪来」。
-     * 判据取几何关系而不是类名：`dialog.bottom <= trigger.top`（在其上方）、
-     * 间距 0–24px（当前 `mb-2`＝8px）、左边对齐。改回居中时这三条必然红。
-     */
+    /** 语言是账户菜单的子页：浮层仍锚定头像上方，不再查找已卸载的语言入口按钮。 */
     const popoverGeometry = await run(`(() => {
-      const trigger = document.querySelector('[data-language-trigger]');
-      const dialog = document.querySelector('[data-language-dialog]');
+      const trigger = document.querySelector('[data-account-menu-trigger]');
+      const dialog = document.querySelector('[data-sidebar-account-menu]');
       if (!trigger || !dialog) return { missing: true };
       const t = trigger.getBoundingClientRect();
       const d = dialog.getBoundingClientRect();
@@ -400,7 +397,7 @@ app.whenReady().then(async () => {
         leftAligned: Math.abs(t.left - d.left) < 2,
       };
     })()`);
-    check("语言弹框锚定在按钮上方（popover 定位，不是屏幕居中）",
+    check("语言子页保留头像上方的账户菜单定位",
       popoverGeometry.missing !== true && popoverGeometry.above === true &&
         popoverGeometry.gap >= 0 && popoverGeometry.gap <= 24 &&
         popoverGeometry.leftAligned === true,
@@ -438,7 +435,7 @@ app.whenReady().then(async () => {
       switchedBack === true, `${switchedBack ? "轮询命中" : "轮询超时"} ${JSON.stringify(zhDump)}`);
 
     /**
-     * ---------- 深浅色开关（侧边栏左下角） ----------
+     * ---------- 深浅色开关（顶栏外观按钮） ----------
      *
      * 判据取**媒体查询本身**而不是某个 class：本项目的深色 token 与所有 `dark:` 工具类
      * 都由 `prefers-color-scheme` 驱动，开关走的是 Electron 的 `nativeTheme.themeSource`
@@ -483,12 +480,16 @@ app.whenReady().then(async () => {
         (el) => el.getAttribute('data-theme-option')
       ),
     })`);
-    check("侧边栏左下角「主题」入口可用，弹框给出 system / light / dark 三态",
+    check("顶栏「外观」入口可用，弹框给出 system / light / dark 三态",
       themeOptions.dialog === true &&
         JSON.stringify(themeOptions.options) === JSON.stringify(["system", "light", "dark"]),
       JSON.stringify(themeOptions));
 
     await installRippleRecorder();
+    const chosenThemeButton = await run(`(() => {
+      const rect = document.querySelector('[data-theme-option="dark"]').getBoundingClientRect();
+      return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+    })()`);
     await clickSelector('[data-theme-option="dark"]');
     const switchedToDark = await waitFor(
       `document.documentElement.getAttribute('data-theme') === 'dark' && ` +
@@ -500,7 +501,7 @@ app.whenReady().then(async () => {
       `${switchedToDark ? "轮询命中" : "轮询超时"} ${JSON.stringify(await readThemeState())}`);
 
     /**
-     * 波纹换肤：圆心必须在**左下角那个按钮**上、半径必须够覆盖到最远角，
+     * 波纹换肤：圆心必须在**实际点击的主题卡片**上、半径必须够覆盖到最远角，
      * 且动画结束后类要摘干净（否则下次换肤会带着上一次的圆心与半径）。
      */
     const ripple = await run(`(() => {
@@ -517,16 +518,16 @@ app.whenReady().then(async () => {
       `!document.documentElement.classList.contains('theme-ripple')`,
       4000
     );
-    const rippleFromBottomLeft =
+    const rippleFromThemeButton =
       ripple.seen === true &&
-      ripple.x <= 260 &&
-      ripple.y >= ripple.viewportHeight - 260 &&
+      Math.hypot(ripple.x - chosenThemeButton.x, ripple.y - chosenThemeButton.y) <= 3 &&
       ripple.radius >=
-        Math.hypot(ripple.viewportWidth, ripple.viewportHeight) * 0.9 &&
+        Math.hypot(Math.max(ripple.x, ripple.viewportWidth - ripple.x), Math.max(ripple.y, ripple.viewportHeight - ripple.y)) &&
       rippleCleaned === true;
-    check("换主题走「波纹」：圆心在侧边栏左下角、半径覆盖到最远角、结束后清理干净",
-      rippleFromBottomLeft,
-      `${JSON.stringify(ripple)} cleaned=${rippleCleaned}`);
+    check("换主题走「波纹」：圆心在点击的卡片、半径覆盖到最远角、结束后清理干净",
+      rippleFromThemeButton,
+      `${JSON.stringify({ ripple, chosenThemeButton })} cleaned=${rippleCleaned}`);
+    await require("./lib/sidebar-menu-fixture").closeAppearance(run);
 
     /**
      * 负向对照 + 回退：把 View Transitions API 摘掉之后，主题**仍然要能切**，
@@ -553,12 +554,13 @@ app.whenReady().then(async () => {
       Document.prototype.startViewTransition = window.__startViewTransitionBackup;
       return true;
     })()`);
+    await require("./lib/sidebar-menu-fixture").closeAppearance(run);
 
     /**
-     * ---------- 侧边栏「收边态」下的弹出物（回归：被容器 overflow 裁掉） ----------
+     * ---------- 收边态下的弹出物回归 ----------
      *
-     * 症状（用户实测）：收边后点「语言」「主题」没反应。真相是弹框**已经渲染**，
-     * 但它是按钮右侧的 absolute 子元素，被侧栏容器的 `overflow-hidden` 裁成 0 可见。
+     * 症状（用户实测）：收边后点「语言」没反应。语言菜单通过 Portal 脱离侧栏，
+     * 外观弹窗通过文档弹窗层渲染；两者都必须保持完整可见。
      * 判据刻意用 IntersectionObserver 的可见比例（它把祖先裁剪算进去）而不是几何：
      * 被裁掉时 `getBoundingClientRect()` 一切正常，只有可见比例看得出来。
      */
@@ -582,17 +584,17 @@ app.whenReady().then(async () => {
     );
     await clickSelector("[data-theme-trigger]");
     const collapsedThemeRatio = await popoverVisibleRatio("[data-theme-dialog]");
-    check("收边后「主题」弹框真的弹得出来（不被侧栏容器裁掉）",
+    check("收边后顶栏「外观」弹框真的弹得出来",
       collapsedThemeRatio === 1,
       `可见比例=${collapsedThemeRatio}（被裁掉时是 0）`);
-    await clickSelector('[data-sidebar-popover-backdrop="theme"]');
+    await require("./lib/sidebar-menu-fixture").closeAppearance(run);
 
     await clickSelector("[data-language-trigger]");
     const collapsedLanguageRatio = await popoverVisibleRatio("[data-language-dialog]");
     check("收边后「语言」弹框同样弹得出来",
       collapsedLanguageRatio === 1,
       `可见比例=${collapsedLanguageRatio}（被裁掉时是 0）`);
-    await clickSelector('[data-sidebar-popover-backdrop="language"]');
+    await clickSelector('[data-account-menu-trigger]');
 
     /** 恢复展开态：后面几步的断言都按展开态写的 */
     await clickSelector('[aria-label="展开侧栏"]');
@@ -610,6 +612,8 @@ app.whenReady().then(async () => {
     check("选「跟随系统」后偏好回到 system（交还系统偏好，不影响后续步骤）",
       restoredTheme === true,
       `${restoredTheme ? "轮询命中" : "轮询超时"} ${JSON.stringify(await readThemeState())}`);
+    await waitFor(`!document.documentElement.classList.contains('theme-ripple')`);
+    await require("./lib/sidebar-menu-fixture").closeAppearance(run);
 
     /**
      * 页面切换的结构约定（动画本体在最后一条断言里测）：

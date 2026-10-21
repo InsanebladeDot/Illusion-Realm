@@ -9,6 +9,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { t } from "@/i18n";
 import { useToastStore } from "@/stores/useToastStore";
+import { useVideoClipActions } from "@/hooks/use-video-clip-actions";
+import { useVideoClipPreview } from "@/hooks/use-video-clip-preview";
+import { sameSourceGroup } from "@/utils/video/clip-effects";
 import {
   hasVideoBridge,
   pickVideoFiles,
@@ -40,6 +43,7 @@ export function buildClipInputs(clips: ClipItem[]): ClipInput[] {
     duration: clip.duration,
     hasAudio: clip.hasAudio,
     trim: { start: clip.trim.start, end: clip.trim.end },
+    effects: clip.effects,
   }));
 }
 
@@ -129,12 +133,14 @@ export function useClipEditor({
     },
     [flushSeek, selectedClip?.duration]
   );
+  useVideoClipPreview({ clip: selectedClip, videoRef, playing, setPlaying, seek });
 
   /** 播放到终点自动停止并回到起点，便于反复预览选区 */
   const reportTime = useCallback(
     (time: number) => {
       setPlayhead(time);
       if (!playing || !selectedClip) return;
+      if (selectedClip.effects?.reverse) return;
       if (time >= selectedClip.trim.end - 0.02) {
         videoRef.current?.pause();
         seek(selectedClip.trim.start);
@@ -218,11 +224,12 @@ export function useClipEditor({
     const clip = clips.find((item) => item.id === id);
     if (clip) activateClip(clip);
   }, [activateClip, clips]);
+  const clipActions = useVideoClipActions({ clips, setClips, activateClip });
 
   /** 同一个源视频可重复出现在处理列表中，每个区间拥有独立 ID 和起终点。 */
   const addRange = useCallback(() => {
     if (!selectedClip) return;
-    const sourceRanges = clips.filter((clip) => clip.path === selectedClip.path);
+    const sourceRanges = clips.filter((clip) => sameSourceGroup(clip, selectedClip));
     const minimum = Math.max(0.05, 1 / Math.max(1, selectedClip.fps));
     const ordered = [...sourceRanges].sort((a, b) => a.trim.start - b.trim.start);
     const gaps = ordered.reduce<{ start: number; end: number }[]>((result, range, index) => {
@@ -250,6 +257,8 @@ export function useClipEditor({
       setClips(next);
 
       if (next.length === 0) {
+        videoRef.current?.pause();
+        setPlaying(false);
         setSelectedId(null);
         callbacksRef.current.onCleared?.();
         return;
@@ -278,7 +287,7 @@ export function useClipEditor({
       if (!selectedClip) return;
       const id = selectedClip.id;
       const frame = Math.max(0.05, 1 / Math.max(1, selectedClip.fps));
-      const others = clips.filter((clip) => clip.path === selectedClip.path && clip.id !== id)
+      const others = clips.filter((clip) => sameSourceGroup(clip, selectedClip) && clip.id !== id)
         .sort((a, b) => a.trim.start - b.trim.start);
       const desired = Math.max(frame, Math.min(selectedClip.duration, end - start));
       const previousEnd = others.filter((clip) => clip.trim.end <= selectedClip.trim.start + frame / 2)
@@ -297,6 +306,14 @@ export function useClipEditor({
   const togglePlay = useCallback(() => {
     const element = videoRef.current;
     if (!element) return;
+    if (selectedClip?.effects?.reverse) {
+      element.pause();
+      if (!playing && element.currentTime <= selectedClip.trim.start + 0.001) {
+        seek(Math.max(selectedClip.trim.start, selectedClip.trim.end - 1 / Math.max(1, selectedClip.fps)));
+      }
+      setPlaying(!playing);
+      return;
+    }
     if (element.paused) {
       // 播放头在选区之外时从起点开始
       if (
@@ -306,15 +323,16 @@ export function useClipEditor({
       ) {
         element.currentTime = selectedClip.trim.start;
       }
-      void element.play();
+      void element.play().catch(() => setPlaying(false));
     } else {
       element.pause();
     }
-  }, [selectedClip]);
+  }, [playing, seek, selectedClip]);
 
   const skip = useCallback(
     (deltaSeconds: number) => {
       videoRef.current?.pause();
+      setPlaying(false);
       seek((videoRef.current?.currentTime ?? playhead) + deltaSeconds);
     },
     [playhead, seek]
@@ -324,6 +342,7 @@ export function useClipEditor({
     (frames: number) => {
       const element = videoRef.current;
       element?.pause();
+      setPlaying(false);
       const frameDuration = selectedClip && selectedClip.fps > 0 ? 1 / selectedClip.fps : 1 / 25;
       seek((element?.currentTime ?? playhead) + frames * frameDuration);
     },
@@ -353,6 +372,7 @@ export function useClipEditor({
   }, [selectedClip?.path]);
 
   return {
+    ...clipActions,
     clips,
     selectedClip,
     selectedIndex,

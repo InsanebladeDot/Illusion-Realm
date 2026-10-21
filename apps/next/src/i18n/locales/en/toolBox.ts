@@ -39,6 +39,19 @@ export const toolBox = {
     "losslessNote": "(Lossless stream copy, keyframe-aligned, fastest)",
     "reencodeNote": "(Re-encoded, frame-accurate)",
     "overwriteNote": "; if a file with the same name exists, a number is appended instead of overwriting.",
+    "clipMenu": {
+      "title": "Clip editing", "speed": "Speed (×)", "volume": "Volume (%)", "volumeSlider": "Clip volume",
+      "volumeUp": "Increase volume", "volumeDown": "Decrease volume", "mute": "Disable audio", "reverse": "Reverse",
+      "split": "Split here", "copy": "Copy clip", "paste": "Paste after this clip", "delete": "Delete clip",
+      "selectedSpeed": "Selected clip speed", "hint": "Right-click a clip to change its speed, volume, mute or reverse, or to split, copy, paste and delete it.",
+      "previewHint": "Speed and mute preview immediately. Volume above 100% and reversed audio are applied on export. Deleting a clip keeps the original video file.",
+      "effects": "{speed}× · Volume {volume}%", "reverseLabel": "Reverse", "mutedLabel": "Muted"
+    },
+    "reframe": {
+      "title": "Re-export video at frame rate", "tab": "Frame rate", "fps": "Target frame rate",
+      "hint": "Keep every original frame of the selected video and rebuild playback timing at the chosen frame rate. Audio speed follows. Trim, speed and crop settings do not apply. Uses the selected output folder, or opens a save dialog.",
+      "done": "Video exported at the new frame rate"
+    },
     "quick": {
       "title": "Quick tools", "switch": "Switch between video editing and quick tools", "editor": "Video editor",
       "equalSplit": "Split equally", "description": "Divide the entire selected video into N equal-duration parts and export separate MP4 files.",
@@ -182,6 +195,13 @@ export const toolBox = {
     "comicBadge": "AI 创作"
   },
   "civitai": {
+    metadata: {
+      heading: "Model source information", source: "Source", title: "Source title", creator: "Creator",
+      loading: "Reading source JSON…", missing: "No matching .civitai.json source file for this version.",
+      invalid: "The source JSON is unreadable or invalid.", unsupported: "This source JSON version is not supported yet.",
+      unavailable: "Cannot read model metadata. Check model directories and restart the app.",
+      hashHint: "File fingerprint provided by the source API, used to verify download integrity. It contains no model description.",
+    },
     fileInfo: "File information and checksum", unavailable: "No downloadable file",
     online: "Online models",
     local: "Local models",
@@ -244,8 +264,8 @@ export const toolBox = {
       "destination": "Save location", "newCategory": "Custom category…", "categoryPlaceholder": "Enter category name",
       "categoryHint": "Uncategorized models go into the Uncategorized folder. Each model has its own folder.",
       "invalidCategory": "Category names cannot contain paths, special characters, reserved names, or end with a dot or space.",
-      "logo": "Model cover", "changeLogo": "Change cover", "resetLogo": "Use default preview",
-      "logoHint": "Uses the first preview of this version. Without an image, shows the model filename. PNG, JPEG or WebP, up to 20 MB.",
+      "logo": "Model cover", "changeLogo": "Change cover", "resetLogo": "Use current preview",
+      "logoHint": "Uses the preview currently shown in the details as the cover. Without an image, shows the model filename. PNG, JPEG or WebP, up to 20 MB. Model source JSON is saved with the download.",
       "logoWarning": "Model saved, but the preview cover could not be downloaded. Change it in the local library.",
       "logoChanged": "Model cover updated", "tasks": "Downloads · {count} active", "completed": "Downloaded: {name}",
       "remove": "Delete task and downloaded files", "cancelHint": "Cancel download and keep progress for retry", "retryHint": "Retry and resume retained progress when supported",

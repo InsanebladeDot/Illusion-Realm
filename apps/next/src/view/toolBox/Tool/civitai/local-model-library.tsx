@@ -19,6 +19,7 @@ import { useToastStore } from "@/stores/useToastStore";
 import { localLibraryCategory } from "@/utils/civitai-local-models";
 import { LocalModelCategoryEditor } from "./local-model-category-editor";
 import { LocalModelBatchDialog } from "./local-model-batch-dialog";
+import { LocalModelMetadataDetails } from "./local-model-metadata-details";
 
 const LOCAL_MODEL_TYPES = [{ value: "lora", label: "LoRA" }, { value: "checkpoint", label: "Checkpoint" }, { value: "embedding", label: "Embedding" }] as const;
 function localType(model: LocalModel) { return LOCAL_MODEL_TYPES.find((item) => item.value === model.type)?.label; }
@@ -52,7 +53,7 @@ function LocalLibraryFilters({ filters, onRootChange }: LocalLibraryFiltersProps
   </div>;
 }
 
-function LocalModelDetails({ model, onMoved }: { model: LocalLibraryModel; onMoved: (folder: string, category: string) => Promise<void> }) {
+function LocalModelDetails({ model, revision, onMoved }: { model: LocalLibraryModel; revision: number; onMoved: (folder: string, category: string) => Promise<void> }) {
   const { t } = useTranslation();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -71,6 +72,8 @@ function LocalModelDetails({ model, onMoved }: { model: LocalLibraryModel; onMov
   return <div className="space-y-4 p-4" data-local-model-details>
     <h3 className="break-words font-semibold">{model.name}</h3>
     <div className="relative aspect-[4/3] overflow-hidden rounded-lg bg-muted"><ResourceCoverImage cover={model.iconPath || ""} alt={model.name} placeholder={placeholderName(model)} fill className="object-contain" /></div>
+    {/* 界面：按具体文件版本读取下载时保存的来源、触发词和简介。 */}
+    <LocalModelMetadataDetails versions={model.versions} revision={revision} />
     {/* 界面：更换本地模型 logo，复用原生文件选择器 */}
     <button data-local-change-logo type="button" disabled={busy} onClick={() => { void changeLogo(); }} className="flex w-full items-center justify-center gap-2 rounded-lg border border-border px-3 py-2 text-xs hover:bg-muted disabled:opacity-50"><ImagePlus size={14} />{t("toolBox.civitai.transfer.changeLogo")}</button>
     {/* 界面：切换模型分类，移动整个文件夹；跨大分类只提供资源管理器入口 */}
@@ -130,6 +133,10 @@ export function LocalModelLibrary({ switcher }: { switcher: ReactNode }) {
   const { models, scanning, scan } = useLocalLibraryData();
   const filters = useLocalLibraryFilters(models);
   const [selectedPath, setSelectedPath] = useState<string | null>(null);
+  const [detailsRevision, setDetailsRevision] = useState(0);
+  const scannedAt = useSettingsStore(state => state.lastScannedAt) || 0;
+  const metadataRevision = detailsRevision + scannedAt;
+  function showDetails(folder: string) { setSelectedPath(folder); setDetailsRevision(value => value + 1); }
   const [error, setError] = useState(false);
   const wide = useMediaQuery("(min-width: 1280px)");
   const { filtered } = filters;
@@ -147,9 +154,9 @@ export function LocalModelLibrary({ switcher }: { switcher: ReactNode }) {
     {/* 界面：默认查看详情；点击移动或删除进入多选，再继续操作进入已知晓确认 */}
     <LocalModelBatchToolbar count={selection.checked.length} mode={selection.mode} disabled={scanning} onAll={selection.all} onClear={selection.clear} onExit={selection.exit} onAction={(action) => { setSelectedPath(null); selection.open(action); }} />
     {filtered.length === 0 && <p className="py-10 text-center text-sm text-muted-foreground">{t(models.length ? "toolBox.civitai.empty" : "toolBox.civitai.localEmpty")}</p>}
-    <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,1fr)_320px]"><div className="grid min-w-0 grid-cols-2 gap-3 md:grid-cols-3 2xl:grid-cols-4">{filtered.map((model) => <LocalModelCard key={model.filePath} model={model} selecting={!!selection.mode} selected={selection.checked.some((item) => item.filePath === model.filePath)} onSelect={() => selection.toggle(model.filePath)} onDetails={() => setSelectedPath(model.filePath)} />)}</div><aside className="sticky top-0 hidden max-h-[calc(100dvh-160px)] overflow-auto rounded-xl border border-border bg-background xl:block">{selected && wide ? <LocalModelDetails key={selected.filePath} model={selected} onMoved={modelMoved} /> : <p className="px-6 py-12 text-center text-xs text-muted-foreground">{t("toolBox.civitai.localChoose")}</p>}</aside></div>
+    <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,1fr)_320px]"><div className="grid min-w-0 grid-cols-2 gap-3 md:grid-cols-3 2xl:grid-cols-4">{filtered.map((model) => <LocalModelCard key={model.filePath} model={model} selecting={!!selection.mode} selected={selection.checked.some((item) => item.filePath === model.filePath)} onSelect={() => selection.toggle(model.filePath)} onDetails={() => showDetails(model.filePath)} />)}</div><aside className="sticky top-0 hidden max-h-[calc(100dvh-160px)] overflow-auto rounded-xl border border-border bg-background xl:block">{selected && wide ? <LocalModelDetails key={selected.filePath} model={selected} revision={metadataRevision} onMoved={modelMoved} /> : <p className="px-6 py-12 text-center text-xs text-muted-foreground">{t("toolBox.civitai.localChoose")}</p>}</aside></div>
     {/* 弹窗：窄屏本地模型详情 */}
-    {!wide && selected && <ResourceDialogShell open title={t("toolBox.civitai.details")} titleId="local-model-details-title" onOpenChange={(open) => { if (!open) setSelectedPath(null); }}><LocalModelDetails key={selected.filePath} model={selected} onMoved={modelMoved} /></ResourceDialogShell>}
+    {!wide && selected && <ResourceDialogShell open title={t("toolBox.civitai.details")} titleId="local-model-details-title" onOpenChange={(open) => { if (!open) setSelectedPath(null); }}><LocalModelDetails key={selected.filePath} model={selected} revision={metadataRevision} onMoved={modelMoved} /></ResourceDialogShell>}
     {selection.batch && <LocalModelBatchDialog {...selection.batch} onClose={selection.close} onFinished={batchFinished} />}
   </section>;
 }

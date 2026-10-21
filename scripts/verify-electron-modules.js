@@ -630,6 +630,9 @@ if (animadex) {
 
 // ---- 真正注册 IPC，并验证 handler 存在 ----
 const { ipcMain } = require("electron");
+const { registerComfyHandlers } = require("../apps/electron/ipc-handlers/comfy.handlers");
+try { registerComfyHandlers(); check("registerComfyHandlers() registers generation and cancellation", true); }
+catch (error) { check("registerComfyHandlers() registers generation and cancellation", false, error.message); }
 const { registerModelDownloadHandlers } = require("../apps/electron/ipc-handlers/model-download.handlers");
 try { registerModelDownloadHandlers(); check("registerModelDownloadHandlers() 调用不抛错", true); }
 catch (error) { check("registerModelDownloadHandlers() 调用不抛错", false, error.message); }
@@ -675,6 +678,7 @@ if (animadex?.registerAnimadexIpc) {
 
 {
   const channels = [
+    "comfy:generate", "comfy:cancel", "comfy:uploadImage", "comfy:listModels",
     "models:downloadTarget", "models:downloadStart", "models:downloadCancel", "models:downloadRetry", "models:downloadRemove", "models:downloadList", "models:changeLogo", "models:categoryTarget", "models:moveCategory", "models:batch",
     "civitai:keyStatus", "civitai:keySet", "civitai:keyClear",
     "prompt:transform", "prompt:secretStatus", "prompt:secretSet", "prompt:secretClear",

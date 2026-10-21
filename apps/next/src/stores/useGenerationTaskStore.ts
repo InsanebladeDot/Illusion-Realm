@@ -3,7 +3,7 @@
 /** 图片生成任务列表：记录每次提交的快照和独立状态，不随创建页卸载而清空。 */
 import { create } from "zustand";
 
-export type GenerationTaskStatus = "queued" | "generating" | "saving" | "completed" | "failed";
+export type GenerationTaskStatus = "queued" | "generating" | "saving" | "cancelling" | "cancelled" | "completed" | "failed";
 export interface GenerationTask {
   id: string;
   status: GenerationTaskStatus;
@@ -25,7 +25,7 @@ interface GenerationTaskState {
   update: (id: string, patch: Partial<GenerationTask>) => void;
 }
 export function isGenerationTaskActive(task: GenerationTask): boolean {
-  return task.status !== "completed" && task.status !== "failed";
+  return !["completed", "failed", "cancelled"].includes(task.status);
 }
 export const useGenerationTaskStore = create<GenerationTaskState>((set) => ({
   tasks: [],

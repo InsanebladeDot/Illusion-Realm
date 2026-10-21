@@ -26,7 +26,8 @@ function DownloadFooter({ model, version, source, fileId, onFileChange, onConfig
     <p className="text-[10px] leading-relaxed text-muted-foreground">{t("toolBox.civitai.downloadHint")}</p>
   </footer>;
 }
-function VersionContent({ model, version, source, onConfigure }: { model: CivitaiModel; version?: CivitaiVersion; source: string; onConfigure: (file: CivitaiFile) => void }) {
+interface VersionContentProps { model: CivitaiModel; version?: CivitaiVersion; source: string; previewIndex: number; onPreviewChange: (index: number) => void; onConfigure: (file: CivitaiFile) => void }
+function VersionContent({ model, version, source, previewIndex, onPreviewChange, onConfigure }: VersionContentProps) {
   const { t } = useTranslation();
   const [fileId, setFileId] = useState(0);
   const file = version?.files.find((file) => file.id === fileId) || version?.files.find((file) => file.primary) || version?.files[0];
@@ -34,7 +35,7 @@ function VersionContent({ model, version, source, onConfigure }: { model: Civita
   return <div className="flex min-h-0 flex-1 flex-col">
     {/* 界面：可折叠内容独立滚动；预览默认展开 */}
     <div data-civitai-detail-scroll className="min-h-0 flex-1 space-y-3 overflow-y-auto p-3">
-      {version && <DetailSection title={t("toolBox.civitai.preview")} open><CivitaiPreview key={version.id} images={version.images} title={model.name} /></DetailSection>}
+      {version && <DetailSection title={t("toolBox.civitai.preview")} open><CivitaiPreview key={version.id} images={version.images} title={model.name} index={previewIndex} onIndexChange={onPreviewChange} /></DetailSection>}
       {!!version?.trainedWords.length && <DetailSection title={t("toolBox.civitai.words")}><div className="flex flex-wrap gap-1">{version.trainedWords.map((word, index) => <span key={index} className="break-all rounded border border-border px-2 py-1 text-[11px]">{word}</span>)}</div></DetailSection>}
       <DetailSection title={t("toolBox.civitai.about")}><p className="whitespace-pre-wrap break-words text-xs leading-relaxed text-muted-foreground">{description}</p></DetailSection>
       <DetailSection title={t("toolBox.civitai.fileInfo")}>{file ? <div className="space-y-2 text-xs text-muted-foreground"><p className="break-all">{file.name}</p><p>{(file.sizeKB / 1024).toFixed(1)} MB · {file.format}</p>{file.sha256 && <p className="break-all font-mono text-[10px]">SHA256 · {file.sha256}</p>}</div> : <p className="text-xs text-muted-foreground">{t("toolBox.civitai.noFiles")}</p>}</DetailSection>
@@ -47,13 +48,14 @@ export function CivitaiDetails({ model, source }: { model: CivitaiModel; source:
   const { t } = useTranslation();
   const [versionId, setVersionId] = useState(model.versions[0]?.id || 0);
   const [downloadFile, setDownloadFile] = useState<CivitaiFile | null>(null);
+  const [previewIndex, setPreviewIndex] = useState(0);
   const version = model.versions.find((version) => version.id === versionId) || model.versions[0];
   return <div className="flex h-full min-h-0 flex-col" data-civitai-details={model.id}>
     {/* 界面：顶部固定模型名称与版本 */}
     <header data-civitai-version-bar className="shrink-0 space-y-2 border-b border-border bg-background p-3">
       <h3 className="truncate text-sm font-semibold" title={model.name}>{model.name}</h3><p className="truncate text-[10px] text-muted-foreground">{model.type} · {model.creator}</p>
-      {version && <SimpleSelect value={String(version.id)} ariaLabel={t("toolBox.civitai.version")} onChange={(value) => { setDownloadFile(null); setVersionId(Number(value)); }} options={model.versions.map((item) => ({ value: String(item.id), label: `${item.name} · ${item.baseModel}` }))} portal />}
+      {version && <SimpleSelect value={String(version.id)} ariaLabel={t("toolBox.civitai.version")} onChange={(value) => { setDownloadFile(null); setPreviewIndex(0); setVersionId(Number(value)); }} options={model.versions.map((item) => ({ value: String(item.id), label: `${item.name} · ${item.baseModel}` }))} portal />}
     </header>
-    {downloadFile && version ? <ModelDownloadForm key={`${version.id}/${downloadFile.id}`} model={model} version={version} file={downloadFile} source={source} onBack={() => setDownloadFile(null)} /> : <VersionContent key={version?.id || 0} model={model} version={version} source={source} onConfigure={setDownloadFile} />}
+    {downloadFile && version ? <ModelDownloadForm key={`${version.id}/${downloadFile.id}`} model={model} version={version} file={downloadFile} source={source} previewUrl={version.images[previewIndex] || ""} onBack={() => setDownloadFile(null)} /> : <VersionContent key={version?.id || 0} model={model} version={version} source={source} previewIndex={previewIndex} onPreviewChange={setPreviewIndex} onConfigure={setDownloadFile} />}
   </div>;
 }

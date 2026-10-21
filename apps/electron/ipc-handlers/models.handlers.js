@@ -1,6 +1,7 @@
 const { IPC_CHANNELS } = require("../ipcChannels");
 const { registerHandle } = require("../ipcHandlers");
 const { scanModelsInDirectory } = require("../modelScanner");
+const { readLocalModelMetadata, validateMetadataArgs } = require("../services/local-model-metadata");
 
 /**
  * modelScanner 接受的模型类型（从其签名派生，避免与实现重复声明）。
@@ -50,6 +51,9 @@ function validateScanArgs(args) {
  * @returns {void}
  */
 function registerModelHandlers() {
+  registerHandle(IPC_CHANNELS.MODELS_READ_METADATA,
+    /** @param {Electron.IpcMainInvokeEvent} _event @param {string[]} filePaths */
+    async (_event, filePaths) => readLocalModelMetadata(filePaths), validateMetadataArgs);
   registerHandle(
     IPC_CHANNELS.MODELS_SCAN,
     /**

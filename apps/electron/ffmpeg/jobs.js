@@ -1,5 +1,8 @@
 // 视频、动图和单帧导出共用任务执行器；FFmpeg 参数由各模式独立构建。
 const { spawn } = require("child_process");
+const { buildAtempoFilters } = require("./audio-filters");
+const { buildReframeArgs } = require("./reframe");
+const { clipEffectFilters } = require("./clip-effects");
 
 /**
  * 任务参数与进度事件从 shared 派生（仅类型层 import，运行期不 require）：
@@ -17,31 +20,11 @@ const { spawn } = require("child_process");
  * @typedef {object} StartEditJobOptions
  * @property {string} ffmpegPath
  * @property {VideoEditJob} job
+ * @property {import("@illusion-realm/shared").VideoProbeResult} [sourceInfo] 按帧重排时由主进程探测的源信息
  * @property {(progress: Omit<VideoProgressEvent, "jobId">) => void} [onProgress]
  * @property {(result: { outputPath: string, requiresReencode: boolean }) => void} [onDone]
  * @property {(error: Error) => void} [onError]
  */
-
-/**
- * 变速的音频滤镜链：atempo 单实例安全区间为 0.5–2.0，超出则串联
- * @param {number} speed 倍速，> 0
- * @returns {string[]}
- */
-function buildAtempoFilters(speed) {
-  const filters = [];
-  let remaining = speed;
-
-  while (remaining > 2) {
-    filters.push("atempo=2");
-    remaining /= 2;
-  }
-  while (remaining < 0.5) {
-    filters.push("atempo=0.5");
-    remaining /= 0.5;
-  }
-  filters.push(`atempo=${Number(remaining.toFixed(4))}`);
-  return filters;
-}
 
 /**
  * 保证裁剪尺寸为偶数（libx264 要求）
@@ -83,8 +66,9 @@ function buildEditArgs(job) {
   const hasTrimWindow = end > start;
   const trimDuration = hasTrimWindow ? end - start : 0;
 
-  const videoFilters = [];
-  const audioFilters = [];
+  const effects = clipEffectFilters(job.effects);
+  const videoFilters = [...effects.video];
+  const audioFilters = [...effects.audio];
 
   if (crop?.enabled) {
     videoFilters.push(
@@ -98,7 +82,7 @@ function buildEditArgs(job) {
     audioFilters.push(...buildAtempoFilters(speedValue));
   }
 
-  const requiresReencode = videoFilters.length > 0 || accurateCut;
+  const requiresReencode = videoFilters.length > 0 || audioFilters.length > 0 || effects.muted || accurateCut;
 
   const args = ["-y", "-hide_banner"];
   if (start > 0) args.push("-ss", String(start));
@@ -116,7 +100,8 @@ function buildEditArgs(job) {
     args.push("-c", "copy", "-avoid_negative_ts", "make_zero");
   } else {
     if (videoFilters.length > 0) args.push("-vf", videoFilters.join(","));
-    if (audioFilters.length > 0) args.push("-af", audioFilters.join(","));
+    if (effects.muted) args.push("-an");
+    else if (audioFilters.length > 0) args.push("-af", audioFilters.join(","));
     args.push(
       "-c:v",
       "libx264",
@@ -135,7 +120,7 @@ function buildEditArgs(job) {
 
   // 预期输出时长（用于进度换算）
   const sourceDuration = trimDuration > 0 ? trimDuration : Number(job.sourceDuration ?? 0);
-  const expectedDuration = sourceDuration > 0 ? sourceDuration / speedValue : 0;
+  const expectedDuration = sourceDuration > 0 ? sourceDuration / speedValue / effects.speed : 0;
 
   return { args, requiresReencode, expectedDuration };
 }
@@ -177,9 +162,10 @@ function buildConcatArgs(job) {
   // 2) 为缺少音轨的片段追加静音输入（放在所有片段之后）
   /** @type {Map<number, number>} */
   const silenceInputIndex = new Map();
+  const hasAnyAudio = clips.some((clip) => clip.hasAudio && !clipEffectFilters(clip.effects).muted);
   let nextInputIndex = clips.length;
   clips.forEach((clip, index) => {
-    if (clip.hasAudio) return;
+    if (!hasAnyAudio || (clip.hasAudio && !clipEffectFilters(clip.effects).muted)) return;
     const duration = clipTrimDurations[index] || Number(clip.duration ?? 0) || 1;
     args.push(
       "-f",
@@ -193,26 +179,27 @@ function buildConcatArgs(job) {
     nextInputIndex += 1;
   });
 
-  const hasAnyAudio =
-    clips.some((clip) => clip.hasAudio) || silenceInputIndex.size > 0;
-
   // 3) 滤镜图：逐片段归一化 → concat → 可选变速/裁剪
   /** @type {string[]} */
   const chains = [];
   clips.forEach((clip, index) => {
+    const effects = clipEffectFilters(clip.effects);
     chains.push(
       `[${index}:v]scale=${targetWidth}:${targetHeight}:force_original_aspect_ratio=decrease,` +
         `pad=${targetWidth}:${targetHeight}:(ow-iw)/2:(oh-ih)/2,setsar=1,` +
-        `fps=${targetFps},setpts=PTS-STARTPTS[v${index}]`
+        `setpts=PTS-STARTPTS,${effects.video.length ? effects.video.join(",") + "," : ""}fps=${targetFps}[v${index}]`
     );
   });
 
   if (hasAnyAudio) {
     clips.forEach((clip, index) => {
-      const audioInput = clip.hasAudio ? `${index}:a` : `${silenceInputIndex.get(index)}:a`;
+      const effects = clipEffectFilters(clip.effects);
+      const audioInput = clip.hasAudio && !effects.muted ? `${index}:a:0` : `${silenceInputIndex.get(index)}:a:0`;
+      const duration = clipTrimDurations[index] / effects.speed;
       chains.push(
         `[${audioInput}]aresample=44100,asetpts=PTS-STARTPTS,` +
-          `aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo[a${index}]`
+          `aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo,` +
+          `${effects.audio.length ? effects.audio.join(",") + "," : ""}apad,atrim=duration=${duration},asetpts=PTS-STARTPTS[a${index}]`
       );
     });
   }
@@ -266,7 +253,7 @@ function buildConcatArgs(job) {
 
   args.push("-movflags", "+faststart", outputPath);
 
-  const totalSource = clipTrimDurations.reduce((sum, value) => sum + value, 0);
+  const totalSource = clipTrimDurations.reduce((sum, value, index) => sum + value / clipEffectFilters(clips[index].effects).speed, 0);
   const expectedDuration = totalSource > 0 ? totalSource / speedValue : 0;
 
   return { args, requiresReencode: true, expectedDuration };
@@ -363,7 +350,7 @@ function buildGifArgs(job) {
  * 已知的任务类型；未知类型通常意味着渲染进程比主进程新（主进程未重启）
  * @type {Set<string>}
  */
-const KNOWN_JOB_MODES = new Set(["single", "concat", "gif", "frame"]);
+const KNOWN_JOB_MODES = new Set(["single", "concat", "gif", "frame", "reframe"]);
 
 /** 精确定位原始视频时间轴，导出一张原始分辨率 PNG，不应用剪辑滤镜。
  * @param {VideoEditJob} job
@@ -402,10 +389,12 @@ function assertKnownMode(mode) {
  * @param {StartEditJobOptions} options
  * @returns {import("child_process").ChildProcess}
  */
-function startEditJob({ ffmpegPath, job, onProgress, onDone, onError }) {
+function startEditJob({ ffmpegPath, job, sourceInfo, onProgress, onDone, onError }) {
   assertKnownMode(job?.mode);
   const plan =
-    job.mode === "frame"
+    job.mode === "reframe"
+      ? buildReframeArgs(job, sourceInfo)
+      : job.mode === "frame"
       ? buildFrameArgs(job)
       : job.mode === "concat"
         ? buildConcatArgs(job)

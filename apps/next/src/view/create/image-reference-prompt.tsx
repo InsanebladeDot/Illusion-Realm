@@ -90,20 +90,21 @@ export function ImageReferencePrompt(props: Props) {
   };
   return <>
     <div ref={ref} role="textbox" aria-multiline="true" aria-label={t("create.videoCreatePanel.prompt")} data-video-prompt contentEditable={!disabled} suppressContentEditableWarning
-      aria-autocomplete="list" aria-controls={mentions.state ? mentions.id : undefined} aria-activedescendant={mentions.state && mentions.items.length ? `${mentions.id}-${mentions.active}` : undefined}
+      aria-autocomplete="list" aria-controls={mentions.state ? mentions.id : undefined} aria-activedescendant={mentions.state && mentions.entries.length ? `${mentions.id}-${mentions.active}` : undefined}
       data-placeholder={t("create.videoCreatePanel.promptPlaceholder")}
       className={cn("min-h-[100px] w-full whitespace-pre-wrap break-words rounded-md bg-transparent px-3 py-2 text-sm outline-none focus-visible:ring-1 focus-visible:ring-ring empty:before:text-muted-foreground empty:before:content-[attr(data-placeholder)]", PROMPT_EDITOR_SCROLL_CLASS, INPUT_BORDER_CLASS)}
       onInput={() => { if (!composing.current) { commit(); mentions.update(); } }}
       onCompositionStart={() => { editor.setComposing(true); mentions.close(); }} onCompositionEnd={() => { editor.setComposing(false); mentions.update(); }}
       onClick={(event) => { openReference(event.target); mentions.update(); }} onBlur={() => mentions.close()}
       onPaste={(event) => { event.preventDefault(); editor.insert(event.clipboardData.getData("text/plain")); mentions.update(); }}
-      onKeyUp={(event) => { if (["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key) && !composing.current) mentions.update(); }}
+      onKeyUp={(event) => { if (["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key) && !composing.current && !mentions.state) mentions.update(); }}
       onKeyDown={(event) => {
         if (composing.current || event.nativeEvent.isComposing) return;
-        if (!mentions.onKeyDown(event)) { if ((event.ctrlKey || event.metaKey) || event.key === "Enter") mentions.close(); handleEditorKey(event, editor, openReference); }
+        if (!mentions.onKeyDown(event)) { if ((event.ctrlKey || event.metaKey) || ["Enter", "ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) mentions.close(); handleEditorKey(event, editor, openReference); }
       }} />
     {/* 浮层：只搜索当前任务传入的素材；选择结果插入光标处并纳入撤销历史 */}
-    {mentions.state && !disabled && <PromptMediaMenu id={mentions.id} position={mentions.state.position} items={mentions.items} active={mentions.active} onSelect={mentions.choose} />}
+    {mentions.state && !disabled && <PromptMediaMenu id={mentions.id} position={mentions.state.position} entries={mentions.entries} active={mentions.active}
+      category={mentions.category} onBack={mentions.back} onChoose={mentions.chooseEntry} />}
     {/* 弹窗：直接复用图片显示区的缩放、翻页和关闭功能 */}
     {preview !== null && <ImagePreviewOverlay open items={images.flatMap((src, index) => src ? [{ key: String(index), src }] : [])} index={images.slice(0, preview).filter(Boolean).length}
       onIndexChange={(index) => { const indices = images.flatMap((src, original) => src ? [original] : []); setPreview(indices[index]); }} onOpenChange={(open) => { if (!open) setPreview(null); }} seedSrc={images[preview]} />}

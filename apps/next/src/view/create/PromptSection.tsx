@@ -40,6 +40,7 @@ import { cn } from "@/utils/cn";
 import type { PromptTabToolId } from "@/types/promptTabs";
 import { PromptAssistantToolbar } from "@/components/prompt-assistant/prompt-assistant-toolbar";
 import { readEditableText, setEditableText } from "@/utils/promptEditor";
+import { LoraTriggerWordsButton } from "./lora-trigger-words-button";
 
 /**
  * 工具 id → 图标（**表现层**，不进数据层）；
@@ -55,8 +56,10 @@ const ROW_TOOL_ICONS: Record<PromptTabToolId, typeof Users> = {
 
 export function PromptSection({
   series = "anima",
+  loraIds = [],
 }: {
   series?: ViewSeries;
+  loraIds?: string[];
 }) {
   const { t } = useTranslation();
   const [autocomplete, setAutocomplete] = useState(true);
@@ -90,7 +93,7 @@ export function PromptSection({
     <>
       <div className="relative space-y-1.5">
         <div className="space-y-2">
-          <div className="flex items-center justify-between gap-2">
+          <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="flex items-center gap-1.5">
               <label className="text-sm font-semibold" htmlFor="prompt-editor">
                 {t("promptAssembly.editor.label")}
@@ -170,6 +173,8 @@ export function PromptSection({
                 </button>
               </div>
             </div>
+            {/* 界面：已选 LoRA 的 JSON 触发词，普通与高级模式复用同一写入入口。 */}
+            <LoraTriggerWordsButton ids={loraIds} onApplied={() => setCollapsed(false)} />
             <div className="inline-flex overflow-hidden rounded-md border md:hidden">
               <button
                 type="button"

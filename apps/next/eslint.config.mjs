@@ -10,6 +10,7 @@ const eslintConfig = defineConfig([
     // Default ignores of eslint-config-next:
     ".next/**",
     "out/**",
+    "public/vendor/**",
     "build/**",
     "next-env.d.ts",
     // Electron 主进程 / preload / 脚本必须是 CommonJS（require + module.exports），

@@ -14,6 +14,10 @@ const EXTENSIONS = {
   video: /\.(mp4|webm|mov)$/i,
   audio: /\.(mp3|wav|flac|m4a|aac|ogg|opus|aiff?|wma|weba)$/i,
 };
+export const MIXED_REFERENCE_ACCEPT = Object.values(REFERENCE_FILE_ACCEPT).join(",") + ",.jpg,.jpeg,.png,.webp,.mp4,.webm,.mov,.mp3,.wav,.flac,.m4a,.aac,.ogg,.opus,.aif,.aiff,.wma,.weba";
+export function referenceFileKind(file: File): PromptMediaKind | undefined {
+  return (["image", "video", "audio"] as const).find((kind) => isReferenceFile(kind, file));
+}
 export function isReferenceFile(kind: PromptMediaKind, file: File) {
   if (!file.type) return EXTENSIONS[kind].test(file.name);
   return kind === "audio" ? file.type.startsWith("audio/") : REFERENCE_FILE_ACCEPT[kind].split(",").includes(file.type);

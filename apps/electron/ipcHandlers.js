@@ -57,7 +57,8 @@ function toIpcError(error) {
       : undefined;
 
   let code = CODES.INTERNAL;
-  if (rawCode === "ENOENT") code = CODES.NOT_FOUND;
+  if (typeof rawCode === "string" && /^COMFY_(CANCELLED|DISCONNECTED|STOP_FAILED|TIMEOUT|EXECUTION_FAILED)$/.test(rawCode)) code = rawCode;
+  else if (rawCode === "ENOENT") code = CODES.NOT_FOUND;
   else if (rawCode === "EACCES" || rawCode === "EPERM") code = CODES.PERMISSION_DENIED;
   else if (typeof rawCode === "string" && /^E[A-Z]+$/.test(rawCode)) code = CODES.IO_ERROR;
 

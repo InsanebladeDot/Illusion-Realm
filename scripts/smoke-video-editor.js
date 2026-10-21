@@ -99,7 +99,7 @@ fs.writeFileSync(
 );
 ipcMain.handle("userData:read", async () => ({
   filePath: userDataFile,
-  data: JSON.parse(fs.readFileSync(userDataFile, "utf8")),
+    data: require("./lib/guest-session-fixture").withGuestSession(JSON.parse(fs.readFileSync(userDataFile, "utf8"))),
   isNew: false,
 }));
 ipcMain.handle("userData:write", async (_event, data) => {

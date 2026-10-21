@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type MouseEvent } from "react";
 import { useClipEditor, buildClipInputs } from "@/hooks/useClipEditor";
 import { useVideoEqualSplit } from "@/hooks/use-video-equal-split";
 import { useFfmpegStatus } from "@/hooks/useFfmpegStatus";
@@ -27,6 +27,7 @@ import {
 } from "@/utils/video/ffmpeg";
 import { joinOutputPath, normalizeOutputFileName } from "@/utils/video/outputPath";
 import { formatTime } from "@/utils/video/time";
+import { getClipEffects, getClipOutputDuration, sameSourceGroup } from "@/utils/video/clip-effects";
 import type { ClipItem } from "@/components/videoEdit/types";
 import type { VideoEditJob } from "@/types/electron-api";
 import { ClipPlaylist } from "@/components/videoEdit/ClipPlaylist";
@@ -37,6 +38,8 @@ import { TimelineScrubber } from "@/components/videoEdit/TimelineScrubber";
 import { VideoTrimRanges } from "@/components/videoEdit/video-trim-ranges";
 import { VideoImportZone } from "@/components/videoEdit/VideoImportZone";
 import { VideoQuickTools } from "@/components/videoEdit/video-quick-tools";
+import { VideoReframeControls } from "@/components/videoEdit/video-reframe-controls";
+import { VideoClipContextMenu, type ClipMenuPosition } from "@/components/videoEdit/video-clip-context-menu";
 import { CropPanel } from "@/view/toolBox/Tool/video/components/CropPanel";
 import { SpeedPanel } from "@/view/toolBox/Tool/video/components/SpeedPanel";
 
@@ -68,7 +71,7 @@ export default function VideoToolPage() {
   const { status, checking, ffmpegPath, redetect, pickManually } =
     useFfmpegStatus(isDesktop);
 
-  const [speed, setSpeed] = useState(1);
+  const [clipMenu, setClipMenu] = useState<ClipMenuPosition | null>(null);
   const [cropAspect, setCropAspect] = useState<CropAspectId>("source");
   const [crop, setCrop] = useState<CropRect>(EMPTY_CROP);
   // 默认按选区精确剪切，避免短视频因关键帧回退而导出整段原片。
@@ -82,6 +85,9 @@ export default function VideoToolPage() {
   const [jobId, setJobId] = useState<string | null>(null);
   const [progress, setProgress] = useState(0);
   const [resultPath, setResultPath] = useState<string | null>(null);
+  const [reframeFps, setReframeFps] = useState(30);
+  const [reframing, setReframing] = useState(false);
+  const reframeSession = useRef<{ cancelled: boolean } | null>(null);
 
   /** 把裁剪框重置为整幅画面（输出尺寸基准变化时调用） */
   const resetCropFor = useCallback((clip: ClipItem) => {
@@ -113,7 +119,6 @@ export default function VideoToolPage() {
     playhead,
     previewUrl,
     videoRef,
-    selectionDuration,
   } = editor;
 
   /** 输出尺寸以首段为准（拼接时会缩放对齐首段） */
@@ -124,14 +129,16 @@ export default function VideoToolPage() {
     baseWidth > 0 && cropAspect !== "source" && !isFullFrame(crop, baseWidth, baseHeight)
   );
 
-  const outputDuration = speed !== 1 ? selectionDuration / speed : selectionDuration;
+  const effects = getClipEffects(selectedClip);
+  const speed = effects.speed;
+  const outputDuration = clips.reduce((total, clip) => total + getClipOutputDuration(clip), 0);
   const isConcat = clips.length > 1;
-  const sourceRanges = clips.filter((clip) => clip.path === selectedClip?.path);
+  const sourceRanges = selectedClip ? clips.filter((clip) => sameSourceGroup(clip, selectedClip)) : [];
   const sourceCount = new Set(clips.map((clip) => clip.path)).size;
   const hasRepeatedSource = sourceCount < clips.length;
 
   /** 自动生成的文件名（拼接段数 / 倍速 / 裁剪会体现在名字里） */
-  const autoFileName = clips.length > 0 ? buildOutputFileName(clips, speed, hasCrop) : "";
+  const autoFileName = clips.length > 0 ? buildOutputFileName(clips, clips.length === 1 ? speed : 1, hasCrop) : "";
   /** 输入框里的原始文件名（用户可改） */
   const rawFileName = customFileName ?? autoFileName;
   /** 实际写盘用的文件名（缺扩展名时补 .mp4） */
@@ -143,15 +150,29 @@ export default function VideoToolPage() {
   const split = useVideoEqualSplit({ clip: selectedClip, ffmpegPath, outputFolder: effectiveOutputFolder,
     onFolder: (folder) => { setOutputFolder(folder); setStoredOutputFolder(folder); } });
   const busy = running || split.running;
+  const menuClip = clipMenu ? clips.find(clip => clip.id === clipMenu.id) : undefined;
+
+  /** 时间轴右键使用点击位置切开；标签/列表右键使用当前播放头。 */
+  const openClipMenu = (event: MouseEvent<HTMLElement>, id: string, time = playhead) => {
+    event.preventDefault(); event.stopPropagation();
+    if (busy) return;
+    if (id !== selectedClip?.id) editor.selectClip(id);
+    videoRef.current?.pause(); editor.setPlaying(false);
+    setClipMenu({ id, x: event.clientX, y: event.clientY, time });
+  };
 
   /** 订阅转码进度（首个进度事件同时带回 jobId，用于取消） */
   useEffect(() => {
     return onVideoProgress((event) => {
       if (split.running) return;
+      if (reframeSession.current?.cancelled) {
+        void cancelVideoEdit(event.jobId).catch(() => showToast(t("toolBox.video.processFailed"), "error"));
+        return;
+      }
       setJobId(event.jobId);
       setProgress(event.percent);
     });
-  }, [split.running]);
+  }, [split.running, showToast, t]);
 
   const handleAspectChange = (aspect: CropAspectId) => {
     setCropAspect(aspect);
@@ -198,6 +219,9 @@ export default function VideoToolPage() {
     if (!target) return;
 
     setRunning(true);
+    setClipMenu(null);
+    videoRef.current?.pause();
+    editor.setPlaying(false);
     setProgress(0);
     setResultPath(null);
 
@@ -210,7 +234,6 @@ export default function VideoToolPage() {
           width: clips[0].width,
           height: clips[0].height,
           fps: clips[0].fps > 0 ? clips[0].fps : 25,
-          speed,
           crop: cropOptions,
         }
       : {
@@ -219,7 +242,7 @@ export default function VideoToolPage() {
           outputPath: target,
           sourceDuration: clips[0].duration,
           trim: { start: clips[0].trim.start, end: clips[0].trim.end },
-          speed,
+          effects: clips[0].effects,
           crop: cropOptions,
           accurateCut,
         };
@@ -242,11 +265,45 @@ export default function VideoToolPage() {
   };
 
   const handleCancel = async () => {
+    if (reframeSession.current) {
+      reframeSession.current.cancelled = true;
+      try { if (jobId) await cancelVideoEdit(jobId); }
+      catch { showToast(t("toolBox.video.processFailed"), "error"); }
+      return;
+    }
     if (jobId) await cancelVideoEdit(jobId);
     setRunning(false);
     setJobId(null);
     setProgress(0);
     showToast(t("toolBox.video.cancelled"));
+  };
+
+  /** 整段原片按新帧率导出，复用现有保存对话框、任务进度和成品入口。 */
+  const handleReframe = async () => {
+    if (!selectedClip || busy || reframeSession.current) return;
+    const session = { cancelled: false };
+    reframeSession.current = session;
+    setRunning(true); setReframing(true); setProgress(0); setJobId(null); setResultPath(null);
+    setClipMenu(null);
+    editor.setPlaying(false);
+    videoRef.current?.pause();
+    try {
+      const name = `${selectedClip.name.replace(/\.[^.]+$/, "")}_${reframeFps}fps.mp4`;
+      const target = effectiveOutputFolder ? joinOutputPath(effectiveOutputFolder, name) : await pickOutputFile(name, "video");
+      if (!target || session.cancelled) return;
+      const result = await runVideoEdit({ mode: "reframe", inputPath: selectedClip.path, outputPath: target, fps: reframeFps }, ffmpegPath);
+      if (!session.cancelled) { setResultPath(result.outputPath); setProgress(100); showToast(t("toolBox.video.reframe.done"), "success"); }
+    } catch (error) {
+      if (!session.cancelled) showToast(error instanceof Error ? error.message : t("toolBox.video.processFailed"), "error");
+    } finally {
+      if (session.cancelled) showToast(t("toolBox.video.cancelled"));
+      reframeSession.current = null; setRunning(false); setReframing(false); setJobId(null);
+    }
+  };
+
+  const reframeControls = {
+    fps: reframeFps, onFpsChange: setReframeFps, disabled: busy || !selectedClip || !isDesktop || !ffmpegPath,
+    running: reframing, onRun: () => void handleReframe(), onCancel: () => void handleCancel(),
   };
 
   /** 导出当前预览位置：先暂停并记录原始视频时间，再打开保存对话框。 */
@@ -257,6 +314,8 @@ export default function VideoToolPage() {
       return;
     }
     video.pause();
+    editor.setPlaying(false);
+    setClipMenu(null);
     const lastFrame = Math.max(0, selectedClip.duration - 1 / (selectedClip.fps || 25));
     const frameTime = Math.max(0, Math.min(video.currentTime, lastFrame));
     const name = `${selectedClip.name.replace(/\.[^.]+$/, "")}_frame_${Math.round(frameTime * 1000)}ms.png`;
@@ -315,6 +374,7 @@ export default function VideoToolPage() {
             onSelect={editor.selectClip}
             onReorder={editor.reorderClips}
             onRemove={editor.removeClip}
+            onContextMenu={openClipMenu}
           />
 
           <PreviewStage
@@ -359,6 +419,7 @@ export default function VideoToolPage() {
                 disabled={busy}
                 onSelect={editor.selectClip}
                 onAdd={editor.addRange}
+                onContextMenu={openClipMenu}
               />
               <TimelineScrubber
                 duration={selectedClip.duration}
@@ -368,16 +429,26 @@ export default function VideoToolPage() {
                 ranges={sourceRanges.map((range) => ({ id: range.id, start: range.trim.start, end: range.trim.end }))}
                 selectedId={selectedClip.id}
                 onSelectRange={editor.selectClip}
+                onRangeContextMenu={openClipMenu}
                 onStartChange={(value) => editor.setTrim(value, selectedClip.trim.end)}
                 onEndChange={(value) => editor.setTrim(selectedClip.trim.start, value)}
                 onRangeChange={(start, end) => editor.setTrim(start, end)}
                 onSeek={editor.seek}
                 disabled={busy}
               />
+              <p className="text-xs text-muted-foreground">{t("toolBox.video.clipMenu.hint")}</p>
             </section>
           )}
 
-          <SpeedPanel speed={speed} onChange={setSpeed} />
+          {/* 界面：「当前区间变速」，切换区间时显示该区间自己的值。 */}
+          <SpeedPanel speed={speed} disabled={busy} label={t("toolBox.video.clipMenu.selectedSpeed")}
+            onChange={value => { if (selectedClip && !busy) editor.updateEffects(selectedClip.id, { speed: value }); }} />
+
+          {/* 界面：「重新按帧导出视频」，独立处理选中的完整原视频。 */}
+          <section className="space-y-4 rounded-xl border border-border bg-background p-5">
+            <h3 className="border-b border-border/60 pb-3 text-base font-semibold text-foreground">{t("toolBox.video.reframe.title")}</h3>
+            <VideoReframeControls {...reframeControls} />
+          </section>
 
           <CropPanel
             videoWidth={baseWidth}
@@ -442,7 +513,7 @@ export default function VideoToolPage() {
                   width: baseWidth,
                   height: baseHeight,
                 })
-              : speed === 1 && !hasCrop && !accurateCut
+              : speed === 1 && effects.volume === 1 && !effects.muted && !effects.reverse && !hasCrop && !accurateCut
                 ? t("toolBox.video.losslessNote")
                 : t("toolBox.video.reencodeNote")}
             {t("toolBox.video.overwriteNote")}
@@ -450,8 +521,14 @@ export default function VideoToolPage() {
         </>
       )}
       </fieldset>
+      {/* modal：区间右键编辑，与变速面板和导出共用区间效果数据。 */}
+      {clipMenu && menuClip && !busy && <VideoClipContextMenu clip={menuClip} position={clipMenu} canPaste={Boolean(editor.clipboard)}
+        onChange={patch => editor.updateEffects(menuClip.id, patch)} onClose={() => setClipMenu(null)}
+        onSplit={() => editor.splitRange(menuClip.id, clipMenu.time)} onCopy={() => editor.copyRange(menuClip.id)}
+        onPaste={() => editor.pasteRange(menuClip.id)} onDelete={() => editor.removeClip(menuClip.id)} />}
       {/* 界面：视频快捷功能侧边浮窗，窄屏通过右侧固钉切换 */}
       <VideoQuickTools clip={selectedClip} busy={busy} isDesktop={isDesktop} outputFolder={effectiveOutputFolder}
+        reframe={reframeControls}
         split={split} onSplit={(parts) => { if (!busy) { videoRef.current?.pause(); void split.start(parts); } }}
         onCancel={() => void split.cancel()} onPickFolder={() => void handlePickOutputFolder()}
         onOpenFolder={() => { if (split.resultFolder) void openPathInExplorer(split.resultFolder).catch(() => showToast(t("toolBox.video.processFailed"), "error")); }}

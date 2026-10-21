@@ -27,6 +27,8 @@ const { registerAnimadexIpc } = require("../animadex");
 const { registerAgentHandlers } = require("./agent.handlers");
 const { registerCivitaiHandlers } = require("./civitai.handlers");
 const { registerPromptAssistantHandlers } = require("./prompt-assistant.handlers");
+const { registerAccountHandlers } = require("./account.handlers");
+const { registerCloudImageHandlers } = require("./cloud-images.handlers");
 
 const { ipcMain } = require("electron");
 
@@ -52,6 +54,8 @@ const REGISTRATIONS = [
   ["agent", registerAgentHandlers],
   ["civitai", registerCivitaiHandlers],
   ["promptAssistant", registerPromptAssistantHandlers],
+  ["account", registerAccountHandlers],
+  ["cloudImages", registerCloudImageHandlers],
 ];
 
 /**

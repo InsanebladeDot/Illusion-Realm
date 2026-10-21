@@ -9,6 +9,33 @@
  *     they are not standalone sentences.
  */
 export const settings = {
+  contentAccess: {
+    title: "Content access",
+    label: "Allow NSFW content",
+    description: "Allow adult content in Civitai model searches and previews. Off by default; you must read and accept the access agreement before enabling it.",
+    viewAgreement: "Read the content access agreement",
+    agreementTitle: "NSFW content access agreement",
+    agreementVersion: "Agreement version: {version}",
+    age: "I confirm that I am at least 18 and meet the legal age for accessing adult content in my location. Minors must not enable this option.",
+    content: "Civitai searches and previews may show adult content, including nudity or sexual themes. I understand this and choose to access it voluntarily.",
+    lawful: "I will comply with local laws and the source platform's rules. I will not access, create or distribute illegal content, including sexual content involving minors or non-consensual intimate imagery.",
+    scope: "This setting only controls Civitai searches and previews in this app. It does not sync website preferences or bypass login, permission or regional restrictions. You can turn it off at any time; downloaded files will remain.",
+    acknowledge: "I have read and accept this agreement and confirm that I meet the age and access requirements.",
+    accept: "Accept and enable",
+  },
+  appearance: {
+    title: "Appearance",
+    description: "Personalize your workspace with a theme, accent color and font.",
+    theme: "Theme presets",
+    colorsTitle: "Color presets",
+    colorsHint: "Colors the title bar, sidebar, highlighted text and buttons without changing your artwork.",
+    font: "Interface font",
+    fontHint: "Applies across the interface. Code, icons and artwork keep their dedicated fonts.",
+    autoSave: "Changes apply immediately and are saved on this device.",
+    reset: "Reset appearance",
+    colors: { default: "Default", sand: "Warm sand", rose: "Rose garden", teal: "Lake", sunset: "Sunset", forest: "Forest", ocean: "Ocean", graphite: "Graphite" },
+    fonts: { auto: "Auto", sans: "Sans", serif: "Serif" },
+  },
   "theme": {
     "system": "System",
     "light": "Light",

@@ -3,6 +3,34 @@
  * 命名约定：`profile.<语义>`，例如 `profile.edit.bio`。
  */
 export const profile = {
+  cover: { change: "预览封面", reset: "重置封面", preview: "主页封面预览", hint: "仅当前页面预览，刷新后不保留" },
+  cloud: {
+    resourceScope: "资源范围", mine: "我的", publicLibrary: "公开", myImages: "我的图片", publicImages: "公开图片", myCollections: "我的收藏夹", publicCollections: "公开收藏夹", refresh: "刷新",
+    editImage: "编辑图片", deleteImage: "删除图片", save: "保存", createCollection: "新建收藏夹", editCollection: "管理收藏夹", deleteCollection: "删除收藏夹",
+    collectionName: "收藏夹名称", description: "说明（选填）", addToCollection: "加入收藏夹", chooseCollection: "选择我的收藏夹", collected: "已加入收藏夹", removeFromCollection: "取消收藏",
+    noCollections: "暂无收藏夹", createFirst: "你还没有收藏夹，请先到云端收藏夹中创建。", collectionPrivacy: "公开收藏夹不会公开其中的私有图片。取消收藏或删除收藏夹均不会删除原图。",
+    deleteImageHint: "我已知晓：此操作删除云端图片记录并停止 API 访问，但不保证图床直链文件被物理删除。",
+    deleteCollectionHint: "我已知晓：此操作删除收藏夹，原图片仍会保留。",
+    images: "云端图片", imagesDescription: "管理、分享与整理你的创作素材", manageImages: "管理你的图片素材", collections: "收藏夹", upload: "上传图片", uploading: "正在上传并验证…", retry: "重试上传",
+    collectionOwner: "创建者 {name}", noCover: "暂无封面", lookupById: "按 ID 查看收藏夹", backToCollections: "返回收藏夹", collectionsDescription: "把喜欢的创作整理在一起",
+    file: "选择 PNG 图片", fileHint: "原始 PNG，最大 16 MiB；保留生成信息，不压缩或重新编码。",
+    title: "图片标题", visibility: "访问权限", private: "私有", public: "公开", presentation: "展示方式",
+    imageOnly: "仅展示图片", withGenerationInfo: "包含生成信息", login: "登录账户后可上传云端图片。", goLogin: "前往登录",
+    privacy: "私有仅限制本应用接口访问，图床直链仍可公开访问；仅展示图片不会移除 PNG 中的生成信息。",
+    success: "图片已上传", recent: "本次会话中的图片", recentHint: "这里只展示本次上传或按 ID 查询的结果，并非账户的全部云端图片。",
+    imageId: "图片 ID", lookup: "查看", searchPlaceholder: "搜索图片名称或 ID", filter: "筛选图片", all: "全部", noSearchResults: "没有匹配的图片", statsLoaded: "已加载图片", statsPublic: "其中公开", statsPrivate: "其中私有", statsHint: "统计、名称搜索与筛选基于当前已加载的图片；输入完整图片 ID 后可按回车查询云端图片。", empty: "暂无图片", preview: "预览 {title}", dimensions: "{width} × {height} px",
+    id: "ID：{id}", collectionId: "收藏夹 ID", collectionHint: "创建、管理和查看云端收藏夹，也可按 ID 查看可访问的收藏夹。",
+    collectionEmpty: "此收藏夹暂无可查看的图片。", loadMore: "加载更多", loading: "正在加载…", unavailable: "图片已不可访问",
+    revisionReset: "收藏夹已更新，已重新加载第一页。", cooldown: "请在 {seconds} 秒后重试。", requestId: "排查编号：{id}",
+    error: {
+      generic: "操作失败，请稍后重试。", invalidPng: "请选择有效的 PNG 文件，且大小不超过 16 MiB。",
+      invalid: "请检查标题、图片和 ID 等参数后重试。", unauthenticated: "登录已失效，请重新登录。",
+      quota: "云端存储额度不足。", conflict: "提交内容发生冲突，请调整内容后重新提交。",
+      rate: "请求过于频繁，请等待后重试。", storage: "图床上传或原图校验失败，可以重试本次上传。",
+      service: "上传或账户服务暂时不可用，请稍后重试。", notFound: "内容不存在或你没有查看权限。",
+      response: "服务返回的数据格式不符合接口约定，请稍后重试。",
+    },
+  },
   edit: {
     title: "编辑公开资料",
     description: "更新你的个人资料，所有人可见。",
@@ -18,6 +46,10 @@ export const profile = {
     addSocial: "添加社交媒体",
     saved: "公开资料已保存",
     save: "保存更改",
+  },
+  crop: {
+    title: "裁剪头像", hint: "拖动图片或使用方向键调整位置，滚轮向上放大、向下缩小，也可使用缩放滑条。圆形为预览，实际保存为 512 × 512 正方形静态图片。",
+    dragHint: "头像裁剪区域，可拖动图片、使用方向键调整，或滚动滚轮缩放", zoom: "缩放", reset: "重置", confirm: "使用此头像", failed: "头像裁剪失败，请重新选择图片。",
   },
   stats: {
     posts: "帖子",

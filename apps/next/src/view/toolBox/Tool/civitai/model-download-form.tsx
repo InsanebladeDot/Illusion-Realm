@@ -6,12 +6,12 @@ import { ChevronLeft, Download } from "lucide-react";
 import { ModelCategorySchema, type DownloadModelType, type ModelDownloadTarget } from "@illusion-realm/shared";
 import { useTranslation } from "@/i18n";
 import { useModelDownloadStore } from "@/stores/useModelDownloadStore";
-import { civitaiDownload, type CivitaiModel, type CivitaiVersion, type CivitaiFile } from "@/utils/civitai";
+import { civitaiDescription, civitaiDownload, type CivitaiModel, type CivitaiVersion, type CivitaiFile } from "@/utils/civitai";
 import { downloadErrorMessage, getModelDownloadTarget, readLogoFile, startModelDownload } from "@/utils/model-downloads";
 import { CivitaiImage } from "./civitai-image";
 import { ModelCategoryPicker } from "./model-category-picker";
 
-interface FormProps { model: CivitaiModel; version: CivitaiVersion; file: CivitaiFile; source: string; onBack: () => void }
+interface FormProps { model: CivitaiModel; version: CivitaiVersion; file: CivitaiFile; source: string; previewUrl: string; onBack: () => void }
 interface LogoProps { src: string; name: string; custom: boolean; onChange: (file?: File) => void; onReset: () => void }
 function DownloadLogo({ src, name, custom, onChange, onReset }: LogoProps) {
   const { t } = useTranslation();
@@ -32,7 +32,7 @@ function useDownloadTarget(modelType: string, baseModel: string) {
   }, [modelType, baseModel]);
   return { target, targetError: error };
 }
-export function ModelDownloadForm({ model, version, file, source, onBack }: FormProps) {
+export function ModelDownloadForm({ model, version, file, source, previewUrl, onBack }: FormProps) {
   const { t } = useTranslation();
   const { target, targetError } = useDownloadTarget(model.type, version.baseModel);
   const [category, setCategory] = useState("Uncategorized");
@@ -48,7 +48,9 @@ export function ModelDownloadForm({ model, version, file, source, onBack }: Form
   async function begin() {
     setBusy(true); setError("");
     try {
-      const task = await startModelDownload({ modelType: model.type as DownloadModelType, baseModel: version.baseModel, modelName: model.name, fileName: file.name, downloadUrl: civitaiDownload(file, source), category: category.trim(), sha256: file.sha256, previewUrl: version.images[0] || "", ...(logo ? { logoDataUrl: logo } : {}) });
+      const task = await startModelDownload({ modelType: model.type as DownloadModelType, baseModel: version.baseModel, modelName: model.name, fileName: file.name, downloadUrl: civitaiDownload(file, source), category: category.trim(), sha256: file.sha256, previewUrl,
+        source: { modelId: model.id, versionId: version.id, versionName: version.name, creator: model.creator, trainedWords: version.trainedWords, description: civitaiDescription(model.description), versionDescription: civitaiDescription(version.description) },
+        ...(logo ? { logoDataUrl: logo } : {}) });
       useModelDownloadStore.getState().update(task); onBack();
     } catch (reason) { setError(downloadErrorMessage(reason)); }
     finally { setBusy(false); }
@@ -57,8 +59,8 @@ export function ModelDownloadForm({ model, version, file, source, onBack }: Form
     <p className="break-all text-xs font-medium">{file.name}</p>
     <ModelCategoryPicker id="model-download-category" category={category} custom={custom} categories={target?.categories || []} valid={valid} hint={t("toolBox.civitai.transfer.categoryHint")} onSelect={(value) => { setCustom(value === "/custom"); setCategory(value === "/custom" ? "" : value); }} onInput={setCategory} />
     <section className="space-y-1"><p className="text-xs font-medium">{t("toolBox.civitai.transfer.destination")}</p><p className="break-all rounded-lg border border-border bg-muted/40 p-2 text-[10px] text-muted-foreground">{target ? `${target.rootPath}/${category.trim() || "Uncategorized"}/${model.name.replace(/[<>:"/\\|?*\x00-\x1f]/g, "_").replace(/[. ]+$/, "").slice(0, 100)}/${file.name}` : targetError || t("toolBox.civitai.loading")}</p><Link href="/settings" className="text-xs text-sky-600 dark:text-sky-300">{t("toolBox.civitai.configure")}</Link></section>
-    {/* 界面：默认第一张预览图，也可自行选择封面 */}
-    <DownloadLogo src={logo || version.images[0] || ""} name={file.name} custom={!!logo} onChange={(file) => { void selectLogo(file); }} onReset={() => setLogo("")} />
+    {/* 界面：默认采用详情当前预览图，也可自行选择封面。 */}
+    <DownloadLogo src={logo || previewUrl} name={file.name} custom={!!logo} onChange={(file) => { void selectLogo(file); }} onReset={() => setLogo("")} />
     {error && <p role="alert" className="text-xs text-red-600 dark:text-red-400">{error}</p>}
   </div><footer className="shrink-0 border-t border-border p-3"><button data-model-download-start type="button" disabled={!target || !valid || busy} onClick={() => { void begin(); }} className="flex w-full items-center justify-center gap-2 rounded-lg bg-sky-600 px-3 py-2 text-xs text-white hover:bg-sky-700 disabled:opacity-50"><Download size={14} />{t(busy ? "toolBox.civitai.transfer.starting" : "toolBox.civitai.transfer.start")}</button></footer></div>;
 }

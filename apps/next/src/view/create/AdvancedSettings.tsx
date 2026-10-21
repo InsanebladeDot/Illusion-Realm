@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import {
   Check,
   Info,
@@ -31,7 +31,7 @@ import { clampSeed, generateRandomSeed } from "@/utils/seed";
 import { ACCENT_FOCUS_RING_CLASS, INPUT_BORDER_CLASS } from "@/utils/layout";
 import { cn } from "@/utils/cn";
 
-export function AdvancedSettings({ series = "anima" }: { series?: "anima" | "sdxl" }) {
+export function AdvancedSettings({ series = "anima", children }: { series?: "anima" | "sdxl"; children?: ReactNode }) {
   const { t } = useTranslation();
   const [usePreset, setUsePreset] = useState(true);
   const samplerOverride = useCreateFormStore((state) => state.sampler);
@@ -74,7 +74,7 @@ export function AdvancedSettings({ series = "anima" }: { series?: "anima" | "sdx
   return (
     <>
       {/* 界面：「高级设置」图片与视频共用折叠外壳 */}
-      <AdvancedSettingsSection className="hidden md:block">
+      <AdvancedSettingsSection>
           <div className="space-y-1.5">
             <div className="flex items-center space-x-2">
               <label className="text-sm font-medium">
@@ -253,6 +253,8 @@ export function AdvancedSettings({ series = "anima" }: { series?: "anima" | "sdx
               />
             </div>
           </div>
+          {/* 界面：图片模式特有的高级选项，由创建页提供状态。 */}
+          {children}
       </AdvancedSettingsSection>
 
       <PresetPromptDialog

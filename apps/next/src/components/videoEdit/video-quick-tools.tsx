@@ -12,6 +12,9 @@ import { SIDEBAR_WIDTH_COLLAPSED, SIDEBAR_WIDTH_EXPANDED } from "@/data/navigati
 import { useTranslation } from "@/i18n";
 import { buildEqualSplitRanges, getMaxSplitParts } from "@/utils/video/equal-split";
 import { formatTime } from "@/utils/video/time";
+import { VideoReframeControls, type VideoReframeControlsProps } from "./video-reframe-controls";
+
+type QuickTab = "split" | "reframe" | "frame";
 
 interface SplitState { running: boolean; progress: number; completed: string[]; resultFolder: string | null; total: number }
 interface VideoQuickToolsProps {
@@ -25,6 +28,7 @@ interface VideoQuickToolsProps {
   onPickFolder: () => void;
   onOpenFolder: () => void;
   onExportFrame: () => void;
+  reframe: VideoReframeControlsProps;
 }
 
 function SplitRangePreview({ duration, parts, fps }: { duration: number; parts: number; fps: number }) {
@@ -41,8 +45,8 @@ function SplitRangePreview({ duration, parts, fps }: { duration: number; parts: 
 interface QuickControlsProps extends VideoQuickToolsProps {
   partsText: string;
   onPartsChange: (text: string) => void;
-  tab: "split" | "frame";
-  onTabChange: (tab: "split" | "frame") => void;
+  tab: QuickTab;
+  onTabChange: (tab: QuickTab) => void;
 }
 
 function SplitOutputControls(props: QuickControlsProps & { valid: boolean; parts: number }) {
@@ -102,12 +106,14 @@ function QuickToolsContent(props: QuickControlsProps & { onClose: () => void }) 
       <button type="button" onClick={props.onClose} aria-label={t("common.close")} className="rounded p-1 text-muted-foreground hover:bg-muted"><X size={16} /></button>
     </header>
     <div role="tablist" aria-label={t("toolBox.video.quick.title")} className="m-3 flex rounded-lg bg-muted/50 p-1">
-      {(["split", "frame"] as const).map((key) => <button key={key} type="button" role="tab" aria-selected={props.tab === key} onClick={() => props.onTabChange(key)}
+      {(["split", "reframe", "frame"] as const).map((key) => <button key={key} type="button" role="tab" aria-selected={props.tab === key} onClick={() => props.onTabChange(key)}
         className={`flex-1 rounded-md px-2 py-2 text-xs ${props.tab === key ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted"}`}>
-        {key === "split" ? t("toolBox.video.quick.equalSplit") : t("toolBox.video.exportFrame")}</button>)}
+        {key === "split" ? t("toolBox.video.quick.equalSplit") : key === "reframe" ? t("toolBox.video.reframe.tab") : t("toolBox.video.exportFrame")}</button>)}
     </div>
     <div role="tabpanel" className="min-h-0 overflow-y-auto px-4 pb-4">
       <div hidden={props.tab !== "split"}><SplitControls {...props} /></div>
+      {/* 界面：「重新按帧导出视频」，与编辑区共用同一组件和状态。 */}
+      {props.tab === "reframe" && <VideoReframeControls {...props.reframe} />}
       {props.tab === "frame" && <div className="space-y-4"><p className="text-xs leading-relaxed text-muted-foreground">{t("toolBox.video.exportFrameHint")}</p>
         <button type="button" disabled={props.busy || !props.clip || !props.isDesktop} onClick={props.onExportFrame}
           className="flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-3 py-2.5 text-sm text-primary-foreground disabled:opacity-40"><Camera size={16} />{t("toolBox.video.exportFrame")}</button></div>}
@@ -119,7 +125,7 @@ export function VideoQuickTools(props: VideoQuickToolsProps) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [partsText, setPartsText] = useState("2");
-  const [tab, setTab] = useState<"split" | "frame">("split");
+  const [tab, setTab] = useState<QuickTab>("split");
   const wide = useMediaQuery("(min-width: 1280px)");
   const desktopNav = useMediaQuery("(min-width: 768px)");
   const hydrated = useIsHydrated();

@@ -5,6 +5,10 @@
  * 多个组件共用的同一句话请复用 `common.*`，不要在这里重复登记。
  */
 export const create = {
+  loraTriggers: {
+    apply: "应用触发词", hint: "追加已选 LoRA 的触发词，跳过已有词；高级模式写入当前分类。",
+    applied: "已追加 {count} 个触发词", unchanged: "提示词已包含这些触发词",
+  },
   maskEditor: {
     title: "蒙版编辑 · 快速验证", import: "导入图片", empty: "导入图片后涂抹需要重绘的区域",
     hint: "涂抹区域用于重绘；显示颜色只影响预览。导出始终保持原图宽高，切换模式会结束本次编辑。",
@@ -36,9 +40,22 @@ export const create = {
     desktopOnly: "请在桌面端使用提示词助手", presetInvalid: "请填写预设名称和系统指令", presetSaved: "已保存自定义预设",
   },
   generationTasks: {
+    summary: "{running} 个生成中 · {queued} 个排队中", categories: "任务分类",
+    tabs: { active: "进行中", history: "历史" }, current: "当前生成",
+    emptyActive: "暂无进行中的任务", emptyHistory: "暂无历史任务",
+    serialHint: "任务按提交顺序依次生成", queuePosition: "等待生成 · 排队第 {position} 位",
+    generatingImage: "正在生成第 {number} 张", details: "查看参数", noPrompt: "未填写提示词",
+    prompt: "提示词", model: "模型", dimensions: "图片尺寸", quantity: "生成张数",
     title: "生成任务", active: "{count} 个任务进行中", empty: "暂无生成任务",
     add: "添加生成任务", progress: "已完成 {completed} / {total} 张", view: "查看图片",
-    status: { queued: "排队中", generating: "生成中", saving: "保存中", completed: "已完成", failed: "失败" },
+    cancel: "停止生成", cancelQueued: "取消排队", cancelAll: "停止全部", cancelled: "生成已停止",
+    disconnected: "ComfyUI 连接已断开或请求超时，请检查服务后重新提交。",
+    queueStopped: "队列已终止，请检查 ComfyUI 服务后重新提交。",
+    stopFailed: "未能确认 ComfyUI 已停止，待执行任务已取消。请检查服务端任务。",
+    stopUnavailable: "停止接口不可用，请完全退出并重新启动应用。",
+    timeout: "生成等待超时，队列已终止，请检查 ComfyUI 服务端任务。",
+    executionFailed: "ComfyUI 工作流执行失败，请检查模型、参数及服务端日志。",
+    status: { queued: "排队中", generating: "生成中", saving: "保存中", cancelling: "正在停止", cancelled: "已停止", completed: "已完成", failed: "失败" },
   },
   addImagesToFolderDialog: {
     titlePrefix: "添加图片到「",
@@ -313,7 +330,7 @@ export const create = {
     generateFailed: "ComfyUI 生成失败",
     model: "模型",
     addExtension: "添加扩展",
-    generating: "正在生成…",
+    generating: "正在生成{dots}",
     mediaVideo: "视频",
     mediaRoleCover: "翻唱",
     mediaRoleTts: "语音",
@@ -482,16 +499,26 @@ export const create = {
     invalid: "视频参数无效，请检查生成步数、帧率、长度和总帧数。",
   },
   mediaReferences: {
+    back: "返回分类",
     title: "搜索已导入素材",
     empty: "没有匹配的素材，请先在当前任务中导入。",
     image: "图片", video: "视频", audio: "音频",
   },
   videoReferences: {
-    tabs: "参考素材类型",
-    addFiles: "批量添加{kind}",
+    importResources: "批量导入资源",
+    resources: "资源",
+    mixedSkipped: "已添加 {count} 个资源，另有 {skipped} 个因格式不支持而跳过。",
     batchHint: "点击多选或拖入多个文件",
-    skipped: "已添加 {count} 个{kind}，另有 {skipped} 个因格式不支持或数量超限而跳过。",
     hint: "按需导入图片、视频或音频，在提示词中输入 @ 选择素材。参考视频仅使用画面，声音请通过参考音频导入。",
     missing: "素材引用 {token} 不存在，请先导入对应素材或移除引用。",
+  },
+  canny: {
+    title: "检测边缘", invert: "反转", thresholds: "检测阈值", lower: "检测阈值下限", upper: "检测阈值上限",
+    original: "原图", result: "检测后的图", preview: "预览", loading: "正在读取图片…",
+    pending: "上传原图后自动检测",
+    outputHint: "检测后的图为默认转换输出，可预览或下载原尺寸 PNG。当前生成工作流尚未接入边缘控制。",
+    processing: "正在检测边缘…", processingFailed: "边缘检测失败，请重试", retry: "重试检测", download: "下载 PNG",
+    tooLarge: "图片尺寸过大，请使用不超过 8192 像素边长且不超过 1600 万像素的图片",
+    invalidImage: "请选择 PNG、JPEG 或 WebP 图片", loadFailed: "图片读取失败，请重新选择",
   },
 } as const;

@@ -1,4 +1,5 @@
 import { agent } from "./agent";
+import { auth } from "./auth";
 import { cartoon } from "./cartoon";
 import { characters } from "./characters";
 import { common } from "./common";
@@ -28,6 +29,7 @@ import { view3d } from "./view3d";
  */
 export const zhCN = {
   agent,
+  auth,
   common,
   nav,
   create,

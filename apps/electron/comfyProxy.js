@@ -1,4 +1,7 @@
+/** ComfyUI 代理：提交、轮询及下载共用有界请求，可取消生成由会话管理器关联服务端任务。 */
 const { randomUUID } = require("crypto");
+const { setTimeout: delay } = require("node:timers/promises");
+const { comfyError, requestComfy, readComfyJson, normalizeComfyError } = require("./services/comfy-request");
 
 const POLL_INTERVAL_MS = 800;
 const MAX_WAIT_MS = 10 * 60 * 1000;
@@ -43,14 +46,6 @@ const MAX_WAIT_MS = 10 * 60 * 1000;
  */
 
 /**
- * @param {number} ms
- * @returns {Promise<void>}
- */
-function sleep(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-/**
  * @param {string} serverAddress 形如 127.0.0.1:8188
  * @returns {string}
  */
@@ -66,7 +61,7 @@ function buildBase(serverAddress) {
  * @returns {Promise<ComfyQueueResult>}
  */
 async function queuePrompt(serverAddress, prompt, clientId) {
-  const response = await fetch(`${buildBase(serverAddress)}/prompt`, {
+  const response = await requestComfy(serverAddress, "/prompt", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ prompt, client_id: clientId }),
@@ -74,7 +69,7 @@ async function queuePrompt(serverAddress, prompt, clientId) {
 
   if (!response.ok) {
     const detail = await response.text().catch(() => "");
-    throw new Error(
+    throw comfyError("COMFY_EXECUTION_FAILED",
       `ComfyUI 提交失败 (${response.status})${detail ? `: ${detail}` : ""}`
     );
   }
@@ -86,14 +81,13 @@ async function queuePrompt(serverAddress, prompt, clientId) {
  * 取单次任务的历史记录
  * @param {string} serverAddress
  * @param {string} promptId
- * @returns {Promise<Record<string, unknown> | null>} 失败（非 2xx）返回 null
+ * @param {AbortSignal} [signal]
+ * @returns {Promise<Record<string, unknown>>}
  */
-async function fetchHistory(serverAddress, promptId) {
-  const response = await fetch(
-    `${buildBase(serverAddress)}/history/${encodeURIComponent(promptId)}`
-  );
-  if (!response.ok) return null;
-  return response.json();
+async function fetchHistory(serverAddress, promptId, signal) {
+  return /** @type {Record<string, unknown>} */ (await readComfyJson(
+    serverAddress, `/history/${encodeURIComponent(promptId)}`, {}, signal
+  ));
 }
 
 /**
@@ -220,9 +214,10 @@ function buildViewUrl(serverAddress, candidate) {
  * 下载输出文件（图片/视频/gif 通用）
  * @param {string} serverAddress
  * @param {ViewFileRef} file
+ * @param {AbortSignal} [signal]
  * @returns {Promise<string>} data URL
  */
-async function fetchFileDataUrl(serverAddress, file) {
+async function fetchFileDataUrl(serverAddress, file, signal) {
   const candidates = buildViewCandidates(file);
   /** @type {Error | null} */
   let lastError = null;
@@ -232,12 +227,9 @@ async function fetchFileDataUrl(serverAddress, file) {
     /** @type {Response} */
     let response;
     try {
-      response = await fetch(url);
+      response = await requestComfy(serverAddress, url.slice(buildBase(serverAddress).length), {}, signal);
     } catch (error) {
-      lastError = new Error(
-        `ComfyUI 文件下载失败：${error instanceof Error ? error.message : error}（${url}）`
-      );
-      continue;
+      throw normalizeComfyError(error, signal);
     }
 
     if (!response.ok) {
@@ -250,7 +242,9 @@ async function fetchFileDataUrl(serverAddress, file) {
       continue;
     }
 
-    const buffer = Buffer.from(await response.arrayBuffer());
+    let buffer;
+    try { buffer = Buffer.from(await response.arrayBuffer()); }
+    catch (error) { throw normalizeComfyError(error, signal); }
     const mimeType = response.headers.get("content-type") || "application/octet-stream";
     return `data:${mimeType};base64,${buffer.toString("base64")}`;
   }
@@ -308,27 +302,25 @@ function collectOutputFiles(entry) {
  * @returns {Promise<Record<string, unknown>>} 已有输出的 history 条目
  */
 async function waitForHistory(serverAddress, promptId, abortSignal) {
-  const startedAt = Date.now();
+  const deadline = AbortSignal.timeout(MAX_WAIT_MS);
+  const signal = abortSignal ? AbortSignal.any([abortSignal, deadline]) : deadline;
 
-  while (Date.now() - startedAt < MAX_WAIT_MS) {
-    if (abortSignal?.aborted) {
-      const error = new Error("ComfyUI 任务已取消");
-      error.name = "AbortError";
-      throw error;
-    }
-
-    const history = await fetchHistory(serverAddress, promptId);
+  while (!deadline.aborted) {
+    signal.throwIfAborted();
+    const history = await fetchHistory(serverAddress, promptId, signal);
     const entry = /** @type {Record<string, unknown> | undefined} */ (
       history?.[promptId]
     );
+    const status = /** @type {{ status_str?: string, completed?: boolean } | undefined} */ (entry?.status);
+    if (status?.status_str === "error") throw comfyError("COMFY_EXECUTION_FAILED", "ComfyUI workflow execution failed");
     if (entry && collectOutputFiles(entry).length > 0) {
       return entry;
     }
-
-    await sleep(POLL_INTERVAL_MS);
+    if (status?.completed) throw comfyError("COMFY_EXECUTION_FAILED", "ComfyUI completed without outputs");
+    await delay(POLL_INTERVAL_MS, undefined, { signal }).catch((error) => { throw normalizeComfyError(error, signal); });
   }
 
-  throw new Error("ComfyUI 生成超时，请检查队列与服务器日志");
+  throw comfyError("COMFY_TIMEOUT", "ComfyUI generation timed out");
 }
 
 /**
@@ -367,9 +359,10 @@ async function listComfyModels(serverAddress) {
  * 提交工作流并等待产物，下载为 data URL 返回
  * @param {string} serverAddress
  * @param {object} prompt ComfyUI API 格式工作流
+ * @param {{ signal?: AbortSignal, onQueued?: (id: string) => void }} [options]
  * @returns {Promise<{ promptId: string, images: ComfyOutputRecord[], videos: ComfyOutputRecord[] }>}
  */
-async function generateWithComfy(serverAddress, prompt) {
+async function generateWithComfy(serverAddress, prompt, options = {}) {
   if (!serverAddress) {
     throw new Error("未配置 ComfyUI 服务地址");
   }
@@ -378,13 +371,16 @@ async function generateWithComfy(serverAddress, prompt) {
   const queued = await queuePrompt(serverAddress, prompt, clientId);
 
   if (queued.node_errors && Object.keys(queued.node_errors).length > 0) {
-    throw new Error(
+    throw comfyError("COMFY_EXECUTION_FAILED",
       `ComfyUI 工作流校验失败: ${JSON.stringify(queued.node_errors)}`
     );
   }
 
   const promptId = queued.prompt_id;
-  const entry = await waitForHistory(serverAddress, promptId);
+  if (typeof promptId !== "string" || !promptId) throw comfyError("COMFY_EXECUTION_FAILED", "ComfyUI returned no prompt ID");
+  options.onQueued?.(promptId);
+  options.signal?.throwIfAborted();
+  const entry = await waitForHistory(serverAddress, promptId, options.signal);
 
   /** @type {ComfyOutputRecord[]} */
   const images = [];
@@ -392,7 +388,7 @@ async function generateWithComfy(serverAddress, prompt) {
   const videos = [];
 
   for (const file of collectOutputFiles(entry)) {
-    const dataUrl = await fetchFileDataUrl(serverAddress, file);
+    const dataUrl = await fetchFileDataUrl(serverAddress, file, options.signal);
     /** @type {ComfyOutputRecord} */
     const record = {
       nodeId: file.nodeId,
@@ -410,9 +406,10 @@ async function generateWithComfy(serverAddress, prompt) {
   }
 
   if (images.length === 0 && videos.length === 0) {
-    throw new Error("ComfyUI 任务完成，但未返回任何输出");
+    throw comfyError("COMFY_EXECUTION_FAILED", "ComfyUI 任务完成，但未返回任何输出");
   }
 
+  options.signal?.throwIfAborted();
   return { promptId, images, videos };
 }
 

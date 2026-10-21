@@ -23,6 +23,7 @@ const api = {
   },
   selectFolder: (defaultPath) =>
     ipcRenderer.invoke(IPC_CHANNELS.DIALOG_SELECT_FOLDER, defaultPath),
+  readLocalModelMetadata: (filePaths) => ipcRenderer.invoke(IPC_CHANNELS.MODELS_READ_METADATA, filePaths),
   scanModels: (dirPath, type) =>
     ipcRenderer.invoke(IPC_CHANNELS.MODELS_SCAN, dirPath, type),
   modelDownloadTarget: (location) => ipcRenderer.invoke(IPC_CHANNELS.MODELS_DOWNLOAD_TARGET, location),
@@ -48,8 +49,9 @@ const api = {
     ipcRenderer.invoke(IPC_CHANNELS.FILES_READ_IMAGE_DATA_URL, filePath),
   listImageFiles: (dirPath) =>
     ipcRenderer.invoke(IPC_CHANNELS.FILES_LIST_IMAGE_FILES, dirPath),
-  comfyGenerate: (prompt, serverAddress) =>
-    ipcRenderer.invoke(IPC_CHANNELS.COMFY_GENERATE, prompt, serverAddress),
+  comfyGenerate: (prompt, serverAddress, requestId) =>
+    ipcRenderer.invoke(IPC_CHANNELS.COMFY_GENERATE, prompt, serverAddress, requestId),
+  comfyCancel: (requestId) => ipcRenderer.invoke(IPC_CHANNELS.COMFY_CANCEL, requestId),
   comfyUploadImage: (serverAddress, payload) =>
     ipcRenderer.invoke(IPC_CHANNELS.COMFY_UPLOAD_IMAGE, serverAddress, payload),
   comfyListModels: (serverAddress) =>
@@ -146,8 +148,8 @@ const api = {
   setFullScreen: (flag) => ipcRenderer.invoke(IPC_CHANNELS.WINDOW_SET_FULL_SCREEN, flag),
 
   /** 深色 / 浅色 / 跟随系统（转发到 nativeTheme.themeSource） */
-  setThemeSource: (source) =>
-    ipcRenderer.invoke(IPC_CHANNELS.THEME_SET_THEME_SOURCE, source),
+  setThemeSource: (source, shellColor) =>
+    ipcRenderer.invoke(IPC_CHANNELS.THEME_SET_THEME_SOURCE, source, shellColor),
 
   // 角色库（animadex）
   animadexSearch: (params) => ipcRenderer.invoke(IPC_CHANNELS.ANIMADEX_SEARCH, params),
@@ -164,6 +166,17 @@ const api = {
   promptSecretStatus: (connection) => ipcRenderer.invoke(IPC_CHANNELS.PROMPT_SECRET_STATUS, connection),
   promptSetSecret: (connection, key) => ipcRenderer.invoke(IPC_CHANNELS.PROMPT_SECRET_SET, connection, key),
   promptClearSecret: (connection) => ipcRenderer.invoke(IPC_CHANNELS.PROMPT_SECRET_CLEAR, connection),
+  accountRegister: (request) => ipcRenderer.invoke(IPC_CHANNELS.ACCOUNT_REGISTER, request),
+  accountVerifyEmail: (token) => ipcRenderer.invoke(IPC_CHANNELS.ACCOUNT_VERIFY_EMAIL, token),
+  accountResendVerification: (email) => ipcRenderer.invoke(IPC_CHANNELS.ACCOUNT_RESEND_VERIFICATION, email),
+  accountLogin: (request) => ipcRenderer.invoke(IPC_CHANNELS.ACCOUNT_LOGIN, request),
+  accountMe: () => ipcRenderer.invoke(IPC_CHANNELS.ACCOUNT_ME),
+  accountLogout: () => ipcRenderer.invoke(IPC_CHANNELS.ACCOUNT_LOGOUT),
+  cloudImageUpload: (request) => ipcRenderer.invoke(IPC_CHANNELS.CLOUD_IMAGE_UPLOAD, request),
+  cloudLibraryRequest: (request) => ipcRenderer.invoke(IPC_CHANNELS.CLOUD_LIBRARY_REQUEST, request),
+  cloudImageGet: (id) => ipcRenderer.invoke(IPC_CHANNELS.CLOUD_IMAGE_GET, id),
+  cloudCollectionGet: (id) => ipcRenderer.invoke(IPC_CHANNELS.CLOUD_COLLECTION_GET, id),
+  cloudCollectionItems: (request) => ipcRenderer.invoke(IPC_CHANNELS.CLOUD_COLLECTION_ITEMS, request),
   onAgentEvent: (callback) => {
     /**
      * @param {Electron.IpcRendererEvent} _event

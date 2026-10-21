@@ -22,6 +22,7 @@ type TimelineScrubberProps = {
   ranges?: Array<{ id: string; start: number; end: number }>;
   selectedId?: string;
   onSelectRange?: (id: string) => void;
+  onRangeContextMenu?: (event: React.MouseEvent<HTMLElement>, id: string, time: number) => void;
   disabled?: boolean;
 };
 
@@ -50,6 +51,7 @@ export function TimelineScrubber({
   ranges = [],
   selectedId,
   onSelectRange,
+  onRangeContextMenu,
   disabled = false,
 }: TimelineScrubberProps) {
   const { t } = useTranslation();
@@ -217,6 +219,7 @@ export function TimelineScrubber({
             aria-pressed={selected} aria-label={selected ? t("toolBox.videoEdit.timeline.dragRange") : t("toolBox.video.rangeLabel", { index: index + 1 })}
             onPointerDown={(event) => handleRangePointerDown(event, range)}
             onClick={() => { if (!selected && !disabled) onSelectRange?.(range.id); }}
+            onContextMenu={event => { if (!disabled) onRangeContextMenu?.(event, range.id, timeAt(event.clientX)); }}
             className={`absolute inset-y-1 z-10 cursor-grab rounded-sm border-y-2 text-left active:cursor-grabbing disabled:cursor-not-allowed ${
             selected ? "border-blue-500 bg-blue-500/30" : "border-blue-400/50 bg-blue-400/15"
           }`} style={{ left: `${pct(range.start)}%`, width: `${width}%` }}>

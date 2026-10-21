@@ -3,10 +3,16 @@ import type { ComfyApiPrompt } from "@/types/comfy";
 import { t } from "@/i18n";
 import { findPromptReferenceMedia, promptMediaMatches, type PromptMediaKind, type PromptReferenceMedia } from "@/utils/prompt-media-references";
 
-export const REFERENCE_MEDIA_LIMITS = { image: 9, video: 3, audio: 3 } as const;
 export const REFERENCE_MEDIA_KINDS = ["image", "video", "audio"] as const;
 export interface UploadedVideoReference { kind: PromptMediaKind; number: number; name: string }
 export interface VideoReferenceFile extends PromptReferenceMedia { file: File }
+/** 预览按稳定编号保留空位，不截断第 10 张之后的图片，也不把删除后的编号映射到别的图片。 */
+export function referenceImageSources(media: readonly PromptReferenceMedia[]): (string | null)[] {
+  const images = media.filter((item) => item.kind === "image");
+  const last = images.reduce((max, item) => Math.max(max, item.number), 0);
+  const sources = new Map(images.map((item) => [item.number, item.src]));
+  return Array.from({ length: last }, (_, index) => sources.get(index + 1) ?? null);
+}
 export function orderedReferences<T extends { kind: PromptMediaKind; number: number }>(media: readonly T[]) {
   return REFERENCE_MEDIA_KINDS.flatMap((kind) => media.filter((item) => item.kind === kind).sort((a, b) => a.number - b.number));
 }
@@ -31,8 +37,8 @@ export function normalizeVideoReferences(text: string, media: readonly PromptRef
 function validateReferences(media: readonly UploadedVideoReference[]) {
   for (const kind of REFERENCE_MEDIA_KINDS) {
     const items = media.filter((item) => item.kind === kind);
-    if (items.length > REFERENCE_MEDIA_LIMITS[kind] || new Set(items.map((item) => item.number)).size !== items.length
-      || items.some((item) => !item.name || !Number.isInteger(item.number) || item.number < 1))
+    if (new Set(items.map((item) => item.number)).size !== items.length
+      || items.some((item) => !item.name || !Number.isSafeInteger(item.number) || item.number < 1))
       throw new Error(t("create.videoSettings.invalid"));
   }
 }

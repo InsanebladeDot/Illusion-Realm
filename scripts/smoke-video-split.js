@@ -22,7 +22,7 @@ const documentPath = path.join(work, "user.json");
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 let userDocument = { version: 1, userDataPath: documentPath, videoTool: { ffmpegPath: ffmpeg, outputFolder: work } };
 registerAppProtocol(); registerVideoToolIpc();
-registerHandle("userData:read", () => ({ filePath: documentPath, data: userDocument, isNew: false }));
+registerHandle("userData:read", () => ({ filePath: documentPath, data: require("./lib/guest-session-fixture").withGuestSession(userDocument), isNew: false }));
 registerHandle("userData:write", (_event, data) => { userDocument = data; return { filePath: documentPath, data }; });
 registerHandle("userData:getDefaultPath", () => documentPath);
 registerHandle("theme:setThemeSource", () => null);

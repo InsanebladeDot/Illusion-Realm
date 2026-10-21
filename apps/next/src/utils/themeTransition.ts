@@ -32,8 +32,8 @@ export interface RippleGeometry extends RippleOrigin {
 /**
  * 圆形波的最大半径 = 圆心到最远角的距离（+8px 抹掉边缘抗锯齿的白缝）。
  *
- * 缺省圆心是左下角 (0, height)：主题入口就在侧边栏左下角，
- * 即使拿不到按钮位置，波纹方向也不会跑偏。
+ * 缺省圆心是左下角 (0, height)：即使拿不到顶栏外观按钮位置，
+ * 波纹仍会覆盖整个窗口；正常路径会传入按钮中心作为圆心。
  */
 export function computeRippleGeometry(
   origin: RippleOrigin | null,

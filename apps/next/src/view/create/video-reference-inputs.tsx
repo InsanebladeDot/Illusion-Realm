@@ -1,64 +1,67 @@
 "use client";
 
-// 参考素材只展示当前分类；复用创建页标签按钮和首尾帧上传控件，素材状态由父组件保留。
-import { useState } from "react";
-import { Image, Film, Music } from "lucide-react";
+// 界面：统一批量导入参考资源，按图片 / 视频 / 音频排序，卡片换行显示；上传仍由生成逻辑负责。
+import { useRef } from "react";
+import { Upload, X } from "lucide-react";
 import { useTranslation } from "@/i18n";
-import { IconTabButton } from "@/components/icon-tab-button";
-import { REFERENCE_MEDIA_KINDS, REFERENCE_MEDIA_LIMITS, orderedReferences } from "@/utils/comfy/video-reference-media";
-import type { PromptMediaKind } from "@/utils/prompt-media-references";
-import { THIN_DIVIDER_CLASS } from "@/utils/layout";
-import { cn } from "@/utils/cn";
-import { VideoImageUpload } from "./VideoImageUpload";
+import { REFERENCE_MEDIA_KINDS, orderedReferences, type VideoReferenceFile } from "@/utils/comfy/video-reference-media";
+import { MIXED_REFERENCE_ACCEPT, REFERENCE_FILE_ACCEPT } from "@/utils/reference-file-types";
+import { MEDIA_REFERENCE_LABELS, mediaReferenceToken } from "@/utils/prompt-media-references";
+import { MediaThumbnail } from "./media-thumbnail";
 import type { useVideoReferenceMedia } from "./use-video-reference-media";
 
 interface Props { references: ReturnType<typeof useVideoReferenceMedia>; disabled: boolean }
-interface GroupProps { references: Props["references"]; kind: PromptMediaKind }
-const ICONS = { image: Image, video: Film, audio: Music };
-
-function ReferenceGroup({ references, kind }: GroupProps) {
+function ResourceTile({ item, references }: { item: VideoReferenceFile; references: Props["references"] }) {
   const { t } = useTranslation();
-  const items = orderedReferences(references.media).filter((item) => item.kind === kind);
-  const next = references.nextNumber(kind);
-  const slots = [...items.map((item) => item.number), ...(next ? [next] : [])];
-  return <section role="tabpanel" id={`reference-panel-${kind}`} aria-labelledby={`reference-tab-${kind}`} data-reference-kind={kind}>
-    {/* 界面：当前类型的素材卡片；空卡片批量添加，已有卡片逐个替换、删除。 */}
-    <div className={cn("grid max-h-80 min-w-0 gap-2 overflow-y-auto overscroll-contain pr-1", items.length ? "grid-cols-2" : "grid-cols-1")}>
-      {slots.map((number) => {
-        const item = items.find((entry) => entry.number === number);
-        return <div key={number} data-reference-number={number}>
-          <VideoImageUpload kind={kind} filename={item?.name}
-            label={item ? `@${kind}${number}` : t("create.videoReferences.addFiles", { kind: t(`create.mediaReferences.${kind}`) })}
-            imageUrl={item?.src ?? null} onSelect={(file) => references.select(kind, number, file)}
-            onSelectFiles={item ? undefined : (files) => references.add(kind, files)}
-            onRemove={() => references.remove(`${kind}-${number}`)} />
-        </div>;
-      })}
-    </div>
-  </section>;
+  const input = useRef<HTMLInputElement>(null);
+  const token = mediaReferenceToken(item);
+  return <div data-reference-kind={item.kind} data-reference-number={item.number} className="group relative aspect-square min-w-0">
+    <input ref={input} type="file" accept={REFERENCE_FILE_ACCEPT[item.kind]} className="hidden" onChange={(event) => {
+      const file = event.target.files?.[0];
+      if (file) references.select(item.kind, item.number, file);
+      event.target.value = "";
+    }} />
+    <button type="button" title={`${token} · ${item.name} · ${t("create.upload.clickToReplace")}`} aria-label={`${token} · ${item.name}`}
+      onClick={() => input.current?.click()} className="absolute inset-0 block h-full w-full overflow-hidden rounded-md border border-border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+      <MediaThumbnail item={item} className="h-full w-full rounded-none" />
+      <span className="absolute inset-x-0 bottom-0 truncate bg-black/55 px-1 py-0.5 text-center text-[10px] text-white">{token}</span>
+    </button>
+    <button type="button" data-reference-remove aria-label={t("create.upload.removeLabel", { label: token })} onClick={() => references.remove(item.id)}
+      className="absolute right-0.5 top-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-black/55 text-white hover:bg-black/75 focus-visible:ring-2 focus-visible:ring-ring"><X className="h-3 w-3" /></button>
+  </div>;
+}
+
+function ResourceImport({ references, disabled }: Props) {
+  const { t } = useTranslation();
+  const input = useRef<HTMLInputElement>(null);
+  return <>
+    <input ref={input} type="file" multiple accept={MIXED_REFERENCE_ACCEPT} data-reference-import className="hidden" onChange={(event) => {
+      if (!disabled) references.addFiles(Array.from(event.target.files ?? []));
+      event.target.value = "";
+    }} />
+    <button type="button" data-reference-drop onClick={() => input.current?.click()}
+      onDragOver={(event) => { event.preventDefault(); event.dataTransfer.dropEffect = disabled ? "none" : "copy"; }}
+      onDrop={(event) => { event.preventDefault(); if (!disabled) references.addFiles(Array.from(event.dataTransfer.files)); }}
+      className="flex w-full items-center justify-center gap-2 rounded-md border border-dashed border-border px-3 py-3 text-sm font-medium text-primary transition-colors hover:border-primary/60 hover:bg-primary/5 disabled:opacity-50">
+      <Upload className="h-4 w-4" />{t("create.videoReferences.importResources")}
+    </button>
+  </>;
 }
 
 export function VideoReferenceInputs({ references, disabled }: Props) {
   const { t } = useTranslation();
-  const [kind, setKind] = useState<PromptMediaKind>("image");
-  return <fieldset disabled={disabled} data-video-reference-inputs className="min-w-0 space-y-3">
-    {/* 界面：图片 / 视频 / 音频切换，与上方创建模式采用同一套图标标签。 */}
-    <div role="tablist" aria-label={t("create.videoReferences.tabs")} className={cn("flex min-w-0 border-b", THIN_DIVIDER_CLASS)}
-      onKeyDown={(event) => {
-        if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
-        event.preventDefault();
-        const index = REFERENCE_MEDIA_KINDS.indexOf(kind);
-        const next = event.key === "Home" ? 0 : event.key === "End" ? 2 : (index + (event.key === "ArrowRight" ? 1 : 2)) % 3;
-        setKind(REFERENCE_MEDIA_KINDS[next]);
-        event.currentTarget.querySelectorAll<HTMLButtonElement>("button")[next]?.focus();
-      }}>
-      {REFERENCE_MEDIA_KINDS.map((value) => <IconTabButton key={value} id={`reference-tab-${value}`} role="tab"
-        aria-selected={kind === value} aria-controls={`reference-panel-${value}`} tabIndex={kind === value ? 0 : -1}
-        data-reference-tab={value} active={kind === value} icon={ICONS[value]} label={t(`create.mediaReferences.${value}`)}
-        trailing={<span className="ml-1 text-[10px] tabular-nums text-muted-foreground">{references.media.filter((item) => item.kind === value).length}/{REFERENCE_MEDIA_LIMITS[value]}</span>}
-        onClick={() => setKind(value)} className="min-w-0 flex-1 px-2 sm:px-3" />)}
+  const items = orderedReferences(references.media);
+  return <fieldset disabled={disabled} data-video-reference-inputs className="min-w-0 space-y-2">
+    {/* 界面：混合文件导入入口；拖放和文件选择共用同一分类、容量校验。 */}
+    <ResourceImport references={references} disabled={disabled} />
+    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
+      <span className="font-medium text-foreground">{t("create.videoReferences.resources")}</span>
+      {REFERENCE_MEDIA_KINDS.map((kind) => <span key={kind} data-reference-count={kind}>{t(MEDIA_REFERENCE_LABELS[kind])} {items.filter((item) => item.kind === kind).length}</span>)}
     </div>
-    <ReferenceGroup key={kind} references={references} kind={kind} />
+    {/* 界面：仅用方形缩略图展示资源，视频首帧与 @ 搜索共用封面。 */}
+    <div data-reference-grid className="grid max-h-64 grid-cols-[repeat(auto-fill,minmax(4rem,1fr))] gap-2 overflow-y-auto overscroll-contain p-0.5">
+      {items.map((item) => <ResourceTile key={item.id} item={item} references={references} />)}
+    </div>
     <p className="text-xs leading-relaxed text-muted-foreground">{t("create.videoReferences.hint")}</p>
   </fieldset>;
 }

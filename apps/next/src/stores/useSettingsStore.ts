@@ -37,7 +37,10 @@ import {
   scanLocalModels,
 } from "@/utils/electronBridge";
 import type { UserDataSettings } from "@/types/userData";
+import type { ColorPreset, UiFont } from "@/types/appearance";
+import { resolveColorPreset, resolveUiFont } from "@/utils/appearance";
 import { createUserDataSectionPersistStorage } from "@/utils/userDataStorage";
+import { CONTENT_AGREEMENT_VERSION, resolveCivitaiContentAccess, type CivitaiContentAccess } from "@/types/content-access";
 import {
   DEFAULT_THEME_PREFERENCE,
   resolveThemePreference,
@@ -51,6 +54,11 @@ type SettingsState = {
   userDataPath: string;
   /** 主题偏好：system / light / dark（见 utils/themeResolution 的真值表） */
   theme: ThemePreference;
+  colorPreset: ColorPreset;
+  uiFont: UiFont;
+  civitaiContentAccess: CivitaiContentAccess;
+  acceptCivitaiContentAgreement: () => void;
+  disableCivitaiNsfw: () => void;
   models: LocalModel[];
   scanning: boolean;
   lastScannedAt: number | null;
@@ -59,6 +67,8 @@ type SettingsState = {
   setComfyServerUrl: (url: string) => void;
   setUserDataPath: (value: string) => void;
   setTheme: (preference: ThemePreference) => void;
+  setColorPreset: (preset: ColorPreset) => void;
+  setUiFont: (font: UiFont) => void;
   scanAllModels: () => Promise<void>;
 };
 
@@ -166,6 +176,11 @@ export const useSettingsStore = create<SettingsState>()(
       comfyServerUrl: DEFAULT_COMFY_SERVER_URL,
       userDataPath: "",
       theme: DEFAULT_THEME_PREFERENCE,
+      colorPreset: "default",
+      uiFont: "auto",
+      civitaiContentAccess: resolveCivitaiContentAccess(null),
+      acceptCivitaiContentAgreement: () => set({ civitaiContentAccess: { enabled: true, agreementVersion: CONTENT_AGREEMENT_VERSION, acceptedAt: Date.now() } }),
+      disableCivitaiNsfw: () => set((state) => ({ civitaiContentAccess: { ...state.civitaiContentAccess, enabled: false } })),
       models: [],
       scanning: false,
       lastScannedAt: null,
@@ -198,6 +213,8 @@ export const useSettingsStore = create<SettingsState>()(
        * 这里再写一次就会多出第二个写点 —— 正是 locale 那边栽过的坑。
        */
       setTheme: (preference) => set({ theme: preference }),
+      setColorPreset: (preset) => set({ colorPreset: resolveColorPreset(preset) }),
+      setUiFont: (font) => set({ uiFont: resolveUiFont(font) }),
       scanAllModels: async () => {
         if (!isElectronEnvironment()) return;
 
@@ -229,6 +246,9 @@ export const useSettingsStore = create<SettingsState>()(
         comfyServerUrl: state.comfyServerUrl,
         userDataPath: state.userDataPath,
         theme: state.theme,
+        colorPreset: state.colorPreset,
+        uiFont: state.uiFont,
+        civitaiContentAccess: state.civitaiContentAccess,
       }),
       // 旧版持久化数据缺少新增路径字段（如 diffusionModelsPath），合并时回填默认值
       merge: (persisted, current) => {
@@ -238,6 +258,9 @@ export const useSettingsStore = create<SettingsState>()(
           ...saved,
           /** 文档是外部输入：脏值（手改、旧版本写的）在这里就会被决议回 system */
           theme: resolveThemePreference(saved.theme).preference,
+          colorPreset: resolveColorPreset(saved.colorPreset),
+          uiFont: resolveUiFont(saved.uiFont),
+          civitaiContentAccess: resolveCivitaiContentAccess(saved.civitaiContentAccess),
           paths: {
             ...EMPTY_SETTINGS_PATHS,
             ...(saved.paths ?? {}),

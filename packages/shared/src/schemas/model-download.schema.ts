@@ -15,6 +15,15 @@ export const LocalModelBatchRequestSchema = z.discriminatedUnion("action", [
   z.object({ ...batchFields, action: z.literal("move"), targetRootPath: z.string().min(1).max(4096), category: ModelCategorySchema }).strict(),
   z.object({ ...batchFields, action: z.literal("delete") }).strict(),
 ]);
+export const ModelDownloadSourceSchema = z.object({
+  modelId: z.number().int().positive().max(Number.MAX_SAFE_INTEGER),
+  versionId: z.number().int().positive().max(Number.MAX_SAFE_INTEGER),
+  versionName: z.string().max(240),
+  creator: z.string().max(240),
+  trainedWords: z.array(z.string().max(4096)).max(256),
+  description: z.string().max(200000),
+  versionDescription: z.string().max(200000),
+}).strict();
 export const ModelDownloadRequestSchema = ModelDownloadLocationSchema.extend({
   modelName: z.string().trim().min(1).max(240),
   fileName: z.string().min(1).max(240).regex(/^[^<>:"/\\|?*\x00-\x1f]+\.(safetensors|ckpt|pt|pth|gguf)$/i).refine((value) => !/^(CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])\./i.test(value)),
@@ -23,4 +32,5 @@ export const ModelDownloadRequestSchema = ModelDownloadLocationSchema.extend({
   sha256: z.string().regex(/^([a-f0-9]{64})?$/i),
   previewUrl: z.string().max(4096).refine((value) => !value || /^https:\/\/([a-z0-9-]+\.)?civitai\.(com|red)\//i.test(value)),
   logoDataUrl: z.string().max(28 * 1024 * 1024).regex(/^data:image\/(png|jpeg|webp);base64,[a-z0-9+/=]+$/i).optional(),
-}).strict();
+  source: ModelDownloadSourceSchema.optional(),
+}).strict().refine((value) => !value.source || value.source.versionId === Number(/\/models\/(\d+)/.exec(value.downloadUrl)?.[1]));
