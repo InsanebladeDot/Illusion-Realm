@@ -1,5 +1,8 @@
 "use client";
 
+// 下拉选项沿用原业务值，菜单外观、滚动与键盘操作统一复用采样器组件。
+import { SimpleSelect } from "@/components/SimpleSelect";
+
 import { AccountApiError } from "@/api/account";
 import { useTranslation } from "@/i18n";
 import { CLOUD_BUTTON_CLASS, CLOUD_INPUT_CLASS, cloudErrorKey } from "@/utils/cloud-image-ui";
@@ -17,12 +20,21 @@ export function CloudUploadForm({ state }: { state: CloudUploadState }) {
       </label>
       <label className="space-y-1.5 text-sm sm:col-span-2"><span>{t("profile.cloud.title")}</span><input required maxLength={100} value={state.draft.title} onChange={event => state.change({ title: event.target.value })} className={CLOUD_INPUT_CLASS} /></label>
       {/* 界面：访问权限和展示方式是独立设置；不把仅展示描述为去除原图元数据 */}
-      <label className="space-y-1.5 text-sm"><span>{t("profile.cloud.visibility")}</span><select value={state.draft.visibility} onChange={event => state.change({ visibility: event.target.value === "public" ? "public" : "private" })} className={CLOUD_INPUT_CLASS}>
-        <option value="private">{t("profile.cloud.private")}</option><option value="public">{t("profile.cloud.public")}</option>
-      </select></label>
-      <label className="space-y-1.5 text-sm"><span>{t("profile.cloud.presentation")}</span><select value={state.draft.presentationMode} onChange={event => state.change({ presentationMode: event.target.value === "withGenerationInfo" ? "withGenerationInfo" : "imageOnly" })} className={CLOUD_INPUT_CLASS}>
-        <option value="imageOnly">{t("profile.cloud.imageOnly")}</option><option value="withGenerationInfo">{t("profile.cloud.withGenerationInfo")}</option>
-      </select></label>
+      {/* 请求锁还传给 Portal，菜单已打开后开始上传也必须关闭，不能只禁用 fieldset。 */}
+      <label className="space-y-1.5 text-sm"><span>{t("profile.cloud.visibility")}</span><SimpleSelect
+ disabled={state.busy}
+ value={String(state.draft.visibility)}
+ onChange={(value) => state.change({ visibility: value === "public" ? "public" : "private" })}
+ className="min-w-0" portal
+ options={[{ value: String("private"), label: t("profile.cloud.private") }, { value: String("public"), label: t("profile.cloud.public") }]}
+ /></label>
+      <label className="space-y-1.5 text-sm"><span>{t("profile.cloud.presentation")}</span><SimpleSelect
+ disabled={state.busy}
+ value={String(state.draft.presentationMode)}
+ onChange={(value) => state.change({ presentationMode: value === "withGenerationInfo" ? "withGenerationInfo" : "imageOnly" })}
+ className="min-w-0" portal
+ options={[{ value: String("imageOnly"), label: t("profile.cloud.imageOnly") }, { value: String("withGenerationInfo"), label: t("profile.cloud.withGenerationInfo") }]}
+ /></label>
     </fieldset>
     <p className="text-xs leading-relaxed text-muted-foreground">{t("profile.cloud.privacy")}</p>
     <UploadStatus state={state} />

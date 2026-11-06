@@ -25,7 +25,8 @@ export function CloudImageEditor({ image, ownerId, onChanged, onClose }: { image
     <h3 className="font-semibold">{t("profile.cloud.editImage")}</h3>
     <fieldset disabled={task.busy || task.cooldown > 0} className="space-y-4">
       <form onSubmit={event => { event.preventDefault(); void task.run(save); }} className="space-y-3">
-        <CloudResourceFields draft={draft} collection={false} onChange={patch => setDraft(value => ({ ...value, ...patch }))} />
+        {/* 弹窗：将请求锁显式传给浮层下拉，fieldset 无法禁用挂在外面的菜单。 */}
+        <CloudResourceFields disabled={task.busy || task.cooldown > 0} draft={draft} collection={false} onChange={patch => setDraft(value => ({ ...value, ...patch }))} />
         <button type="submit" className={CLOUD_BUTTON_CLASS} disabled={!draft.name.trim()}>{t("profile.cloud.save")}</button>
       </form>
       <div className="space-y-3 border-t border-border pt-3"><CloudDeleteConfirmation collection={false} checked={confirmed} onChange={setConfirmed} />

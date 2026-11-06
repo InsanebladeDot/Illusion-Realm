@@ -6,6 +6,34 @@
  * 因此「翻了哪些」是可以机检的数字，不靠人记。
  */
 export const profile = {
+  /*
+   * 生成统计文案的语义边界：
+   * 本地记录与账户云端历史明确区分，不能继续提示所有统计均未接入。
+   * 主模型与 LoRA 共用选择器，词条值变化不改变持久化 role 枚举。
+   * 平均耗时的秒单位由插值组合，数字格式仍由界面控制。
+   * 积分未知继续使用原空值，不提供从本地推理次数估算积分的文案。
+   * 保存失败提示只说明统计记录问题，避免误导用户重新生成已保存图片。
+   */
+  ui: {
+    mainModels: "Main models", loraModels: "LoRA models", modelRole: "Model usage category", modelTotals: "Main {main} · LoRA {lora}", seconds: "{value}s", attempts: "{count} tasks recorded", outcomes: "Generation outcomes", imageUnit: "Unit: images", historySaveFailed: "The image task finished, but its statistics could not be saved. Check the user data folder and retry.",
+    sample: "UI sample", actual: "My content", sampleHint: "UI sample. Interactions stay on this page and do not update your account.", actualHint: "Showing your profile and local image analytics. Posts are not connected yet.",
+    edit: "Edit profile", quoteFirst: "What you imagine", quoteLast: "will meet you here.", defaultBio: "Meet a better you in a world of imagination.", level: "Lv.3", likesTotal: "Likes",
+    posts: "Posts", likes: "Likes", privatePosts: "Only me", private: "Private analytics", cloudImages: "Cloud images", cloudCollections: "Collections", comments: "Comments", received: "Received comments",
+    all: "All", art: "Artwork", notes: "Creative notes", daily: "Daily life", newest: "Newest", oldest: "Oldest", popular: "Most liked", sort: "Sort posts", category: "Post category",
+    empty: "No matching content", sampleEmpty: "Like an artwork in Posts, then return here.", more: "More actions", like: "Like {title}", comment: "Comment on {title}", save: "Save", unsave: "Unsave", privateAction: "Set sample to private", publicAction: "Set sample to public", detail: "View details", saved: "Sample state updated on this page", commentPlaceholder: "Share your thoughts…", submit: "Post sample comment", commentHint: "Comments stay on this page and reset on refresh.",
+    post1: "The girl beneath the water", post2: "Notes on LoRA training", post3: "A violet dream", post4: "Testing a new model", post5: "Afternoon sunshine", post6: "Thoughts on prompts",
+    description1: "Trying a new approach to light and shadow.", description2: "Sharing parameters and comparisons from this LoRA training run.", description3: "Exploring cool colors and gentle light.", description4: "A new model test with promising results.", description5: "Returning to a fresh and calming style.", description6: "A few useful tags for future creations.",
+    myData: "My data", creations: "Creations", totalLikes: "Likes received", published: "Posts", followers: "Followers", following: "Following", privateHint: "Only visible to you", recentActivity: "Recent activity", seeAll: "View all", shortcuts: "Quick links", myWorks: "My works", myCollections: "My collections", settings: "Settings", promo: "Join more creators", promoHint: "Explore the possibilities of AI", create: "Create", activity1: "Published The girl beneath the water", activity2: "Saved an image", activity3: "Liked an image", activity4: "Uploaded a cloud image", activityTime1: "2 hours ago", activityTime2: "5 hours ago", activityTime3: "Yesterday 20:34", activityTime4: "Yesterday 16:20", noActivity: "No activity to display",
+    statsHint: "Private data about your creative activity and usage", range: "Date range", days7: "Last 7 days", days30: "Last 30 days", total: "Generations", success: "Success rate", duration: "Average duration", models: "Models used", points: "Total credits", previous: "Previous period {value}", primaryModel: "Primary: animaBase", unavailable: "No data", trend: "Creation trend", count: "Generations", countUnit: "Unit: generations", percentUnit: "Unit: %", distribution: "Content distribution", person: "People", scene: "Scenes", illustration: "Illustrations", other: "Other", totalLabel: "Total", modelUsage: "Model usage", otherModels: "Other models", peak: "Peak creation hours", hour: "{hour}h", today: "Usage today", generate: "Generations", times: "{count} times", imageGeneration: "Images", videoGeneration: "Videos", modelCalls: "Model calls", encouragement: "Great work today!", recentCreations: "Recent creations", moreRecords: "View more", details: "View details", chartHint: "Sample data. Actual analytics are not connected.", todayHint: "Sample values. Actual analytics must distinguish images, videos and model calls to avoid double counting.", actualStats: "Local image tasks recorded since tracking was enabled. Manual stops are excluded; ComfyUI errors count as failures. Duration includes preparation, generation and saving, not queue time. Older images, audio/video and external tools are excluded; credits are unknown.",
+  },
+  collections: {
+    all: "All", character: "Characters", scene: "Scenes", illustration: "Illustrations", work: "Works", other: "Other",
+    categories: "Collection categories", search: "Search saved content…", sort: "Sort saved content", newest: "Recently saved", oldest: "Earliest saved", recent: "Recently saved", manage: "Manage", reset: "Restore all samples", clear: "Clear filters", remove: "Unsave {title}",
+    sampleHint: "These are 8 sample saves. Counts reflect the samples still saved. Unsave and like actions stay on this page; actual cloud collections continue to use the existing account service.",
+    encouragement: "Your collection celebrates what you love.", title7: "A promise beneath the blossoms", title8: "A distant fantasy",
+    tags1: "# Original character　# Fresh　# Blue", tags2: "# City　# Night　# Cyber mood", tags3: "# Girl　# Flowers　# Dreamlike", tags4: "# Characters　# Duo　# Experiment",
+    tags5: "# Character　# Sunshine　# Fresh", tags6: "# Character　# Night　# Mood", tags7: "# Girl　# Blossoms　# Spring", tags8: "# Landscape　# Distance　# Calm",
+  },
   cover: { change: "Preview cover", reset: "Reset cover", preview: "Profile cover preview", hint: "Page preview only; not saved after refresh" },
   cloud: {
     resourceScope: "Resource scope", mine: "Mine", publicLibrary: "Public", myImages: "My images", publicImages: "Public images", myCollections: "My collections", publicCollections: "Public collections", refresh: "Refresh",

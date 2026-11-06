@@ -1,5 +1,8 @@
 "use client";
 
+// 下拉选项沿用原业务值，菜单外观、滚动与键盘操作统一复用采样器组件。
+import { SimpleSelect } from "@/components/SimpleSelect";
+
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Plus, Trash2, Upload, X } from "lucide-react";
 import {
@@ -217,32 +220,23 @@ export function EditProfileDialog({
             <div className="space-y-3">
               {socialLinks.map((link) => (
                 <div key={link.id} className="flex gap-2">
-                  <select
-                    value={link.platform}
-                    onChange={(event) =>
+                  <SimpleSelect
+ value={String(link.platform)}
+ onChange={(value) =>
                       setSocialLinks((prev) =>
                         prev.map((item) =>
                           item.id === link.id
                             ? {
                                 ...item,
-                                platform: event.target
-                                  .value as ProfileSocialPlatform,
+                                platform: value as ProfileSocialPlatform,
                               }
                             : item
                         )
                       )
                     }
-                    className={cn(
-                      "h-9 rounded-md border bg-background px-2 text-sm",
-                      INPUT_BORDER_CLASS
-                    )}
-                  >
-                    {SOCIAL_PLATFORMS.map((platform) => (
-                      <option key={platform} value={platform}>
-                        {PROFILE_SOCIAL_PLATFORM_LABELS[platform]}
-                      </option>
-                    ))}
-                  </select>
+ className="min-w-0" portal
+ options={[...SOCIAL_PLATFORMS.map((platform) => ({ value: String(platform), label: PROFILE_SOCIAL_PLATFORM_LABELS[platform] }))]}
+ />
                   <input
                     type="url"
                     value={link.url}

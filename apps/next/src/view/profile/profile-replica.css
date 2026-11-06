@@ -1,0 +1,1814 @@
+/* 个人中心：按 HTML 参考的横幅、主区 / side 栅格和卡片尺寸实现；色彩复用应用主题。 */
+.profile-replica {
+  --pr-accent:var(--accent-text);
+  --pr-soft:color-mix(in srgb,var(--pr-accent) 9%,var(--background));
+  height:100%;
+  min-height:0;
+  overflow:auto;
+  overscroll-behavior:contain;
+  padding:0 0 14px;
+  /* 个人主页沿用 main 内容展示区的浅蓝底色，不用近白混色遮住父层。 */
+  /* 外围间隔由 main 的内边距提供，页面自身不重复添加外壳留边。 */
+  /* 其他预设与深色继续回退到原有内容表面；样例说明栏仍保持透明。 */
+  background:var(--workspace-surface,var(--background));
+  color:var(--foreground);
+  container-type:inline-size;
+  scrollbar-width:thin;
+  scrollbar-color:var(--border) transparent
+}
+
+.profile-replica [hidden] {
+  display:none!important
+}
+
+.profile-replica :is(button,a,select,textarea):focus-visible {
+  outline:2px solid var(--pr-accent);
+  outline-offset:3px
+}
+
+.profile-replica button {
+  cursor:pointer
+}
+
+.profile-replica :is(h1,h2,h3,p) {
+  margin:0
+}
+
+.profile-replica h2 {
+  font-size:14px;
+  font-weight:650
+}
+
+.profile-replica svg {
+  flex-shrink:0
+}
+
+.profile-replica [data-simple-select] > button {
+  background:var(--background);
+  border:1px solid var(--border);
+  border-radius:7px;
+  min-height:31px;
+  padding:3px 8px;
+  font-size:12px;
+  color:var(--foreground);
+  max-width:180px
+}
+
+.pr-mode {
+  display:flex;
+  align-items:center;
+  gap:13px;
+  min-height:30px;
+  padding:1px 3px 6px;
+  font-size:10px;
+  color:var(--muted-foreground)
+}
+
+.pr-mode p {
+  min-width:0
+}
+
+.pr-mode-switch {
+  display:flex;
+  gap:3px;
+  white-space:nowrap;
+  flex-shrink:0
+}
+
+.pr-mode-switch button {
+  padding:3px 8px;
+  border-radius:6px
+}
+
+.pr-mode-switch button[aria-pressed=true] {
+  color:var(--pr-accent);
+  background:var(--pr-soft)
+}
+
+.pr-banner {
+  position:relative;
+  isolation:isolate;
+  /* 桌面封面从 207px 收紧至 187px，为下方帖子归还 20px 高度。 */
+  /* 图片继续 cover 裁切，实际头像和资料仍由同一个 flex 容器布局。 */
+  /* 手机断点保留独立高度，避免操作按钮与两行简介相互覆盖。 */
+  height:187px;
+  overflow:hidden;
+  border:1px solid var(--border);
+  border-radius:10px;
+  margin-bottom:14px
+}
+
+.pr-banner-image {
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  object-position:center;
+  z-index:-3
+}
+
+.pr-banner-wash {
+  position:absolute;
+  inset:0;
+  z-index:-2;
+  background:linear-gradient(90deg,#edf5ff55,transparent 57%)
+}
+
+.pr-identity {
+  height:100%;
+  display:flex;
+  align-items:center;
+  gap:24px;
+  /* 参考图中头像和资料组的中点比封面中点低约 10px，而非完全垂直居中。 */
+  /* 上下内边距相差 20px，使头像与资料共同下移且实际按钮命中区同步移动。 */
+  /* 窄屏继续使用自己的 36px/12px 内边距，保留原有可读性与封面按钮空间。 */
+  padding:44px 46px 24px
+}
+
+.pr-avatar {
+  display:grid;
+  place-items:center;
+  /* 桌面头像从 112px 缩至 90px，约为原尺寸的五分之四。 */
+  /* 宽高同步缩小以保持圆形，白边与原有编辑入口一起参与实际布局。 */
+  /* 手机与极窄容器继续使用下方断点尺寸，不再次叠加缩放。 */
+  width:90px; height:90px;
+  flex-shrink:0;
+  border:3px solid #fff;
+  border-radius:50%;
+  box-shadow:0 3px 15px #6e84c526;
+  /* 头像本身不铺灰底，图片由圆形容器裁切，白色描边仍保留参考图层次。 */
+  /* 实际内容没有头像时直接显示姓名缩写，不用样例图片覆盖用户身份。 */
+  /* 背景透明只改变外观，编辑入口和原头像读取逻辑保持一致。 */
+  background:transparent;
+  font-size:28px
+}
+
+.pr-avatar img {
+  width:100%;
+  height:100%;
+  border-radius:50%;
+  object-fit:cover
+}
+
+.pr-identity-copy {
+  min-width:0;
+  max-width:46%;
+  color:#2c3e6d
+}
+
+.pr-name {
+  display:flex;
+  align-items:center;
+  gap:12px
+}
+
+.pr-name h1 {
+  /* 昵称比原来小 1px，随头像一起降低资料区的视觉密度。 */
+  /* 仍保留单行省略与完整 title，长用户名不会挤出等级标记。 */
+  /* 不缩放资料容器，避免连同编辑按钮的实际命中坐标一起变化。 */
+  font-size:24px;
+  font-weight:650;
+  letter-spacing:-.6px;
+  line-height:1.3;
+  white-space:nowrap;
+  text-overflow:ellipsis;
+  overflow:hidden;
+  min-width:0
+}
+
+.pr-name>span {
+  /* 等级标记字号同步减少 1px，避免昵称缩小后标记显得过大。 */
+  /* 标记保留原有圆角和内边距，不改变等级数据或样例边界。 */
+  /* 手机断点原本也是 10px，因此该尺寸在窄屏下不会重复缩小。 */
+  font-size:10px;
+  white-space:nowrap;
+  border-radius:15px;
+  padding:1px 9px;
+  color:#fff;
+  background:linear-gradient(90deg,#849bff,#6279ff)
+}
+
+.pr-bio {
+  /* 简介同步从 13px 调整为 12px，与收紧后的横幅比例一致。 */
+  /* 原有两行截断和长单词换行继续约束资料高度，内容不会被删除。 */
+  /* 手机仍由专用断点取 11px，不用全局字号影响其他页面。 */
+  font-size:12px;
+  line-height:1.6;
+  color:#6f80ac;
+  margin:8px 0 12px!important;
+  display:-webkit-box;
+  -webkit-line-clamp:2;
+  -webkit-box-orient:vertical;
+  overflow:hidden;
+  overflow-wrap:anywhere
+}
+
+.pr-social {
+  display:flex;
+  gap:24px;
+  color:#7284b4;
+  /* 关注、粉丝和获赞的单位文字缩小 1px，与简介保持字号层次。 */
+  /* 数字使用下方独立字号，避免单位和数值同时失去主次。 */
+  /* 只约束封面内的资料统计，不改变侧栏数据卡或私密图表。 */
+  font-size:11px
+}
+
+.pr-social span {
+  white-space:nowrap
+}
+
+.pr-social strong {
+  /* 统计数字从 19px 收至 18px，跟随头像与资料字号一起调整。 */
+  /* 保留等宽数字与字重，样例和实际模式仍使用相同的排版。 */
+  /* 手机现有 16px/14px 尺寸继续优先，不压低窄屏可读性。 */
+  font-size:18px;
+  font-weight:650;
+  margin-right:5px;
+  color:#2c3e6d;
+  font-variant-numeric:tabular-nums
+}
+
+.pr-account {
+  font-size:10px;
+  color:#647ca9;
+  overflow-wrap:anywhere
+}
+
+.pr-account[open] {
+  max-height:75px;
+  overflow:auto
+}
+
+.pr-cover-actions {
+  position:absolute;
+  right:20px;
+  top:18px;
+  display:flex;
+  gap:8px
+}
+
+.pr-cover-actions>button {
+  background:#ffffffbf!important;
+  color:#3f5795!important;
+  border:1px solid #aab8f6!important;
+  min-height:32px;
+  font-size:12px!important;
+  gap:7px!important
+}
+
+.pr-cover-note {
+  position:absolute;
+  bottom:8px;
+  right:14px;
+  font-size:10px;
+  background:var(--background);
+  color:var(--muted-foreground);
+  border-radius:5px;
+  padding:3px 7px
+}
+
+.pr-banner blockquote {
+  position:absolute;
+  right:44px;
+  bottom:40px;
+  color:#7e94d5;
+  font-size:14px;
+  line-height:1.8;
+  text-align:center;
+  transform:rotate(-3deg);
+  padding:0 18px;
+  margin:0
+}
+
+.pr-banner blockquote:before,.pr-banner blockquote:after {
+  position:absolute;
+  font-size:58px;
+  color:#a9baff;
+  line-height:1
+}
+
+.pr-banner blockquote:before {
+  content:'“';
+  left:-20px;
+  top:-8px
+}
+
+.pr-banner blockquote:after {
+  content:'”';
+  right:-12px;
+  bottom:-15px
+}
+
+.pr-layout {
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 324px;
+  gap:12px;
+  align-items:start
+}
+
+.pr-layout[data-profile-layout=statistics] {
+  grid-template-columns:minmax(0,1fr) 348px
+}
+
+.pr-main {
+  min-width:0
+}
+
+.pr-panel {
+  min-width:0;
+  border:1px solid var(--border);
+  border-radius:10px;
+  background:var(--background);
+  box-shadow:0 3px 12px #5670a106
+}
+
+.pr-tabs {
+  display:flex;
+  align-items:stretch;
+  gap:20px;
+  background:var(--background);
+  min-height:49px;
+  border-radius:9px;
+  padding:0 19px;
+  margin-bottom:12px;
+  overflow-x:auto;
+  scrollbar-width:none;
+  white-space:nowrap;
+  border:1px solid color-mix(in srgb,var(--background) 85%,var(--border))
+}
+
+.pr-tabs>button {
+  position:relative;
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  flex-shrink:0;
+  padding:0 6px;
+  min-height:47px;
+  font-size:14px;
+  outline-offset:-3px!important
+}
+
+.pr-tabs>button[aria-selected=true] {
+  color:var(--pr-accent);
+  font-weight:650
+}
+
+.pr-tabs>button[aria-selected=true]:after {
+  content:'';
+  height:3px;
+  position:absolute;
+  bottom:0;
+  left:0;
+  right:0;
+  border-radius:4px 4px 0 0;
+  background:var(--pr-accent)
+}
+
+.pr-tabs>button:hover {
+  color:var(--pr-accent)
+}
+
+.pr-tabs svg {
+  width:17px;
+  height:17px;
+  /* 所有标签都保留图标，不能根据帖子/统计状态改变标签的视觉识别。 */
+  /* 窄屏由标签栏自身横向滚动容纳内容，不再通过隐藏图标节省宽度。 */
+  /* 图标与文字共用原按钮，键盘导航和实际业务入口保持不变。 */
+  display:block
+}
+
+.pr-posts {
+  padding:8px 20px 16px
+}
+
+.pr-post-toolbar {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+  min-height:49px;
+  margin-bottom:4px
+}
+
+.pr-categories {
+  display:flex;
+  align-self:stretch;
+  gap:27px;
+  overflow-x:auto;
+  scrollbar-width:none
+}
+
+.pr-categories button {
+  position:relative;
+  white-space:nowrap;
+  color:var(--muted-foreground);
+  font-size:13px;
+  min-height:38px;
+  padding:0 2px
+}
+
+.pr-categories button[aria-pressed=true] {
+  color:var(--pr-accent);
+  font-weight:600
+}
+
+.pr-categories button[aria-pressed=true]:after {
+  position:absolute;
+  bottom:5px;
+  left:0;
+  right:0;
+  height:2px;
+  background:var(--pr-accent);
+  content:''
+}
+
+/* 个人主页的帖子、云端图片和收藏夹网格共用210px最小卡宽与16px间距。 */
+/* auto-fill保留未填满的列，分类、喜欢或私密筛选只剩一项时卡片不会拉宽。 */
+/* 五列下限随容器增长，足够宽时最多五列，中等宽度自然降为四、三、二、一列。 */
+/* min(100%,...)允许最窄窗口使用单列，不会因210px最小值撑出水平滚动。 */
+/* 选择器限定个人主页，收藏夹在其他页面的网格及本页列表模式均不受影响。 */
+/* 仅统一列表排布，原卡片详情、权限、分页和各自封面内容由原组件保留。 */
+.profile-replica :is(.pr-post-grid,.pr-cloud-image-grid,.collection-grid) {
+  display:grid; grid-template-columns:repeat(auto-fill,minmax(min(100%,max(210px,calc((100% - 64px)/5))),1fr)); gap:16px;
+}
+
+.pr-post {
+  min-width:0;
+  overflow:hidden;
+  border:1px solid var(--border);
+  border-radius:9px;
+  background:var(--background);
+  box-shadow:0 3px 8px #446aaa08;
+  /* 整张卡片按参考图保持宽略大于高，不能只约束封面的横向比例。 */
+  /* 封面占高度的 56%，文字区使用剩余空间，宽度变化时两者同步缩放。 */
+  /* minmax 的零下限允许摘要收缩，防止内容最小高度反向撑成长卡片。 */
+  display:grid; grid-template-rows:56% minmax(0,1fr); aspect-ratio:1.04;
+}
+
+.pr-post:hover {
+  box-shadow:0 5px 18px #506cb318
+}
+
+.pr-post-cover {
+  position:relative;
+  display:block;
+  width:100%;
+  /* 封面高度由整卡的比例行决定，不再由图片宽高比重复推导另一套高度。 */
+  /* 原图保持 object-fit:cover，不拉伸图片，也不改变详情中的原始资源。 */
+  /* 零最小高度允许卡片在窄容器中按同一比例收缩。 */
+  height:100%; min-height:0;
+  overflow:hidden;
+  background:var(--muted)
+}
+
+.pr-post-cover img {
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  transition:transform .25s
+}
+
+.pr-post-cover:hover img {
+  transform:scale(1.025)
+}
+
+.pr-post-cover>span {
+  position:absolute;
+  left:9px;
+  bottom:7px;
+  background:#657bdbb8;
+  color:#fff;
+  border:1px solid #ffffff30;
+  border-radius:5px;
+  line-height:20px;
+  padding:0 7px;
+  font-size:10px;
+  backdrop-filter:blur(6px)
+}
+
+.pr-post-copy {
+  /* 帖子文字区上下 padding 各减 4px，为固定比例的卡片内容归还 8px 空间。 */
+  /* 左右仍为 10px，让标题、摘要与底部操作保持原来的水平对齐。 */
+  /* 封面比例与原图不变，压缩的是文字周围空白而非图片内容。 */
+  padding:8px 10px 6px;
+  display:flex;
+  flex-direction:column;
+  /* 文字区位于固定比例的剩余栅格行，允许内部摘要使用实际剩余高度。 */
+  /* 解除默认最小尺寸才能避免长文字把卡片撑高，详情入口仍保留全文。 */
+  /* 左右最小宽度也归零，长标题不会把自动列数挤出容器。 */
+  min-width:0; min-height:0
+}
+
+.pr-post-heading {
+  display:flex;
+  align-items:start;
+  gap:4px
+}
+
+.pr-post-heading>button:first-child {
+  min-width:0;
+  flex:1;
+  text-align:left;
+  /* 紧凑卡片采用 13px 标题和较短行距，给摘要及底部操作保留空间。 */
+  /* 仍最多显示两行，长标题继续从原详情入口查看，不删除帖子字段。 */
+  /* 规则仅作用于帖子标题，不缩小导航或资料区的字号。 */
+  font-size:13px; line-height:1.4;
+  font-weight:600;
+  display:-webkit-box;
+  -webkit-line-clamp:2;
+  -webkit-box-orient:vertical;
+  overflow:hidden
+}
+
+/* 更多按钮只匹配第二个子按钮，收藏卡仅有标题时不能把标题压成18px。 */
+/* 公共卡片的 headingAction 可省略，选择最后一个按钮会误命中标题。 */
+/* 帖子仍有原菜单按钮，沿用其点击区域及次要文字颜色。 */
+.pr-post-heading>button:nth-child(2) {
+  width:18px;
+  min-height:25px;
+  flex-shrink:0;
+  color:var(--muted-foreground)
+}
+
+.pr-post-copy>p {
+  color:var(--muted-foreground);
+  /* 摘要按参考卡片收紧字号与行距，优先使用标题和操作之外的剩余空间。 */
+  /* 允许零最小高度，防止原先 38px 占位把整卡推成高大于宽。 */
+  /* 两行截断继续生效，完整文字仍由已有帖子详情展示。 */
+  font-size:11px; line-height:1.4; min-height:0; flex:1;
+  /* 标题与摘要之间收紧 4px，配合上下 padding 和 footer 为内容归还约 20px。 */
+  /* 两行摘要的最小高度及截断规则保持原样，卡片仍能按行整齐排列。 */
+  /* 窄屏继续采用自己的 5px 间距，不挤压手机上的阅读空间。 */
+  margin-top:4px;
+  display:-webkit-box;
+  -webkit-line-clamp:2;
+  -webkit-box-orient:vertical;
+  overflow:hidden;
+  overflow-wrap:anywhere
+}
+
+.pr-post-copy>footer {
+  display:flex;
+  align-items:center;
+  gap:12px;
+  margin-top:auto;
+  /* 摘要和操作行之间收紧 8px，使操作行能放入固定比例的文字区域。 */
+  /* footer 仍由 margin-top:auto 对齐同一行卡片底边，按钮本身不缩小。 */
+  /* 保留日期、喜欢及评论的完整点击区，避免用固定高度裁切内容。 */
+  padding-top:9px;
+  color:var(--muted-foreground);
+  /* 日期和计数使用 10px，维持参考图的次要信息层次。 */
+  /* 底栏保留单行，自动网格的单列回退提供足够的可用宽度。 */
+  /* 喜欢和评论仍使用原按钮，数值及事件处理不发生变化。 */
+  font-size:10px;
+  white-space:nowrap
+}
+
+.pr-post-copy time {
+  margin-right:auto;
+  font-variant-numeric:tabular-nums
+}
+
+.pr-post-copy>footer button {
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+  /* 可见操作行从 27px 收至 22px，与缩短后的文字区匹配。 */
+  /* 保留原图标和按钮事件，不以缩放变换制造视觉和点击位置偏差。 */
+  /* 单列回退时也沿用同一尺寸，避免手机卡片重新长成竖向长条。 */
+  min-height:22px
+}
+
+.pr-post-copy>footer button[aria-pressed=true] {
+  color:var(--pr-accent)
+}
+
+.pr-post-copy>footer button[aria-pressed=true] svg {
+  fill:var(--pr-soft)
+}
+
+.pr-empty {
+  padding:50px 15px;
+  text-align:center
+}
+
+.pr-empty h3 {
+  font-size:15px;
+  font-weight:600
+}
+
+.pr-empty p {
+  margin:10px 0!important;
+  color:var(--muted-foreground);
+  font-size:13px
+}
+
+.pr-empty-note {
+  padding:18px 0;
+  color:var(--muted-foreground);
+  font-size:12px
+}
+
+.pr-button {
+  display:inline-flex;
+  justify-content:center;
+  align-items:center;
+  min-height:36px;
+  padding:0 14px;
+  background:var(--accent-fill);
+  color:var(--accent-fill-foreground);
+  border-radius:8px;
+  font-size:12px;
+  margin-top:12px
+}
+
+.pr-side {
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+  min-width:0
+}
+
+.pr-side .pr-panel {
+  padding:16px 20px
+}
+
+.pr-side header {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+  margin-bottom:15px
+}
+
+.pr-side header>button {
+  font-size:10px;
+  color:var(--muted-foreground);
+  white-space:nowrap
+}
+
+.pr-overview>div {
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:13px 12px
+}
+
+.pr-overview>div>div {
+  display:flex;
+  flex-direction:column;
+  gap:2px;
+  min-width:0
+}
+
+.pr-overview span {
+  font-size:10px;
+  color:var(--muted-foreground);
+  white-space:nowrap
+}
+
+.pr-overview strong {
+  font-size:22px;
+  font-weight:650;
+  letter-spacing:-.7px;
+  font-variant-numeric:tabular-nums
+}
+
+.pr-overview>div>div:nth-child(2),.pr-overview>div>div:nth-child(3) {
+  border-left:1px solid var(--border);
+  padding-left:12px
+}
+
+.pr-activity-row {
+  display:flex;
+  align-items:center;
+  gap:10px;
+  width:100%;
+  text-align:left;
+  margin:0 0 12px;
+  min-width:0
+}
+
+.pr-activity-row:last-child {
+  margin-bottom:0
+}
+
+.pr-activity-row img {
+  width:37px;
+  height:37px;
+  border-radius:6px;
+  object-fit:cover;
+  flex-shrink:0
+}
+
+.pr-activity-row>div {
+  min-width:0
+}
+
+.pr-activity-row p {
+  font-size:12px;
+  overflow:hidden;
+  white-space:nowrap;
+  text-overflow:ellipsis;
+  color:var(--muted-foreground)
+}
+
+.pr-activity-row small {
+  font-size:10px;
+  color:var(--muted-foreground)
+}
+
+.pr-shortcuts h2 {
+  margin-bottom:12px
+}
+
+.pr-shortcut-grid {
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  border-bottom:1px solid var(--border);
+  padding-bottom:15px;
+  gap:8px
+}
+
+.pr-shortcut-grid :is(button,a) {
+  display:flex;
+  align-items:center;
+  flex-direction:column;
+  gap:6px;
+  color:var(--muted-foreground);
+  font-size:10px;
+  min-height:48px;
+  white-space:nowrap
+}
+
+.pr-shortcut-grid svg {
+  width:19px;
+  height:19px
+}
+
+.pr-promo {
+  position:relative;
+  display:block;
+  overflow:hidden;
+  margin-top:14px;
+  border-radius:8px;
+  background:linear-gradient(100deg,var(--pr-soft),var(--muted));
+  padding:12px;
+  min-height:96px;
+  color:var(--pr-accent)
+}
+
+.pr-promo :is(strong,p,span) {
+  position:relative;
+  z-index:1
+}
+
+.pr-promo strong {
+  font-size:13px;
+  font-weight:550
+}
+
+.pr-promo p {
+  font-size:11px;
+  margin:1px 0 6px!important
+}
+
+.pr-promo span {
+  display:inline-block;
+  font-size:11px;
+  padding:4px 10px;
+  border-radius:7px;
+  background:linear-gradient(100deg,#5764ff,#80b8ff);
+  color:#fff
+}
+
+.pr-promo img {
+  position:absolute;
+  right:-13px;
+  bottom:0;
+  width:47%;
+  height:100%;
+  object-fit:cover;
+  mask-image:linear-gradient(90deg,transparent,#000 35%);
+  opacity:.8
+}
+
+.pr-statistics {
+  padding:16px
+}
+
+.pr-stats-heading {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:20px
+}
+
+.pr-stats-heading>div {
+  display:flex;
+  align-items:center;
+  gap:12px;
+  min-width:0
+}
+
+.pr-stats-heading h2 {
+  display:flex;
+  align-items:center;
+  gap:9px;
+  white-space:nowrap;
+  font-size:16px
+}
+
+.pr-stats-heading h2 svg {
+  color:var(--pr-accent)
+}
+
+.pr-stats-heading p {
+  color:var(--muted-foreground);
+  font-size:11px
+}
+
+.pr-metrics {
+  display:grid;
+  grid-template-columns:repeat(5,minmax(0,1fr));
+  gap:16px;
+  margin-bottom:20px
+}
+
+.pr-metric {
+  position:relative;
+  min-width:0;
+  min-height:128px;
+  border-radius:10px;
+  padding:16px 12px 14px 58px;
+  background:linear-gradient(120deg,color-mix(in srgb,#ab9aff 12%,var(--background)),var(--muted))
+}
+
+.pr-metric:nth-child(2),.pr-metric:nth-child(5) {
+  background:linear-gradient(120deg,color-mix(in srgb,#89e2e7 12%,var(--background)),var(--muted))
+}
+
+.pr-metric-icon {
+  position:absolute;
+  top:17px;
+  left:15px;
+  display:grid;
+  place-items:center;
+  width:33px;
+  height:33px;
+  border-radius:50%;
+  background:var(--pr-soft);
+  color:var(--pr-accent)
+}
+
+.pr-metric>p {
+  font-size:12px;
+  color:var(--muted-foreground);
+  white-space:nowrap
+}
+
+.pr-metric>div {
+  display:flex;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:10px;
+  margin:6px 0 5px
+}
+
+.pr-metric strong {
+  font-size:24px;
+  font-weight:650;
+  line-height:1.2;
+  letter-spacing:-.6px;
+  font-variant-numeric:tabular-nums
+}
+
+.pr-metric>div>span {
+  font-size:10px;
+  color:#19a18d;
+  white-space:nowrap;
+  background:var(--background);
+  border-radius:15px;
+  padding:2px 6px
+}
+
+.pr-metric>div>span[data-pink=true] {
+  color:#d67eac
+}
+
+.pr-metric>small {
+  font-size:10px;
+  color:var(--muted-foreground);
+  white-space:nowrap
+}
+
+.pr-chart-row {
+  display:grid;
+  grid-template-columns:minmax(0,1.32fr) minmax(0,1fr);
+  gap:13px;
+  margin-bottom:12px
+}
+
+.pr-chart-card {
+  min-width:0;
+  border:1px solid var(--border);
+  border-radius:10px;
+  padding:12px 16px;
+  background:var(--background)
+}
+
+.pr-chart-card>header {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  min-height:29px;
+  margin-bottom:7px
+}
+
+.pr-chart-card h3 {
+  display:flex;
+  align-items:center;
+  gap:9px;
+  font-size:13px;
+  font-weight:600
+}
+
+.pr-chart-card>header>button {
+  color:var(--muted-foreground);
+  width:24px;
+  height:24px;
+  display:grid;
+  place-items:center
+}
+
+.pr-chart-card [data-simple-select] > button {
+  min-height:27px;
+  font-size:10px;
+  padding-inline:7px
+}
+
+.pr-chart-legend {
+  display:flex;
+  align-items:center;
+  gap:9px;
+  font-size:10px;
+  color:var(--muted-foreground);
+  padding:0 0 3px
+}
+
+.pr-chart-legend>i {
+  width:6px;
+  height:6px;
+  border-radius:50%;
+  background:#8574ff
+}
+
+.pr-chart-legend>span {
+  margin-left:8px
+}
+
+/* ECharts 宿主使用确定高度，隐藏标签重新显示时能观察到非零布局。 */
+/* 宽度由父卡片决定，零最小宽度允许最窄窗口继续收缩而不是撑出展示区。 */
+/* 图表自身不加内边距；坐标和标签留白交给 ECharts grid 的 containLabel。 */
+/* SVG 的像素尺寸由实例 resize 更新，不能再套用原手绘 viewBox 的自适应高度。 */
+/* 趋势保留原版 159px 高度，避免库迁移使整张统计卡明显变高。 */
+/* 其它两种柱形沿用紧凑的 111px，数据标签不会被当成额外 DOM 行占位。 */
+/* 明细复用这些尺寸，dialog 的宽度变化仍由 ResizeObserver 通知实例。 */
+/* 环图只负责圆环与中央读数，右侧文字图例继续参与父层 flex 布局。 */
+/* 环图宽度不超过可用区，极窄布局中图例会自动换行而不是挤压 SVG。 */
+/* 统一宿主替代旧 pr-trend-svg、pr-hours-svg、CSS 假环与 CSS 模型进度条。 */
+/* 删除旧选择器，防止遗留容器查询在小尺寸下把新图表改回不确定高度。 */
+/* 这部分只定义几何，不把浅色主题文字写死，颜色由绘制时的主题 token 决定。 */
+.pr-echart { width:100%; min-width:0; height:159px; }
+.pr-echart:is([data-chart-kind="hours"],[data-chart-kind="models"]) { height:111px; }
+.pr-distribution>.pr-echart { width:155px; max-width:100%; height:155px; flex-shrink:0; }
+
+.pr-distribution {
+  display:flex;
+  align-items:center;
+  justify-content:space-around;
+  gap:20px;
+  padding:16px 0 6px
+}
+
+.pr-distribution ul {
+  margin:0;
+  padding:0;
+  list-style:none;
+  flex:1;
+  max-width:180px;
+  min-width:100px
+}
+
+.pr-distribution li {
+  display:flex;
+  align-items:center;
+  gap:9px;
+  margin-bottom:12px;
+  font-size:11px
+}
+
+.pr-distribution li:last-child {
+  margin:0
+}
+
+.pr-distribution li i {
+  width:8px;
+  height:8px;
+  border-radius:50%;
+  background:#8172ff
+}
+
+.pr-distribution li:nth-child(2) i {
+  background:#69c7ff
+}
+
+.pr-distribution li:nth-child(3) i {
+  background:#ec95dd
+}
+
+.pr-distribution li:nth-child(4) i {
+  background:#7edddd
+}
+
+.pr-distribution li strong {
+  margin-left:auto;
+  font-weight:550;
+  font-variant-numeric:tabular-nums
+}
+
+.pr-bottom-charts {
+  grid-template-columns:minmax(0,1.12fr) minmax(0,1fr);
+  margin-bottom:0
+}
+
+.pr-today {
+  position:relative;
+  overflow:hidden;
+  min-height:232px
+}
+
+.pr-today header {
+  justify-content:start
+}
+
+.pr-today-total {
+  font-size:12px;
+  position:relative;
+  z-index:1
+}
+
+.pr-today-total>strong {
+  font-size:25px;
+  font-weight:650
+}
+
+.pr-today-total>span {
+  color:#1ab49c;
+  margin-left:15px
+}
+
+.pr-today-rows {
+  position:relative;
+  z-index:1;
+  max-width:174px;
+  margin-top:15px
+}
+
+.pr-today-rows p {
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin-top:12px;
+  color:var(--muted-foreground);
+  font-size:12px
+}
+
+.pr-today-rows svg {
+  color:var(--pr-accent)
+}
+
+.pr-today-rows strong {
+  margin-left:auto;
+  font-size:18px;
+  font-weight:600
+}
+
+.pr-today-art {
+  position:absolute;
+  width:155px;
+  height:157px;
+  object-fit:cover;
+  object-position:center bottom;
+  right:-16px;
+  bottom:0;
+  opacity:.65;
+  mask-image:linear-gradient(90deg,transparent,#000 20%)
+}
+
+.pr-today-message {
+  position:absolute;
+  right:20px;
+  top:70px;
+  font-size:11px;
+  color:var(--pr-accent);
+  transform:rotate(-13deg);
+  background:var(--background);
+  padding:1px 3px;
+  border-radius:4px;
+  z-index:1
+}
+
+.pr-recent-row {
+  display:flex;
+  align-items:center;
+  gap:12px;
+  width:100%;
+  text-align:left;
+  min-height:87px;
+  margin-bottom:5px
+}
+
+.pr-recent-row:last-child {
+  margin:0
+}
+
+.pr-recent-row img {
+  width:68px;
+  height:68px;
+  border-radius:7px;
+  object-fit:cover;
+  flex-shrink:0
+}
+
+.pr-recent-row>div {
+  min-width:0;
+  flex:1
+}
+
+.pr-recent-row strong {
+  display:block;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  font-size:12px;
+  font-weight:500
+}
+
+.pr-recent-row p {
+  color:var(--muted-foreground);
+  font-size:10px;
+  margin-top:4px
+}
+
+.pr-session {
+  padding-top:15px
+}
+
+.pr-session>.profile-content {
+  padding-inline:4px
+}
+
+.pr-cloud {
+  padding:18px
+}
+
+.pr-data-note {
+  padding:9px 12px;
+  margin-bottom:12px!important;
+  background:var(--pr-soft);
+  border-radius:7px;
+  color:var(--muted-foreground);
+  font-size:12px
+}
+
+.profile-dialog {
+  margin:auto;
+  width:min(780px,calc(100vw - 32px));
+  max-height:85dvh;
+  padding:0;
+  border:1px solid var(--border);
+  border-radius:14px;
+  background:var(--background);
+  color:var(--foreground);
+  box-shadow:0 18px 80px #263c7050
+}
+
+.profile-dialog::backdrop {
+  background:#21386355;
+  backdrop-filter:blur(5px)
+}
+
+.profile-dialog>header {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+  padding:15px 20px;
+  border-bottom:1px solid var(--border)
+}
+
+.profile-dialog h2 {
+  font-size:16px;
+  font-weight:600
+}
+
+.profile-dialog-body {
+  padding:20px;
+  overflow-wrap:anywhere;
+  font-size:13px;
+  line-height:1.8
+}
+
+.profile-dialog small {
+  color:var(--muted-foreground);
+  font-size:12px
+}
+
+.profile-dialog button {
+  cursor:pointer
+}
+
+.profile-dialog button:focus-visible,.profile-dialog textarea:focus-visible {
+  outline:2px solid var(--accent-text);
+  outline-offset:3px
+}
+
+.pr-detail-image {
+  display:block;
+  margin:0 auto 15px;
+  max-width:100%;
+  max-height:49dvh;
+  object-fit:contain;
+  border-radius:9px
+}
+
+.profile-dialog textarea {
+  display:block;
+  width:100%;
+  border:1px solid var(--border);
+  background:var(--muted);
+  color:var(--foreground);
+  border-radius:8px;
+  padding:12px;
+  margin-top:14px;
+  font-size:16px
+}
+
+.pr-comments {
+  list-style:none;
+  padding:0;
+  margin:12px 0
+}
+
+.pr-comments li {
+  padding:10px 0;
+  border-top:1px solid var(--border);
+  white-space:pre-wrap
+}
+
+.pr-choice {
+  display:block;
+  width:100%;
+  text-align:left;
+  background:var(--muted);
+  border:1px solid var(--border);
+  border-radius:8px;
+  padding:9px 13px;
+  margin-bottom:9px
+}
+
+:root[data-theme=dark] .pr-banner-wash {
+  background:linear-gradient(90deg,#1c2942db,#1b2d4c33 52%,#1d2b4a10)
+}
+
+:root[data-theme=dark] .pr-identity-copy,:root[data-theme=dark] .pr-social strong {
+  color:#e6edff
+}
+
+:root[data-theme=dark] :is(.pr-bio,.pr-social,.pr-account) {
+  color:#bdcbea
+}
+
+@container(max-width:1200px) {
+  .pr-layout,.pr-layout[data-profile-layout=statistics] {
+    grid-template-columns:minmax(0,1fr) 285px
+  }
+  .pr-tabs {
+    gap:15px;
+    padding-inline:14px
+  }
+  .pr-tabs>button {
+    font-size:13px
+  }
+  .pr-posts {
+    padding-inline:14px
+  }
+  .pr-post-grid {
+    gap:12px
+  }
+  .pr-post-copy>footer {
+    gap:7px
+  }
+  .pr-categories {
+    gap:18px
+  }
+  .pr-side .pr-panel {
+    padding:15px
+  }
+  .pr-metrics {
+    gap:10px
+  }
+  .pr-metric {
+    padding:14px 10px 12px;
+    min-height:130px
+  }
+  .pr-metric-icon {
+    position:static;
+    width:26px;
+    height:26px;
+    float:left;
+    margin-right:8px
+  }
+  .pr-metric>p {
+    line-height:26px;
+    font-size:11px
+  }
+  .pr-metric>div {
+    clear:both;
+    margin-top:8px
+  }
+  .pr-metric strong {
+    font-size:23px
+  }
+  .pr-metric>small {
+    font-size:9px
+  }
+  .pr-distribution {
+    gap:12px
+  }
+  .pr-chart-card {
+    padding:12px
+  }
+  .pr-stats-heading p {
+    display:none
+  }
+  .pr-identity {
+    padding-inline:28px
+  }
+}
+
+@container(max-width:1050px) {
+  .pr-layout,.pr-layout[data-profile-layout=statistics] {
+    grid-template-columns:1fr
+  }
+  .pr-side {
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    align-items:start
+  }
+  .pr-side>.pr-shortcuts {
+    grid-column:1/-1
+  }
+  .pr-identity-copy {
+    max-width:56%
+  }
+  .pr-banner blockquote {
+    display:none
+  }
+  .pr-metric-icon {
+    float:none;
+    margin-bottom:3px
+  }
+  .pr-metric>p {
+    line-height:1.7
+  }
+  .pr-metric>small {
+    white-space:normal
+  }
+  .pr-metric>div {
+    gap:5px
+  }
+  .pr-metric strong {
+    font-size:22px
+  }
+  .pr-metric {
+    min-height:150px
+  }
+  .pr-post-copy>footer {
+    font-size:10px
+  }
+  .pr-stats-heading {
+    margin-bottom:15px
+  }
+  .pr-distribution {
+    gap:16px
+  }
+  .pr-chart-row {
+    grid-template-columns:minmax(0,1.2fr) minmax(0,1fr)
+  }
+}
+
+@container(max-width:700px) {
+  .pr-mode {
+    flex-wrap:wrap;
+    gap:3px;
+    padding-bottom:8px
+  }
+  .pr-mode p {
+    font-size:10px
+  }
+  .pr-banner {
+    height:192px;
+    margin-bottom:10px
+  }
+  .pr-banner-image {
+    object-position:58% center
+  }
+  .pr-identity {
+    padding:36px 16px 12px;
+    gap:14px
+  }
+  .pr-identity-copy {
+    max-width:none;
+    flex:1
+  }
+  .pr-avatar {
+    width:76px;
+    height:76px
+  }
+  .pr-name h1 {
+    font-size:23px
+  }
+  .pr-name>span {
+    font-size:10px;
+    line-height:17px;
+    padding-inline:7px
+  }
+  .pr-bio {
+    font-size:11px;
+    margin:7px 0 8px!important
+  }
+  .pr-social {
+    gap:16px;
+    font-size:10px
+  }
+  .pr-social strong {
+    font-size:16px
+  }
+  .pr-cover-actions {
+    right:10px;
+    top:8px;
+    gap:5px
+  }
+  .pr-cover-actions>button {
+    font-size:10px!important;
+    min-height:27px;
+    padding:3px 7px!important
+  }
+  .pr-cover-actions>button>span {
+    display:none
+  }
+  .pr-tabs {
+    gap:16px;
+    padding-inline:12px;
+    min-height:46px;
+    margin-bottom:10px
+  }
+  .pr-tabs>button {
+    font-size:12px;
+    min-height:44px;
+    padding-inline:1px
+  }
+  .pr-posts {
+    padding:7px 12px 12px
+  }
+  .pr-post-toolbar {
+    gap:4px;
+    flex-wrap:wrap;
+    padding-bottom:7px
+  }
+  .pr-categories {
+    gap:20px;
+    flex:1;
+    min-width:0
+  }
+  .pr-categories button {
+    font-size:11px;
+    min-height:35px
+  }
+  .pr-post-toolbar [data-simple-select] > button {
+    font-size:10px;
+    min-height:27px;
+    margin-left:auto;
+    max-width:120px
+  }
+  .pr-post-grid {
+    gap:10px
+  }
+  .pr-post-copy {
+    padding:9px 8px 7px
+  }
+  .pr-post-heading>button:first-child {
+    font-size:12px
+  }
+  .pr-post-copy>p {
+    font-size:11px;
+    margin-top:5px
+  }
+  .pr-post-copy>footer {
+    gap:8px;
+    padding-top:9px;
+    font-size:10px
+  }
+  .pr-post-cover>span {
+    font-size:9px;
+    left:6px;
+    bottom:5px;
+    line-height:17px;
+    padding-inline:5px
+  }
+  .pr-side {
+    grid-template-columns:1fr;
+    gap:10px
+  }
+  .pr-side .pr-panel {
+    padding:13px 12px
+  }
+  .pr-side h2 {
+    font-size:13px
+  }
+  .pr-overview strong {
+    font-size:20px
+  }
+  .pr-statistics {
+    padding:13px 12px
+  }
+  .pr-stats-heading h2 {
+    font-size:14px;
+    gap:7px
+  }
+  .pr-metrics {
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:9px;
+    margin-bottom:12px
+  }
+  .pr-metric {
+    min-height:118px;
+    padding:13px 12px
+  }
+  .pr-metric-icon {
+    float:left;
+    margin:0 8px 0 0
+  }
+  .pr-metric>p {
+    line-height:26px;
+    font-size:11px
+  }
+  .pr-metric>small {
+    font-size:10px
+  }
+  .pr-metric:last-child {
+    grid-column:1/-1;
+    min-height:101px
+  }
+  .pr-metric:last-child>div {
+    clear:none;
+    margin-left:42px;
+    margin-top:4px
+  }
+  .pr-metric:last-child>small {
+    margin-left:42px
+  }
+  .pr-chart-row {
+    grid-template-columns:1fr;
+    gap:10px;
+    margin-bottom:10px
+  }
+  .pr-bottom-charts {
+    margin-bottom:0
+  }
+  .pr-chart-card h3 {
+    font-size:12px
+  }
+  .pr-distribution {
+    padding:12px 8px 8px;
+    gap:28px;
+    justify-content:center
+  }
+  .pr-today-art {
+    width:180px;
+    height:170px
+  }
+  .pr-account {
+    max-height:50px;
+    overflow:auto
+  }
+  .pr-cloud {
+    padding:12px
+  }
+}
+
+@container(max-width:355px) {
+  .pr-identity {
+    padding-inline:10px;
+    gap:10px
+  }
+  .pr-avatar {
+    width:64px;
+    height:64px
+  }
+  .pr-name h1 {
+    font-size:21px
+  }
+  .pr-name {
+    gap:7px
+  }
+  .pr-social {
+    gap:10px
+  }
+  .pr-social strong {
+    font-size:14px;
+    margin-right:2px
+  }
+  .pr-categories {
+    flex-basis:100%;
+    gap:14px
+  }
+  .pr-post-grid {
+    gap:8px
+  }
+  .pr-distribution {
+    gap:18px;
+    /* 展示层新增内容留白后，最窄窗口不足以并排容纳环图和完整图例。 */
+    /* 空间不足时让图例另起一行，避免固定宽度把统计卡片撑出可用区域。 */
+    /* 保留环图比例、全部图例与数值，不通过裁切或隐藏内容消除溢出。 */
+    padding-inline:0; flex-wrap:wrap
+  }
+  .pr-distribution ul {
+    min-width:94px
+  }
+  .pr-metric>p {
+    font-size:10px
+  }
+  .pr-metric-icon {
+    width:22px;
+    height:22px
+  }
+  .pr-metric>div {
+    gap:5px
+  }
+  .pr-post-heading>button:first-child {
+    font-size:12px
+  }
+}
+
+/* 界面：手机横幅以浅色遮罩保障资料可读，保留右侧角色轮廓。 */
+@container(max-width:700px) {
+  .pr-banner-wash {
+    background:linear-gradient(90deg,#edf5fff2,#edf5ffd1 65%,#edf5ff33)
+  }
+  :root[data-theme=dark] .pr-banner-wash {
+    background:linear-gradient(90deg,#1c2942ed,#1c2942ca 65%,#1c294244)
+  }
+}
+
+@media(prefers-reduced-motion:reduce) {
+  .profile-replica *, .profile-dialog * {
+    transition:none!important;
+    animation:none!important
+  }
+}
+
+
+/* 共用卡片封面外层为图片与收藏按钮建立定位上下文。 */
+/* 零最小高度沿用原卡片56%的封面行，防止图片固有尺寸撑高。 */
+/* 覆盖按钮作为兄弟节点，整个封面仍可独立打开详情。 */
+.pr-artwork-cover { position:relative; min-width:0; min-height:0; }
+/* 收藏面板保留参考图中的内容留白，展示区外壳不再重复增加间隔。 */
+/* 20px仅属于本面板，不改变首页与创建页的零内边距。 */
+/* 长内容依旧由个人主页滚动容器承载。 */
+.pr-saved { padding:18px 20px; }
+/* 工具条使用可换行布局，窄窗不会用固定宽度挤出展示区域。 */
+/* 标题优先占据左侧，搜索和排序保持各自独立的标签。 */
+/* 底部间距用于分隔分类行，不改变卡片网格的行高。 */
+.pr-saved-toolbar { display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin-bottom:12px; }
+/* 标题与搜索之间由自动外边距分配剩余空间。 */
+/* 宽度不足时整项正常换行，而非缩小标题字号。 */
+/* 文字颜色继承个人主页主题，不固定浅色字色。 */
+.pr-saved-toolbar h2 { margin-right:auto; }
+/* 搜索边框与输入框共用一条水平中线。 */
+/* 210px为理想宽度，窄屏由下方容器查询改为占满一行。 */
+/* min-width归零允许输入框收缩而不撑开父级。 */
+.pr-saved-search { display:flex; align-items:center; gap:7px; width:210px; min-width:0; padding:7px 10px; border:1px solid var(--border); border-radius:8px; color:var(--muted-foreground); }
+/* 输入框取消浏览器默认白底，跟随父面板的主题表面。 */
+/* flex子项最小宽度归零，长placeholder不会决定整个工具条宽度。 */
+/* 键盘焦点仍由全局focus-visible边框明确显示。 */
+.pr-saved-search input { width:100%; min-width:0; border:0; outline-offset:3px; background:transparent; color:var(--foreground); font-size:11px; }
+/* 分类pills允许换行，六个分类在窄屏也全部可访问。 */
+/* 分类计数来自控制器，不通过CSS伪内容制造数字。 */
+/* 分类区与卡片之间保留独立间距，筛选时不会移动工具条。 */
+.pr-saved-categories { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:18px; }
+/* 分类使用短胶囊尺寸，沿用主题边框而非截图中的固定蓝色。 */
+/* 字体与当前个人主页紧凑字号一致，不扩大整张卡片。 */
+/* 非选中态依然保留描边，避免浅色背景下按钮轮廓丢失。 */
+.pr-saved-categories button { padding:4px 12px; border:1px solid var(--border); border-radius:999px; font-size:11px; color:var(--pr-accent); }
+/* 选中分类与侧栏共用同一状态，视觉只读取aria-pressed。 */
+/* 强调色直接取主题文本色，浅色与深色均由现有主题决定。 */
+/* 选中表面用主题soft背景，避免固定白字在浅色强调色上不可读。 */
+.pr-saved-categories button[aria-pressed=true] { background:var(--pr-soft); border-color:var(--pr-accent); font-weight:650; }
+/* 右上角收藏按钮拥有独立的26px命中区域。 */
+/* 不使用整卡的点击代理，因此取消收藏不会触发图片详情。 */
+/* 半透明深色与白色图标适用于各类封面，位置不占用正文高度。 */
+.pr-bookmark { position:absolute; top:7px; right:7px; display:grid; place-items:center; width:26px; height:26px; border-radius:5px; color:#fff; background:#344b89b8; }
+/* 收藏标签沿用正文的弹性剩余高度，整卡比例与帖子一致。 */
+/* 标签颜色使用次要文字，深色主题不固定截图的浅蓝。 */
+/* 长标签仍有详情入口，不通过放大卡片来强行显示全文。 */
+.pr-artwork-collection .pr-post-copy>p { color:var(--muted-foreground); }
+/* 管理入口位于主面板末尾，窄屏侧栏下移时也能直接到达。 */
+/* 它只打开样例管理说明，不冒充账户收藏夹编辑。 */
+/* 弱化字号保持工具层级，不与作品标题争夺视觉权重。 */
+.pr-saved-manage { margin-top:14px; color:var(--pr-accent); font-size:11px; }
+/* 侧栏分类自上而下铺开，顶部与面板标题保持独立间距。 */
+/* 每行采用同一网格，图标、名称与计数在所有分类上对齐。 */
+/* 行距与应用紧凑导航接近，但选择器不作用于全局nav。 */
+.pr-saved-category-list { display:grid; gap:3px; margin-top:12px; }
+/* 分类行的中间列允许收缩，数值列保留实际所需宽度。 */
+/* 图标使用原lucide尺寸，名称换语言不会挤走图标。 */
+/* 32px行高保留紧凑密度，不继承帖子卡或账户按钮的高度。 */
+.pr-saved-category-list button { display:grid; grid-template-columns:14px minmax(0,1fr) auto; align-items:center; gap:9px; min-height:32px; padding:4px 9px; border-radius:7px; text-align:left; font-size:12px; }
+/* 侧栏选中分类对应主区同一个category值。 */
+/* 使用主题soft背景，切换暗色不留下白色选中块。 */
+/* 不改变行高，切换分类不会导致最近列表上下跳动。 */
+.pr-saved-category-list button[aria-pressed=true] { background:var(--pr-soft); color:var(--pr-accent); }
+/* 最近收藏行分成查看区和取消区两个兄弟按钮。 */
+/* 查看区占满剩余宽度，取消按钮保持自身宽度。 */
+/* 间距只负责两按钮分隔，不在侧栏引入额外固定宽列。 */
+.pr-saved-recent { display:flex; align-items:center; gap:8px; margin-top:12px; }
+/* 缩略图与标题组合为整行查看按钮，提供较大的命中区域。 */
+/* flex最小宽度归零，长标题不会把右侧移除按钮挤出容器。 */
+/* 文本保持左对齐，避免按钮默认对齐方式影响日期位置。 */
+.pr-saved-recent>button:first-child { display:flex; align-items:center; gap:10px; flex:1; min-width:0; text-align:left; }
+/* 缩略图保持固定正方形，object-fit裁切而不拉伸原图。 */
+/* 原始图片仍在详情中完整呈现，本规则只影响最近收藏预览。 */
+/* 收缩关闭后，窄侧栏中的图标和缩略图始终可见。 */
+.pr-saved-recent img { width:46px; height:46px; flex-shrink:0; border-radius:5px; object-fit:cover; }
+/* 标题日期列使用纵向栅格，每项沿用相同的行间距。 */
+/* min-width允许长标题截断，避免父flex的内容最小宽度溢出。 */
+/* 日期与分类均为真实文本，不使用背景图片承载文字。 */
+.pr-saved-recent span { display:grid; gap:2px; min-width:0; }
+/* 最近标题保持单行，完整名称可通过查看详情获取。 */
+/* 省略仅作用于视觉文本，不改变按钮的可访问名称内容。 */
+/* 12px字号与侧栏分类一致，避免八条样例把侧栏撑得过高。 */
+.pr-saved-recent strong { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:12px; font-weight:500; }
+/* 日期和分类弱化到10px，维持截图的两级信息层次。 */
+/* 文字使用主题次要色，不给深色主题遗留浅色硬编码。 */
+/* 分类计数无需在此重复，计数统一放在上方分类列表。 */
+.pr-saved-recent small { font-size:10px; color:var(--muted-foreground); }
+/* 独立移除按钮保留28px区域，图片查看按钮不会包裹它。 */
+/* 图标颜色使用强调文本，任意主题下均沿用现有对比度配置。 */
+/* flex-shrink关闭防止长标题压没取消收藏入口。 */
+.pr-saved-recent>button:last-child { display:grid; place-items:center; width:28px; height:28px; flex-shrink:0; color:var(--pr-accent); }
+/* 底部鼓励区是独立装饰面板，不叠加到最近收藏条目上。 */
+/* 主题soft背景延续参考图浅蓝效果，暗色沿用当前配色。 */
+/* 固定96px只压缩装饰区域，不影响作品卡片高度。 */
+.pr-saved-promo { position:relative; min-height:96px; overflow:hidden; margin-top:16px; padding:20px 12px; border-radius:8px; background:var(--pr-soft); }
+/* 鼓励文案预留插画占用的右侧空间，避免两者重叠。 */
+/* 保留一半文字宽度，长英文允许自然换行。 */
+/* 文案可选可复制，插画不承担任何正文文本。 */
+.pr-saved-promo p { position:relative; z-index:1; width:55%; font-size:12px; color:var(--pr-accent); }
+/* 装饰图靠右下放置，透明资源不会形成额外矩形背景。 */
+/* object-fit保持比例，避免随侧栏宽度变化拉长人物。 */
+/* 图片pointer-events关闭，不妨碍附近列表按钮的命中。 */
+.pr-saved-promo img { position:absolute; right:-10px; bottom:-20px; width:45%; height:130px; object-fit:contain; pointer-events:none; }
+/* 输入框加入焦点轮廓，沿用个人主页的强调色可访问反馈。 */
+/* 不覆盖原placeholder文字，也不依赖仅颜色变化表达输入位置。 */
+/* 该规则只影响收藏搜索，不重写全局输入控件外观。 */
+.pr-saved-search input:focus-visible { outline:2px solid var(--pr-accent); }
+/* 最窄个人主页中搜索与排序独立一行，标题完整显示。 */
+/* 断点读取个人主页实际容器宽度，而非窗口物理像素。 */
+/* 外层已有导航和边框时，不会误判还剩完整屏幕宽度。 */
+@container(max-width:600px) {
+/* 窄屏面板水平留白减到12px，保留正文与边框的间隔。 */
+/* 主展示区的外壳留边保持不变，两个层级不能互相抵消。 */
+/* 规则只压缩收藏面板，不覆盖头像和帖子面板。 */
+  .pr-saved { padding:14px 12px; }
+/* 标题单独占满一行，搜索框不挤压标题。 */
+/* 工具条已允许换行，本规则只确定窄屏的换行点。 */
+/* 排序选择器仍与搜索框共处下一行。 */
+  .pr-saved-toolbar h2 { flex-basis:100%; }
+/* 搜索框分配排序之外的剩余宽度，输入仍可正常收缩。 */
+/* 取消桌面210px理想宽度，避免320px窗口横向溢出。 */
+/* 图标作为不可收缩的兄弟元素，始终能辨认搜索入口。 */
+  .pr-saved-search { width:auto; flex:1; }
+/* 侧栏在个人主页已有断点下移；极窄屏进一步使用单列。 */
+/* 分类和最近收藏先后排列，不把46px缩略图压进过窄双列。 */
+/* 未改变其他标签的侧栏布局，普通主页沿用既有规则。 */
+  .pr-saved-side { grid-template-columns:1fr; }
+/* 容器查询在此闭合，收藏样式不泄漏到后续布局。 */
+/* 桌面继续使用前面的主区加侧栏，与共享卡片列数独立。 */
+/* 卡片自身仍由同一个auto-fill网格决定四至五列及逐级减少。 */
+}

@@ -30,7 +30,8 @@ export function CloudCollectionEditor({ collection, ownerId, onChanged, onClose 
     <h3 className="font-semibold">{t(collection ? "profile.cloud.editCollection" : "profile.cloud.createCollection")}</h3>
     <fieldset disabled={task.busy || task.cooldown > 0} className="space-y-4">
       <form onSubmit={event => { event.preventDefault(); void task.run(save); }} className="space-y-3">
-        <CloudResourceFields draft={draft} collection onChange={patch => { requestId.current = null; setDraft(value => ({ ...value, ...patch })); }} />
+        {/* 弹窗：将请求锁显式传给浮层下拉，fieldset 无法禁用挂在外面的菜单。 */}
+        <CloudResourceFields disabled={task.busy || task.cooldown > 0} draft={draft} collection onChange={patch => { requestId.current = null; setDraft(value => ({ ...value, ...patch })); }} />
         <button type="submit" className={CLOUD_BUTTON_CLASS} disabled={!draft.name.trim()}>{t("profile.cloud.save")}</button>
       </form>
       {collection && <div className="space-y-3 border-t border-border pt-3"><CloudDeleteConfirmation collection checked={confirmed} onChange={setConfirmed} />

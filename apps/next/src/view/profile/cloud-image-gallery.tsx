@@ -10,7 +10,10 @@ export function CloudImageGallery({ images, actions }: { images: CloudImage[]; a
   const [preview, setPreview] = useState<number | null>(null);
   const items = images.map(image => ({ key: image.id, src: image.sourceUrl, alt: image.title }));
   return <>
-    <div className="grid grid-cols-1 gap-x-4 gap-y-6 min-[540px]:grid-cols-2 xl:grid-cols-3">
+    {/* 界面：云端图片采用个人主页统一网格，按可用宽度逐步减列而不是固定最多三列。 */}
+    {/* 不足一行仍保留空列，图片数量减少时不会把单张资源拉成大卡。 */}
+    {/* 原预览、权限文字及actions回调继续使用同一图片对象，不改变云端请求。 */}
+    <div className="pr-cloud-image-grid">
       {images.map((image, index) => <article key={image.id} data-cloud-image-id={image.id} className="group min-w-0">
         <button type="button" onClick={() => setPreview(index)} aria-label={t("profile.cloud.preview", { title: image.title })} className="block w-full overflow-hidden rounded-2xl border border-border/60 bg-muted outline-none transition-shadow hover:shadow-md focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
           {/* 界面：云端原图缩略展示，点开复用全局图片预览层 */}

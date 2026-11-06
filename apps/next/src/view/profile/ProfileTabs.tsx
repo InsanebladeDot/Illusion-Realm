@@ -1,120 +1,87 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
-import { PROFILE_TABS } from "@/data/profile";
-import type { ProfileTabId } from "@/types/profile";
+import { Cloud, Heart, LockKeyhole, MessageCircle, MessageSquare, Shield, FolderHeart } from "lucide-react";
 import { useTranslation } from "@/i18n";
-import { THIN_DIVIDER_CLASS } from "@/utils/layout";
-import { cn } from "@/utils/cn";
 import { useAccountStore } from "@/stores/useAccountStore";
 import { CloudImagesPanel } from "./cloud-images-panel";
 import { CloudCollectionsPanel } from "./cloud-collections-panel";
-import { ResourceViewToggle } from "./resource-view-toggle";
+import { ProfilePostsPanel } from "./profile-posts-panel";
+import { ProfileStatisticsPanel } from "./profile-statistics-panel";
+import { ProfileSide } from "./profile-side";
+import { PROFILE_TAB_ORDER, type ProfileContentTab } from "./profile-reference-data";
+// 收藏样例复用作品卡片；真实云端面板仍单独保留权限与分页逻辑。
+// 主区和右栏读取同一个 hook 实例，避免取消收藏后数量或最近列表不同步。
+// 仅在显式样例模式显示截图作品，不把它们呈现为账户实际收藏。
+import { ProfileCollectionsPanel, ProfileCollectionsSide } from "./profile-collections-panel";
+import { useProfileCollections } from "./use-profile-collections";
 
-type ContentTab = ProfileTabId | "cloudImages" | "cloudCollections";
+const TAB_ICONS = { posts: MessageSquare, likes: Heart, privatePosts: Shield, private: LockKeyhole, cloudImages: Cloud, cloudCollections: FolderHeart, comments: MessageCircle, received: MessageCircle };
 
-function EmptyPostsPanel() {
+/**
+ * 方向键使用自动激活模式，同时移动焦点和内容，Home/End 跳到两端。
+ * 帖子、喜欢及私密帖子共用同一 panel，aria-controls 因而指向同一个稳定节点。
+ * 评论入口保留在六个参考标签之后，避免视觉复刻删除已有产品入口。
+ */
+function ProfileTabBar({ active, onTab }: { active: ProfileContentTab; onTab: (tab: ProfileContentTab) => void }) {
   const { t } = useTranslation();
-
-  return (
-    <div className="py-12 text-center">
-      <h3 className="mb-2 text-lg font-medium">{t("profile.tabs.emptyPostsTitle")}</h3>
-      <p className="mb-4 text-muted-foreground">{t("profile.tabs.emptyPostsDescription")}</p>
-      <Link
-        href="/create"
-        className="inline-flex h-9 items-center justify-center rounded-md bg-accent-fill px-4 text-sm font-medium text-accent-fill-foreground hover:bg-accent-fill/90"
-      >
-        {t("profile.tabs.goCreate")}
-      </Link>
-    </div>
-  );
+  return <div className="pr-tabs" role="tablist" aria-label={t("profile.tabs.ariaLabel")} onKeyDown={event => {
+    if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
+    event.preventDefault(); const i = PROFILE_TAB_ORDER.indexOf(active);
+    const index = event.key === "Home" ? 0 : event.key === "End" ? PROFILE_TAB_ORDER.length - 1 : (i + (event.key === "ArrowRight" ? 1 : -1) + PROFILE_TAB_ORDER.length) % PROFILE_TAB_ORDER.length;
+    onTab(PROFILE_TAB_ORDER[index]); event.currentTarget.querySelector<HTMLButtonElement>(`[data-profile-content-tab="${PROFILE_TAB_ORDER[index]}"]`)?.focus();
+  }}>{PROFILE_TAB_ORDER.map(tab => {
+    const Icon = TAB_ICONS[tab];
+    return <button type="button" role="tab" id={`profile-tab-${tab}`} aria-controls={`profile-panel-${["likes", "privatePosts"].includes(tab) ? "posts" : tab}`} tabIndex={active === tab ? 0 : -1} aria-selected={active === tab} data-profile-content-tab={tab} key={tab} onClick={() => onTab(tab)}><Icon size={17} />{t(`profile.ui.${tab}`)}</button>;
+  })}</div>;
 }
 
-function EmptyTabPanel({ label }: { label: string }) {
+function EmptyComments({ received }: { received: boolean }) {
   const { t } = useTranslation();
-
-  return (
-    <div className="py-12 text-center">
-      <h3 className="mb-2 text-lg font-medium">{t("profile.tabs.emptyPrefix")}{label}</h3>
-      <p className="text-muted-foreground">{t("profile.tabs.comingSoon")}</p>
-    </div>
-  );
+  return <div className="pr-panel pr-empty"><h3>{t("profile.tabs.emptyPrefix")}{t(received ? "profile.ui.received" : "profile.ui.comments")}</h3><p>{t("profile.tabs.comingSoon")}</p></div>;
 }
 
-export function ProfileTabs() {
-  const { t } = useTranslation();
-  const [activeTab, setActiveTab] = useState<ContentTab>("posts");
-  const [visited, setVisited] = useState<ContentTab[]>([]);
+/**
+ * visited 只延迟首次挂载；离开云端标签后以 hidden 隐藏，保留重试 UUID 与上传草稿。
+ * accountId 作为云端组件 key，切换账户时丢弃上个账户的私有会话状态。
+ * 私密统计复用历史 private 标识；privatePosts 明确表示样例帖子的可见范围。
+ * 页面不因切换统计而改写全局导航折叠偏好，由应用外壳自行响应窗口尺寸。
+ */
+export function ProfileTabs({ sample }: { sample: boolean }) {
+  // 控制器属于整个标签宿主，离开收藏页后再返回不丢失本页互动。
+  // 实际模式仅隐藏样例展示，不写入云端草稿或覆盖原来的列表状态。
+  // 搜索与分类同时传给两处展示组件，不额外建立全局持久化 store。
+  const collections = useProfileCollections();
+  const [active, setActive] = useState<ProfileContentTab>("posts"), [visited, setVisited] = useState<ProfileContentTab[]>([]);
   const accountId = useAccountStore(state => state.profile?.id ?? null);
-  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
-
-  const activeLabel =
-    PROFILE_TABS.find((tab) => tab.id === activeTab)?.label ??
-    t("profile.tabs.fallbackLabel");
-
-  return (
-    <div className="flex min-h-0 flex-1 flex-col">
-      <div className="profile-content shrink-0">
-        <div
-          role="tablist"
-          aria-label={t("profile.tabs.ariaLabel")}
-          className={cn(
-            "no-scrollbar flex h-12 w-full items-center justify-start gap-1 overflow-x-auto overflow-y-hidden border-b bg-transparent p-0",
-            THIN_DIVIDER_CLASS
-          )}
-        >
-          {[...PROFILE_TABS, { id: "cloudImages" as const, label: t("profile.cloud.images") }, { id: "cloudCollections" as const, label: t("profile.cloud.collections") }].map((tab) => {
-            const active = activeTab === tab.id;
-            return (
-              <button
-                key={tab.id}
-                type="button"
-                role="tab"
-                data-profile-content-tab={tab.id}
-                aria-selected={active}
-                onClick={() => { setActiveTab(tab.id); setVisited(current => current.includes(tab.id) ? current : [...current, tab.id]); }}
-                className={cn(
-                  "relative inline-flex h-12 shrink-0 items-center justify-center whitespace-nowrap rounded-none border-b-2 border-transparent bg-transparent px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground",
-                  active && "border-accent-stroke text-accent-text"
-                )}
-              >
-                <span className="flex items-center gap-1 md:gap-2">
-                  {tab.label}
-                  {"privateOnly" in tab && tab.privateOnly ? (
-                    <span className="rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-normal text-muted-foreground md:px-2 md:text-xs">
-                      {t("profile.tabs.privateOnly")}
-                    </span>
-                  ) : null}
-                </span>
-              </button>
-            );
-          })}
-        </div>
+  const onTab = (tab: ProfileContentTab) => { setActive(tab); setVisited(current => current.includes(tab) ? current : [...current, tab]); };
+  const postsVisible = ["posts", "likes", "privatePosts"].includes(active);
+  return <div className="pr-layout" data-profile-layout={active === "private" ? "statistics" : "posts"}>
+    <div className="pr-main"><ProfileTabBar active={active} onTab={onTab} />
+      {/* 界面：帖子、喜欢与仅自己可见共用一份样例状态，不切换卸载。 */}
+      <div id="profile-panel-posts" role="tabpanel" aria-labelledby={`profile-tab-${postsVisible ? active : "posts"}`} hidden={!postsVisible}><ProfilePostsPanel sample={sample} tab={active} /></div>
+      <div id="profile-panel-private" role="tabpanel" aria-labelledby="profile-tab-private" hidden={active !== "private"}><ProfileStatisticsPanel sample={sample} /></div>
+      <div id="profile-panel-comments" role="tabpanel" aria-labelledby="profile-tab-comments" hidden={active !== "comments"}><EmptyComments received={false} /></div>
+      <div id="profile-panel-received" role="tabpanel" aria-labelledby="profile-tab-received" hidden={active !== "received"}><EmptyComments received /></div>
+      {/* 界面：「云端图片」「收藏夹」保留原有真实接口、权限和重试状态；账户变化清空私有会话。 */}
+      <div id="profile-panel-cloudImages" className="pr-panel pr-cloud" role="tabpanel" aria-labelledby="profile-tab-cloudImages" hidden={active !== "cloudImages"}>{visited.includes("cloudImages") && <CloudImagesPanel key={accountId ?? "guest"} ownerId={accountId} active={active === "cloudImages"} />}</div>
+      {/* 界面：「收藏夹」样例与真实内容共用原标签；真实组件保持挂载但在样例模式不加载。 */}
+      {/* 云端 active 需要同时满足实际模式与当前标签，隐藏时不继续触发刷新请求。 */}
+      {/* role 与标签 ID 仍只有一个，避免模式切换产生重复 aria-controls 目标。 */}
+      {/* 样例组件不以账户作为 key，切换账户不会把样例互动落到真实收藏记录中。 */}
+      {/* 实际组件仍以账户 ID 为 key，跨账户不复用前一个用户的私有数据。 */}
+      {/* 隐藏真实列表只停止加载通知，编辑器草稿和重试 ID 沿用原来的挂载实例。 */}
+      {/* 宿主的 hidden 同时覆盖两种模式，其他标签不会露出任何收藏内容。 */}
+      {/* 样例网格保持挂载，搜索与排序往返标签时继续有效。 */}
+      {/* 账户模式开关位于个人主页，不在本标签另建一套容易失步的模式状态。 */}
+      {/* 因而侧栏与主区总是在同一模式下展示，避免样例分类配真实文件夹列表。 */}
+      <div id="profile-panel-cloudCollections" role="tabpanel" aria-labelledby="profile-tab-cloudCollections" hidden={active !== "cloudCollections"}>
+        <div hidden={!sample}><ProfileCollectionsPanel state={collections} /></div>
+        <div className="pr-panel pr-cloud" hidden={sample}>{visited.includes("cloudCollections") && <CloudCollectionsPanel key={accountId ?? "guest"} ownerId={accountId} active={!sample && active === "cloudCollections"} />}</div>
       </div>
-      {/* 界面：标签下方共用一个滚动区；切换标签不卸载已有云端表单。 */}
-      <div data-profile-scroll className="profile-content min-h-0 flex-1 overflow-y-auto overscroll-contain pb-8">
-        <div className="pt-5" role="tabpanel" hidden={activeTab === "cloudImages" || activeTab === "cloudCollections"}>
-          {activeTab === "posts" ? (
-            <div>
-              <div className="mb-4 flex items-center justify-between gap-3">
-                <h3 className="text-base font-semibold">{t("profile.tabs.allPosts")}</h3>
-                <ResourceViewToggle value={viewMode} onChange={setViewMode} />
-              </div>
-              <EmptyPostsPanel />
-            </div>
-          ) : (
-            <EmptyTabPanel label={activeLabel} />
-          )}
-        </div>
-        {/* 界面：云端图片与收藏夹；保持挂载以保留重试 UUID，账户变化则清空私有会话结果 */}
-        <div className="pt-5" role="tabpanel" hidden={activeTab !== "cloudImages"}>
-          {visited.includes("cloudImages") && <CloudImagesPanel key={accountId ?? "guest"} ownerId={accountId} active={activeTab === "cloudImages"} />}
-        </div>
-        <div className="pt-5" role="tabpanel" hidden={activeTab !== "cloudCollections"}>
-          {visited.includes("cloudCollections") && <CloudCollectionsPanel key={accountId ?? "guest"} ownerId={accountId} active={activeTab === "cloudCollections"} />}
-        </div>
-      </div>
-    </div>
-  );
+      {/* side：只在样例收藏夹切换为分类与最近收藏，其他标签仍保留原右栏。 */}
+      {/* 分类控件与主区直接共用同一对象，真实云端不读取这些样例计数。 */}
+      {/* 侧栏沿用外层栅格定位，窄屏时由既有容器规则下移而不覆盖作品。 */}
+    </div>{sample && active === "cloudCollections" ? <ProfileCollectionsSide state={collections} /> : <ProfileSide sample={sample} statistics={active === "private"} onTab={onTab} />}
+  </div>;
 }

@@ -1,0 +1,179 @@
+{
+  "baseline": "C:\\Users\\18305\\AppData\\Local\\Temp\\ir-generation-statistics-baseline-i9wzqhlw\\baseline.json",
+  "method": "本轮工作区内容快照的新增与替换行；空行、未改行、删除行、纯定界符排除，混合行只算代码；中文职责/边界/反证说明人工核对。",
+  "files": [
+    {
+      "file": "packages/shared/src/types/userData.ts",
+      "category": "business",
+      "C": 3,
+      "B": 1,
+      "ratio": 75.0
+    },
+    {
+      "file": "apps/next/src/utils/generation-statistics.ts",
+      "category": "business",
+      "C": 197,
+      "B": 109,
+      "ratio": 64.38
+    },
+    {
+      "file": "apps/next/src/stores/use-generation-history-store.ts",
+      "category": "business",
+      "C": 59,
+      "B": 40,
+      "ratio": 59.6
+    },
+    {
+      "file": "apps/next/src/stores/useGenerationTaskStore.ts",
+      "category": "business",
+      "C": 38,
+      "B": 16,
+      "ratio": 70.37
+    },
+    {
+      "file": "apps/next/src/utils/image-generation-queue.ts",
+      "category": "business",
+      "C": 5,
+      "B": 2,
+      "ratio": 71.43
+    },
+    {
+      "file": "apps/next/src/utils/comfy/run-anima-edit.ts",
+      "category": "business",
+      "C": 5,
+      "B": 3,
+      "ratio": 62.5
+    },
+    {
+      "file": "apps/next/src/components/generation-task-card.tsx",
+      "category": "business",
+      "C": 41,
+      "B": 12,
+      "ratio": 77.36
+    },
+    {
+      "file": "apps/next/src/components/AppShell.tsx",
+      "category": "business",
+      "C": 20,
+      "B": 2,
+      "ratio": 90.91
+    },
+    {
+      "file": "apps/next/src/view/profile/profile-statistics-panel.tsx",
+      "category": "business",
+      "C": 53,
+      "B": 19,
+      "ratio": 73.61
+    },
+    {
+      "file": "apps/next/src/view/profile/profile-charts.tsx",
+      "category": "business",
+      "C": 97,
+      "B": 18,
+      "ratio": 84.35
+    },
+    {
+      "file": "apps/next/src/i18n/locales/zh-CN/profile.ts",
+      "category": "business",
+      "C": 6,
+      "B": 3,
+      "ratio": 66.67
+    },
+    {
+      "file": "apps/next/src/i18n/locales/en/profile.ts",
+      "category": "business",
+      "C": 6,
+      "B": 3,
+      "ratio": 66.67
+    },
+    {
+      "file": "apps/next/src/i18n/locales/zh-CN/create.ts",
+      "category": "business",
+      "C": 5,
+      "B": 1,
+      "ratio": 83.33
+    },
+    {
+      "file": "apps/next/src/i18n/locales/en/create.ts",
+      "category": "business",
+      "C": 5,
+      "B": 1,
+      "ratio": 83.33
+    },
+    {
+      "file": "scripts/verify-generation-statistics.js",
+      "category": "test",
+      "C": 446,
+      "B": 187,
+      "ratio": 70.46
+    },
+    {
+      "file": "packages/shared/src/schemas/generation-history.schema.ts",
+      "category": "business",
+      "C": 63,
+      "B": 19,
+      "ratio": 76.83
+    },
+    {
+      "file": "apps/next/src/utils/userDataStorage.ts",
+      "category": "business",
+      "C": 27,
+      "B": 6,
+      "ratio": 81.82
+    },
+    {
+      "file": "apps/next/src/view/ProfilePage.tsx",
+      "category": "business",
+      "C": 3,
+      "B": 1,
+      "ratio": 75.0
+    },
+    {
+      "file": "apps/next/src/utils/agentHostTools.ts",
+      "category": "business",
+      "C": 46,
+      "B": 29,
+      "ratio": 61.33
+    },
+    {
+      "file": "apps/next/src/view/profile/profile-side.tsx",
+      "category": "business",
+      "C": 16,
+      "B": 8,
+      "ratio": 66.67
+    },
+    {
+      "file": "apps/next/src/components/profile/profile-echart.tsx",
+      "category": "business",
+      "C": 14,
+      "B": 3,
+      "ratio": 82.35
+    },
+    {
+      "file": "scripts/verify-agent-loras.js",
+      "category": "test",
+      "C": 29,
+      "B": 5,
+      "ratio": 85.29
+    },
+    {
+      "file": "scripts/smoke-generation-notice.js",
+      "category": "test",
+      "C": 124,
+      "B": 56,
+      "ratio": 68.89
+    }
+  ],
+  "totals": {
+    "business": {
+      "C": 709,
+      "B": 296,
+      "ratio": 70.55
+    },
+    "test": {
+      "C": 599,
+      "B": 248,
+      "ratio": 70.72
+    }
+  }
+}
