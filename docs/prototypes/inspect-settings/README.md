@@ -1,5 +1,7 @@
 # Metadata views and SiliconFlow setup
 
+> 2026-10-22 瘦身归档说明：本文保留历史方案、代码示例与当时验证结论；配套独立 HTML 原型、截图、JSON 报告和源码备份已清理，文中旧预览命令不再适用。当前实现以 apps/ 下的正式源码为准，删除明细见 docs/项目瘦身清单-2026-10-22.md。
+
 Local image inspection offers original text and two-space formatted JSON for prompts, full generation information and embedded JSON fields. Original text remains exact. Plain text can be expanded, with the JSON option disabled and explained. Copy uses the current view; cards and dialogs share mode state. Escape, backdrop clicks and the close button dismiss the native dialog; focus returns to the trigger.
 
 The settings Agent section links to `https://siliconflow.cn/`. The setup button previews the four steps through its native hover tooltip and opens the existing `DocumentDialog` on click/tap. Both languages use the existing typed `useTranslation` catalogue. Instructions were checked against [SiliconFlow quickstart](https://docs.siliconflow.cn/cn/userguide/quickstart).
