@@ -7,24 +7,16 @@ afterPack: scripts/ffmpeg-after-pack.cjs
 directories:
   output: release
 
-# 打包内容（相对 apps/electron）：
-# - 主进程 / preload / 资源：'*.js'、'icon.png'、'ffmpeg/**'
-# - 主进程子目录：ipc-handlers/、services/、agent/、ffmpeg/（漏收会在启动时 Cannot find module）
-# - 运行时依赖：node_modules/@illusion-realm/**（workspace 链接到 packages/shared）
-#   main.js 第 6 行 require("./agent/env") 是启动第一步：agent/ 一旦漏收，
-#   表现就是「双击 exe 只弹一个 Cannot find module './agent/env' 的错误框」。
-#   这条白名单是手写的，新增主进程子目录时**必须同步加到这里**
-#   （scripts/verify-electron-modules.js 有对应断言，别只靠记性）。
+# 运行源码统一置于 src，递归白名单随功能目录扩展，不再手工枚举每个域。
+# assets 只分发窗口实际使用的 PNG；ICO 仅在 Windows 打包时使用。
+# installer 是独立安装向导，scripts 是构建工具，均不混入客户端 asar。
+# scripts/verify-electron-modules.js 从 main 与 preload 出发核对依赖图覆盖。
 # 注意：Next.js 静态导出目录位于 app 目录之外（apps/next/out），
 #       electron-builder 不会把外部目录收进 asar，因此通过 extraResources 分发。
 files:
   - '!**/*'
-  - '*.js'
-  - 'ipc-handlers/**/*'
-  - 'services/**/*'
-  - 'agent/**/*'
-  - 'ffmpeg/**/*'
-  - 'icon.png'
+  - 'src/**/*'
+  - 'assets/icon.png'
   - 'package.json'
   - 'node_modules/@illusion-realm/**/*'
 
@@ -34,13 +26,24 @@ asarUnpack:
   - '**/*.node'
 
 extraResources:
+  # 单一角色资料源供 Agent 与创建页共用；安装后不依赖开发机路径。
+  # JSON 保留原始字段，不执行 TS 或浏览器全局脚本。
+  - from: ../../packages/shared/src/data/character-reference.json
+    to: character-reference.json
+  # 自有许可与安装说明随客户端保留，卸载前也可以脱离向导查阅。
+  # 第三方组件许可仍各自保留；这两个文件不替代 FFmpeg 等原有通知。
+  # 使用 extraResources 放在可直接阅读的位置，不把许可仅藏于安装器。
+  - from: ../../LICENSE
+    to: LICENSE-Illusion-Realm.txt
+  - from: installer/NOTICE.txt
+    to: INSTALLATION-NOTICE.txt
   # Next.js 静态导出（生产环境由 app:// 协议读取：resources/next-out）
   - from: ../next/out
     to: next-out
     filter:
       - '**/*'
   # Agent（Python sidecar）：**方案 A = 随包带虚拟环境**（2026-09-27 定）。
-  # 目标目录必须是 agent：`agent/locate.js` 把 AGENT_DIR 算成 <resources>/agent，
+  # 目标目录必须是 agent：`src/main/modules/agent/locate.js` 把 AGENT_DIR 算成 <resources>/agent，
   # 解释器查找的第一顺位就是它下面的 .venv/Scripts/python.exe。
   # **改名 / 漏收的后果不是报错而是静默降级**：locate.js 会一路回退到系统 PATH 的
   # python，打包版看起来"能跑"，实则用的是用户机器上的解释器（多半没装 mcp）。
@@ -78,7 +81,7 @@ extraResources:
   # （core.py 里 `sys.executable -m tools.server`），单文件 exe 不能直接 `-m`，
   # 得先给入口加一个 `--tools-server` 自调用分支。
   # FFmpeg / FFprobe：放到 apps/electron/bin/ffmpeg/ 后随包分发，
-  # 运行期由 ffmpeg/locate.js 通过 process.resourcesPath/ffmpeg 找到
+  # 运行期由 src/main/modules/ffmpeg/locate.js 通过 process.resourcesPath/ffmpeg 找到
   - from: bin/ffmpeg
     to: ffmpeg
     filter:
@@ -99,10 +102,26 @@ electronDist: node_modules/electron/dist
 
 win:
   # beforePack 直接将 256px PNG 封装为 ICO，避免打包时依赖 WASM 图标转换器。
-  icon: icon.ico
+  icon: assets/icon.ico
   target:
     - nsis
 mac:
-  icon: icon.png
+  icon: assets/icon.png
 linux:
-  icon: icon.png
+  icon: assets/icon.png
+
+# 此 NSIS 是蓝白安装向导内嵌的安装引擎，不作为最终分发入口。
+# 固定当前用户安装，避免向导承诺的范围与系统注册范围不一致。
+# 安装目录通过经过校验的 /D 参数传入；NSIS 仍负责卸载与注册。
+# 禁止安装后自行运行，启动只能由向导完成页的用户选择触发。
+# 禁止自动发布，最终单文件由 scripts/build-installer.cjs 另行组装。
+# 开始菜单的可选行为由 include 读取自定义开关，不删除其他应用快捷方式。
+# blockmap 仅用于自动更新，本安装入口暂未接入自动更新服务。
+nsis:
+  oneClick: true
+  perMachine: false
+  runAfterFinish: false
+  deleteAppDataOnUninstall: false
+  differentialPackage: false
+  include: installer/engine.nsh
+  artifactName: illusion-realm-engine-${version}.exe

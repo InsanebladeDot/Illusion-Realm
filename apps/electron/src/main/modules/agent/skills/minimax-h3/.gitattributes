@@ -1,0 +1,2 @@
+# Preserve the upstream snapshot bytes used by manifest SHA-256 checks.
+* -text

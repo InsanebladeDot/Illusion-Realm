@@ -1,0 +1,72 @@
+<!doctype html>
+<!--
+  安装器使用本地模板的蓝白色、左侧插画和右侧六步结构。
+  文案为当前用户的 Windows 离线安装，不承诺安装器不具备的后台能力。
+  页面没有内联事件和远程资源，所有系统交互经过受限 preload。
+  CSP 保留本地脚本、样式和图片，拒绝网络请求与动态脚本执行。
+  六个步骤由 hidden 控制，键盘不能聚焦未激活页面的控件。
+-->
+<html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'none'; base-uri 'none'; form-action 'none'"><title>Illusion Realm · 安装向导</title><link rel="stylesheet" href="installer.css"><script defer src="renderer.cjs"></script></head>
+<!--
+  自定义标题栏只包含品牌、最小化和关闭，避免与页面外套一层原生导航。
+  标题栏可拖动，按钮在 CSS 中取消拖动区域，保留正常点击。
+  关闭按钮与页脚取消共用主进程确认，不假装安装写入可以安全秒停。
+  插画为模板同一张本地图片，不触发下载或第三方跟踪。
+  装饰图片 alt 为空，避免辅助阅读器重复朗读旁边品牌说明。
+-->
+<body><main class="installer"><header class="titlebar"><div class="brand"><span class="mark">✧</span>Illusion Realm <span class="muted small">安装向导</span></div><div class="window-actions"><button id="minimize" aria-label="最小化">−</button><button id="close" aria-label="关闭安装向导">×</button></div></header><div class="body"><aside class="art"><div class="eyebrow">A WORLD OF IMAGINATION</div><h2>每一个灵感<br>都值得被看见</h2><p>让想象拥有形状，<br>把心中的世界带到桌面。</p><img src="character.webp" alt=""><span class="art-foot">Illusion Realm · 让想象成为现实</span></aside><section class="content"><nav id="steps" class="steps" aria-label="安装步骤"></nav>
+<!--
+  欢迎页说明安装目标，下一步进入许可而非立即写入磁盘。
+  版本号由实际构建清单回填，不从设计稿复制固定数字。
+  feature 介绍现有创作类别，不承诺自动安装大型模型或第三方服务。
+  第一页只展示一个主要操作，让安装入口保持简单。
+-->
+<section class="page" data-page="0"><div class="eyebrow">WELCOME TO YOUR CREATIVE WORLD</div><h1>你好，创作者。<br>欢迎来到幻境</h1><p class="subtitle">只需几步，把 Illusion Realm 带到你的桌面。<br>为每一个小小的灵感，留下一处创作空间。</p><div class="feature"><span class="feature-icon">✧</span><div><strong>把脑海中的画面，变成作品</strong><p>图片、视频与音频创作，探索更多表达方式</p></div></div><div class="feature"><span class="feature-icon">❀</span><div><strong>自己的模型，自己的创作空间</strong><p>进入应用后配置 ComfyUI、模型与创作服务</p></div></div><div class="meta"><span class="pill">Windows x64</span><span class="pill" id="version"></span><span class="pill">自定义安装位置</span></div></section>
+<!--
+  根目录 LICENSE 全文与安装说明由主进程读取并以 textContent 显示。
+  原型的法律占位文字被正式项目许可替换，没有伪造律师审定背书。
+  勾选默认关闭，既用于界面放行，也在实际执行时再次验证。
+  许可框允许独立滚动和键盘聚焦，不强制宣称滚动到底等于阅读。
+  用户拒绝时仍能关闭向导，不自动调用安装进程。
+-->
+<section class="page" data-page="1" hidden><div class="eyebrow">01 / BEFORE WE BEGIN</div><h1>先读一读，再出发</h1><p class="subtitle">请阅读项目许可、安装说明与第三方服务提示。</p><pre class="agreement" id="legal" tabindex="0" aria-label="许可与安装使用说明"></pre><label class="check"><input id="consent" type="checkbox"><span>我已阅读并同意以上许可与安装使用说明</span></label></section>
+<!--
+  目录可直接输入或通过原生文件夹选择器选择，不使用原型的模拟列表。
+  容量信息来自当前构建与目标卷；初始化不展示虚构的可用空间。
+  路径错误在页面显示，文本输入保持可用，用户无需重新开始设置。
+  快捷方式默认创建但可分别取消，确认页按实际选择总结。
+  首次安装仅接受空专用目录，避免卸载机制误删原有私人资料。
+  安装范围固定当前用户，不显示与实际行为不符的全用户选项。
+-->
+<section class="page" data-page="2" hidden><div class="eyebrow">02 / MAKE YOURSELF AT HOME</div><h1>给灵感，选一个位置</h1><p class="subtitle">首次安装选择空的专用文件夹；发现旧版时可原位修复。</p><!--
+  检测结果复用现有 notice，明确区分缺件、完整和不可访问。
+  重新检测仅查询，修复按钮仍经过目录预检、条款与确认阶段。
+  错误结果不是“未安装”，因此不会放行覆盖其他位置。
+  原安装位置锁定，避免修复动作变成迁移并遗留两份安装。
+  只用固定按钮转发动作，不在正文生成注册表命令让用户执行。
+-->
+<div class="notice"><p id="diagnosis" role="status" aria-live="polite">正在检测已有安装…</p><div class="repair-actions"><button id="repair" class="button primary" disabled>一键修复安装</button><button id="rescan" class="button secondary">重新检测</button></div></div><div class="field-label"><label for="installPath">安装位置</label><button class="link" id="reset">恢复推荐位置</button></div><div class="path-row"><input id="installPath" type="text" spellcheck="false" aria-describedby="pathError"><button id="browse" class="button secondary">浏览…</button></div><div class="path-info" id="capacity">选择目录后检查可用空间</div><div class="notice">修复会补回程序、卸载入口与所选快捷方式，保留用户配置、缓存、下载队列、模型和作品。不恢复已被手动删除的个人文件。</div><div class="field-label">快捷方式</div><div class="options"><label class="check"><input id="desktop" type="checkbox" checked>创建桌面快捷方式</label><label class="check"><input id="startMenu" type="checkbox" checked>添加到开始菜单</label></div><p class="fineprint">安装范围：仅当前用户。受保护的系统目录不可选。</p></section>
+<!--
+  确认页展示真正要交给 NSIS 的目录和两种快捷方式，允许返回修改。
+  路径用文本节点回填，不把用户输入解释成 HTML。
+  空间要求包含当前应用文件与安装余量，不包含大型模型。
+  “开始安装”是唯一触发实际写入的页面按钮，不支持设计稿跳步。
+-->
+<section class="page" data-page="3" hidden><div class="eyebrow">03 / READY WHEN YOU ARE</div><h1>一切就绪，准备安家</h1><p class="subtitle">确认以下设置后继续。修复将在原位置补回程序，不先卸载旧版本。</p><div class="summary"><div class="summary-row"><span>应用名称</span><span>Illusion Realm</span></div><div class="summary-row"><span>安装位置</span><span id="summaryPath"></span></div><div class="summary-row"><span>安装范围</span><span>当前用户</span></div><div class="summary-row"><span>快捷方式</span><span id="summaryShortcuts"></span></div><div class="summary-row"><span>所需空间</span><span id="required"></span></div></div><div class="notice">安装后再配置模型与创作服务；安装器不会自动下载模型或发送创作内容。</div></section>
+<!--
+  进度使用不定状态而非虚构百分比，开始与完成都取决于真实异步结果。
+  不展示“验证中”后直接跳成功，主进程会先检查目标程序存在。
+  安装中禁止返回与再次提交，窗口仍可最小化。
+  失败返回可操作的设置页并保留路径，不伪装已回滚或静默删除残留。
+-->
+<section class="page" data-page="4" hidden><div class="eyebrow">04 / A LITTLE MAGIC IN PROGRESS</div><h1>正在为灵感腾出空间</h1><p class="subtitle">正在校验安装资源、释放应用文件并写入卸载信息。</p><div class="progress-top">正在安装，请稍候…</div><div class="progress-track" role="progressbar" aria-label="正在安装应用"><div class="progress-bar"></div></div><div class="task-list"><p>✓ 已确认许可与安装设置</p><p>◌ 正在执行系统安装</p><p class="muted">安装结束后将检查应用程序是否写入</p></div><div class="notice">请等待安装结束。此时关闭窗口不会强制中断文件写入。</div></section>
+<!--
+  完成页只在引擎成功退出和 EXE 检查通过之后显示。
+  启动为用户可取消的选项，不提前唤起客户端。
+  重启提示只在引擎返回 3010 时显示，不自行重启操作系统。
+  公共错误区域使用 role=alert，异步失败也能被辅助阅读器通知。
+  页脚按钮在控制脚本初始化前禁用，资源未加载不能绕过许可。
+  底栏去掉设计预览和演示入口，仅保留产品标识与安装范围。
+-->
+<section class="page" data-page="5" hidden><div class="check-icon">✓</div><div class="eyebrow">YOUR WORLD IS READY</div><h1>安装完成，欢迎回家</h1><p class="subtitle">Illusion Realm 已准备就绪。<br>把第一个灵感，变成喜欢的模样吧。</p><div class="summary"><div class="summary-row"><span>安装位置</span><span id="completePath"></span></div><div class="summary-row"><span>下一步</span><span>配置模型与作品目录</span></div></div><label class="check"><input id="launchAfter" type="checkbox" checked>完成后启动 Illusion Realm</label><p class="fineprint" id="reboot" hidden>系统提示需要重启后完成部分更改，请保存工作后自行重启。</p></section>
+<p class="alert" id="pathError" role="alert" hidden></p><footer class="footer"><span class="fineprint" id="footerHint">一个属于你的创作小世界</span><div class="footer-actions"><button class="text-button" id="cancel">取消</button><button class="button secondary" id="back" hidden>上一步</button><button class="button primary" id="next" disabled>正在准备…</button></div></footer></section></div><div class="bottom-strip"><span>Illusion Realm · 让想象成为现实</span><span>Windows · 当前用户安装</span></div></main></body></html>

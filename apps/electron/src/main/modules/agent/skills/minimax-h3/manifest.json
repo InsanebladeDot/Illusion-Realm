@@ -1,0 +1,313 @@
+{
+  "version": 1,
+  "source": "https://github.com/MiniMax-AI/MiniMax-H3",
+  "importedOn": "2026-10-24",
+  "skills": [
+    {
+      "id": "3d-animation-short-generator",
+      "name": "3d-animation-short-generator",
+      "description": "Create complete stylized 3D animated shorts from a story idea through an ordered production workflow covering project brief, story outline, character and environment cards, standardized shot planning, text or optional pencil storyboards, video-model selection, single-shot generation, assembly, BGM matching, and final review. Use when the user wants an end-to-end narrative animation workflow with strong character consistency, scene continuity, timing, camera, performance, and audio control. Not for single images, simple edits, photorealistic live action, or one standalone clip.",
+      "compatibility": "Requires the MiniMax Hub agent (canvas workspace, choice cards, and hub_generate_image/hub_generate_video tools); not portable to generic agent harnesses.",
+      "requiresHub": true,
+      "entry": "SKILL.cn.md",
+      "files": [
+        "SKILL.cn.md",
+        "SKILL.md",
+        "meta.yaml",
+        "references/fallback-policy.md",
+        "references/model-selection.md",
+        "references/qc-checklist.md",
+        "references/shot-table-spec.md",
+        "references/storyboard-guidelines.md"
+      ]
+    },
+    {
+      "id": "anime-director",
+      "name": "anime-director",
+      "description": "Direct anime-style video generation from first and last frames plus reference images, using the MiniMax H3 prompt format. Use when the user brings keyframe images, character sheets, or a scene idea and wants an anime clip: the skill fixes a character invariant sheet, designs the first/last frame pair with a graded differential amplitude, builds a shot and beat table, and writes the final English H3 prompt for FL2VA, I2VA, L2VA, or Ref2VA. Not for photoreal live action, single still images, or non-keyframe video editing.",
+      "compatibility": "Portable to any agent that can read local files. Pairs with the h3-prompt-writing skill — this skill decides what to shoot, h3-prompt-writing fixes how the prompt is formatted. No API keys or Hub tools required.",
+      "requiresHub": false,
+      "entry": "SKILL.cn.md",
+      "files": [
+        "SKILL.cn.md",
+        "SKILL.md",
+        "meta.yaml",
+        "references/anime-vocabulary-en.md",
+        "references/role-prompt.cn.txt"
+      ]
+    },
+    {
+      "id": "brand-promo-video-generator",
+      "name": "brand-promo-video-generator",
+      "description": "For marketers and creators producing promotional content for brands, products, websites, apps, shops, or personal projects. Users provide logos, product images, interface screenshots, official links, or other verifiable assets and confirm duration, aspect ratio, audience, and campaign focus. The Skill organizes brand facts and asset provenance, selects a narrative direction, plans precise beats and shots, generates needed imagery, video, voiceover, or music, and completes assembly and pre-delivery review. It outputs a promotional short that highlights product capabilities, use cases, and a call to action. Best for launches, website showcases, and social promotion; not for imitating real brand marks without authorized assets, inventing product claims, or producing long-form narrative films.",
+      "compatibility": "Requires the MiniMax Hub agent (canvas workspace and the hub_* tools listed below); not portable to generic agent harnesses.",
+      "requiresHub": true,
+      "entry": "SKILL.cn.md",
+      "files": [
+        "SKILL.cn.md",
+        "SKILL.md",
+        "meta.yaml"
+      ]
+    },
+    {
+      "id": "co-op-game-intro-generator",
+      "name": "co-op-game-intro-generator",
+      "description": "For users creating a two-player co-op game menu or opening animation. Users provide two player names, a game title, a target visual style, and optional character reference images. The Skill locks identity cues, generates an approval image from a fixed menu framework with coordinated color, buttons, icons, and typography, then uses the approved result to rebuild the character, UI-copy, and event timing instructions for the final video. It outputs a co-op game intro featuring two characters, player cards, and menu interaction motion. Best for game concepts, character-led menus, and social content; not for playable game development, complex multi-page UI, exact brand-logo replication, or generic character-free title sequences.",
+      "compatibility": "Requires the MiniMax Hub agent (canvas workspace and MiniMax H3 generation); not portable to generic agent harnesses.",
+      "requiresHub": true,
+      "entry": "SKILL.cn.md",
+      "files": [
+        "SKILL.cn.md",
+        "SKILL.md",
+        "meta.yaml",
+        "references/h3-confirmation-image-template.md",
+        "references/h3-video-prompt-template.md"
+      ]
+    },
+    {
+      "id": "h3-prompt-writing",
+      "name": "h3-prompt-writing",
+      "description": "Write MiniMax H3 video generation prompts for T2VA, I2VA, FL2VA, L2VA, and Ref2VA. Use when rewriting multimodal requests into H3 prompt structures, composing integrated_multimodal_description, overall_soundscape, and non_diegetic_music, aligning keyframes, or defining reference labels for images, videos, and audio.",
+      "compatibility": "Portable to any agent that can read local files — no external API calls, MiniMax Hub tools, or proprietary runtime required. The agents/openai.yaml file only adds optional ChatGPT/Codex UI metadata; it does not restrict the skill to OpenAI agents.",
+      "requiresHub": false,
+      "entry": "SKILL.md",
+      "files": [
+        "SKILL.md",
+        "agents/openai.yaml",
+        "references/base-en.txt",
+        "references/ref-en.txt"
+      ]
+    },
+    {
+      "id": "handdrawn-live-video-generator",
+      "name": "handdrawn-live-video-generator",
+      "description": "For creators making surreal short videos that blend rough glowing hand-drawn animation with live-action spaces. Users provide a scene idea, contact object or hand, desired mood, and optional language or style constraints. The Skill clarifies the physical contact, designs continuous morphing, escape route, and delayed handheld chase movement, then writes a reusable 15-second 16:9 video prompt in the user's language. After user confirmation it recommends MiniMax H3 generation and checks contact realism, camera delay, rough glowing stroke texture, and non-horror tone. Best for single-scene creative clips, not polished CG, horror jump scares, plush characters, or multi-scene cuts.",
+      "compatibility": "Requires the MiniMax Hub agent (canvas workspace and MiniMax H3 generation); not portable to generic agent harnesses.",
+      "requiresHub": true,
+      "entry": "SKILL.cn.md",
+      "files": [
+        "SKILL.cn.md",
+        "SKILL.md",
+        "meta.yaml"
+      ]
+    },
+    {
+      "id": "minimalist-product-ad-generator",
+      "name": "minimalist-product-ad-generator",
+      "description": "Turn product images and ad requirements into minimalist product ad shorts for e-commerce promotion and product launches. The Skill confirms format and product variants, extracts selling points, writes concise English ad copy, builds product anchors, plans beat-synced typography/storyboards, and generates a clean product film with premium camera language. Not for KOC talking-head ads, general editing, or complex screen demos.",
+      "compatibility": "Requires the MiniMax Hub agent (canvas workspace and MiniMax H3 generation); not portable to generic agent harnesses.",
+      "requiresHub": true,
+      "entry": "SKILL.cn.md",
+      "files": [
+        "SKILL.cn.md",
+        "SKILL.md",
+        "meta.yaml"
+      ]
+    },
+    {
+      "id": "music-video-subtitle-generator",
+      "name": "music-video-subtitle-generator",
+      "description": "For musicians, video creators, and social-media editors producing AI music videos or emotional short films with lyric typography. Users provide music, lyrics, references, characters, typography direction, mood, or target platform. The Skill analyzes beat and vocal timing, separates character, scene, and text references, designs beat-reactive spatial typography, decomposes long works into connected shots, audits prompts, and routes generation for H3 or other video tools. It outputs MV concepts, shot prompts, lyric text plans, and stitching guidance. Best for stylized MVs and subtitle-driven music visuals, not ordinary caption cleanup, licensed IP copying, or fully manual post-production editing.",
+      "compatibility": "Requires the MiniMax Hub agent (canvas workspace and Hub generation/routing tools); not portable to generic agent harnesses.",
+      "requiresHub": true,
+      "entry": "SKILL.cn.md",
+      "files": [
+        "SKILL.cn.md",
+        "SKILL.md",
+        "meta.yaml"
+      ]
+    },
+    {
+      "id": "paper-collage-explainer-generator",
+      "name": "paper-collage-explainer-generator",
+      "description": "For creators, educators, and social-video editors who need a tactile paper-collage language for narration, knowledge points, opinions, or abstract topics. Users provide source copy, story beats, or a core concept and may specify aspect ratio, duration, palette, and audio needs. The Skill extracts meaning, proposes visual metaphors, prepares a production plan and storyboard, generates approved halftone collage stills, then creates stop-motion clips with paper movement and tactile sound effects, with optional final assembly. By default it keeps collage SFX and does not add BGM, voiceover, or subtitles unless requested. Best for explainers, viewpoints, story visuals, and social B-roll; not for presenter ads, editable layers, complex typography, or prompt-only tasks.",
+      "compatibility": "Requires the MiniMax Hub agent (canvas workspace and Hub-native image/video/audio tools); not portable to generic agent harnesses.",
+      "requiresHub": true,
+      "entry": "SKILL.cn.md",
+      "files": [
+        "SKILL.cn.md",
+        "SKILL.md",
+        "meta.yaml"
+      ]
+    },
+    {
+      "id": "papercraft-stop-motion-explainer",
+      "name": "papercraft-stop-motion-explainer",
+      "description": "For creators explaining science, education, or general knowledge through tactile handmade papercraft visuals. Users provide a topic, core knowledge points, or source material and may specify audience, duration, aspect ratio, and deliverable type. The Skill extracts the learning goal and visual metaphor, proposes creative directions, designs paper characters, layered diorama sets, and props, creates preview concepts plus image and video prompts, and plans storyboards, camera movement, transitions, and sound with staged approvals and review checklists. It outputs a production-ready papercraft stop-motion explainer package, or selected assets such as still prompts, image-series prompts, short-video prompts, or storyboards. Best for cut-paper, pop-up-book, layered diorama, and miniature stop-motion explainers; not for standard 2D cartoons, line doodles, live action, or explainers without a paper-art look.",
+      "compatibility": "Requires the MiniMax Hub agent (canvas workspace and MiniMax H3 generation); not portable to generic agent harnesses.",
+      "requiresHub": true,
+      "entry": "SKILL.cn.md",
+      "files": [
+        "SKILL.cn.md",
+        "SKILL.md",
+        "meta.yaml"
+      ]
+    }
+  ],
+  "files": [
+    {
+      "path": "3d-animation-short-generator/SKILL.cn.md",
+      "sha256": "4f495c97f013b4ba9d84447e896352291c64871c9b6db0a7634777e84be2715e"
+    },
+    {
+      "path": "3d-animation-short-generator/SKILL.md",
+      "sha256": "64336677c7dd6ab4cf465ed3a1306140ceebb3d1a15d4a113f18d03828897dae"
+    },
+    {
+      "path": "3d-animation-short-generator/meta.yaml",
+      "sha256": "866322e78bbb26dea6ec6e99af29725746ddef472933c4413ceb82f105d52978"
+    },
+    {
+      "path": "3d-animation-short-generator/references/fallback-policy.md",
+      "sha256": "287952843ec16de6742e7e56e0db03d95917a02c5974ce96d811995a2863bb8a"
+    },
+    {
+      "path": "3d-animation-short-generator/references/model-selection.md",
+      "sha256": "624444a29c93cc0dd908a79a7c35dd739e5942f6627feed4e8e2cff026a170b2"
+    },
+    {
+      "path": "3d-animation-short-generator/references/qc-checklist.md",
+      "sha256": "2279d068973257d354e51023cabd507324dc3d8520614c9e6a6df9615679a2fb"
+    },
+    {
+      "path": "3d-animation-short-generator/references/shot-table-spec.md",
+      "sha256": "a361869e4f0fea4d2e7779e720fc5f293779f1d845e0d1b1aab299fcd9fd8250"
+    },
+    {
+      "path": "3d-animation-short-generator/references/storyboard-guidelines.md",
+      "sha256": "a6c8506cd8209cb99936f6765781170fd2bd39fe9631be5b2e71231d730d94eb"
+    },
+    {
+      "path": "README.md",
+      "sha256": "f9d01bfca1d7e0e7579f5b0528d5ded4975507df5171b0b3412bd42f80775ac9"
+    },
+    {
+      "path": "anime-director/SKILL.cn.md",
+      "sha256": "7e650b43579496a005118ebb85527419a25168c92cf48861b8ec235bcb58015f"
+    },
+    {
+      "path": "anime-director/SKILL.md",
+      "sha256": "ccb237815c398f12b94b66e7e5798e9cda981e5c2620aa30c6584ba9b8121430"
+    },
+    {
+      "path": "anime-director/meta.yaml",
+      "sha256": "c4a549739514ad44745668e8ad62f7e64d7e74def69feae611a9072ede9efaf0"
+    },
+    {
+      "path": "anime-director/references/anime-vocabulary-en.md",
+      "sha256": "ede5394af0fa46c84c2387054b90d45a1de51741ba211397c0b3585eb89312e1"
+    },
+    {
+      "path": "anime-director/references/role-prompt.cn.txt",
+      "sha256": "708e19e1b44a113c3d91e28a65dab6ddd72f60ea300b7bb4e2ea38d8d20a718d"
+    },
+    {
+      "path": "brand-promo-video-generator/SKILL.cn.md",
+      "sha256": "c9496466be0779b64a68c8f61775dba6a9af314d15c3347802eb835e6460189b"
+    },
+    {
+      "path": "brand-promo-video-generator/SKILL.md",
+      "sha256": "eb0955d932fac90f0033251d32bd7582284e1ff7db24a843013c701cc42abde4"
+    },
+    {
+      "path": "brand-promo-video-generator/meta.yaml",
+      "sha256": "637418e0448915bd98a8963d5af437d66b5a01d6d4dec35bd90de9c0e9f999f5"
+    },
+    {
+      "path": "co-op-game-intro-generator/SKILL.cn.md",
+      "sha256": "e957a0bd380672d9b10eb5db2e44611ebf2323b096fcb9844f14c8d685f23835"
+    },
+    {
+      "path": "co-op-game-intro-generator/SKILL.md",
+      "sha256": "8086c218c83ae52f0c839b9285012c3bf8f1112b3a5e9fcc3f023776c85487b0"
+    },
+    {
+      "path": "co-op-game-intro-generator/meta.yaml",
+      "sha256": "fe44040a16a18835610ab4d94e717ca1f67844b1272e69e8ff01d7e3e1e81af3"
+    },
+    {
+      "path": "co-op-game-intro-generator/references/h3-confirmation-image-template.md",
+      "sha256": "d3eef421ca9c6c311b1c4b16905b83fdfb019540220809dcc9ceaed0ffe04084"
+    },
+    {
+      "path": "co-op-game-intro-generator/references/h3-video-prompt-template.md",
+      "sha256": "b0ac816807e63cc24feaa5148ad516478eedc3636bcbe9cdbb99681241c6793e"
+    },
+    {
+      "path": "h3-prompt-writing/SKILL.md",
+      "sha256": "95d74fee00e78641fb9e774ab17488516ceece441231519287f0d3128eaa8c54"
+    },
+    {
+      "path": "h3-prompt-writing/agents/openai.yaml",
+      "sha256": "b7b92e20e27d0b3526d90663c5c9d1d5d7ae8a7199950173a5bd52aee8dbf5f0"
+    },
+    {
+      "path": "h3-prompt-writing/references/base-en.txt",
+      "sha256": "088fb632fa3cbb18c9821024fb689e6f0f356f824c8f2e6b8e43a33239b137c7"
+    },
+    {
+      "path": "h3-prompt-writing/references/ref-en.txt",
+      "sha256": "b621067b41988c4d92be715b7a98ba48338f4076ab6041d95fcf463ea7c8ccdd"
+    },
+    {
+      "path": "handdrawn-live-video-generator/SKILL.cn.md",
+      "sha256": "904b92f0bdea1e73785dd3ca4ce4116e06f37f2ddc4f7c49e8041962c4c7dbe3"
+    },
+    {
+      "path": "handdrawn-live-video-generator/SKILL.md",
+      "sha256": "164c14a41028ded7972b245775053ddb6ca8c57fa2dc10a3c011ac54e2e7e7fe"
+    },
+    {
+      "path": "handdrawn-live-video-generator/meta.yaml",
+      "sha256": "6d81996e23567c37ffde30351e19365a6204c5ba7f913aaeb6aa700c5a443127"
+    },
+    {
+      "path": "minimalist-product-ad-generator/SKILL.cn.md",
+      "sha256": "e401726296fe78339d43aa37598c975727957eba7e802ad50b132d90b31f7816"
+    },
+    {
+      "path": "minimalist-product-ad-generator/SKILL.md",
+      "sha256": "1b931503f6a0df4ae0ede1bf653dc751136bdeb206c0552a76c2cd3bc97fecd1"
+    },
+    {
+      "path": "minimalist-product-ad-generator/meta.yaml",
+      "sha256": "023b823f24eb5995710e03a78a8bf42d5ae5117f9229c31d01c8f020dda6c3c6"
+    },
+    {
+      "path": "music-video-subtitle-generator/SKILL.cn.md",
+      "sha256": "0c2d7a0182fea0775911dee54b5dc67aa34916d491be0c6927b4f163920cac8b"
+    },
+    {
+      "path": "music-video-subtitle-generator/SKILL.md",
+      "sha256": "85e754f95447ac876a021536a53e188f8ccd4c71e064804ba1de3ee3c4c7623b"
+    },
+    {
+      "path": "music-video-subtitle-generator/meta.yaml",
+      "sha256": "0870a7c6485c24582a5d5975da678c546e34d680919c02b7f2092acf3ef01390"
+    },
+    {
+      "path": "paper-collage-explainer-generator/SKILL.cn.md",
+      "sha256": "b3fdd97c85779e672de01e1d762e287cfe637e2422df08de8a039cbc9f34d4de"
+    },
+    {
+      "path": "paper-collage-explainer-generator/SKILL.md",
+      "sha256": "97b5778a6c6980befa8545d55e898afdd0d072d5473100799d0741a4bec16612"
+    },
+    {
+      "path": "paper-collage-explainer-generator/meta.yaml",
+      "sha256": "4469db70cf6a95e1eacb2ff6de76aa3dc7306a8d4884befdf0a3139bd20af5c0"
+    },
+    {
+      "path": "papercraft-stop-motion-explainer/SKILL.cn.md",
+      "sha256": "305996ffb890820df4f9a53705dfa581c6caad7911fc4d1bf1212cb4a81b7098"
+    },
+    {
+      "path": "papercraft-stop-motion-explainer/SKILL.md",
+      "sha256": "6089e82f99f8efcd7985760a2997c246432ead93e782ea3292de2d2f19560d61"
+    },
+    {
+      "path": "papercraft-stop-motion-explainer/meta.yaml",
+      "sha256": "30967be7137779df33ad392cc0ca796af4615742c8d44cc88abbdd66351f210f"
+    }
+  ]
+}

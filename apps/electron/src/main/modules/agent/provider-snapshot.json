@@ -1,0 +1,179 @@
+{
+  "verifiedAt": "2026-10-24T15:45:32.405776+00:00",
+  "siliconflow": [
+    {
+      "id": "deepseek-ai/DeepSeek-V4.1-Flash",
+      "input": 2.0,
+      "output": 8.0,
+      "currency": "CNY",
+      "tier": "budget",
+      "groups": [],
+      "context": 1048576,
+      "pricingBasis": "token",
+      "tiers": [],
+      "available": null
+    },
+    {
+      "id": "moonshotai/Kimi-K2.7-Code",
+      "input": 6.5,
+      "output": 27.0,
+      "currency": "CNY",
+      "tier": "premium",
+      "groups": [],
+      "context": 262144,
+      "pricingBasis": "token",
+      "tiers": [],
+      "available": null
+    },
+    {
+      "id": "deepseek-ai/DeepSeek-V4-Pro",
+      "input": 12.0,
+      "output": 24.0,
+      "currency": "CNY",
+      "tier": "premium",
+      "groups": [],
+      "context": 1048576,
+      "pricingBasis": "token",
+      "tiers": [],
+      "available": null
+    },
+    {
+      "id": "deepseek-ai/DeepSeek-V4-Flash",
+      "input": 1.0,
+      "output": 2.0,
+      "currency": "CNY",
+      "tier": "budget",
+      "groups": [],
+      "context": 1048576,
+      "pricingBasis": "token",
+      "tiers": [],
+      "available": null
+    },
+    {
+      "id": "zai-org/GLM-5.3",
+      "input": 6.0,
+      "output": 28.0,
+      "currency": "CNY",
+      "tier": "premium",
+      "groups": [],
+      "context": 1048576,
+      "pricingBasis": "token",
+      "tiers": [],
+      "available": null
+    },
+    {
+      "id": "zai-org/GLM-5.3-Flash",
+      "input": 0.0,
+      "output": 0.0,
+      "currency": "CNY",
+      "tier": "free",
+      "groups": [],
+      "context": 1048576,
+      "pricingBasis": "token",
+      "tiers": [],
+      "available": null
+    },
+    {
+      "id": "Qwen/Qwen2.5-14B-Instruct",
+      "input": 0.7,
+      "output": 0.7,
+      "currency": "CNY",
+      "tier": "budget",
+      "groups": [],
+      "context": 32768,
+      "pricingBasis": "token",
+      "tiers": [],
+      "available": null
+    },
+    {
+      "id": "stepfun-ai/Step-3.5-Flash",
+      "input": 0.7,
+      "output": 2.1,
+      "currency": "CNY",
+      "tier": "budget",
+      "groups": [],
+      "context": 262144,
+      "pricingBasis": "token",
+      "tiers": [],
+      "available": null
+    },
+    {
+      "id": "Qwen/Qwen3.5-4B",
+      "input": 0.0,
+      "output": 0.0,
+      "currency": "CNY",
+      "tier": "free",
+      "groups": [],
+      "context": 262144,
+      "pricingBasis": "token",
+      "tiers": [],
+      "available": null
+    },
+    {
+      "id": "inclusionAI/Ling-mini-2.0",
+      "input": 0.5,
+      "output": 2.0,
+      "currency": "CNY",
+      "tier": "budget",
+      "groups": [],
+      "context": 131072,
+      "pricingBasis": "token",
+      "tiers": [],
+      "available": null
+    },
+    {
+      "id": "Qwen/Qwen3-8B",
+      "input": 0.0,
+      "output": 0.0,
+      "currency": "CNY",
+      "tier": "free",
+      "groups": [],
+      "context": 131072,
+      "pricingBasis": "token",
+      "tiers": [],
+      "available": null
+    }
+  ],
+  "euzhi": [
+    {
+      "id": "grok-4.7",
+      "input": 1.6,
+      "output": 4.8,
+      "currency": "USD",
+      "tier": "budget",
+      "groups": [
+        "grok"
+      ],
+      "context": 0,
+      "pricingBasis": "tiered",
+      "tiers": [
+        {
+          "above": 200000,
+          "input": 3.2,
+          "output": 9.6
+        }
+      ],
+      "available": null
+    },
+    {
+      "id": "grok-4.6",
+      "input": 1.6,
+      "output": 4.8,
+      "currency": "USD",
+      "tier": "budget",
+      "groups": [
+        "grok"
+      ],
+      "context": 0,
+      "pricingBasis": "tiered",
+      "tiers": [
+        {
+          "above": 200000,
+          "input": 3.2,
+          "output": 9.6
+        }
+      ],
+      "available": null
+    }
+  ]
+}

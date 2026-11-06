@@ -10,7 +10,6 @@ export * from './createForm';
 export * from './createMode';
 export * from './electron-api';
 export * from './extension';
-export * from './gallery';
 export * from './generatedImageMeta';
 export * from './historyFolder';
 export * from './localModel';
@@ -53,4 +52,7 @@ export {
   type View3DEnhanceWeights,
   type View3DModelHistoryItem,
 } from './userData';
+export type {
+  UserDataInfiniteCanvas,
+} from './infinite-canvas';
 export { CONTENT_AGREEMENT_VERSION, resolveCivitaiContentAccess, type CivitaiContentAccess } from './content-access';

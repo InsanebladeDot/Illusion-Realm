@@ -1,4 +1,7 @@
 /**
+ * 检查范围固定为运行源码 src，独立安装器和构建工具不参与客户端逃逸基线。
+ */
+/**
  * 逃逸断言：主进程里还剩多少文件带着 // @ts-nocheck。
  *
  * 规则：数量只能减少，不能增加。新增逃逸会让本地 `pnpm check` 直接失败。
@@ -9,7 +12,7 @@
 const fs = require("fs");
 const path = require("path");
 
-const TARGET_DIR = path.resolve(__dirname, "..");
+const TARGET_DIR = path.resolve(__dirname, "../src");
 const BASELINE = 0; // 随文件转正逐步递减，最终为 0
 
 const SKIP_DIRS = new Set(["node_modules", "dist", "release", "bin", "scripts"]);
@@ -58,7 +61,7 @@ if (offending.length > BASELINE) {
 }
 
 if (offending.length === 0) {
-  console.log("[nocheck] ✅ 主进程 26 个文件全部纳入类型检查");
+  console.log("[nocheck] ✅ 主进程运行源码全部纳入类型检查");
 } else {
   console.log("[nocheck] 剩余待转正：");
   for (const file of offending) console.log(`  - ${file}`);

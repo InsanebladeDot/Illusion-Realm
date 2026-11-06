@@ -1,0 +1,52 @@
+/* 颜色、双栏比例与角色插画位置参考用户提供的 installer.html。 */
+/* 安装器是独立本地页面，不能依赖客户端 Next/Tailwind 运行时。 */
+/* 全局 box-sizing 使固定窗口中的内边距始终包含在可用尺寸内。 */
+:root{font-family:"Microsoft YaHei","Segoe UI",sans-serif;color:#354a75;background:#f3f8ff;font-synthesis:none}*{box-sizing:border-box}body{margin:0}button,input{font:inherit}button{cursor:pointer;border:0;background:none;color:inherit}button:disabled{cursor:default;opacity:.42}[hidden]{display:none!important}
+/* 适配窗口高度，不给正文设置超出视口的原型展示外边距。 */
+/* 大圆角保留模板视觉，窗口本身由 Electron 提供系统拖动能力。 */
+/* 长许可与窄屏内容独立滚动，底部导航不被图片撑出窗口。 */
+.installer{height:100dvh;display:flex;flex-direction:column;overflow:hidden;border:1px solid #dce4f5;border-radius:16px;background:#f3f8ff}.body{display:grid;grid-template-columns:330px minmax(0,1fr);flex:1;min-height:0}.content{padding:28px 38px 18px;background:#ffffffb8;min-width:0;min-height:0;display:flex;flex-direction:column}.page{flex:1;overflow:auto;min-height:0}
+/* 无边框窗口的标题栏是可拖动区域；控制按钮必须排除拖动。 */
+/* 主次文字保持模板蓝灰色，关闭悬浮改为淡红以区分窗口操作。 */
+/* 按钮使用真实文本与 aria 标签，不依赖远程图标字体加载。 */
+.titlebar{height:48px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:0 12px 0 22px;border-bottom:1px solid #e8ecf8;font-size:12px;-webkit-app-region:drag}.brand{display:flex;align-items:center;gap:10px;font-weight:600}.mark{display:grid;place-items:center;width:25px;height:25px;border-radius:8px;background:#e0e9ff;color:#4b60ff;font-size:18px}.window-actions{display:flex;-webkit-app-region:no-drag}.window-actions button{height:30px;width:34px;border-radius:7px;font-size:17px}.window-actions button:hover{background:#e7edfa}.window-actions button:last-child:hover{background:#ffe8ec;color:#b74664}
+/* 左栏为品牌展示，不参与步骤高度计算或安装操作。 */
+/* 插画使用 contain 保持比例，底部对齐，避免把角色头部裁切。 */
+/* 说明标签覆盖插画边缘但不挡住右栏可交互控件。 */
+.art{position:relative;overflow:hidden;padding:38px 30px 0;background:linear-gradient(155deg,#e8f3ff,#eef0ff 56%,#e1e9ff)}.art h2{font-size:25px;line-height:1.65;margin-top:14px;letter-spacing:1px}.art p{margin-top:12px;font-size:12px;color:#7b8eb4}.art img{position:absolute;left:-4%;bottom:0;width:108%;height:365px;object-fit:contain;object-position:center bottom}.art-foot{position:absolute;bottom:17px;left:25px;border:1px solid #ffffffc0;background:#ffffffdf;border-radius:20px;padding:6px 11px;font-size:10px;color:#6278aa}
+/* 步骤状态由脚本给 current/done，不让颜色成为唯一的状态提示。 */
+/* 完成步骤显示勾，当前步骤用 aria-current 与背景同步标识。 */
+/* 步骤编号尺寸固定，长标题缩放由窄屏媒体查询统一处理。 */
+.steps{display:flex;align-items:center;gap:7px;font-size:10px;color:#8c9bb9;margin-bottom:26px;flex-shrink:0}.step{display:flex;align-items:center;gap:5px;white-space:nowrap}.step b{display:grid;place-items:center;height:20px;width:20px;border:1px solid #dfe5f4;border-radius:50%;font-weight:500}.step.current{color:#4053e6}.step.current b{background:#4b60ff;border-color:#4b60ff;color:white}.step.done b{background:#e7edff;color:#4b60ff}.connector{height:1px;flex:1;background:#e8ecf8;min-width:4px}
+/* 文字大小跟随模板，标题保留两行欢迎语而不撑开其余步骤。 */
+/* 所有说明使用正常行高，许可文本另行保留原始换行。 */
+/* 轻量标签只描述实际支持的平台和功能，不放模拟空间数字。 */
+h1,h2,p{margin:0}h1{font-size:30px;line-height:1.5;letter-spacing:-.8px;color:#2f426b}p{font-size:13px;line-height:1.9}.muted{color:#8595b7}.small{font-size:11px}.eyebrow{font-size:10px;letter-spacing:2px;color:#7f8fba;margin-bottom:10px}.subtitle{margin-top:10px;color:#8595b7}.feature{display:flex;gap:13px;align-items:center;margin-top:22px}.feature-icon{height:36px;width:36px;display:grid;place-items:center;background:#eef2ff;color:#6572d8;border-radius:11px;font-size:20px}.feature strong{font-size:13px;font-weight:500}.feature p{font-size:11px;color:#8595b7}.meta{margin-top:26px;display:flex;gap:8px}.pill{border:1px solid #e2e8f6;border-radius:20px;padding:4px 10px;font-size:10px;color:#8090b0}
+/* 页脚保持在可视区域内，许可正文再长也不把继续按钮挤走。 */
+/* 键盘焦点用清晰描边，不只依赖鼠标悬浮或轻微颜色变化。 */
+/* 主操作蓝色填充，返回次级描边，取消保持低干扰文本样式。 */
+.footer{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-top:18px;margin-top:18px;border-top:1px solid #e8ecf8;flex-shrink:0}.footer-actions{display:flex;gap:9px;align-items:center}.button{display:inline-flex;align-items:center;justify-content:center;padding:11px 19px;border-radius:10px;font-size:12px;white-space:nowrap}.primary{background:#4b60ff;color:#fff;box-shadow:0 4px 12px #4b60ff20}.primary:hover{background:#4053e6}.secondary{border:1px solid #dfe5f4;background:#fff}.text-button{color:#7889ac;font-size:12px;padding:8px}button:focus-visible,input:focus-visible,.agreement:focus-visible{outline:3px solid #a8baff;outline-offset:2px}
+/* 许可保留段落和编号，长行换行，不产生整窗横向滚动。 */
+/* 目录输入伸缩但浏览按钮保持完整，避免长路径挤掉操作入口。 */
+/* 容量和路径错误位于控件附近，错误不以颜色作为唯一提示。 */
+.agreement{border:1px solid #e6ebf7;border-radius:12px;padding:16px;margin:19px 0 0;max-height:250px;overflow:auto;background:#fafcff;font:12px/1.9 "Microsoft YaHei",sans-serif;color:#7383a4;white-space:pre-wrap;overflow-wrap:anywhere}.check{display:flex;align-items:center;gap:9px;font-size:12px;margin-top:15px}input[type=checkbox]{accent-color:#4b60ff;width:16px;height:16px;flex-shrink:0}input[type=text]{width:100%;border:1px solid #d7dff3;background:white;border-radius:10px;padding:12px;color:#354a75;font-size:13px}.field-label{display:flex;justify-content:space-between;align-items:center;font-size:12px;margin:21px 0 9px}.path-row{display:flex;gap:8px}.path-row input{min-width:0;flex:1}.path-info{margin-top:8px;font-size:11px;color:#8595b7}.link{color:#4b60ff;padding:0;font-size:11px}.alert{margin-top:10px;font-size:12px;color:#aa3653;line-height:1.7}
+/* 确认页与完成页共用摘要卡，长目录可折行而不改变左栏宽度。 */
+/* 提示说明与主要内容分层，避免把注意事项做成拦截式假警告。 */
+/* 快捷方式允许全部关闭，布局不能要求至少选中一项。 */
+.summary{padding:16px 18px;background:#f7f9ff;border:1px solid #e6ebf7;border-radius:12px;margin-top:20px}.summary-row{display:flex;justify-content:space-between;gap:15px;margin:12px 0;font-size:12px}.summary-row span:first-child{color:#8595b7;flex-shrink:0}.summary-row span:last-child{text-align:right;overflow-wrap:anywhere}.notice{margin-top:14px;padding:11px 12px;border-radius:10px;background:#f0f5ff;color:#7285ac;font-size:11px;line-height:1.8}.options{display:flex;gap:24px;flex-wrap:wrap}.fineprint{font-size:10px;color:#7b8dab;line-height:1.7}.options+.fineprint{margin-top:17px}.check-icon{display:grid;place-items:center;width:57px;height:57px;border-radius:18px;background:#e9f5f4;color:#4c9d91;font-size:27px;margin-bottom:17px}
+/* 流动条表示未知剩余时长，绝不呈现未经引擎报告的完成百分比。 */
+/* 遵从减少动画偏好时保留静态状态和说明，安装逻辑不依赖动画结束。 */
+/* 页底品牌条固定高度，是窗口结构的一部分而非正文滚动内容。 */
+.progress-top{margin-top:33px;font-size:13px}.progress-track{height:7px;background:#e8edfa;border-radius:10px;margin-top:15px;overflow:hidden}.progress-bar{height:100%;width:35%;background:#6c7dff;border-radius:10px;animation:working 1.4s ease-in-out infinite alternate}.task-list{display:grid;gap:15px;margin-top:27px;color:#7383a4}.bottom-strip{height:34px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:0 22px;border-top:1px solid #e8ecf8;font-size:10px;color:#8595b7}@keyframes working{to{transform:translateX(185%)}}
+/* 窄窗口先隐藏品牌插画，保留完整安装表单和页脚。 */
+/* 短窗口允许当前步骤滚动，不通过缩小点击目标强塞内容。 */
+/* 这条媒体查询只依赖 CSS，不存在首帧媒体状态翻转问题。 */
+@media(max-width:800px){.body{grid-template-columns:1fr}.art{display:none}.content{padding:22px 30px 16px}}@media(prefers-reduced-motion:reduce){.progress-bar{animation:none}}
+
+/* 修复操作沿用现有按钮和提示底色，保持安装向导的蓝白视觉。 */
+/* 状态文字允许长文件名折行，不因缺失路径挤宽整个窗口。 */
+/* 操作可换行，窄窗口与短窗口仍由当前步骤独立滚动。 */
+/* 输入只读时保留可选中复制的路径，不用 disabled 隐藏文字。 */
+/* 重新检测与修复是并列动作，等待状态由脚本统一禁用。 */
+/* 样式只作用于新操作组，不改变客户端、GIF 或其他工具按钮。 */
+.repair-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}#diagnosis{overflow-wrap:anywhere;font-size:12px}input[readonly]{background:#f7f9ff}

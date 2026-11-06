@@ -1,3 +1,5 @@
+import type { CanvasImportMediaRequest, CanvasImportMediaResult } from "../schemas/canvas-project.schema";
+import type { UserDataInfiniteCanvas } from "../schemas/infinite-canvas.schema";
 import type { ModelDownloadLocation, ModelDownloadRequest, ModelDownloadTarget, ModelDownloadTask, LocalModelCategoryTarget, MoveModelCategoryRequest } from "./model-download";
 import type {
   AgentEventMessage,
@@ -13,6 +15,18 @@ import type { AnimadexSearchParams, AnimadexSearchResult } from "./character";
 import type { OutputFolderEntry } from "./historyFolder";
 import type { IpcResult } from "../ipc-result";
 import type { LocalModelMetadataEntry } from "../schemas/local-model-metadata.schema";
+// 补全结果类型从 schema 推导，避免 preload 与页面手写状态枚举漂移。
+// 这是 type-only 依赖，主进程不会因此装载 Zod。
+// 状态不包含任何模型字节或 API Key。
+import type { LocalModelRecoveryResult } from "../schemas/local-model-metadata.schema";
+// 窗口动作允许集由schema推导，类型与运行时契约共用一个定义。
+// type-only引用不会把zod引入主进程或preload运行时。
+// 最大化通知仍使用基础boolean，无需暴露Electron实例类型。
+import type { WindowControlAction } from "../schemas/user-data.schema";
+// 目录形状由 schema 推导，跨边界接口不再复制价格与分组字段。
+// 此处为 type-only，不把 Zod 带入 preload 或主进程运行期。
+// 可选 provider 仅为旧单站调用兼容，新页面始终传入明确站点。
+import type { AgentProvider, AgentCatalog } from '../schemas/agent-provider.schema';
 
 type ComfyRemoteImage = {
   nodeId: string;
@@ -57,6 +71,22 @@ export type VideoProbeResult = {
   hasAudio: boolean;
   size: number;
 };
+
+// 波形是源时间轴上的等宽振幅包络，不是音高、真实采样音频或可播放文件。
+// duration来自主进程探测，peaks固定上限；0到1表示每个时间窗的绝对振幅峰值。
+// 无音轨或取消返回null，有音轨但采样失败由IpcResult错误表达，不能伪造零波形。
+// 普通数字数组可跨IPC结构化克隆，不把AudioBuffer或Node Buffer暴露给组件。
+// 左右修剪只选择这些源时间窗，同源实例共享源数据但不共享选中和修剪状态。
+// 这是临时展示数据，不增加用户文档字段，也不改变原素材的元数据。
+// 峰值经过8kHz单声道解码，表达概览，不作为母带电平或音高分析结果。
+export interface VideoWaveformResult {
+  duration: number;
+  // 最后一窗可以不足整窗，不用数组长度反推源秒数，避免尾部AAC填充使映射漂移。
+  // 片段入点和倍速均按此秒步长取样，工程位置不能直接当作源数组下标。
+  // 窗口大小由主进程采样配置产生，渲染层不能随缩放改写源包络时间尺。
+  secondsPerPeak: number;
+  peaks: number[];
+}
 
 export type VideoCropOptions = {
   enabled: boolean;
@@ -135,12 +165,38 @@ export type VideoProgressEvent = {
  * 失败信息以 `{ success: false, error, code? }` 返回；`on*` 订阅类方法返回取消订阅函数。
  */
 export type ElectronAPI = {
+  // 工程只通过业务接口复制素材与打包，不向页面暴露文件流。
+// 画布桥接只传纯数据，不让 renderer 获取任意文件系统对象。
+// canvasImportMedia 成功表示受管复制完成，返回归属和逐项结果。
+// 来源路径由现有 getPathForFile 取得，不向组件暴露 Node API。
+// 失败 IpcResult 由 unwrapIpc 转为本地 UI 错误边界处理。
+// 部分拒绝属于成功结果中的 rejected，不混同整个通道失败。
+// canvasExportProject 返回完成路径，用户取消则返回 null。
+// 完成路径不代表一份新的画布节点，也不自动替换当前草稿。
+// canvasOpenProject 不接参数，系统选择框由主进程拥有。
+// 打开返回完整文档或取消 null，不能返回半解包状态。
+// 这三个返回类型直接复用既有 IpcResult 联合。
+// 类型上不允许调用者忘记区分 success 后直接读取 data。
+// 当前 API 仍在既有顶层命名，不新增嵌套 bridge 注册体系。
+// 跨进程传输没有函数与 DOM，因此能由 Electron 结构化克隆。
+// 共享接口只声明能力，具体路径与权限仍由主进程校验。
+// 普通浏览器缺少这些方法时应显示桌面能力错误。
+// 不能通过临时 Blob URL 回落伪装工程已经可跨页面保存。
+  canvasImportMedia: (request: CanvasImportMediaRequest) => Promise<IpcResult<CanvasImportMediaResult>>;
+  canvasExportProject: (document: UserDataInfiniteCanvas) => Promise<IpcResult<string | null>>;
+  canvasOpenProject: () => Promise<IpcResult<UserDataInfiniteCanvas | null>>;
   accountRegister: (request: { email: string; password: string; displayName: string }) => Promise<IpcResult<import("./account").AccountApiResponse>>;
   accountVerifyEmail: (token: string) => Promise<IpcResult<import("./account").AccountApiResponse>>;
   accountResendVerification: (email: string) => Promise<IpcResult<import("./account").AccountApiResponse>>;
   accountLogin: (request: { email: string; password: string; deviceName: string }) => Promise<IpcResult<import("./account").AccountApiResponse>>;
   accountMe: () => Promise<IpcResult<import("./account").AccountApiResponse>>;
   accountLogout: () => Promise<IpcResult<import("./account").AccountApiResponse>>;
+  /**
+   * 进入或恢复游客前清除本地账户凭据，不进行 HTTP 请求。
+   * 完成前不能挂载业务页面，失败仍通过统一 IPC 结果返回。
+   * 不返回旧令牌，也不把游客伪装成服务器已认证账号。
+   */
+  accountEnterGuest: () => Promise<IpcResult<void>>;
   cloudImageUpload: (request: import("../schemas/cloud-image.schema").CloudImageUpload) => Promise<IpcResult<import("./account").AccountApiResponse>>;
   cloudLibraryRequest: (request: import("../schemas/cloud-image.schema").CloudLibraryRequest) => Promise<IpcResult<import("./account").AccountApiResponse>>;
   cloudImageGet: (id: string) => Promise<IpcResult<import("./account").AccountApiResponse>>;
@@ -153,9 +209,28 @@ export type ElectronAPI = {
   isElectron: boolean;
   hasCustomTitleBar: boolean;
   onWindowChromeVisibility: (callback: (visible: boolean) => void) => () => void;
+  /**
+   * 自定义 head 的有限动作；返回调用者窗口当前的最大化状态。
+   * state 用于挂载后的初次同步，其余值由主进程校验后执行。
+   * 失败遵循统一 IpcResult，不跨边界抛出原生窗口异常。
+   * close 仍触发原有关闭生命周期，不提供强制退出进程能力。
+   */
+  controlWindow: (action: WindowControlAction) => Promise<IpcResult<boolean>>;
+  /**
+   * 系统或按钮引发的最大化变化；仅传布尔值，不暴露原生窗口。
+   * 返回取消订阅函数，页面卸载或热更新必须清理监听器。
+   * 初始状态须另行查询，因为订阅前的系统事件不会重放。
+   */
+  onWindowMaximized: (callback: (maximized: boolean) => void) => () => void;
   selectFolder: (defaultPath?: string) => Promise<IpcResult<string | null>>;
   scanModels: (dirPath: string, type: LocalModelType) => Promise<IpcResult<LocalModel[]>>;
   readLocalModelMetadata: (filePaths: string[]) => Promise<IpcResult<LocalModelMetadataEntry[]>>;
+  /**
+   * 对配置目录中的一个模型流式计算摘要，并按准确版本补全来源资料。
+   * 已有来源 JSON 和封面保留，模型文件本体不写入。
+   * 失败原因由 data.status 或 IPC 错误表示，调用方不得忽略。
+   */
+  recoverLocalModelMetadata: (filePath: string) => Promise<IpcResult<LocalModelRecoveryResult>>;
   modelDownloadTarget: (location: ModelDownloadLocation) => Promise<IpcResult<ModelDownloadTarget>>;
   startModelDownload: (request: ModelDownloadRequest) => Promise<IpcResult<ModelDownloadTask>>;
   cancelModelDownload: (id: string) => Promise<IpcResult<boolean>>;
@@ -186,6 +261,14 @@ export type ElectronAPI = {
     }>
   >;
   comfyCancel: (requestId: string) => Promise<IpcResult<boolean>>;
+  /**
+   * 向指定 ComfyUI 请求卸载已加载模型，并清理执行器与设备缓存。
+   * 成功数据只表示服务接受请求，不是显存已经下降的测量结果。
+   * 正在执行的任务由 ComfyUI 自行收尾，本接口不会发送中断。
+   * 地址沿用设置页的主机与端口形式，不能传任意 HTTP 路径。
+   * 失败仍使用统一 IpcResult，调用方须恢复按钮并显示提示。
+   */
+  comfyFreeMemory: (serverAddress: string) => Promise<IpcResult<boolean>>;
   comfyUploadImage: (
     serverAddress: string,
     payload: { filename: string; dataBase64: string; subfolder?: string }
@@ -315,6 +398,10 @@ export type ElectronAPI = {
     inputPath: string;
     manualFfmpegPath?: string | null;
   }) => Promise<IpcResult<VideoProbeResult>>;
+  // 请求形状来自schema；读取和取消都通过主进程校验与窗口归属检查。
+  // 旧主进程没有此方法时渲染层显示不可用，不将缺桥接当成静音源。
+  // 原videoProbe和videoRun的参数顺序与返回值不受此独立辅助能力影响。
+  videoWaveform: (payload: import("../schemas/media.schema").VideoWaveformRequest) => Promise<IpcResult<VideoWaveformResult | null>>;
   videoRun: (payload: {
     job: VideoEditJob;
     manualFfmpegPath?: string | null;
@@ -357,11 +444,24 @@ export type ElectronAPI = {
   /** 回执宿主工具的执行结果（`ok:false` 也要回，error 只放一句可读原因） */
   agentHostResult: (result: AgentHostCallResult) => Promise<IpcResult<boolean>>;
   /** 查密钥状态（**不回原值**：只有有没有 / 来源 / 存储方式 / 尾 4 位） */
-  agentSecretStatus: () => Promise<IpcResult<AgentSecretStatus>>;
+  // 不返回密钥原值，切换站点后分别读取状态，禁止共享 configured 标志。
+  // 旧调用没有 provider 时仍属于硅基流动，而不是最后访问的站点。
+  // 状态 Promise 的错误由标准 IpcResult 表达。
+  agentSecretStatus: (provider?: AgentProvider) => Promise<IpcResult<AgentSecretStatus>>;
   /** 写入密钥：主进程侧加密落盘，明文只在这一次调用里存在一瞬 */
-  agentSetSecret: (apiKey: string) => Promise<IpcResult<AgentSecretStatus>>;
+  // 密钥原文只经过本次写操作，不存在读回接口。
+  // provider 和 key 必须一起提交，以免异步保存串到新标签。
+  // 成功只返回所属站点的配置摘要。
+  agentSetSecret: (apiKey: string, provider?: AgentProvider) => Promise<IpcResult<AgentSecretStatus>>;
   /** 清除密钥 */
-  agentClearSecret: () => Promise<IpcResult<AgentSecretStatus>>;
+  // 清除只影响传入站点，不能顺便删除另一个服务商的凭据。
+  // force 不在清除接口中，刷新目录是独立的只读操作。
+  // 主进程会拒绝不在允许集中的 provider。
+  agentClearSecret: (provider?: AgentProvider) => Promise<IpcResult<AgentSecretStatus>>;
+  // 返回公开目录与可选账户可见性，价格核实不等同推理已成功。
+  // 调用者不得把未知价格显示为免费，也不得自动跨站切换。
+  // 刷新失败返回保留目录和错误码，离线仍可选择已知模型。
+  agentCatalog: (provider: AgentProvider, force?: boolean) => Promise<IpcResult<AgentCatalog>>;
 };
 
 declare global {

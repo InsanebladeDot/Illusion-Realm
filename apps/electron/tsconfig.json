@@ -5,6 +5,6 @@
     "moduleResolution": "node",
     "checkJs": true
   },
-  "include": ["**/*.js"],
+  "include": ["src/**/*.js"],
   "exclude": ["node_modules", "dist", "release", "bin", "scripts"]
 }

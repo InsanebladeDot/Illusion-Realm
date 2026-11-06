@@ -1,0 +1,32 @@
+# 安装向导是独立的临时 Electron 应用，不收集创作客户端代码或账户数据。
+# portable 只作为单文件自解压外壳，真正安装仍交给内嵌 NSIS 引擎。
+# 构建脚本把输出复制到 release/setup，只向用户分发其中一个 EXE。
+appId: com.illusionrealm.installer
+productName: Illusion Realm Installer
+asar: true
+npmRebuild: false
+files:
+  - '*.cjs'
+  - '*.html'
+  - '*.css'
+  - 'package.json'
+  - 'character.webp'
+# payload 包含构建时生成的清单、许可和安装引擎，不从网络加载资源。
+# 引擎放在 asar 外才能由 Windows 创建进程，清单含它的流式 SHA-256。
+# 模板引用的图片为随包本地资源，不请求原型目录或远程字体。
+extraResources:
+  - from: payload
+    to: payload
+win:
+  # 内层 NSIS 已在第一阶段签名，封装时不能再次改字节使清单哈希失效。
+  # 此排除只作用于 engine.exe，外层向导与最终安装 EXE 仍按配置签名。
+  # 运行期摘要验证针对原始内层引擎，而非构建后再次修改的副本。
+  signExts:
+    - '!engine.exe'
+  target: portable
+  artifactName: Illusion-Realm-Setup-${version}.exe
+# 当前用户目录安装无需提升整个向导权限；受保护的目标目录会明确拒绝。
+# 外壳退出才清理临时运行目录，避免先退出再把安装引擎一起删掉。
+# 自动发布被构建入口显式关闭，不读取开发者发布凭据。
+portable:
+  requestExecutionLevel: user

@@ -22,7 +22,7 @@ export type GeneratedImageFile = {
 /**
  * `files:listOutputFolders` 的返回条目 —— **单一事实来源**。
  *
- * 主进程（`apps/electron/generatedImages.js`）用 JSDoc `import("@illusion-realm/shared")`
+ * 主进程（`apps/electron/src/main/modules/images/generated-images.js`）用 JSDoc `import("@illusion-realm/shared")`
  * 指向这里，渲染进程（`@/utils/generatedImages`）也用它，因此「主进程少返回一个字段」
  * 或「渲染进程多消费一个字段」都会在各自的 tsc 上直接报错，而不是退化成运行期 undefined。
  */

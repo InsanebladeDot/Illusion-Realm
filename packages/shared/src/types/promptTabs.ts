@@ -8,7 +8,11 @@
  *
  * 新增工具时先加这里（跨进程共享的稳定 id），再在 `apps/next/src/data/promptTools.ts` 里补一条声明。
  */
+/** 画师工具写入既有style分类，不新增第二套提示词结构。 */
+/** 可选挂载沿用tools数组，旧文档未记录画师时保持兼容。 */
+/** 与渲染层注册表保持一致，类型检查约束所有图标映射。 */
 export type PromptTabToolId =
+  | "artist"
   | "character"
   | "pose"
   | "background"

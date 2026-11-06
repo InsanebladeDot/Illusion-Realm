@@ -3,7 +3,7 @@
  *
  * 三处必须一致，改一边就要改另一边：
  * 1. Python 侧 `apps/agent/agent_core/core.py` yield 的事件；
- * 2. 主进程 `apps/electron/agent/runner.js` 逐行转发时加上 `runId`；
+ * 2. 主进程 `apps/electron/src/main/modules/agent/runner.js` 逐行转发时加上 `runId`；
  * 3. 渲染层 `apps/next/src/stores/useAgentStore.ts` 消费它。
  *
  * `scripts/verify-agent-events.js` 会真的拉起 Python 进程，断言事件序列与关键字段。
@@ -16,6 +16,10 @@ export type AgentPermission = "readonly" | "full";
 export interface AgentHistoryItem {
   role: "user" | "assistant";
   content: string;
+  /** 历史用户图片使用已发送的内嵌数据，不能使用本机预览地址。 */
+  /** 省略字段兼容原有纯文本历史，助手消息不携带该字段。 */
+  /** 保留图像上下文后，“上一张图”的追问无需重新选择文件。 */
+  images?: string[];
 }
 
 /**
@@ -42,6 +46,10 @@ export interface AgentRunConfig {
 /** `agent:run` 的入参 */
 export interface AgentRunOptions {
   question: string;
+  /** 当前用户明确附加的图片，使用 OpenAI 兼容的 base64 data URL。 */
+  /** 主进程校验类型、数量与总长度，远端无法读取用户的本地路径。 */
+  /** 该字段经 stdin 交给 Python，不放入命令行或普通用户配置文档。 */
+  images?: string[];
   history?: AgentHistoryItem[];
   config?: AgentRunConfig;
 }
@@ -118,7 +126,7 @@ export interface AgentHostCallResult {
 /**
  * 密钥状态摘要 —— **渲染进程能拿到的全部信息**。
  *
- * 密钥原值只存在于主进程（`apps/electron/agent/secret.js`，safeStorage 加密落盘），
+ * 密钥原值只存在于主进程（`apps/electron/src/main/modules/agent/secret.js`，safeStorage 加密落盘），
  * 渲染层只能问「有没有 / 从哪来 / 怎么存的 / 尾 4 位」，据此渲染提示与设置项。
  */
 export interface AgentSecretStatus {

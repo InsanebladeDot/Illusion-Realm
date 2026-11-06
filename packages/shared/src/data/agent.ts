@@ -2,7 +2,7 @@
  * Agent 的**默认配置**（多模块共用的那一份）。
  *
  * 谁在用：
- * - 主进程：`apps/electron/agent/defaults.js` 是**同值副本**（主进程运行期解析不到本包，
+ * - 主进程：`apps/electron/src/main/modules/agent/defaults.js` 是**同值副本**（主进程运行期解析不到本包，
  *   与 `ipcChannels.js` 同一套做法），由 `scripts/verify-electron-modules.js` 断言两边一致；
  * - 渲染层：设置页 / 文案可以引用它，别把默认值再写一遍；
  * - Python sidecar：不直接读它 —— 主进程每次运行都会把生效值经 stdin 传下去，
@@ -34,10 +34,13 @@ export const AGENT_ENV_KEYS = {
   python: "ILLUSION_AGENT_PYTHON",
 } as const;
 
-/** 默认值：与 `apps/electron/agent/defaults.js`、`apps/agent/agent_core/config.py` 三处保持一致 */
+/** 默认值：与 `apps/electron/src/main/modules/agent/defaults.js`、`apps/agent/agent_core/config.py` 三处保持一致 */
 export const AGENT_DEFAULTS = {
   baseUrl: "https://api.siliconflow.cn/v1",
   model: "deepseek-ai/DeepSeek-V4-Flash",
-  maxSteps: 8,
+  // 默认四轮：查询与回答计为不同模型请求。
+  // 桌面档位覆盖为二、四、六轮，Python 另设硬上限。
+  // 与另一个进程的默认值一致，防止仅 CLI 保留旧八轮。
+  maxSteps: 4,
   permission: "readonly",
 } as const;

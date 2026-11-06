@@ -50,6 +50,10 @@ export type UserDataHistoryFolders = {
   /** 生成输出策略：自由跟随当前图库选择，或固定到指定目录 */
   outputMode?: "free" | "fixed";
   fixedOutputPath?: string;
+  /** 用户确认过的手动图片顺序，按文件夹路径分别记录；旧文档缺省即按原列表顺序显示。 */
+  // 保持可选，旧文档缺失时由 store 初始空映射承接，不需要升级用户文件版本。
+  // 该字段只是图库偏好，不含 DOM、函数或文件二进制，可以原样写入同一 JSON。
+  imageOrderByFolder?: Record<string, string[]>;
 };
 
 export type UserDataQuickPhrases = {
@@ -66,7 +70,12 @@ export type UserDataCreateForm = {
   sizeMode?: ImageSizeMode;
   customWidth?: number;
   customHeight?: number;
-  /** 图片尺寸原始宽高的倍率（0.1–1）；旧文档缺省为 1。 */
+  /**
+   * 图片尺寸原始宽高的倍率，最小 0.1，默认 1.0，确认时保留一位小数。
+   * 允许 1 倍以上；这里保存倍率 number，不保存带 × 的显示字符串。
+   * 最终 width/height 仍在图片尺寸适配层对齐成整数像素。
+   * 旧文档缺失时沿用 1 倍，不更改用户数据文档版本。
+   */
   sizeScale?: number;
   /** 模型/扩展 Dialog 字体：sm=小，md=中，lg=大 */
   resourceDialogFontSize?: "sm" | "md" | "lg";
@@ -141,6 +150,10 @@ export type View3DModelHistoryItem = {
 };
 
 export type UserDataDocument = {
+  // 本机生成账本是可选 v1 分段；旧文档缺失时由 store 恢复为空。
+  // 不包含图片字节、提示词或密钥，未来迁表可按任务 ID 独立导入。
+  // 任务与模型使用放在同一条收据，删除队列卡片不会删除历史。
+  generationHistory?: import("../schemas/generation-history.schema").GenerationHistory;
   version: typeof USER_DATA_VERSION;
   userDataPath: string;
   sidebar: UserDataSidebar;
@@ -157,15 +170,31 @@ export type UserDataDocument = {
   negativePresets: UserDataNegativePresets;
   view3d: UserDataView3D;
   characterFavorites: UserDataCharacterFavorites;
+  // 动作、背景、表情收藏复用同一个用户文档，不创建旁路 localStorage 文件。
+  // 角色与画师原字段继续兼容，导出器统一汇总收藏相关的白名单字段。
+  libraryFavorites?: import("./library-favorites").UserDataLibraryFavorites;
+  /** 可选版本化画师收藏段，缺失时为空，不改变v1文档其余格式。 */
+  /** 收藏只存本地资料ID，线上图片与四万条资料不重复写入。 */
+  /** schema是形状来源，读取侧水合时校验并清除无效成员。 */
+  artistLibrary?: import("../schemas/artist-library.schema").ArtistLibraryData;
   comicTemplates: import("./comic-template").ComicTemplateLibrary;
   promptAssistant?: import("./prompt-assistant").PromptAssistantPreferences;
+  // 这是 v1 文档的可选增量字段，旧文档缺失时回到硅基流动原默认模型。
+  // 只保存站点和各站最后选择的模型，不包含密钥或账户信息。
+  // 切换后返回原站点会恢复选择，目录更新不静默重写用户选择。
+  agentPreferences?: import('../schemas/agent-provider.schema').AgentPreferences;
   /** v1 的可选增量字段：旧文档缺失时视为未进入，其他资料保持兼容。 */
   entrySession?: import("./guest-session").UserDataEntrySession;
+  /** 无限画布的本地草稿；缺失时仍从空画布开始，兼容旧用户文档。 */
+  infiniteCanvas?: import("./infinite-canvas").UserDataInfiniteCanvas;
 };
 
 /** 角色库收藏（animadex 角色 slug） */
 export type UserDataCharacterFavorites = {
   slugs: string[];
+  // 旧文档只存 slug 仍可读取；新收藏额外保存静态资料，脱离原搜索页也能浏览。
+  // 不保存在线请求、API Key 或缓存图片内容，快照仅包含公开角色资料。
+  characters?: import("./character").AnimadexCharacter[];
 };
 
 export type UserDataSectionKey = Exclude<keyof UserDataDocument, "version">;

@@ -12,6 +12,10 @@ export interface ComfyModelLists {
   diffusionModels?: string[];
   clips?: string[];
   vaes?: string[];
+  // 模型补丁独立于 UNet 和 LoRA，不在其他类别中猜测同名文件。
+  // 可选字段保持旧桥接返回值兼容；需要补丁的任务会明确检查缺失。
+  // 值为 ComfyUI 返回的相对名称，允许任意层级子目录。
+  modelPatches?: string[];
 }
 
 export type ComfyQueueResponse = {

@@ -7,7 +7,7 @@
 
 执行 `pnpm check:ffmpeg` 检查文件完整性和实际版本。
 打包前检查源目录，打包后检查 `resources/ffmpeg/`；缺文件会明确失败，不生成缺少工具的发布包。
-运行期由 `apps/electron/ffmpeg/locate.js` 作为 `bundled` 来源自动发现，终端用户无需下载。
+运行期由 `apps/electron/src/main/modules/ffmpeg/locate.js` 作为 `bundled` 来源自动发现，终端用户无需下载。
 
 解析优先级（`resolveTools`）：
 

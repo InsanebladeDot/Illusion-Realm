@@ -1,0 +1,19 @@
+display-name-zh: 动画导演（首尾帧·参考图）
+version: 0.1.0
+tag-en: Animation
+tag-cn: 动画
+complete-tags-en:
+- Animation / Shot Planning
+- Animation / Creative Generation
+- Animation / Prompt Engineering
+complete-tags-cn:
+- 动画 / 镜头规划
+- 动画 / 创作生成
+- 动画 / 提示词工程
+summary-en: Direct anime keyframe videos and write the matching MiniMax H3 prompts.
+summary-cn: 以动画导演身份规划首尾帧与参考图，输出可直接投喂 MiniMax H3 的动漫向提示词。
+desc-en: Built for creators who generate anime clips from a first frame and a last frame plus character or style reference images. The Skill locks a character invariant sheet, designs the frame pair with a graded differential amplitude so the model can interpolate, builds a shot and beat table whose durations sum to the last frame timestamp, then writes the English H3 prompt in FL2VA, I2VA, L2VA, or full-reference format with exact field names and reference labels. It also audits anime-specific failure modes such as drifting eye highlights, smeared hands, flickering hair and background linework, and mixed style families. Best for anime shorts, character-driven shots, and keyframe-driven social content; not for photoreal live action, single still images, or editing an existing video without keyframes.
+desc-cn: 面向用首帧、尾帧加角色或画风参考图生成动漫镜头的创作者。Skill 会先锁定角色不变量表，再按「差分幅度 0–3 级」设计首尾帧组合，确保模型能插值出中间路径；随后产出时长精确对齐尾帧时间戳的镜头节拍表，最后写成字段名与参考标签完全一致的英文 H3 提示词（FL2VA、I2VA、L2VA 或全参考模式）。同时检查动漫向高发崩点：眼睛高光漂移、手部动作糊、发丝与背景线条抖动、一条里混用两种画风。适用于动漫短片、角色驱动镜头和关键帧类社交媒体内容；不适用于真人写实、单张静帧，或不带关键帧的成片剪辑。
+author-en: community
+author-cn: 社区用户
+source: community

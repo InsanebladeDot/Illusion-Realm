@@ -4,7 +4,10 @@ const path = require("node:path");
 const PNG_SIGNATURE = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
 
 async function prepareWindowsIcon() {
-  const root = path.resolve(__dirname, "..");
+  // 图标归 assets 管理，与运行源码、安装器源码分开。
+  // PNG 是唯一源文件；ICO 仍由构建过程生成，不提交生成物。
+  // 此路径同时服务主客户端和单文件安装向导的图标准备。
+  const root = path.resolve(__dirname, "../assets");
   const png = await fs.readFile(path.join(root, "icon.png"));
   if (png.length < 33 || !png.subarray(0, 8).equals(PNG_SIGNATURE) || png.toString("ascii", 12, 16) !== "IHDR") {
     throw new Error("Windows icon source must be a valid PNG.");
