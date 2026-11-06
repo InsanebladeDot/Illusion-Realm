@@ -1,0 +1,44 @@
+{
+  "baseline": "C:\\Users\\18305\\AppData\\Local\\Temp\\ir-dialogue-resize-2f4c1139ae9a41b4a710ffb95db13cb3\\baseline.json",
+  "baselineSha256": "f67c4f516fdfd28eb7740c76a6732d1a9433deab61cbf90ddabe754625eccda0",
+  "method": "仅统计本轮快照之后新增和替换行；新增transform全文。空行、删除、未变上下文不统计。纯注释计C，混合行和其他非空代码计B。",
+  "manualReview": "复核逆旋转和对角投影类比、尺寸限制、固定锚点、指针捕获与撤销生命周期、单列字段布局，以及真实鼠标事件和SVG断言的证据边界。统计范围只涵盖本轮四个文件。",
+  "files": [
+    {
+      "file": "apps/next/src/view/cartoon/dialogue-stage.tsx",
+      "category": "business",
+      "C": 18,
+      "B": 9
+    },
+    {
+      "file": "apps/next/src/view/cartoon/dialogue-properties.tsx",
+      "category": "business",
+      "C": 4,
+      "B": 1
+    },
+    {
+      "file": "apps/next/src/view/cartoon/dialogue-transform.ts",
+      "category": "business",
+      "C": 43,
+      "B": 17
+    },
+    {
+      "file": "scripts/smoke-cartoon-dialogue.js",
+      "category": "tests",
+      "C": 111,
+      "B": 47
+    }
+  ],
+  "totals": {
+    "business": {
+      "C": 65,
+      "B": 27,
+      "rate": 70.65
+    },
+    "tests": {
+      "C": 111,
+      "B": 47,
+      "rate": 70.25
+    }
+  }
+}

@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Edit3, ImagePlus, LayoutTemplate, Minus, Plus, Undo2 } from "lucide-react";
 import { useTranslation, type InterpolationParams, type MessageKey } from "@/i18n";
 import { exportStoryboardImage } from "@/utils/comic/export-storyboard-image";
-import { downloadBlob } from "@/utils/cartoon/exportBubbleImage";
+import { downloadBlob } from "@/utils/download-blob";
 import { useToastStore } from "@/stores/useToastStore";
 import type { ComicTemplate } from "@/data/comic-templates";
 import ComicSaveTemplateDialog from "./comic-save-template-dialog";
@@ -18,11 +18,6 @@ import ComicViewPin, { type ComicCompactView } from "./comic-view-pin";
 import ComicImageTools from "./comic-image-tools";
 import ComicImageMenu from "./comic-image-menu";
 import { DEFAULT_COMIC_PAGE_SIZE, readComicPageSize, type ComicPageSize } from "@/utils/comic/page-size";
-import imageOne from "@/assets/cartoon/1.png";
-import imageTwo from "@/assets/cartoon/2.png";
-import imageThree from "@/assets/cartoon/3.png";
-import imageFour from "@/assets/cartoon/4.png";
-import imageFive from "@/assets/cartoon/5.png";
 
 interface Point { x: number; y: number }
 interface Panel { id: string; title: string; description: string; src: string; blur: number; imageRemoved: boolean; x: number; y: number; width: number; height: number; vertices: Point[] }
@@ -31,7 +26,10 @@ interface TemplateSnapshot { panels: Panel[]; selectedId: string; customMode: bo
 interface ImageContextMenu { panelId: string; x: number; y: number }
 type ComicTranslator = (key: MessageKey, params?: InterpolationParams) => string;
 
-const imageSources = [imageOne.src, imageTwo.src, imageThree.src, imageFour.src, imageFive.src];
+// 分镜初始化只需要可替换的中性占位图，不再借用已移除的漫画气泡素材。
+// 占位图与自定义模板共用生成机制，编号始终对应分镜顺序。
+// 五张占位图只表达分镜位置，不暗示用户已经导入或生成了真实图片。
+const imageSources = Array.from({ length: 5 }, (_, index) => placeholderImage(index));
 const rectangle = (): Point[] => [{ x: 0, y: 0 }, { x: 100, y: 0 }, { x: 100, y: 100 }, { x: 0, y: 100 }];
 const initialPanels = (t: ComicTranslator): Panel[] => [
   { id: "p1", title: t("toolBox.comic.defaults.sceneTitle"), description: t("toolBox.comic.defaults.sceneDescription"), src: imageSources[0], blur: 0, imageRemoved: false, x: 4, y: 3, width: 92, height: 38, vertices: rectangle() },

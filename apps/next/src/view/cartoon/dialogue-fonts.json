@@ -1,0 +1,12 @@
+[
+  {"id":"zcoolkuaile","file":"ZCOOLKuaiLe-Regular.ttf","name":"站酷快乐体","latin":false},
+  {"id":"zcoolqingkehuangyou","file":"ZCOOLQingKeHuangYou-Regular.ttf","name":"站酷庆科黄油体","latin":false},
+  {"id":"zcoolxiaowei","file":"ZCOOLXiaoWei-Regular.ttf","name":"站酷小薇体","latin":false},
+  {"id":"mashanzheng","file":"MaShanZheng-Regular.ttf","name":"马善政毛笔体","latin":false},
+  {"id":"longcang","file":"LongCang-Regular.ttf","name":"龙藏手写体","latin":false},
+  {"id":"liujianmaocao","file":"LiuJianMaoCao-Regular.ttf","name":"刘建毛草","latin":false},
+  {"id":"zhimangxing","file":"ZhiMangXing-Regular.ttf","name":"志莽行书","latin":false},
+  {"id":"bangers","file":"Bangers-Regular.ttf","name":"Bangers","latin":true},
+  {"id":"comicneue","file":"ComicNeue-Regular.ttf","name":"Comic Neue","latin":true},
+  {"id":"pangolin","file":"Pangolin-Regular.ttf","name":"Pangolin","latin":true}
+]

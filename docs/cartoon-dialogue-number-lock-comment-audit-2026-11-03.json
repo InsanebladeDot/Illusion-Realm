@@ -1,0 +1,68 @@
+{
+  "date": "2026-11-03",
+  "baseline": "C:\\Users\\18305\\AppData\\Local\\Temp\\ir-dialogue-number-lock-f17aecba3a214afeac52cfe524f075c8\\baseline.json",
+  "method": "本轮快照与现文件按LF归一化，SequenceMatcher autojunk=False，统计insert/replace后行；纯注释C、含代码行B；删除与上下文排除；人工复核解释职责、原因和边界。",
+  "files": [
+    {
+      "file": "apps/next/src/i18n/locales/en/dialogue.ts",
+      "group": "business",
+      "C": 3,
+      "B": 1,
+      "baselineSha256Lf": "0a901f10363ee3a80895147908422cda4f8035f91c55823e6fcd6f43fec06cb1",
+      "currentSha256Lf": "b5a266a210db2b8ac2a9c5b148969655798d87fe83b71b9cdb28c9994d9f819f"
+    },
+    {
+      "file": "scripts/smoke-cartoon-dialogue.js",
+      "group": "test",
+      "C": 117,
+      "B": 49,
+      "baselineSha256Lf": "38e9f8357b94f6986ea25491885a7a8ebfb6129e2cd86681173ee57f56263a56",
+      "currentSha256Lf": "9bff034bc260b5312847372f7f5fca6f86b3c45f6e15ba96f108c3bd6bfea99f"
+    },
+    {
+      "file": "apps/next/src/view/cartoon/dialogue-properties.tsx",
+      "group": "business",
+      "C": 4,
+      "B": 2,
+      "baselineSha256Lf": "6e2c9eb0254c3f9714776527f663237357cd1cc738df82eb381307728c60b91c",
+      "currentSha256Lf": "3c8c07175c83870009f8306e672b5782f6146015244ef0ea5ae4412dd61b9ff3"
+    },
+    {
+      "file": "apps/next/src/i18n/locales/zh-CN/dialogue.ts",
+      "group": "business",
+      "C": 3,
+      "B": 1,
+      "baselineSha256Lf": "7a6006889c6a16364e491296f257720ec10f72b6cb9db7abdd2afd5cd1d635da",
+      "currentSha256Lf": "6fdacbd11ef8d9a2da7ed18529249fe535ad4a632dbba4c864f882751f76c05f"
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-controls.tsx",
+      "group": "business",
+      "C": 42,
+      "B": 18,
+      "baselineSha256Lf": "dfd7acfcd6a243a3fcba3145f694782b39891519e26e38f9bba58b8f2ac80102",
+      "currentSha256Lf": "a68c8c4423976a4e9326d44896ded228be245f239f04fd25e7c60db8adad5a59"
+    },
+    {
+      "file": "apps/next/src/view/cartoon/dialogue-stage.tsx",
+      "group": "business",
+      "C": 1,
+      "B": 0,
+      "baselineSha256Lf": "5cdfa355ea1582df76af9d737aefccf6f42d892174d1cbb9fa0731a49b613597",
+      "currentSha256Lf": "47e12b73cb2072e7166ac6d74f51a6146ea92ed51d6f5dae5b6c15261d9f39e5"
+    }
+  ],
+  "totals": {
+    "business": {
+      "C": 53,
+      "B": 22,
+      "percent": 70.67
+    },
+    "test": {
+      "C": 117,
+      "B": 49,
+      "percent": 70.48
+    }
+  },
+  "manualReview": "已复核新增注释与行为；JSX独占注释计C，混合行仅计B；文档和截图排除。"
+}

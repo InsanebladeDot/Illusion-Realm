@@ -1,0 +1,102 @@
+[
+  {
+    "id": "zcoolkuaile",
+    "file": "ZCOOLKuaiLe-Regular.ttf",
+    "name": "站酷快乐体",
+    "latin": false,
+    "bytes": 1514968,
+    "sha256": "812a6fc1fe54b6d73a419245c32dfeba8aa33104d5be90d1cf6af082007cb71d",
+    "source": "https://github.com/google/fonts/tree/main/ofl/zcoolkuaile",
+    "license": "zcoolkuaile-OFL.txt"
+  },
+  {
+    "id": "zcoolqingkehuangyou",
+    "file": "ZCOOLQingKeHuangYou-Regular.ttf",
+    "name": "站酷庆科黄油体",
+    "latin": false,
+    "bytes": 8328684,
+    "sha256": "54f0c0df4308cd74cd0f2fd3494ae054dbc4a1fd6fa7d71f4807eb4cdd8b4136",
+    "source": "https://github.com/google/fonts/tree/main/ofl/zcoolqingkehuangyou",
+    "license": "zcoolqingkehuangyou-OFL.txt"
+  },
+  {
+    "id": "zcoolxiaowei",
+    "file": "ZCOOLXiaoWei-Regular.ttf",
+    "name": "站酷小薇体",
+    "latin": false,
+    "bytes": 6313808,
+    "sha256": "a42b620140f493db42f741351dfbf343c0936d58588ee8004b8b2a218d997ff1",
+    "source": "https://github.com/google/fonts/tree/main/ofl/zcoolxiaowei",
+    "license": "zcoolxiaowei-OFL.txt"
+  },
+  {
+    "id": "mashanzheng",
+    "file": "MaShanZheng-Regular.ttf",
+    "name": "马善政毛笔体",
+    "latin": false,
+    "bytes": 5857936,
+    "sha256": "6d2546bb189c732a8ca29af9e22457b152387d158aa459e4ac2ce1e51788b7fb",
+    "source": "https://github.com/google/fonts/tree/main/ofl/mashanzheng",
+    "license": "mashanzheng-OFL.txt"
+  },
+  {
+    "id": "longcang",
+    "file": "LongCang-Regular.ttf",
+    "name": "龙藏手写体",
+    "latin": false,
+    "bytes": 5162508,
+    "sha256": "e5bf2c3f24ef2327c6f136d8f73e2f9dfdf44896fdbeb35a9515f44777bb91bc",
+    "source": "https://github.com/google/fonts/tree/main/ofl/longcang",
+    "license": "longcang-OFL.txt"
+  },
+  {
+    "id": "liujianmaocao",
+    "file": "LiuJianMaoCao-Regular.ttf",
+    "name": "刘建毛草",
+    "latin": false,
+    "bytes": 4951804,
+    "sha256": "cab396b91a5b7c0b4005a35891180d06e6751f5ac261fe680aec65c1ae209033",
+    "source": "https://github.com/google/fonts/tree/main/ofl/liujianmaocao",
+    "license": "liujianmaocao-OFL.txt"
+  },
+  {
+    "id": "zhimangxing",
+    "file": "ZhiMangXing-Regular.ttf",
+    "name": "志莽行书",
+    "latin": false,
+    "bytes": 4063532,
+    "sha256": "644e0cae9b40f0b10ab729a01bd32032e3973bac22be3dccae01bf6ae7fde969",
+    "source": "https://github.com/google/fonts/tree/main/ofl/zhimangxing",
+    "license": "zhimangxing-OFL.txt"
+  },
+  {
+    "id": "bangers",
+    "file": "Bangers-Regular.ttf",
+    "name": "Bangers",
+    "latin": true,
+    "bytes": 93148,
+    "sha256": "4160a7311de9342674cce9160cde9fcbb30f48190397d86ff1b70b455af65824",
+    "source": "https://github.com/google/fonts/tree/main/ofl/bangers",
+    "license": "bangers-OFL.txt"
+  },
+  {
+    "id": "comicneue",
+    "file": "ComicNeue-Regular.ttf",
+    "name": "Comic Neue",
+    "latin": true,
+    "bytes": 57248,
+    "sha256": "a0ee5a37c8b27c4db0700137d928598b1e23b0089e1546a8961909176b779360",
+    "source": "https://github.com/google/fonts/tree/main/ofl/comicneue",
+    "license": "comicneue-OFL.txt"
+  },
+  {
+    "id": "pangolin",
+    "file": "Pangolin-Regular.ttf",
+    "name": "Pangolin",
+    "latin": true,
+    "bytes": 593408,
+    "sha256": "cf4f0a46704c7859d4943320fce6c6d06cc7dc450ef971c3676ef36f9f482299",
+    "source": "https://github.com/google/fonts/tree/main/ofl/pangolin",
+    "license": "pangolin-OFL.txt"
+  }
+]

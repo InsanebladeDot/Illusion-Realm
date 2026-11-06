@@ -1,0 +1,153 @@
+{
+  "baseline": "C:\\Users\\18305\\AppData\\Local\\Temp\\ir-cartoon-690327256b354b0aa866ce525b6610a7\\baseline.json",
+  "baselineSha256": "519cd2d43d1a8a8cb7703ae4ac8ed2ee9b096b08fa7a800f658456611022f8fc",
+  "method": "仅统计任务前快照之后新增/替换行；新增源码全文。纯注释有效内容计C；混合行、括号、import、类型与代码计B；空行、定界符、删除与上下文不计。按TS/JS、JSX、CSS注释形态扫描后人工检查职责、类比、错误清理与测试断言，删除已识别重复说明。",
+  "scope": "业务TS/TSX/CSS和冒烟JS分别统计；JSON纯静态目录及词条值、PNG、文档、构建产物不纳入源码分母。保留已有工作区修改，以baseline.json区分。",
+  "manualReview": "核对了拖动起终点、历史顺序、焦点返回、输入保护、解码失败保留、导出字节、JSON加载声明的说明与实际行为。统计不是全仓覆盖率；源码仍含较多解释性注释。",
+  "totals": {
+    "business": {
+      "C": 1268,
+      "B": 533,
+      "rate": 70.41
+    },
+    "tests": {
+      "C": 279,
+      "B": 117,
+      "rate": 70.45
+    }
+  },
+  "files": [
+    {
+      "file": "apps/next/src/view/cartoon/dialogue-data.ts",
+      "category": "business",
+      "C": 86,
+      "B": 20
+    },
+    {
+      "file": "apps/next/src/view/cartoon/dialogue-history.ts",
+      "category": "business",
+      "C": 93,
+      "B": 29
+    },
+    {
+      "file": "apps/next/src/view/cartoon/dialogue-library.tsx",
+      "category": "business",
+      "C": 53,
+      "B": 19
+    },
+    {
+      "file": "apps/next/src/view/cartoon/dialogue-page.tsx",
+      "category": "business",
+      "C": 78,
+      "B": 66
+    },
+    {
+      "file": "apps/next/src/view/cartoon/dialogue-properties.tsx",
+      "category": "business",
+      "C": 123,
+      "B": 51
+    },
+    {
+      "file": "apps/next/src/view/cartoon/dialogue-render.ts",
+      "category": "business",
+      "C": 102,
+      "B": 63
+    },
+    {
+      "file": "apps/next/src/view/cartoon/dialogue-stage.tsx",
+      "category": "business",
+      "C": 123,
+      "B": 55
+    },
+    {
+      "file": "apps/next/src/view/cartoon/dialogue-types.ts",
+      "category": "business",
+      "C": 49,
+      "B": 9
+    },
+    {
+      "file": "apps/next/src/view/cartoon/dialogue.module.css",
+      "category": "business",
+      "C": 38,
+      "B": 5
+    },
+    {
+      "file": "apps/next/src/view/cartoon/use-dialogue-editor.ts",
+      "category": "business",
+      "C": 106,
+      "B": 57
+    },
+    {
+      "file": "apps/next/src/view/cartoon/use-dialogue-template-picker.ts",
+      "category": "business",
+      "C": 66,
+      "B": 28
+    },
+    {
+      "file": "apps/next/src/components/window-titlebar-content.tsx",
+      "category": "business",
+      "C": 25,
+      "B": 4
+    },
+    {
+      "file": "apps/next/src/app/tools/image/cartoon/page.tsx",
+      "category": "business",
+      "C": 8,
+      "B": 5
+    },
+    {
+      "file": "apps/next/src/app/cartoon/page.tsx",
+      "category": "business",
+      "C": 6,
+      "B": 4
+    },
+    {
+      "file": "apps/next/src/i18n/locales/zh-CN/dialogue.ts",
+      "category": "business",
+      "C": 144,
+      "B": 50
+    },
+    {
+      "file": "apps/next/src/i18n/locales/en/dialogue.ts",
+      "category": "business",
+      "C": 144,
+      "B": 50
+    },
+    {
+      "file": "apps/next/src/components/window-titlebar.tsx",
+      "category": "business",
+      "C": 11,
+      "B": 9
+    },
+    {
+      "file": "apps/next/src/view/toolBox/main/ToolBoxMain.tsx",
+      "category": "business",
+      "C": 6,
+      "B": 3
+    },
+    {
+      "file": "apps/next/src/i18n/locales/zh-CN/index.ts",
+      "category": "business",
+      "C": 2,
+      "B": 2
+    },
+    {
+      "file": "apps/next/src/i18n/locales/en/index.ts",
+      "category": "business",
+      "C": 2,
+      "B": 2
+    },
+    {
+      "file": "apps/next/src/components/library/library-card.tsx",
+      "category": "business",
+      "C": 3,
+      "B": 2
+    },
+    {
+      "file": "scripts/smoke-cartoon-dialogue.js",
+      "category": "tests",
+      "C": 279,
+      "B": 117
+    }
+  ]
+}

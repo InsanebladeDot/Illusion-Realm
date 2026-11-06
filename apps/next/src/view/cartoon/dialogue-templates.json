@@ -1,0 +1,338 @@
+[
+  {
+    "id": "classic-left",
+    "category": "basic",
+    "color": "#1d2030",
+    "font": "sans-serif",
+    "vertical": false
+  },
+  {
+    "id": "classic-right",
+    "category": "basic",
+    "color": "#1d2030",
+    "font": "sans-serif",
+    "vertical": false
+  },
+  {
+    "id": "oval",
+    "category": "basic",
+    "color": "#1d2030",
+    "font": "sans-serif",
+    "vertical": false
+  },
+  {
+    "id": "compact",
+    "category": "basic",
+    "color": "#1d2030",
+    "font": "sans-serif",
+    "vertical": false
+  },
+  {
+    "id": "soft",
+    "category": "basic",
+    "color": "#4f536a",
+    "font": "sans-serif",
+    "vertical": false
+  },
+  {
+    "id": "double",
+    "category": "basic",
+    "color": "#1d2030",
+    "font": "sans-serif",
+    "vertical": false
+  },
+  {
+    "id": "dashed",
+    "category": "basic",
+    "color": "#555a72",
+    "font": "sans-serif",
+    "vertical": false
+  },
+  {
+    "id": "borderless",
+    "category": "basic",
+    "color": "#1d2030",
+    "font": "sans-serif",
+    "vertical": false
+  },
+  {
+    "id": "thought",
+    "category": "basic",
+    "color": "#1d2030",
+    "font": "sans-serif",
+    "vertical": false
+  },
+  {
+    "id": "dream",
+    "category": "fantasy",
+    "color": "#51458b",
+    "font": "sans-serif",
+    "vertical": false
+  },
+  {
+    "id": "black",
+    "category": "emotion",
+    "color": "#ffffff",
+    "font": "sans-serif",
+    "vertical": false
+  },
+  {
+    "id": "whisper",
+    "category": "emotion",
+    "color": "#777b8d",
+    "font": "sans-serif",
+    "vertical": false
+  },
+  {
+    "id": "shout",
+    "category": "emotion",
+    "color": "#1d2030",
+    "font": "sans-serif",
+    "vertical": false
+  },
+  {
+    "id": "angry",
+    "category": "emotion",
+    "color": "#ffffff",
+    "font": "sans-serif",
+    "vertical": false
+  },
+  {
+    "id": "surprise",
+    "category": "emotion",
+    "color": "#1d2030",
+    "font": "sans-serif",
+    "vertical": false
+  },
+  {
+    "id": "tremble",
+    "category": "emotion",
+    "color": "#1d2030",
+    "font": "sans-serif",
+    "vertical": false
+  },
+  {
+    "id": "impact",
+    "category": "emotion",
+    "color": "#251309",
+    "font": "sans-serif",
+    "vertical": false
+  },
+  {
+    "id": "speed",
+    "category": "emotion",
+    "color": "#1d2030",
+    "font": "sans-serif",
+    "vertical": false
+  },
+  {
+    "id": "ice",
+    "category": "emotion",
+    "color": "#285865",
+    "font": "sans-serif",
+    "vertical": false
+  },
+  {
+    "id": "fire",
+    "category": "emotion",
+    "color": "#ffffff",
+    "font": "sans-serif",
+    "vertical": false
+  },
+  {
+    "id": "narration",
+    "category": "narration",
+    "color": "#1d2030",
+    "font": "sans-serif",
+    "vertical": false
+  },
+  {
+    "id": "chapter",
+    "category": "narration",
+    "color": "#ffffff",
+    "font": "sans-serif",
+    "vertical": false
+  },
+  {
+    "id": "stamp",
+    "category": "narration",
+    "color": "#744b39",
+    "font": "sans-serif",
+    "vertical": false
+  },
+  {
+    "id": "photo",
+    "category": "narration",
+    "color": "#1d2030",
+    "font": "sans-serif",
+    "vertical": false
+  },
+  {
+    "id": "system",
+    "category": "digital",
+    "color": "#40557f",
+    "font": "monospace",
+    "vertical": false
+  },
+  {
+    "id": "terminal",
+    "category": "digital",
+    "color": "#79f2a2",
+    "font": "monospace",
+    "vertical": false
+  },
+  {
+    "id": "pixel",
+    "category": "digital",
+    "color": "#1d2030",
+    "font": "monospace",
+    "vertical": false
+  },
+  {
+    "id": "radio",
+    "category": "digital",
+    "color": "#276340",
+    "font": "monospace",
+    "vertical": false
+  },
+  {
+    "id": "phone",
+    "category": "digital",
+    "color": "#555a68",
+    "font": "monospace",
+    "vertical": false
+  },
+  {
+    "id": "ai",
+    "category": "digital",
+    "color": "#39366f",
+    "font": "monospace",
+    "vertical": false
+  },
+  {
+    "id": "neon",
+    "category": "digital",
+    "color": "#ffffff",
+    "font": "monospace",
+    "vertical": false
+  },
+  {
+    "id": "glitch",
+    "category": "digital",
+    "color": "#ffffff",
+    "font": "monospace",
+    "vertical": false
+  },
+  {
+    "id": "romance",
+    "category": "fantasy",
+    "color": "#7a365a",
+    "font": "sans-serif",
+    "vertical": false
+  },
+  {
+    "id": "starlight",
+    "category": "fantasy",
+    "color": "#ffffff",
+    "font": "sans-serif",
+    "vertical": false
+  },
+  {
+    "id": "scroll",
+    "category": "fantasy",
+    "color": "#5c3e21",
+    "font": "sans-serif",
+    "vertical": false
+  },
+  {
+    "id": "ghost",
+    "category": "fantasy",
+    "color": "#59658d",
+    "font": "sans-serif",
+    "vertical": false
+  },
+  {
+    "id": "villain",
+    "category": "fantasy",
+    "color": "#ffffff",
+    "font": "sans-serif",
+    "vertical": false
+  },
+  {
+    "id": "fairy",
+    "category": "fantasy",
+    "color": "#3d6b35",
+    "font": "sans-serif",
+    "vertical": false
+  },
+  {
+    "id": "underwater",
+    "category": "fantasy",
+    "color": "#246277",
+    "font": "sans-serif",
+    "vertical": false
+  },
+  {
+    "id": "glass",
+    "category": "fantasy",
+    "color": "#34384c",
+    "font": "sans-serif",
+    "vertical": false
+  },
+  {
+    "id": "halftone",
+    "category": "manga",
+    "color": "#1d2030",
+    "font": "sans-serif",
+    "vertical": false
+  },
+  {
+    "id": "ink",
+    "category": "manga",
+    "color": "#1d2030",
+    "font": "sans-serif",
+    "vertical": false
+  },
+  {
+    "id": "vertical",
+    "category": "manga",
+    "color": "#1d2030",
+    "font": "sans-serif",
+    "vertical": true
+  },
+  {
+    "id": "sticker",
+    "category": "manga",
+    "color": "#252735",
+    "font": "sans-serif",
+    "vertical": false
+  },
+  {
+    "id": "comedy",
+    "category": "manga",
+    "color": "#1d2030",
+    "font": "sans-serif",
+    "vertical": false
+  },
+  {
+    "id": "shy",
+    "category": "manga",
+    "color": "#875c6b",
+    "font": "sans-serif",
+    "vertical": false
+  },
+  {
+    "id": "silent",
+    "category": "manga",
+    "color": "#1d2030",
+    "font": "sans-serif",
+    "vertical": false
+  },
+  {
+    "id": "breakout",
+    "category": "manga",
+    "color": "#1d2030",
+    "font": "sans-serif",
+    "vertical": false
+  }
+]

@@ -1,0 +1,116 @@
+{
+  "baseline": "C:\\Users\\18305\\AppData\\Local\\Temp\\ir-dialogue-edit-3936fdbe4e7e4fb0a7f00410b6a2bac5\\audit-baseline.json",
+  "baselineSha256": "ec46bd399daf99dabef79c7e6feb690db5f923f40b73b1b794de931ea6686f10",
+  "method": "SequenceMatcher additions/replacements only; new source files in full. Pure comment lines C; code/imports/braces/mixed lines B. Blank/deleted/context/JSON/assets/docs excluded. Shared control pre-change version reconstructed by reversing only this turn focusTone additions; other baseline files captured before edits.",
+  "manualReview": "Reviewed pointer-angle analogy, selection versus editing lifecycle, font async ownership and cancellation, bounded blob reader reuse, export font embedding, real input events, failure injection and PNG bitmap evidence. Counts apply only to this task, not entire workspace.",
+  "files": [
+    {
+      "file": "apps/next/src/view/cartoon/dialogue-blob.ts",
+      "category": "business",
+      "C": 34,
+      "B": 14
+    },
+    {
+      "file": "apps/next/src/view/cartoon/dialogue-font-picker.tsx",
+      "category": "business",
+      "C": 55,
+      "B": 24
+    },
+    {
+      "file": "apps/next/src/view/cartoon/dialogue-fonts.ts",
+      "category": "business",
+      "C": 98,
+      "B": 40
+    },
+    {
+      "file": "apps/next/src/view/cartoon/dialogue-page.tsx",
+      "category": "business",
+      "C": 3,
+      "B": 1
+    },
+    {
+      "file": "apps/next/src/view/cartoon/dialogue-properties.tsx",
+      "category": "business",
+      "C": 19,
+      "B": 7
+    },
+    {
+      "file": "apps/next/src/view/cartoon/dialogue-render.ts",
+      "category": "business",
+      "C": 7,
+      "B": 4
+    },
+    {
+      "file": "apps/next/src/view/cartoon/dialogue-stage.tsx",
+      "category": "business",
+      "C": 42,
+      "B": 21
+    },
+    {
+      "file": "apps/next/src/view/cartoon/dialogue-text-input.tsx",
+      "category": "business",
+      "C": 30,
+      "B": 12
+    },
+    {
+      "file": "apps/next/src/view/cartoon/dialogue-transform.ts",
+      "category": "business",
+      "C": 18,
+      "B": 6
+    },
+    {
+      "file": "apps/next/src/view/cartoon/dialogue-types.ts",
+      "category": "business",
+      "C": 3,
+      "B": 1
+    },
+    {
+      "file": "apps/next/src/view/cartoon/use-dialogue-editor.ts",
+      "category": "business",
+      "C": 20,
+      "B": 7
+    },
+    {
+      "file": "scripts/smoke-cartoon-dialogue.js",
+      "category": "tests",
+      "C": 155,
+      "B": 66
+    },
+    {
+      "file": "apps/next/src/i18n/locales/zh-CN/dialogue.ts",
+      "category": "business",
+      "C": 16,
+      "B": 8
+    },
+    {
+      "file": "apps/next/src/i18n/locales/en/dialogue.ts",
+      "category": "business",
+      "C": 16,
+      "B": 8
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-controls.tsx",
+      "category": "business",
+      "C": 3,
+      "B": 3
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor.module.css",
+      "category": "business",
+      "C": 4,
+      "B": 1
+    }
+  ],
+  "totals": {
+    "business": {
+      "C": 368,
+      "B": 157,
+      "rate": 70.1
+    },
+    "tests": {
+      "C": 155,
+      "B": 66,
+      "rate": 70.14
+    }
+  }
+}

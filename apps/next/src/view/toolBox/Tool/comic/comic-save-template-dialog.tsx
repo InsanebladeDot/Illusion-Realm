@@ -1,5 +1,8 @@
 "use client";
 
+// 下拉选项沿用原业务值，菜单外观、滚动与键盘操作统一复用采样器组件。
+import { SimpleSelect } from "@/components/SimpleSelect";
+
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "@/i18n";
 import { COMIC_CATEGORIES } from "@/data/comic-templates";
@@ -26,10 +29,14 @@ export default function ComicSaveTemplateDialog({ categories, onSave, onClose }:
       <h3 id="comic-save-title" className="font-semibold">{t("toolBox.comic.templates.saveTitle")}</h3>
       <p className="text-xs text-muted-foreground">{t("toolBox.comic.templates.geometryHint")}</p>
       <label className="block text-sm">{t("toolBox.comic.templates.nameLabel")}<input data-template-name autoFocus required maxLength={80} value={name} disabled={saving} onChange={event => setName(event.target.value)} className="mt-1 w-full rounded border border-border bg-background px-2 py-2" /></label>
-      <label className="block text-sm">{t("toolBox.comic.templates.category")}<select data-save-template-category value={category} disabled={saving} onChange={event => setCategory(event.target.value)} className="mt-1 w-full rounded border border-border bg-background px-2 py-2">
-        {options.map(value => <option key={value} value={value}>{value.startsWith("custom:") ? value.slice(7) : t(`toolBox.comic.templates.categories.${value as typeof COMIC_CATEGORIES[number]}`)}</option>)}
-        <option value="new">{t("toolBox.comic.templates.newCategory")}</option>
-      </select></label>
+      <label className="block text-sm">{t("toolBox.comic.templates.category")}<SimpleSelect
+ data-save-template-category
+ value={String(category)}
+ disabled={saving}
+ onChange={(value) => setCategory(value)}
+ className="min-w-0" portal
+ options={[...options.map((value) => ({ value: String(value), label: value.startsWith("custom:") ? value.slice(7) : t(`toolBox.comic.templates.categories.${value as typeof COMIC_CATEGORIES[number]}`) })), { value: String("new"), label: t("toolBox.comic.templates.newCategory") }]}
+ /></label>
       {category === "new" && <label className="block text-sm">{t("toolBox.comic.templates.categoryName")}<input data-custom-category required maxLength={73} disabled={saving} value={customCategory} onChange={event => setCustomCategory(event.target.value)} className="mt-1 w-full rounded border border-border bg-background px-2 py-2" /></label>}
       {error && <p role="alert" className="text-sm text-rose-600 dark:text-rose-400">{error}</p>}
       <footer className="flex justify-end gap-2 border-t border-border pt-3">
