@@ -41,7 +41,7 @@
 | 3D | Three.js（`@types/three`） |
 | 图像与元数据 | exifreader、png-chunks-extract、png-chunk-text、pako |
 | 交互 | @dnd-kit（拖拽排序） |
-| 媒体处理 | 自研 ffmpeg 封装（`apps/electron/ffmpeg/*`），**不依赖** fluent-ffmpeg |
+| 媒体处理 | 自研 ffmpeg 封装（`apps/electron/src/main/modules/ffmpeg/*`），**不依赖** fluent-ffmpeg |
 | 工程 | pnpm workspace monorepo、electron-builder（NSIS / DMG / AppImage） |
 
 工具链要求：**Node ≥ 24**、**pnpm 11**（`packageManager: pnpm@11.7.0`）。
@@ -54,15 +54,17 @@ pnpm workspace，三个包，进程边界由包结构强制：
 Illusion Realm/
 ├── apps/
 │   ├── electron/        @illusion-realm/electron   — 主进程 + preload（CommonJS）
-│   │   ├── main.js            入口：窗口、生命周期、IPC handler 注册
-│   │   ├── preload.js         contextBridge 唯一桥接层
-│   │   ├── appProtocol.js     app:// 与 localfile:// 协议
-│   │   ├── appPaths.js        应用根目录解析（dev = 工作区根，打包 = exe 目录）
-│   │   ├── comfyProxy.js      ComfyUI 请求代理
-│   │   ├── generatedImages.js 生成图扫描 / 文件夹管理
-│   │   ├── modelScanner.js    本地模型扫描
-│   │   ├── userData.js        用户数据读写
-│   │   ├── ffmpeg/            探测 + 任务执行 + 进度上报
+│   │   ├── src/main/index.js   应用入口与生命周期
+│   │   ├── src/main/core/      应用路径、协议、窗口与系统交互
+│   │   ├── src/main/ipc/       IPC 结果封装与汇总注册
+│   │   ├── src/main/storage/   用户 JSON 与输出路径
+│   │   ├── src/main/modules/   account / agent / comfy / images / models / ffmpeg 等业务域
+│   │   ├── src/preload/        contextBridge 唯一桥接层
+│   │   ├── src/common/         主进程与 preload 共用常量
+│   │   ├── assets/             客户端图标
+│   │   ├── installer/          独立安装向导
+│   │   ├── scripts/            构建工具
+│   │   ├── bin/ffmpeg/         内置媒体二进制
 │   │   └── electron-builder.yml
 │   └── next/            @illusion-realm/next       — 渲染进程（App Router）
 │       ├── src/app/           路由（首页 / 创建 / 本地解析 / 漫画 / 主页 / 更新 / 设置 / 工具箱）
@@ -81,6 +83,8 @@ Illusion Realm/
 ├── tsconfig.base.json         各子包 tsconfig 基座
 └── pnpm-workspace.yaml
 ```
+
+Electron 的详细职责与新增文件规则见 [Electron 目录约定](apps/electron/README.md)。
 
 **关键约定**
 
@@ -132,11 +136,18 @@ pnpm dev:electron   # 仅 Electron（需 3000 端口已有服务）
 
 ```bash
 pnpm pack    # 只出 unpacked 目录，用于快速验证：apps/electron/release/win-unpacked/
-pnpm build   # 出安装包：apps/electron/release/（Windows 为 NSIS .exe）
+pnpm build   # 单文件安装入口：apps/electron/release/setup/Illusion-Realm-Setup-<版本>.exe
 ```
 
 `pnpm build` 会先做 Next 静态导出（产物在 `apps/next/out`），再由 electron-builder 收集主进程代码、
 把静态导出放进 `resources/next-out`、并按需带上 ffmpeg。
+
+Windows 安装入口采用模板风格的六步向导，可选择当前用户的安装目录及桌面／开始菜单快捷方式。
+只需分发 `release/setup/` 下对应版本的一个 EXE；`win-unpacked`、`installer-stage` 和内部安装引擎是构建中间产物。
+安装器包含完整项目许可与安装使用说明，检查目录权限、空间及内嵌引擎的 SHA-256，再交由 NSIS 实际安装并注册卸载入口。
+请选择空的专用文件夹；重新安装前请备份数据并卸载旧版本。安装过程中使用不定进度提示，结束后可选择启动应用。
+向导自带临时 Electron 运行时以还原 HTML 模板，因此安装包体积会增加；安装后的客户端不包含这份额外向导运行时。
+安装器不包含模型，不会自动发送创作请求。第三方组件、模型和服务仍遵循各自许可。
 
 ### 4. 校验
 
@@ -227,7 +238,7 @@ node apps/next/scripts/verify-i18n-values.mjs --base HEAD           # 迁移后�
 >    加固（`change` / `resize` / `visibilitychange` 三个触发都只重新读 `media.matches`），
 >    并配了配对对照：`SMOKE_SWALLOW_MEDIA_EVENT=change` 时仍能纠正（1ms），
 >    `=all`（连冗余触发也掐断）时停在 `panel`、超时 8046ms。
->    `SimpleSelect` / `TruncatedTextPopover` 的重测本来就符合这条规则，未改动。
+>    `SimpleSelect` 的重测本来就符合这条规则，未改动。旧的 `TruncatedTextPopover` 已在 2026-10-22 瘦身时移除。
 > 2. **遮挡成为常驻受测维度**：`SMOKE_OCCLUDE=1` 让每个套件都跑在「被盖住」条件下，
 >    并断言 `backgroundThrottling: false` 的可观测后果（被盖住时页面仍为 `visible`）。
 >    实测坑：遮挡若在 `loadURL` 之前就盖上，页面会「生来 hidden」，把维度测成假红；

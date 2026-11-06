@@ -1,113 +1,51 @@
-### `.agents/skills/electron-ipc/SKILL.md`
-
 ---
 name: electron-ipc
-description: >
-  Electron IPC 通信规范。当需要编写主进程与渲染进程之间的通信代码时使用。
-  触发关键词：ipcMain, ipcRenderer, contextBridge, invoke, send, on, handle, channel, preload API。
-  适用于：定义 IPC 通道、编写预加载脚本暴露 API、渲染进程调用主进程能力、主进程推送事件到渲染进程等场景。
+description: 修改 Electron 请求、事件或跨进程参数时使用；按现有通道、registerHandle 和 IpcResult 契约接通主进程、preload 与渲染层。
 ---
 
+# IPC 契约
 
+遵守根目录 [AGENTS.md](../../../AGENTS.md)。以下路径相对仓库根；本技能只约束本次涉及的通道，不授权重命名既有 API。
 
-## Core Principle
-IPC is the ONLY communication channel between main process and renderer.
-All data crossing this boundary must be serializable (no functions, no class instances, no Symbols).
+## 单一来源
 
-## Channel Definition
-All IPC channel names are defined in `packages/shared/src/ipc-channels.ts`:
-```ts
-export const IPC_CHANNELS = {
-  // Image generation
-  GENERATE_IMAGE: 'image:generate',
-  GENERATE_IMAGE_PROGRESS: 'image:generate-progress',
-  // 3D model
-  MODEL_LOAD: 'model:load',
-  MODEL_EXPORT_POSE: 'model:export-pose',
-  // Asset library
-  ASSET_LIST: 'asset:list',
-  ASSET_IMPORT: 'asset:import',
-  // File operations
-  FILE_SAVE_DIALOG: 'file:save-dialog',
-  FILE_OPEN_DIALOG: 'file:open-dialog',
-  // System
-  SYSTEM_GET_PATH: 'system:get-path',
-  SYSTEM_GET_VERSION: 'system:get-version',
-} as const;
-```
-- NEVER use string literals as channel names. Always reference `IPC_CHANNELS`.
-- Channel naming convention: `domain:action` (e.g., `image:generate`).
+| 内容 | 位置 |
+| --- | --- |
+| 通道定义 | `packages/shared/src/ipc-channels.ts` |
+| 主进程与 preload 共用副本 | `apps/electron/src/common/ipc-channels.js` |
+| 返回类型 | `packages/shared/src/ipc-result.ts` |
+| 请求形状 | `packages/shared/src/schemas/` |
+| 注册与异常收敛 | `apps/electron/src/main/ipc/result.js` |
+| 注册汇总 | `apps/electron/src/main/ipc/register.js` |
 
-## Request-Response Pattern (Preferred)
-Use `ipcMain.handle` + `ipcRenderer.invoke` for all request-response flows:
+新增通道须同步两份常量并接入注册汇总；已有通道保持名称、参数顺序和取消语义。主进程不能运行时 require shared 的 TypeScript 源码。
 
-Main process:
-```ts
-ipcMain.handle(IPC_CHANNELS.GENERATE_IMAGE, async (_event, params: GenerateImageParams) => {
-  const validated = GenerateImageSchema.parse(params);
-  try {
-    const result = await imageService.generate(validated);
-    return { success: true, data: result };
-  } catch (error) {
-    return { success: false, error: serializeError(error) };
-  }
-});
+## 请求与返回
+
+- 请求响应走 preload 的 `ipcRenderer.invoke`，主进程统一用 `registerHandle(channel, handler, validator)`。
+- `validator` 接收 `unknown[]`，合法返回 `null`，非法返回不含敏感数据的错误文案；助手将其转换为 `INVALID_ARGUMENT`。
+- 校验器必须安全处理任意输入，不能抛错。当前助手在业务 `try` 之前调用校验器；需要解析 JSON 时在校验器内捕获解析错误。
+- shared 的 Zod schema 定义形状；主进程使用等价手写校验，核对可选值、范围、枚举与转换语义。Zod 当前是开发依赖，不能直接作为主进程运行依赖使用。
+- handler 返回业务数据，由助手包装成功结果；不要再返回 `ipcOk(...)` 或嵌套 `IpcResult`。业务异常由助手收敛，脱离 handler 的异步任务须自行捕获并收尾。
+- 返回只使用 `IpcResult<T>`：成功为 `{ success: true, data }`；失败为 `{ success: false, error: string, code?: string }`。不要返回 Error 对象或另设 `details` 契约。
+
+真实注册示例来自 `apps/electron/src/main/core/windows/window.handlers.js`；下列函数已在该文件定义，不另建同名实现：
+
+```js
+registerHandle(IPC_CHANNELS.WINDOW_CONTROL, controlWindow, validateWindowControl);
 ```
 
-Preload:
-```ts
-contextBridge.exposeInMainWorld('electronAPI', {
-  generateImage: (params: GenerateImageParams) =>
-    ipcRenderer.invoke(IPC_CHANNELS.GENERATE_IMAGE, params),
-});
-```
+这里 `controlWindow` 返回布尔值；`validateWindowControl` 拒绝未知动作；包装与错误码由注册助手负责。
 
-Renderer:
-```ts
-const result = await window.electronAPI.generateImage(params);
-if (!result.success) {
-  showToast(result.error);
-  return;
-}
-```
+渲染封装复用 `apps/next/src/utils/ipcResult.ts`：需要报告失败的操作用 `unwrapIpc`，允许回落的读取用 `unwrapIpcOr`。取消、空结果和失败应分别处理；连接中断等 Promise 拒绝也要捕获，并恢复加载状态。
 
-## Event Push Pattern (Main → Renderer)
-Use `webContents.send` ONLY for one-way notifications (progress, status changes):
-```ts
-mainWindow.webContents.send(IPC_CHANNELS.GENERATE_IMAGE_PROGRESS, { percent: 45 });
-```
-- Renderer listens via `ipcRenderer.on` in preload, exposed as `onGenerateProgress(callback)`.
-- Always remove listeners in cleanup (useEffect return / component unmount).
+## 事件与权限
 
-## Input Validation
-- ALL parameters received by `ipcMain.handle` MUST be validated with Zod schemas.
-- Validation happens in main process, NOT in preload.
-- Return typed error on validation failure:
-```ts
-import { ZodError } from 'zod';
-try {
-  const validated = Schema.parse(params);
-} catch (err) {
-  if (err instanceof ZodError) {
-    return { success: false, error: 'Invalid parameters', details: err.flatten() };
-  }
-  throw err;
-}
-```
+- 主进程通知用 `webContents.send`；事件载荷按既有类型传递，不套请求返回包装。
+- preload 只转发业务载荷，不传 Electron 事件对象；订阅返回只清理本次 listener 的函数。
+- 窗口操作从 `event.sender` 确定目标；鉴权、路径和资源访问校验在主进程执行，不能只靠前端按钮禁用。
+- 不暴露任意通道调用，不使用同步 IPC，不记录令牌、密钥、用户路径或向渲染层返回堆栈。
 
-## Error Serialization
-- Never throw raw Error objects across IPC (they lose stack traces and may contain sensitive info).
-- Use a `serializeError()` utility that extracts: `{ name, message, code? }`.
-- Never include file paths, system info, or stack traces in error messages sent to renderer.
+## 验证
 
-## Anti-patterns (Forbidden)
-- ❌ Using `ipcMain.on` for request-response (use `ipcMain.handle` instead)
-- ❌ Using `ipcRenderer.sendSync` (blocks renderer process)
-- ❌ Exposing raw `ipcRenderer` object via contextBridge
-- ❌ Passing functions, class instances, or DOM elements through IPC
-- ❌ Using string literals for channel names
-- ❌ Handling IPC without try-catch
-- ❌ Sending large binary data through IPC (use file paths instead, let renderer read via dedicated API)
-
-
----
+运行根规则要求的检查；`pnpm verify` 检查通道与注册，类型检查覆盖桥接签名。按变更验证合法输入、非法输入无副作用、失败/取消、订阅清理；真实业务回归使用对应既有验证或冒烟脚本。代码注释遵守 [comment-coverage](../comment-coverage/SKILL.md)。

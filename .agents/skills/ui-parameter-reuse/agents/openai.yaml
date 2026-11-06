@@ -1,0 +1,4 @@
+interface:
+  display_name: "UI 参数复用与业务边界"
+  short_description: "复用相似 UI，通过参数注入差异，严格区分共同展示与独立业务行为"
+  default_prompt: "使用 $ui-parameter-reuse 检查已有组件，将相似 UI 改为参数复用，并保留不同业务行为的边界。"

@@ -1,0 +1,299 @@
+{
+  "format": "illusion-realm.image-recipes",
+  "version": 1,
+  "items": [
+    {
+      "id": "ab82d3ad-0bb0-4712-b3d5-892952c68b66",
+      "name": "柔和插画 · SDXL",
+      "createdAt": "2026-10-28T03:00:00.000Z",
+      "updatedAt": "2026-10-28T03:00:00.000Z",
+      "kind": "image.text-to-image",
+      "engine": "comfyui",
+      "adapter": {
+        "id": "sdxl-text2img",
+        "version": 1
+      },
+      "cover": {
+        "path": "recipe-assets/ab82d3ad-0bb0-4712-b3d5-892952c68b66/fc9dc9a7-98d6-4415-93af-16c0dfc810af.webp",
+        "mimeType": "image/webp",
+        "width": 427,
+        "height": 512
+      },
+      "workflow": {
+        "3": {
+          "class_type": "KSampler",
+          "inputs": {
+            "seed": 123456789,
+            "steps": 24,
+            "cfg": 6,
+            "sampler_name": "euler",
+            "scheduler": "karras",
+            "denoise": 1,
+            "model": [
+              "11",
+              0
+            ],
+            "positive": [
+              "6",
+              0
+            ],
+            "negative": [
+              "7",
+              0
+            ],
+            "latent_image": [
+              "5",
+              0
+            ]
+          }
+        },
+        "4": {
+          "class_type": "CheckpointLoaderSimple",
+          "inputs": {
+            "ckpt_name": "SDXL/example-illustration.safetensors"
+          }
+        },
+        "5": {
+          "class_type": "EmptyLatentImage",
+          "inputs": {
+            "width": 1000,
+            "height": 1200,
+            "batch_size": 1
+          }
+        },
+        "6": {
+          "class_type": "CLIPTextEncode",
+          "inputs": {
+            "text": "",
+            "clip": [
+              "11",
+              1
+            ]
+          }
+        },
+        "7": {
+          "class_type": "CLIPTextEncode",
+          "inputs": {
+            "text": "",
+            "clip": [
+              "11",
+              1
+            ]
+          }
+        },
+        "10": {
+          "class_type": "LoraLoader",
+          "inputs": {
+            "lora_name": "styles/example-soft.safetensors",
+            "strength_model": 0.7,
+            "strength_clip": 0.5,
+            "model": [
+              "4",
+              0
+            ],
+            "clip": [
+              "4",
+              1
+            ]
+          }
+        },
+        "11": {
+          "class_type": "LoraLoader",
+          "inputs": {
+            "lora_name": "styles/example-light.safetensors",
+            "strength_model": 0.3,
+            "strength_clip": 0.2,
+            "model": [
+              "10",
+              0
+            ],
+            "clip": [
+              "10",
+              1
+            ]
+          }
+        },
+        "12": {
+          "class_type": "SaveImage",
+          "inputs": {
+            "filename_prefix": "IllusionRealm",
+            "images": [
+              "17",
+              0
+            ]
+          }
+        },
+        "17": {
+          "class_type": "VAEDecodeTiled",
+          "inputs": {
+            "tile_size": 512,
+            "overlap": 64,
+            "temporal_size": 64,
+            "temporal_overlap": 8,
+            "samples": [
+              "3",
+              0
+            ],
+            "vae": [
+              "4",
+              2
+            ]
+          }
+        }
+      },
+      "promptBindings": [
+        {
+          "role": "positive",
+          "nodeId": "6",
+          "inputKey": "text"
+        },
+        {
+          "role": "negative",
+          "nodeId": "7",
+          "inputKey": "text"
+        }
+      ]
+    },
+    {
+      "id": "0b70ad11-280b-43e4-b2ab-76de10401b62",
+      "name": "清透光影 · Anima",
+      "createdAt": "2026-10-28T03:00:00.000Z",
+      "updatedAt": "2026-10-28T03:00:00.000Z",
+      "kind": "image.text-to-image",
+      "engine": "comfyui",
+      "adapter": {
+        "id": "anima-text2img",
+        "version": 1
+      },
+      "cover": null,
+      "workflow": {
+        "1": {
+          "class_type": "CLIPLoader",
+          "inputs": {
+            "clip_name": "Anima/example-text-encoder.safetensors",
+            "type": "stable_diffusion",
+            "device": "default"
+          }
+        },
+        "2": {
+          "class_type": "VAELoader",
+          "inputs": {
+            "vae_name": "Anima/example-vae.safetensors"
+          }
+        },
+        "3": {
+          "class_type": "EmptyLatentImage",
+          "inputs": {
+            "width": 1000,
+            "height": 1000,
+            "batch_size": 2
+          }
+        },
+        "4": {
+          "class_type": "CLIPTextEncode",
+          "inputs": {
+            "text": "",
+            "clip": [
+              "1",
+              0
+            ]
+          }
+        },
+        "5": {
+          "class_type": "KSampler",
+          "inputs": {
+            "seed": 987654321,
+            "steps": 15,
+            "cfg": 5,
+            "sampler_name": "euler_ancestral",
+            "scheduler": "simple",
+            "denoise": 1,
+            "model": [
+              "10",
+              0
+            ],
+            "positive": [
+              "6",
+              0
+            ],
+            "negative": [
+              "4",
+              0
+            ],
+            "latent_image": [
+              "3",
+              0
+            ]
+          }
+        },
+        "6": {
+          "class_type": "CLIPTextEncode",
+          "inputs": {
+            "text": "",
+            "clip": [
+              "1",
+              0
+            ]
+          }
+        },
+        "7": {
+          "class_type": "UNETLoader",
+          "inputs": {
+            "unet_name": "Anima/example-diffusion.safetensors",
+            "weight_dtype": "default"
+          }
+        },
+        "8": {
+          "class_type": "PreviewImage",
+          "inputs": {
+            "filename_prefix": "IllusionRealm",
+            "images": [
+              "9",
+              0
+            ]
+          }
+        },
+        "9": {
+          "class_type": "VAEDecodeTiled",
+          "inputs": {
+            "tile_size": 512,
+            "overlap": 64,
+            "temporal_size": 64,
+            "temporal_overlap": 8,
+            "samples": [
+              "5",
+              0
+            ],
+            "vae": [
+              "2",
+              0
+            ]
+          }
+        },
+        "10": {
+          "class_type": "LoraLoaderModelOnly",
+          "inputs": {
+            "lora_name": "styles/example-anima-style.safetensors",
+            "strength_model": 0.6,
+            "model": [
+              "7",
+              0
+            ]
+          }
+        }
+      },
+      "promptBindings": [
+        {
+          "role": "positive",
+          "nodeId": "6",
+          "inputKey": "text"
+        },
+        {
+          "role": "negative",
+          "nodeId": "4",
+          "inputKey": "text"
+        }
+      ]
+    }
+  ]
+}

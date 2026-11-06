@@ -1,281 +1,181 @@
-### `AGENTS.md`（项目根目录）
-
 # Illusion Realm — Agent Rules
 
-## Workspace Layout (monorepo, pnpm workspaces)
+桌面 AI 创作工具，使用 Electron 43 系列、Next.js 16 App Router、React 19、TypeScript strict、pnpm、Tailwind CSS 4；实际版本以各包 `package.json` 为准。
+
+只处理当前任务范围。先读现有实现与调用方；历史任务书、旧注释和示例不构成全仓库重构授权。工作区已有修改应保留，不为整理结构改变业务契约。
+
+## 工作区与职责
+
+```text
+apps/
+  electron/                  # 主进程 + preload，手写 CommonJS + JSDoc
+    src/main/index.js        # 应用入口
+    src/main/core/           # 窗口、协议与系统交互
+    src/main/ipc/            # 结果封装与汇总注册
+    src/main/storage/        # JSON 读写与路径
+    src/main/modules/        # 按业务域组织服务及 handler
+    src/preload/             # contextBridge 桥接
+    src/common/              # 通道副本与初始语言
+    installer/               # 独立安装向导
+    scripts/                 # 构建工具
+    assets/                  # 客户端图标
+    bin/ffmpeg/              # 随包分发的二进制
+    electron-builder.yml
+  next/
+    src/app/                 # 路由装配、全局样式
+    src/components/          # 公共 UI 与应用外壳
+    src/view/                # 业务页面与视图
+    src/stores/              # Zustand 状态
+    src/hooks/               # 交互与状态编排
+    src/utils/               # 纯逻辑及渲染侧能力封装
+    src/api/                 # 服务接口
+    src/data/                # 渲染侧数据与配置
+    src/i18n/                # 文案与语言状态
+    public/
+    scripts/                 # 文案、格式等检查
+    next.config.ts           # output: export
+  agent/                     # Python Agent，桌面端由 Electron 通过 stdio 调用
+packages/shared/src/         # types/、schemas/、data/、ipc-channels.ts、ipc-result.ts
+scripts/                     # 跨包校验、冒烟与门禁自检
+.agents/skills/              # 按任务加载的开发规范
 ```
-Illusion Realm/
-├── apps/
-│   ├── electron/          # Electron 主进程 + preload（手写 CommonJS，非 TS）
-│   │   ├── main.js            # 入口（package.json main）
-│   │   ├── preload.js         # contextBridge 桥接
-│   │   ├── appPaths.js        # 应用根目录解析（dev = 工作区根，打包 = exe 目录）
-│   │   ├── appProtocol.js     # app:// 协议（服务 Next 静态导出）
-│   │   ├── ffmpeg/            # ffmpeg 探测 / 任务执行（自研，非 fluent-ffmpeg）
-│   │   ├── bin/ffmpeg/        # 内置 ffmpeg 二进制（不提交，随 extraResources 分发）
-│   │   └── electron-builder.yml
-│   └── next/              # Next.js 渲染进程（App Router，静态导出到 apps/next/out）
-│       ├── src/               # app/ components/ view/ stores/ hooks/ utils/ api/ data/ i18n/
-│       ├── public/
-│       ├── scripts/           # check-i18n.mjs（文案逃逸断言）、verify-i18n-values.mjs（迁移校验）
-│       ├── next.config.ts     # output: export + transpilePackages: @illusion-realm/shared
-│       └── eslint.config.mjs
-├── packages/shared/       # @illusion-realm/shared：跨进程类型 + 纯数据常量
-│   └── src/               # ipc-channels.ts, index.ts, types/, data/
-├── tsconfig.base.json     # 各子包 tsconfig 的基座
-└── pnpm-workspace.yaml
-```
 
-## Commands (run from repo root)
-| 命令 | 作用 |
-|------|------|
-| `pnpm dev` | 并行启动 Next dev server + Electron（Electron 先 wait-on 3000 端口） |
-| `pnpm build` | Next 静态导出 + electron-builder 出 NSIS 安装包 |
-| `pnpm pack` | 只出 win-unpacked 目录（不生成安装包），用于快速验证 |
-| `pnpm typecheck` | `apps/next` 与 `apps/electron` 的 tsc 校验 |
-| `pnpm lint` | 渲染进程 ESLint（`packages/**` 与主进程另行处理） |
-| `pnpm verify` | Electron 内跑主进程校验：模块审计 + 通道一致性 + IPC handler 注册 |
-| `pnpm check` | `typecheck` + `verify` + `check:i18n`，提 PR 前的统一入口 |
-| `pnpm self-test:gate` | **门禁自检**：Next 侧配对对照 + 构建指纹确定性对照 + 退出码护栏四例 + 事件丢失维度（`SMOKE_SWALLOW_MEDIA_EVENT=all`，headless 可跑）。CI 见 `.github/workflows/gate-self-test.yml` |
-| `pnpm check:packaged-agent` | **打包版 Agent 冒烟**：在 `release/win-unpacked` 上验证「asar 里的 locate/runner + `resources/agent` 那棵树」能跑通一次假模型运行（不花 token）。**需先 `pnpm run pack`**；没打包目录时按约定退 2 |
-| `pnpm check:i18n` | 文案逃逸断言：硬编码中文数量与基线比较，**只减不增** |
-| `pnpm check:i18n:list` | 按文件列出剩余硬编码文案分布，用于挑下一批迁移 |
-| `pnpm --filter @illusion-realm/electron check` | 主进程 tsc + `@ts-nocheck` 逃逸断言 |
-| `pnpm --filter @illusion-realm/electron check:nocheck` | 只跑逃逸断言（baseline 只减不增） |
+- 渲染层不得导入 Electron 或 Node API；系统能力只通过 preload 暴露的最小接口调用。
+- shared 内部使用相对路径，不使用 `@/*`、不反向导入 apps、不依赖 Next/React 运行时；React 仅允许 type-only 导入。
+- 渲染层沿用 `@/*`，历史 `@/types/*`、`@/data/*` 由 `apps/next/tsconfig.json` 兼容到 shared；不要为统一写法批量改 import。
+- 主进程用 `apps/electron/src/main/core/paths.js` 的 `getAppRootDir()` 解析应用根，不假定 `app.getAppPath()` 或当前工作目录。
+- Next 静态导出开发时位于 `apps/next/out`，打包后位于 `resources/next-out`；保留 `app://` 协议，不引入依赖 Next 服务端的运行流程。
+- Agent 入口与内部协议见 `apps/agent/README.md`；不要把 Python 的内部 stdio 帧当成渲染层 IPC。
 
-> 单元测试：暂无框架。回归依赖 `scripts/verify-*.js`（模块/参数级断言，多数需在 Electron 内跑）
-> 与 `scripts/smoke-*.js`（真实启动 / 协议 / 样式冒烟）。
->
-> **冒烟脚本一次只跑一个。** 把多个 Electron 冒烟串在同一条命令里背靠背执行时，出现过三次
-> 「后跑的那个失败或卡死、单独重跑却通过」：`smoke-characters` 83/85、`smoke-view3d` 失败、
-> `smoke-anima-workflow` 卡死（被超时杀掉后留下孤儿 Electron 进程，下一次运行会卡在单实例锁上）。
-> 单独执行时 `smoke-view3d` 连跑 4 次全绿、`smoke-characters` 连跑 3 次全绿。
-> 因此**判读结论前先单独重跑一次**，开跑前用
-> `Get-Process electron -ErrorAction SilentlyContinue | Stop-Process -Force` 清掉上一轮残留。
->
-> **冒烟脚本测试的是静态导出 `apps/next/out`，不是源码。**
-> `out` 陈旧时会得到**误导性的失败**：本轮就遇到过「高度过渡没有中间帧」这条断言失败，
-> 重建 `pnpm --filter @illusion-realm/next build` 后同一条断言通过 —— 那是旧构建的产物，
-> 不是代码回归。**看到冒烟失败先确认 `out` 是当前代码构建的**，再谈是不是回归。
-> （`pnpm check` 不构建，所以它不会帮你发现这件事。）
-> 这件事现在由**机器**兜住：`smoke.assertBuildFresh({ app })` 在每条断言之前比对
-> `apps/next/.next/build-fingerprint.json`（构建时由 `scripts/record-build-fingerprint.js`
-> 记录源码树的**逐文件 sha256**）与当前源码，不一致就以**退出码 2** 收场，
-> 并点名是哪几个文件变了。没有指纹记录时退回 mtime 启发式（并顺手补记指纹）；
-> 只改 mtime、内容没变（`git checkout/stash` 就是如此）不会被误报 —— 比的是内容。
-> 指纹范围是**推导 + 不变量**，不靠人记着加：`apps/next/src`、`apps/next/public`、
-> `packages/shared/src` 三棵树整体纳入；两个子包根目录里的代码/配置后缀文件自动纳入；
-> 跨包输入（`tsconfig.base.json` / `pnpm-lock.yaml` / `logs.md`）显式列，
-> **文件不存在会直接报 `input-list-rot`**（清单腐烂比漏文件更危险）；
-> 另有一条生成物不变量：`apps/next/public/changelog.md` 必须与 `logs.md` 一致（`generated-drift`）。
-> 指纹只覆盖**源码**（不含 `out/`），所以它天然不受 Next 产物里的构建时间戳 / 随机 BUILD_ID 影响。
-> CI 上建议再跑一次反向对照（源码不变 → 连续两次 build → 指纹应相同）：
-> `pnpm --filter @illusion-realm/next build && node scripts/record-build-fingerprint.js --compare`
-> —— 指纹若每次都变，这道自检会天天喊「产物过期」，然后被人关掉。
->
-> **冒烟脚本的退出码约定（接 CI 时按此配置，别把超时当基础设施故障重试）**：
-> | 码 | 含义 | CI 处置 |
-> |----|------|---------|
-> | 0 | 通过 | 绿 |
-> | 1 | 断言失败或抛出异常 | 红（就是代码问题） |
-> | 2 | **环境/前置条件问题**：构建产物过期、或遮挡维度的前置条件不成立 | 红，但先按提示修环境（重建 / 调整遮挡时机），别去改代码 |
-> | 124 | **外部看门狗超时**（`SMOKE_TIMEOUT_MS`） | 红，但标为「已知超时」而非基础设施故障 |
-> | 125 | **进程内单步超时**（`SMOKE_STEP_TIMEOUT_MS`，某次 `executeJavaScript` 未返回） | 同上；消息里带**具体步骤名**，直接看那一行 |
->
-> **两个维度要分开命名，别混为一谈**（测的是不同命题，可跑的环境也不同）：
-> - `SMOKE_OCCLUDE=1` → 测「**被遮挡时的 rAF / visibilityState**」，**必须真实可见的窗口**
->   （纯 headless 会被显式 SKIP 并打印原因 —— 静默通过和假红一样坏）。
-> - `SMOKE_SWALLOW_MEDIA_EVENT=all` → 测「**事件丢失时的存活性**」（最坏情况：change 永远不来），
->   **不需要真实窗口、不需要遮挡、headless 可跑** → 这条应当进 CI。
-> - `SMOKE_DPR=1.25|1.5` → 测「**显示缩放 ≠ 100% 时的 3D 画布几何**」（2026-09-26 在 2K @150% 上复现）：
->   `renderer.setSize(w, h, false)` 的 `false` 是 `updateStyle` —— 只改绘制缓冲、不写 CSS 尺寸，
->   于是 canvas 的 CSS 尺寸退化成「属性像素」= `容器 × dpr`，比容器大一圈，
->   而画布不透明 → **直接把 3D 弹窗右侧控制栏整个盖住**（dpr=1 时两者恰好相等，
->   所以 100% 缩放的机器和默认冒烟永远看不到）。修法：canvas 上 `style.width/height = 100%`
->   （CSS 交给布局、`setSize` 只管缓冲）。**改 3D 画布尺寸相关代码时带值跑一次。**
->   注意缩放后窗口的 CSS 宽度 = 物理宽度 / dpr，屏不够宽会让弹窗落到紧凑形态 ——
->   本机 1920 物理宽只能用 1.25，2K 屏（2560）用 1.5 才是真实场景。
->
-> **退出码护栏**（`smoke.guardExit`，随 `installWatchdog` 自动装）：
-> ① 本次运行**已有失败**时，`app.quit()` 会被拦下并改成对应的非零退出码 ——
-> 实测它**无视 `process.exitCode`**（`process.exitCode = 7; app.quit()` 退出码是 0），
-> 会把失败变成成功；**干净路径放行**（无条件拦截会误伤正常收尾）。
-> ② 已有断言失败却 `app.exit(0)` → 强制改成 1 并点名失败断言。
-> 护栏自身有配对自检：`npx electron scripts/self-test-harness-guard.js`
-> 四例 = `exit-zero-with-failure`(→1) / `quit-with-failure`(→1) / `quit-with-clean`(→0) /
-> `exit-zero-clean`(→0)；传未知 case 会**响亮失败**（exit 2）而不是回落默认分支
-> —— 这条同样是被一次「恒真对照」逼出来的（见 logs.md）。
->
-> **窗口被遮挡 = 渲染生命周期停摆，这是本仓库冒烟的「头号环境前提」。**
-> 置顶（`alwaysOnTop`）挡不住桌面上的其它窗口：一旦被盖住，Chromium 把页面标记为
-> `hidden`，rAF 不再回调、CSS 过渡停在半路，**且 `matchMedia` 的 change 事件不再派发**
-> （查询结果仍会重算：读 `innerWidth` / `matches` 都是对的，只有事件不来）。
-> 因此所有冒烟窗口都显式 `webPreferences.backgroundThrottling: false`；
-> 断言里**不要**用页面侧 rAF 当节拍，轮询要么放主进程（`setTimeout` 不受页面可见性影响），
-> 要么在页面侧用 `Promise.race([rAF, setTimeout])` 让计时器兜底。
-> **这条对产品代码同样成立**（2026-09-20 实测）：主题切换的 view-transition callback 里
-> `await new Promise(rAF)` 等 React 提交 —— 窗口不可见时回调永不返回，整页卡在旧快照上，
-> 新旧配色都不显示。产品代码里要「等一拍」就用 `setTimeout`，并且任何等待都要有上限。
-> 抖动台账见 `scripts/lib/known-flakes.js`（断言失败时会自动打印命中记录）。
->
-> **遮挡是常驻受测维度，不只是复现开关。** `smoke.hardenWindow(win)` 负责：
-> `SMOKE_OCCLUDE=1` 时在**页面加载完成后**开一个盖住被测窗口的置顶窗口，
-> 并断言「被盖住时页面仍为 `visible`」—— 这是 `backgroundThrottling: false` 的可观测后果，
-> 删掉那一行会立刻红在这一条上，而不是等某个时序断言偶然红一次再去猜。
-> 两个实测坑：① 遮挡若在 `loadURL` **之前**就盖上，页面会「生来 hidden」
-> （`visibilityState=hidden`、变体永远不翻），那是另一个前提、会把维度测成假红；
-> ② `webContents.getLastWebPreferences()` 读不到 `backgroundThrottling`（实测 `undefined`），
-> 别拿它当断言。
-> 相关开关：`SMOKE_OCCLUDE=1`（遮挡维度）、`SMOKE_SWALLOW_MEDIA_EVENT=change|all`
-> （吞掉 matchMedia 的 change，验证「读为准」加固；`all` 是负向对照）。
-> 每次运行的摘要另外同步追加到 `logs/smoke-runs.log`（同步写，不受 stdout 截断影响）。
->
-> **改渲染进程「视口 / 媒体查询」相关代码时，一律「以读为准，事件只做通知」。**
-> 事件回调里不要采信事件载荷，而要重新求值（`setMatches(media.matches)` 而不是 `event.matches`），
-> 并把 `resize` / `visibilitychange` 也当触发信号。实测：hidden 期间错过的 change 会在页面
-> 重新可见后补发（所以不是线上永久卡死），但那是实测行为、不是规范承诺。
-> 参照实现：`apps/next/src/hooks/useMediaQuery.ts`。
->
-> **「点开才挂载」的弹窗/浮层读视口要用 `useMediaQueryAfterHydration`**：`useMediaQuery`
-> 首帧恒为 `false`（预渲染组件必须如此，hydration 后才测量），而测量发生在首帧绘制之后 ——
-> 于是弹窗会先渲染一帧**紧凑变体**（铺满右侧主区、带 `motion-none`），第二帧才翻成居中弹窗，
-> 同时 `motion-none` 被摘掉、`motion-pop-in` 的缩放这才开始播：观感就是「**先满屏后缩放**」。
-> 这类弹窗（`ResourceDialogShell` / 图片详情 / 3D 视角）的首帧必然在 hydration 之后，
-> 用 `useMediaQueryAfterHydration` 同步取值即可；**页面级/预渲染组件继续用 `useMediaQuery`**。
-> 回归网：`scripts/smoke-characters.js` 的「弹窗首帧」段（含 1100px 配对对照）。
+## 页面结构与区域命名
 
-## UI 命名与注释（区域名 / 组件 ↔ 界面名称）
-渲染进程里用固定几个词指代界面区域，**代码与注释统一用这套说法**（创建页文件头有同样的对照表）：
+路由文件负责装配，业务逻辑放在对应 view/hooks/stores。当前入口包括 `/`、`/create`、`/agent`、`/inspect`、`/profile`、`/settings`、`/updates`、`/login`、`/tools`；工具子路由位于 `/tools/image/*`、`/tools/video/*`、`/tools/models/*`。保留仍被使用的 `/toolBox/*`、`/cartoon`、`/comic` 兼容跳转。
 
-| 词 | 指的是 |
-|----|--------|
-| `nav` | 左侧应用导航（`components/Sidebar.tsx`，全局常驻） |
-| `rail` | 创建页左栏 = 创建表单（模式标签 / 模型 / 提示词 / 反向提示词 / 图片尺寸 / 高级设置 / 生成） |
-| `stage` | 中栏 = 图片显示区（点开进入大图预览层） |
-| `side` | 右栏 = 「已生成图片」/「提示词组装」 |
-| `pin` | 窄屏右上角的图库入口固钉 |
-| `modal` | 页面级弹窗 |
+`AppShell` 管理标题栏、导航、main、底部状态与通知；普通页面由 main 滚动，`fillViewport` 页面自行划分内部滚动区。布局边界以真实 DOM、`apps/next/src/app/workspace-shell.css` 和已有布局机制为准，不把旧导航宽度常量再拼成固定偏移。
 
-写组件的规矩：
+| 名称 | 当前含义 |
+| --- | --- |
+| `nav` | 应用导航：桌面 `Sidebar`，窄视口 `MobileBottomNav`；由 AppShell 管理 |
+| `main` | 业务主显示区；创建路由由 `CreateMainArea` 管理工作区与工具子页的显示 |
+| `rail` | 创建输入区：模式、模型、提示词、参数与生成；视频、Role TTS 使用各自面板 |
+| `stage` | 创建结果预览区；三栏显示、双栏隐藏、单栏可从固钉进入；音频模式展示音频结果 |
+| `side` | 双栏/三栏右侧的已生成图片或高级提示词组装区；编辑模式有独立工作区 |
+| `pin` | 单栏非编辑模式下，主区右侧居中的创建、预览、文件管理三个入口 |
+| `modal` | 浮层展示形态；创建单栏的资源/工具可使用 main 内子页，不等同于全窗口弹窗 |
 
-- **在使用处**用一行中文注释说明「界面上叫什么」，例如 `{/* 界面：「反向提示词」区 */}`、
-  `{/* 弹窗：选择扩展（LoRA） */}`；区域容器的注释写区域名，例如 `{/* rail：创建页左栏 = 创建表单 */}`。
-- 注释里可以直接写中文：界面文案照样走 i18n —— `check:i18n` 走 AST、**不数注释**。
-- `utils/**` 每个文件**开头**要有一小段注释：**干什么 + 怎么做**（怎么做只写关键机制，
-  不写逐行流水账）。`packages/shared/**` 与主进程同理。
-- `"use client";` 必须是文件第 1 行：头注释放在它**下面**（仓库里目前没有反例）。
+创建页约束：
 
-## Path & Alias Rules
-- 渲染进程继续使用 `@/*` 别名；`apps/next/tsconfig.json` 的 `paths` 把 `@/types|data/*`
-  兜底指向 `packages/shared/src`（同名文件已迁移，历史 import 无需改写）。
-- `packages/shared` **不得**使用 `@/*` 别名或反向 import `apps/*`：
-  一律相对路径，且不得依赖 next/react 运行时（`react` 仅允许 type-only import）。
-- 主进程不要假定 `app.getAppPath()`，用 `apps/electron/appPaths.js` 的 `getAppRootDir()`。
-- Next 静态导出目录：dev = `apps/next/out`，打包 = `resources/next-out`（extraResources）。
+- `/create` 使用 `AppShell → CreateMainArea → CreatePage`。编辑模式由 `EditWorkspace` 使用可用主区，不套用普通图片模式的三栏假设。
+- `apps/next/src/hooks/use-create-layout.ts` 按容器实际宽度分栏：`<760px` 单栏、`760–1039px` 双栏、`≥1040px` 三栏；双栏保留 rail + side，导航开合参与可用宽度计算。
+- 主区资源页复用 `apps/next/src/hooks/use-create-main-page.ts`。当前默认响应式策略在创建主区 `<760px` 时进入 main 子页，达到双栏宽度时使用 body 弹窗；其他路由保留各自的展示规则。策略以真实调用参数为准，不根据组件名判断形态。
+- `CreateMainArea` 的工具宿主与工作区是兄弟节点。打开子页只隐藏原工作区，保留编辑 DOM 与生成订阅；不用 URL 跳转、复制 AppShell 或全窗口遮罩代替主区切换。
+- 嵌套子页只显示栈顶，底层保留草稿；关闭按实例 id 清理，隐藏页不响应 Escape。宿主 ref 保持稳定，卸载时清空临时页栈；业务数据仍归原调用方。
+- 后台工作区测得零宽时保留最后一次可见分栏；弹层形态读取常驻父区域，避免错误卸载正在打开的详情。不要把“保留需要的实例”扩大为所有列表永久挂载。
+- main 内子页保留应用导航可用，不强加模态遮罩或 `aria-modal`。公共外壳负责几何与滚动，业务组件负责数据、确认、取消与错误。
 
-## Identity
-You are a senior Electron + Next.js desktop application developer.
-This project is a desktop AI creation tool named "Illusion Realm".
-Tech stack: Electron 43+, Next.js 16 (App Router), React 19, TypeScript 5.x (strict), pnpm, Tailwind CSS 4.
+## 代码限制与注释
 
-## Process Boundary
-- Main process: Node.js runtime. Handles OS-level operations, window management, file I/O, native modules.
-- Renderer process: Next.js (Chromium). Handles all UI rendering and user interaction.
-- Preload scripts: The ONLY bridge between main and renderer. Exposes safe APIs via contextBridge.
-- NEVER import Electron APIs directly in renderer. NEVER call Node.js APIs in renderer.
+- 普通逻辑函数最多 **30 行有效代码**，包括事件处理、计算、请求和校验函数。按正常格式化后的物理行计数，排除空行与纯注释，包含括号行和代码/注释混合行；不得压行规避。
+- 页面与展示组件的 JSX 装配不机械套用 30 行限制；按职责、状态生命周期与真实复用边界拆分，事件和业务函数仍遵守上述限制。不为行数制造无意义包装组件。
+- TypeScript 保持 strict，禁止 `any`；动态值用 `unknown` 并缩窄。对象形状优先 `interface`，联合与工具类型用 `type`。
+- 标识符使用英文：变量/函数 camelCase，组件/类型 PascalCase，常量 UPPER_SNAKE_CASE；新普通文件用 kebab-case，路由保留框架文件名，已有文件不因命名规则批量重命名。
+- 异步失败必须有明确处理边界（try-catch 或 `.catch()`），同时处理取消、状态恢复与资源清理。IPC handler 可由注册助手统一捕获，后台任务不能依赖已结束的 handler 接住错误。
+- 全局客户端状态使用 Zustand，不引入 Redux 或全局 Context。相似 UI 通过参数、插槽和回调复用；业务行为只有完全相同时才合并。
+- **功能、测试及辅助脚本修改必须使用 [.agents/skills/comment-coverage/SKILL.md](.agents/skills/comment-coverage/SKILL.md)。大白话优先，复杂逻辑必须用生活类比；业务代码与测试代码有效注释率分别至少 70%，禁止废话、重复与凑数。** 统计范围、混合行和交付报告按该技能执行；函数长度与注释率分别计算。
+- 注释用中文并解释职责、原因和边界。UI 使用处写界面名称，如 `{/* rail：创建输入区 */}`；用户可见文案仍走 i18n，注释不计入文案逃逸。
+- utils、shared 和主进程文件头说明“做什么 + 关键机制”；需要 `"use client";` 的文件将其放在第一行，头注释放在其后。
 
-## Coding Standards
-- Strict TypeScript. `any` is forbidden. Use `unknown` for dynamic data, narrow with type guards.
-- Max function length: 30 lines. Extract helpers for complex logic.
-- Naming: camelCase (variables/functions), PascalCase (classes/components/types), UPPER_SNAKE (constants), kebab-case (file names).
-- Prefer `interface` over `type` for object shapes. Use `type` for unions and utilities.
-- All async operations must have explicit error handling (try-catch or .catch()).
+## IPC、安全与持久化
 
-## Architecture
-- Monorepo structure: `apps/electron` (main + preload), `apps/next` (renderer), `packages/shared` (types + data).
-- IPC channels are defined in `packages/shared/ipc-channels.ts` as a single source of truth（主进程在
-  `apps/electron/ipcChannels.js` 保留一份同值副本，两端一致性由 `scripts/verify-electron-modules.js` 断言）。
-- State management: Zustand for renderer client state. No Redux. No Context API for global state.
-- Local data persistence: 主进程 JSON 单文件（默认 `user/illusion-realm.json`），读写走
-  `apps/electron/userData.js`。**没有 SQLite，也没有 ORM/repository 层**；
-  默认值、合并与版本迁移全部由渲染进程负责（`packages/shared/src/types/userData.ts` +
-  `apps/next/src/utils/userDataDocument.ts`），主进程只做 JSON 读写与路径解析。
+- 通道来源：`packages/shared/src/ipc-channels.ts`；主进程/preload 共用 `apps/electron/src/common/ipc-channels.js` 的同值副本。变更同步两端，由 `scripts/verify-electron-modules.js` 校验。
+- handler 通过 `apps/electron/src/main/ipc/result.js` 的 `registerHandle` 注册，返回业务数据，由助手统一包装为 `IpcResult<T>`；不重复包装，不跨边界抛异常或暴露堆栈。
+- `IpcResult<T>` 是 `{ success: true, data }` 与 `{ success: false, error: string, code?: string }` 的联合，定义在 `packages/shared/src/ipc-result.ts`。
+- shared 的 Zod schema 是请求形状来源；主进程使用等价手写校验，不运行时导入 Zod/共享 TS。非法输入返回 `INVALID_ARGUMENT`；校验器接收任意输入时不能抛错。
+- 渲染封装复用 `apps/next/src/utils/ipcResult.ts`：写入/需要报告的失败用 `unwrapIpc`，允许回落的读取用 `unwrapIpcOr`；组件树使用错误边界，操作错误给用户明确反馈。
+- 窗口显式设置 `contextIsolation: true`、`nodeIntegration: false`。当前 `sandbox: false` 支持 preload 的 CommonJS 本地 require，例如 `../common/ipc-channels`；仅在桥接实现允许时重新评估开启 sandbox。
+- 不暴露原始 ipcRenderer、任意通道或 Node 能力。主进程按调用者和业务规则校验权限、路径与参数；事件订阅返回独立取消函数，卸载时清理。
+- 错误日志保留级别、模块及必要诊断信息并脱敏；不记录令牌、API 密钥和用户路径，堆栈不返回渲染层。
+- 用户数据是 JSON 单文件，默认 `user/illusion-realm.json`。主进程 `apps/electron/src/main/storage/user-data.js` 负责读写与路径；默认值、合并和迁移由 shared 类型及 `apps/next/src/utils/userDataDocument.ts` 负责。不引入 SQLite、ORM 或另一套存储层。
 
-## Error Handling
-- Main process errors: Log with structured format (level, module, message, stack). Never expose stack traces to renderer.
-- IPC 契约（形状与错误码的完整约定见下方 Security 段，此处不重复）：跨边界不抛异常，
-  一律返回 `IpcResult`；handler 注册统一走 `apps/electron/ipcHandlers.js` 的 `registerHandle`。
-- Renderer errors: Use React Error Boundaries for component trees. Show user-friendly error messages.
-- 渲染进程消费 IPC 返回值：封装层用 `apps/next/src/utils/ipcResult.ts` 的
-  `unwrapIpc`（失败抛错，用于写操作）或 `unwrapIpcOr`（失败回落默认值并 warn，用于读操作）。
+## 主题与 i18n
 
-## Security
-- contextIsolation: true，nodeIntegration: false，一律显式声明。
-- `sandbox: false`（刻意为之）：preload 是手写 CommonJS，需要 `require("./ipcChannels")`
-  等本地模块；sandboxed preload 只能 require 少量内置模块。安全边界因此落在
-  **contextIsolation + 最小 API 面**上，而不是 sandbox。若将来把 preload 改为
-  无 require 的精简实现，应重新评估并改回 `sandbox: true`。
-- Preload scripts expose MINIMUM required APIs. Never expose entire ipcRenderer.
-- 跨 IPC 数据必须校验：shared 的 Zod schema（`packages/shared/src/schemas/`）是形状的
-  单一事实来源；渲染进程/类型层消费它。主进程当前用等价的手写校验器
-  （zod 是 devDependency、不进 asar），入参不合法统一返回 `INVALID_ARGUMENT`。
-- IPC 错误一律以 `IpcResult` 返回（`{ success: false, error, code? }`），
-  不跨边界抛异常，也不向渲染进程泄露堆栈。
-- Never log tokens, API keys, or user paths to console or files.
-
-## i18n
-零依赖方案：不做语言路由、不引第三方库。理由是本项目 `output: "export"` 静态导出 +
-`app://` 协议，next-intl 依赖 middleware 与 `[locale]` 路由段；而 i18next 的 key 拼错
-只在运行时回落成 key 字符串，本项目没有单测框架、拦不住这类错误。
-
-- 词条表：`apps/next/src/i18n/locales/zh-CN/<命名空间>.ts`，`as const` 导出；
-  命名空间按功能域切分（`common` / `nav` / `create` / `cartoon` …），新批次只写自己那一个文件。
-- 取文案：组件里 `const { t } = useTranslation()`；**非组件模块**（utils/stores/api）
-  用 `import { t } from "@/i18n"`（读 store 当前值，不订阅变化）。
-- key 是点分路径（`create.imageSize.title`），类型由 zh-CN 词条表推导：
-  写错 key 会在 `pnpm typecheck` 阶段报 TS2345（已做负向对照）。
-- 插值统一用 `{name}` 占位；`t("common.notImplemented", { label })`。
-- **zh-CN 的值必须与迁移前的中文逐字一致**（标点/全角半角/空格），
-  否则 `scripts/smoke-*.js` 的精确文案断言会挂；搬完用
-  `node apps/next/scripts/verify-i18n-values.mjs --base HEAD` 机检一遍。
-- 语言状态：`apps/next/src/i18n/localeStore.ts`（Zustand，项目约定全局状态不用 Context）。
-  目前只有 zh-CN 故不持久化；接入第二门语言时要把 locale 写进用户数据文档并做水合回填，
-  同时给 `LOCALES` 补一份同键词条（`Record<Locale, Messages>` 会强制键完全一致）。
-- 逃逸断言：`apps/next/scripts/check-i18n.mjs` 统计硬编码中文，基线只减不增，
-  已接进 `pnpm check`；迁移一批就把里面的 `BASELINE` 调小。
+- 主题复用 `apps/next/src/utils/themeSignals.ts`：`nativeTheme.themeSource` 驱动 `prefers-color-scheme`；不另建 `.dark` 开关。全局 CSS 由 `app/layout.tsx` 导入，沿用 Tailwind、语义变量和已有业务 CSS。
+- 本地媒体使用 `apps/next/src/utils/localFileUrl.ts` 的 `buildLocalFileUrl`，不手拼 `file://`。
+- 使用项目现有零依赖 i18n，不新增语言路由或翻译框架。当前登记 zh-CN 与 en，语言集合以 `apps/next/src/i18n/locales/index.ts` 为准，不能把英文仍有中文镜像值理解为只支持一种语言。
+- 组件用 `useTranslation()`，普通模块从 `@/i18n` 导入 `t`；key 从 zh-CN 词条表推导，插值用 `{name}`。按当前功能域修改命名空间，同步已登记语言的键。
+- 语言状态由 `localeStore` 管理，偏好保存在用户文档 `settings.locale`；首帧读取 preload 单独暴露的同步 `initialLocale`，随后由 AppShell 按同一决议机制水合回填。不要改成异步首帧读取或新增第二套语言允许集。
+- 搬迁 zh-CN 文案时保留原字句、标点和空格，用 `node apps/next/scripts/verify-i18n-values.mjs --base HEAD` 核对。硬编码中文、英文未翻译等基线只减不增；新增词条检查双语键一致性。
 
 ## 数据契约与格式变更
-落盘格式（图片内嵌 Meta、工作流 JSON、用户数据文档）的改动比 UI 改动危险得多：
-没有版本标记时，**任何格式变更都无法在旧文件上被识别**，症状会表现为「某类图突然不能二创」。
 
-- **反向检查先于进度**：任何「治理进度」数字都可能因检查工具的盲区而虚高 ——
-  i18n 轮就出现过「基线到 72 看似做完、实际漏掉整类 `throw new Error("中文")`」。
-  开工前先建独立的反证通道（`apps/next/scripts/audit-uncounted-i18n.mjs`、
-  `apps/next/scripts/verify-image-meta.mjs`），再谈迁移了多少。
-- **落盘 Meta 必须带版本标记**：用**独立**的 PNG `tEXt` 块 `illusionRealmMeta`
-  （值形如 `{"version":1,...}`）。不要把版本塞进 `prompt` 块 —— 那个块必须与发送给
-  ComfyUI 的 API Prompt **逐字一致**（`smoke-anima-workflow` 有断言）。
-- **读取侧对无标记的图片按 v1 推理**：本约定落地前产出的图没有标记块，必须仍可二创。
-- **格式类脚本必须 `process.exit(1)` 失败**，否则只是个本地便利脚本、进不了 `pnpm check`。
-- **断言顺序固定：先当前格式、再旧格式。** 先对当前格式跑通 golden baseline，
-  再加「旧格式也能读出同样结果」；反过来无法区分「兼容层读对了」与「兼容层根本没被触发」。
-- **统计口径要连分母一起记**：分母是「输出目录下能列出的全部图片」，
-  **不是**「本生成器产出的图」—— 后者恰好会把「外部导入、从来没有 Meta」那一类排除掉，
-  而它正是要统计的对象。
-- 摸底工具：`node apps/next/scripts/survey-image-meta.mjs --discover <根>` 先找输出目录，
-  再对目录跑分档统计（判据与线上 `parseComfyWorkflow` 一致）。
+- 先建立独立反证检查，再报告迁移进度；不能因统计器漏掉一类输入而宣称完成。现有工具：`apps/next/scripts/audit-uncounted-i18n.mjs`、`apps/next/scripts/verify-image-meta.mjs`。
+- PNG Meta 使用独立 `illusionRealmMeta` tEXt 块，含 `version`；`prompt` 块必须与发给 ComfyUI 的 API Prompt 逐字一致。无标记旧图按 v1 推理，保留二创兼容。
+- 格式检查先验证当前格式的 golden baseline，再验证旧格式。失败须以非零退出码结束，不能只打印问题。
+- 图像统计分母是输出目录能列出的全部图片，包含外部导入与无 Meta 图片；用 `node apps/next/scripts/survey-image-meta.mjs --discover <根>` 摸底。
 
-## Git & PR
-- Conventional commits: feat/fix/refactor/test/docs/chore.
-- Max 500 lines per PR. Split large features into sequential PRs.
-- All PRs must pass: `pnpm typecheck && pnpm lint && pnpm check`.
-  （当前没有单元测试框架；类型与运行时回归靠 `pnpm check`（= typecheck + 主进程 `verify`）
-  以及 `scripts/verify-*.js` / `scripts/smoke-*.js`。引入测试框架后再更新此条。）
+## 命令与验证
 
-## Language
-- Code, comments, commit messages, variable names: English.
-  （现状：注释与提交信息实际是中文，与历史代码保持一致；新代码随所在文件。）
-- User-facing strings (UI text, error messages): Chinese (zh-CN), managed via i18n
-  （写进 `apps/next/src/i18n/locales/zh-CN/`，不要在组件里硬编码 —— `pnpm check:i18n` 会拦）。
+从仓库根执行；实际命令链以 `package.json` 为准。
 
----
+| 命令 | 用途 |
+| --- | --- |
+| `pnpm dev` | 启动 Next + Electron；Electron 等待 3000 端口 |
+| `pnpm build` | Next 静态导出 + 独立 Windows 安装向导构建，内部使用 NSIS 引擎 |
+| `pnpm pack` | 先构建 Next，再生成 `apps/electron/release/win-unpacked` |
+| `pnpm typecheck` | 渲染与主进程类型检查 |
+| `pnpm lint` | 渲染层 ESLint；不覆盖全部主进程/shared |
+| `pnpm verify` | Electron 内检查模块、通道一致性与 IPC 注册 |
+| `pnpm check` | 类型、主进程、门禁、路径、语言、脚本引用、i18n 与 Meta 等统一检查；不构建 |
+| `pnpm self-test:gate` | 门禁配对对照、指纹确定性、退出码护栏和事件丢失维度；对应 `.github/workflows/gate-self-test.yml` |
+| `pnpm check:packaged-agent` | 先 pack，再用假模型检查 asar 与 resources/agent；缺前提退 2 |
+| `pnpm check:i18n` / `pnpm check:i18n:list` | 硬编码中文基线与按文件分布 |
+| `pnpm check:i18n:en` / `pnpm check:locale-keys` | 英文迁移基线与双语键检查 |
+| `pnpm --filter @illusion-realm/electron check` | 主进程 tsc + @ts-nocheck 逃逸检查；单跑逃逸用 `check:nocheck` |
+
+暂无统一单元测试框架，回归依靠 `scripts/verify-*` 与 `scripts/smoke-*`；按脚本入口判断用 Node 还是 Electron。新增测试应覆盖真实行为或关键回归，不只复述实现。
+
+### 冒烟必须遵守
+
+- **一次只跑一个 Electron 冒烟。** 确认并清理本轮测试残留进程，避免单实例锁；不要误杀用户正在使用的应用。失败先核对环境，再单独重跑一次判读，不能靠重复重试掩盖回归。
+- **冒烟测静态导出，不是源码。** `pnpm check` 不构建；产物过期先运行 `pnpm --filter @illusion-realm/next build`。`smoke.assertBuildFresh({ app })` 比较 `apps/next/.next/build-fingerprint.json` 与源码哈希，不一致退 2；无指纹才回退 mtime 并补记录。
+- 指纹由 `scripts/record-build-fingerprint.js` 记录：覆盖 Next src/public、shared src、相关包根代码配置和显式跨包输入，不包含 out。缺输入报 `input-list-rot`；`apps/next/public/changelog.md` 与 `logs.md` 不一致报 `generated-drift`。改指纹机制须验证同源码连续构建结果一致，可在再次构建后运行该脚本 `--compare`。
+- 冒烟窗口显式 `backgroundThrottling: false`。等待不能只靠页面 rAF；使用主进程轮询或计时器兜底并设上限。产品中的等待也须能在窗口不可见时结束。
+- 视口/媒体查询以重新读取 `media.matches` 为准，事件只通知；保留 resize、visibilitychange 触发及清理。页面预渲染读媒体查询用 `useMediaQuery`，hydration 后才挂载的弹层用 `useMediaQueryAfterHydration`；创建容器布局遵守上方独立规则。
+- `smoke.hardenWindow` 的遮挡窗口在页面加载完成后创建；遮挡后必须断言 `visibilityState` 仍为 `visible`，验证 `backgroundThrottling: false` 的实际效果，不以 `getLastWebPreferences()` 中缺失的字段代替。不要在 loadURL 前遮挡导致页面生来 hidden。
+- `smoke.guardExit` 随看门狗安装：已有失败时不能由 `app.quit()` 或 `app.exit(0)` 掩盖；干净退出路径放行。`process.exitCode` 不能保证 app.quit 的退出码。护栏四例见 `scripts/self-test-harness-guard.js`，未知 case 退 2。
+- 摘要同步追加至 `logs/smoke-runs.log`；已知抖动见 `scripts/lib/known-flakes.js`。
+
+| 维度 | 验证内容与前提 |
+| --- | --- |
+| `SMOKE_OCCLUDE=1` | 遮挡时的可见性与渲染生命周期；需要真实可见窗口，headless 须明确 SKIP |
+| `SMOKE_SWALLOW_MEDIA_EVENT=all` | matchMedia 事件永久丢失时仍可恢复；可 headless，不能与遮挡混称 |
+| `SMOKE_DPR=1.25` 或 `1.5` | 改 3D 画布尺寸时必测非 100% 缩放；屏幕物理尺寸须容纳目标布局 |
+
+3D canvas 的 CSS 尺寸由布局控制（如宽高 100%），`renderer.setSize(w, h, false)` 只更新缓冲；否则 DPR 大于 1 时画布可能盖住控制栏。
+
+| 退出码 | 含义与处置 |
+| --- | --- |
+| 0 | 通过 |
+| 1 | 断言失败或异常，按代码问题处理 |
+| 2 | 环境/前置条件不成立，按提示重建或修复环境 |
+| 124 | `SMOKE_TIMEOUT_MS` 外部看门狗超时 |
+| 125 | `SMOKE_STEP_TIMEOUT_MS` 进程内单步超时，按具体步骤排查 |
+
+124/125 均须报失败并标明超时，不当作基础设施故障自动重试。
+
+## 按任务使用技能
+
+| 工作 | 技能 |
+| --- | --- |
+| 功能、测试、辅助脚本修改 | [comment-coverage](.agents/skills/comment-coverage/SKILL.md)，必须使用 |
+| 主进程服务与系统交互 | [electron-main-process](.agents/skills/electron-main-process/SKILL.md) |
+| IPC / 桥接 / 共享契约 | 按改动选 [electron-ipc](.agents/skills/electron-ipc/SKILL.md)、[electron-preload](.agents/skills/electron-preload/SKILL.md)、[shared-types](.agents/skills/shared-types/SKILL.md) |
+| 页面与渲染逻辑 | [nextjs-renderer](.agents/skills/nextjs-renderer/SKILL.md) |
+| 视觉与交互 / 相似 UI 复用 | [interface-ui-design](.agents/skills/interface-ui-design/SKILL.md) / [ui-parameter-reuse](.agents/skills/ui-parameter-reuse/SKILL.md) |
+| 构建、资源与安装器 | [electron-build](.agents/skills/electron-build/SKILL.md) |
+
+## 提交与交付
+
+- Conventional Commits：feat/fix/refactor/test/docs/chore；正文沿用项目中文习惯。单个 PR 最多 500 行，大任务拆为连续 PR。
+- PR 必须通过 `pnpm typecheck`、`pnpm lint`、`pnpm check`，并补充受影响场景的回归。失败区分本次回归与既有问题，不能宣称未运行的检查已通过。
+- 交付简述改动、复用与业务边界、实际验证、未验证项及注释率统计。纯文档变更的业务/测试注释率报告不适用。

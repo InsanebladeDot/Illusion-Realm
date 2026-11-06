@@ -1,0 +1,215 @@
+{
+  "baseline": "C:\\Users\\18305\\AppData\\Local\\Temp\\ir-repair-baseline-d381753a-b795-46ee-94cb-011a13298bcf",
+  "rows": [
+    {
+      "file": "apps/electron/installer/diagnosis.cjs",
+      "C": 126,
+      "B": 52,
+      "ratio": 70.79,
+      "kind": "business"
+    },
+    {
+      "file": "apps/electron/installer/main.cjs",
+      "C": 25,
+      "B": 8,
+      "ratio": 75.76,
+      "kind": "business"
+    },
+    {
+      "file": "apps/electron/installer/renderer.cjs",
+      "C": 58,
+      "B": 28,
+      "ratio": 67.44,
+      "kind": "business"
+    },
+    {
+      "file": "apps/electron/installer/service.cjs",
+      "C": 40,
+      "B": 15,
+      "ratio": 72.73,
+      "kind": "business"
+    },
+    {
+      "file": "apps/electron/installer/installer.html",
+      "C": 5,
+      "B": 3,
+      "ratio": 62.5,
+      "kind": "business"
+    },
+    {
+      "file": "apps/electron/installer/installer.css",
+      "C": 6,
+      "B": 1,
+      "ratio": 85.71,
+      "kind": "business"
+    },
+    {
+      "file": "apps/electron/installer/engine.nsh",
+      "C": 44,
+      "B": 22,
+      "ratio": 66.67,
+      "kind": "business"
+    },
+    {
+      "file": "apps/electron/scripts/build-installer.cjs",
+      "C": 9,
+      "B": 4,
+      "ratio": 69.23,
+      "kind": "business"
+    },
+    {
+      "file": "apps/electron/scripts/prepare-repair-engine.cjs",
+      "C": 59,
+      "B": 24,
+      "ratio": 71.08,
+      "kind": "business"
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-chrome.tsx",
+      "C": 11,
+      "B": 4,
+      "ratio": 73.33,
+      "kind": "business"
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-clip-shell.tsx",
+      "C": 32,
+      "B": 13,
+      "ratio": 71.11,
+      "kind": "business"
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-controls.tsx",
+      "C": 105,
+      "B": 45,
+      "ratio": 70,
+      "kind": "business"
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-panels.tsx",
+      "C": 30,
+      "B": 12,
+      "ratio": 71.43,
+      "kind": "business"
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-samples.tsx",
+      "C": 64,
+      "B": 27,
+      "ratio": 70.33,
+      "kind": "business"
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-timeline.tsx",
+      "C": 15,
+      "B": 5,
+      "ratio": 75,
+      "kind": "business"
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor.module.css",
+      "C": 66,
+      "B": 30,
+      "ratio": 68.75,
+      "kind": "business"
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/video-editor-view.tsx",
+      "C": 5,
+      "B": 1,
+      "ratio": 83.33,
+      "kind": "business"
+    },
+    {
+      "file": "apps/next/src/app/tools/video/editor/samples/page.tsx",
+      "C": 12,
+      "B": 5,
+      "ratio": 70.59,
+      "kind": "business"
+    },
+    {
+      "file": "apps/next/src/utils/local-model-tree.ts",
+      "C": 90,
+      "B": 39,
+      "ratio": 69.77,
+      "kind": "business"
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/civitai/local-model-library.tsx",
+      "C": 90,
+      "B": 43,
+      "ratio": 67.67,
+      "kind": "business"
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/civitai/model-folder-navigation.tsx",
+      "C": 45,
+      "B": 19,
+      "ratio": 70.31,
+      "kind": "business"
+    },
+    {
+      "file": "apps/next/src/i18n/locales/zh-CN/toolBox.ts",
+      "C": 8,
+      "B": 3,
+      "ratio": 72.73,
+      "kind": "business"
+    },
+    {
+      "file": "apps/next/src/i18n/locales/en/toolBox.ts",
+      "C": 8,
+      "B": 3,
+      "ratio": 72.73,
+      "kind": "business"
+    },
+    {
+      "file": "scripts/smoke-installer.js",
+      "C": 70,
+      "B": 32,
+      "ratio": 68.63,
+      "kind": "test"
+    },
+    {
+      "file": "scripts/verify-installer-repair.cjs",
+      "C": 164,
+      "B": 71,
+      "ratio": 69.79,
+      "kind": "test"
+    },
+    {
+      "file": "scripts/smoke-video-editor-ui.js",
+      "C": 13,
+      "B": 4,
+      "ratio": 76.47,
+      "kind": "test"
+    },
+    {
+      "file": "scripts/lib/check-video-ui-controls.js",
+      "C": 188,
+      "B": 72,
+      "ratio": 72.31,
+      "kind": "test"
+    },
+    {
+      "file": "scripts/smoke-local-model-metadata.js",
+      "C": 98,
+      "B": 46,
+      "ratio": 68.06,
+      "kind": "test"
+    }
+  ],
+  "totals": {
+    "business": {
+      "C": 953,
+      "B": 406,
+      "ratio": 70.12509197939661,
+      "need": -5
+    },
+    "test": {
+      "C": 533,
+      "B": 225,
+      "ratio": 70.31662269129288,
+      "need": -8
+    }
+  }
+}
