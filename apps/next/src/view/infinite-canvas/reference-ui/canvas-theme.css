@@ -1,0 +1,198 @@
+/* 主题只改变配色，不复制节点尺寸、排版或交互状态。 */
+/* 和应用一样读取 prefers-color-scheme，原生主题切换是唯一驱动来源。 */
+/* 不另建画布主题开关，也不直接修改 document 的主题属性。 */
+/* 颜色像工作室照明：换灯改变桌面观感，不移动桌上的纸张或修改纸上的画。 */
+/* 在代码中对应的是 CSS token 重算，而节点位置、媒体来源和参数仍是原数据。 */
+/* 如果未来增加主题种类，应接应用统一机制，不在这里保存另一个用户偏好。 */
+/* 深色资料文件保持原有几何，本文件是局部配色适配，不覆盖全站按钮。 */
+/* 导航、标题栏与其他工具页仍由原应用主题决定，没有从画布回写全局样式。 */
+/* 媒体的黑边可能来自原视频或完整比例留白，不能为了白色工作台去改视频像素。 */
+/* 深色保持资料包原色，以下补充 token 供宿主和真实媒体共用。 */
+/* 选择模式和手掌模式的持续状态仍由 aria-pressed 表达，配色不生成自己的状态类。 */
+/* 读屏名称来自组件参数，不在 CSS 中用伪元素补写用户可见的重要操作文字。 */
+/* prefers-reduced-motion 的处理继续沿用基础样式，浅色不额外添加主题切换动画。 */
+/* forced-colors 模式继续保留系统键盘标记，本文件不清除系统高对比焦点。 */
+/* hover 和 focus-visible 分开适配，鼠标移开不会把键盘位置错误地当作业务选择。 */
+/* disabled 仍由原生按钮拦截，不能仅靠低对比度颜色来实现不可用状态。 */
+/* 有些媒体控件由 Chromium 内部绘制，因此只给 color-scheme 提示，不侵入私有子节点。 */
+/* 新增面板家族时应复核固定白字和固定黑底，不能假定继承根文字色就覆盖全部状态。 */
+/* 参数胶囊的阴影保留在文字裁切区域之外，主题文件不使用 overflow 隐藏反馈。 */
+/* 上传、模型和导出未接通的按钮在白色主题仍禁用，白色样式不等于新增业务能力。 */
+/* local media 的来源错误也是内容，不通过更换主题抹掉或重置其重试次数。 */
+/* 不给真实图片附加 CSS 滤镜，截图中的颜色差异只应来自工作台与控件。 */
+/* 暗色默认 token 覆盖无媒体查询支持的环境，正常 Electron 由原生主题明确决议。 */
+/* 浅色和深色共享所有类名，不引入两套可同时挂载却行为不同的节点。 */
+/* 样式加载顺序在 globals 中明确位于资料组件之后，避免用大量 important 抢优先级。 */
+/* 选中边框的意义来自作品选择，焦点清理规则不能把它一起抹掉。 */
+/* 引用路径不包含主题，因此用户切换配色不会重新发起文件选择或改变保存签名。 */
+/* 检查截图时应同时查看空卡和真实媒体，单看白色空画布无法验证内容对比度。 */
+/* 本轮只验证浅深主题的视觉接入，不据此承诺原生解码器支持所有媒体格式。 */
+/* 大图和多视频性能属于资源规模问题，不用白色 CSS 的出现冒充性能验收。 */
+.hy-canvas-ui {
+  /* 小地图遮罩强调观察窗口，半透明黑只属于缩略图外框，不改变媒体画面。 */
+  /* 连线常态比选中略暗，跨主题保持“当前操作对象更清楚”的关系。 */
+  --hy-map-mask: #0007;
+  --hy-edge: #68686b;
+  --hy-edge-selected: #dddddf;
+  --hy-selection: #ffffff0c;
+  --hy-cover: #0f0f0fe8;
+}
+
+/* 白色画布需要同时更换卡片、参数与浮层，不能只把点阵底板刷白。 */
+/* 每个灰阶有明确职责：正文、辅助文字、表面、分隔线和选框彼此独立。 */
+/* 保留参考的灰色细线反馈，避免主题切换突然变成粗彩色按钮。 */
+/* 预览的黑色视频像素属于媒体内容，下方规则不会反转图片或滤镜处理视频。 */
+/* 原生媒体控件在白色主题用 light，实际图像仍按原文件颜色显示。 */
+@media (prefers-color-scheme: light) {
+  /* 这里由 nativeTheme.themeSource 影响媒体查询，跟随系统也走同一条决议链。 */
+  /* 没有 data-theme 与 class 两份色值，应用切换主题时不用重新挂载画布。 */
+  /* 属性草稿、选择、节点坐标和撤销栈都不受 CSS 媒体查询重算影响。 */
+  /* 浏览器预渲染可直接用系统媒体查询绘制，不在服务端访问 window。 */
+  .hy-canvas-ui {
+    /* 略带冷灰的白底给纯白卡片留出分层，避免大面积纯白刺眼。 */
+    /* 背景色只画工作台；原图片里的白色仍保留文件自己的像素。 */
+    --hy-canvas: #f8f9fb;
+    /* 点阵以较浅灰标示空间参照，不抢正文与连线的视觉注意力。 */
+    /* 颜色交给图引擎背景变量，缩放时点阵依然属于镜头而不是节点数据。 */
+    --hy-dot: #c6cad3;
+    /* 节点表面使用纯白，和工作台区分；空媒体卡也使用相同表面。 */
+    /* 不能按视频、音频类型另设黑卡，否则白色主题会留下大面积深色孤岛。 */
+    --hy-node: #ffffff;
+    /* 参数面板、浮层和导入状态共用白色表面，避免组件之间白色温度不同。 */
+    /* 表面不承担选择含义，当前节点仍由边线标识。 */
+    --hy-panel: #ffffff;
+    /* 次级背景用于控件容器与静态空态，不和节点外框争夺主层级。 */
+    /* 胶囊悬停会变到稍深的灰阶，普通状态仍能从白卡中辨认。 */
+    --hy-raised: #f0f1f4;
+    /* hover token 留给组件内已有的语义消费，不由 JavaScript 切颜色。 */
+    /* 移开鼠标后 CSS 自然恢复常态，不需要额外保存 hover state。 */
+    --hy-hover: #e9ebef;
+    /* 细分隔线在纯白背景可见，但不把每个按钮都包成明显边框。 */
+    /* 节点非选中边线同取此值，形成稳定的空间边界。 */
+    --hy-line: #daddE4;
+    /* 选中线比常态线深，鼠标焦点离开后仍能看出业务选择。 */
+    /* 不把颜色写死到节点数据，保存重开后当前主题仍能决定选框颜色。 */
+    --hy-selected: #7e8697;
+    /* 正文取近黑而非纯黑，和应用其余浅色页面保持相近阅读强度。 */
+    /* 这个值也供手写文本与参数输入，避免白底出现不可见白字。 */
+    --hy-text: #272b34;
+    /* 辅助文字仍保持足够对比，不直接复用深色资料中的灰白透明文字。 */
+    /* 禁用是原生 opacity 的另一层语义，不能把所有灰字都设成 disabled。 */
+    --hy-muted: #626a79;
+    /* 白色小地图用白色遮罩弱化当前视窗之外的区域，不盖一块黑玻璃。 */
+    /* 小地图只改显示，不参与节点顺序、连接关系或作品保存。 */
+    --hy-map-mask: #ffffff99;
+    /* 连线放在点阵之上可辨认，仍弱于正文，减少空画布的视觉噪声。 */
+    /* 选中连接另外取较深色，不能与常态线完全相同。 */
+    --hy-edge: #858c9b;
+    --hy-edge-selected: #424b60;
+    /* 框选区域是半透明操作反馈，不能把底下媒体内容实心遮住。 */
+    /* 颜色只影响拖框显示，不会给选中的图片添加实际着色。 */
+    --hy-selection: #65749912;
+    /* 水合遮罩取接近工作台的白色，仍能看出读取被保护的原图。 */
+    /* 遮罩不表达解码完成；错误与加载文字来自各自真实状态。 */
+    --hy-cover: #f8f9fbe8;
+    /* 原生输入和媒体控件也应得到浅色提示，不能只更换自绘的 div。 */
+    /* 媒体本身不反相，原生控件的具体样式仍由 Chromium 提供。 */
+    color-scheme: light;
+  }
+
+  /* 标题与正文需要真实深色，不能继承深色资料中硬编码的白色。 */
+  /* 这里不改变字号和字重；不同主题下长文本仍按同一规则截断。 */
+  /* 包括合成器属性头与设置标题，防止从未点开的次级面板仍残留白字。 */
+  /* 采用组件域下的明确家族，不能全局强制所有 strong 或 span 变黑。 */
+  .hy-canvas-ui :is(.hy-node-label,.hy-typography-sample,.hy-generation-panel textarea,.hy-settings>header strong,.hy-settings-content>strong,.hy-composer>header strong,.hy-materials-title b,.hy-properties>b,.hy-preview footer b) { color: var(--hy-text); }
+  /* 输入光标与 placeholder 分开，失焦不改变已经确认的内容颜色。 */
+  /* 光标取正文色，避免输入框获得焦点后只有内容可见而插入位置不可见。 */
+  /* placeholder 保持比正文浅；用户输入后自然使用正文 token。 */
+  .hy-canvas-ui .hy-generation-panel textarea { caret-color: var(--hy-text); }
+  .hy-canvas-ui textarea::placeholder { color: var(--hy-muted); }
+  /* 辅助文字维持可读的灰色，不能把深色下的低亮灰直接搬到白底。 */
+  /* 不改变 disabled 的事件拦截，灰色图标仍需依据真实业务决定是否可点。 */
+  /* 图标继承 currentColor，因此不必为浅色重复维护 SVG 路径。 */
+  /* 统计数字与加载说明同取辅助色，不把它们误当成可编辑正文。 */
+  .hy-canvas-ui :is(.hy-icon-button,.hy-history-button,.hy-node-empty,.hy-node-empty svg,.hy-node-empty small,.hy-generation-panel,.hy-panel-expand,.hy-reference-add,.hy-panel-tools .hy-chip,.hy-panel-tabs .hy-chip,.hy-zoom-value,.hy-counters,.hy-cost,.hy-menu-heading,.hy-settings,.hy-setting-control small,.hy-material-empty,.hy-preview-empty,.hy-ruler) { color: var(--hy-muted); }
+
+  /* 所有浮动容器保持相同白色表面，边缘依靠细线与轻阴影区分层级。 */
+  /* 设置、添加菜单和合成器也在同一组件域中，不把浅色支持局限于四类节点。 */
+  /* 单独的浮层阴影只提供高度线索，不用粗轮廓圈住整张面板。 */
+  /* border-color 只对原本已有边线的控件生效，不凭空为无边框控件加边。 */
+  /* 这些规则不接触 position、padding 或 width，所以深浅主题切换不会挪动端口。 */
+  .hy-canvas-ui :is(.hy-node-actions,.hy-add-menu,.hy-more-menu,.hy-canvas-dock,.hy-view-controls,.hy-round-button,.hy-project-header,.hy-counters,.hy-ratio-popup,.hy-settings,.hy-composer) { background: var(--hy-panel); border-color: var(--hy-line); box-shadow: 0 4px 18px #25304a0b; }
+  /* 节点常态与选中分别设边线，hover 清理不会抹掉业务选择。 */
+  /* 选中阴影不是键盘 focus shadow，不受原库移除额外焦点圈的规则影响。 */
+  /* 原有选中边框宽度仍由基础样式决定，本文件不另设更粗的白色主题边框。 */
+  .hy-canvas-ui .hy-node-card { border-color: var(--hy-line); }
+  .hy-canvas-ui .hy-node-shell.is-selected .hy-node-card { border-color: var(--hy-selected); box-shadow: 0 0 0 1px #44547108; }
+  /* 端口在白底仍可见，位置与命中面积沿用原图引擎适配，不因换色跳动。 */
+  /* 图片和视频原规则有更具体的端口色，因此在同一级家族显式补齐。 */
+  /* 不用 opacity 隐藏未选中端口，键盘与鼠标仍能发现可连接的位置。 */
+  .hy-canvas-ui .hy-node-port { background: var(--hy-canvas); border-color: #969ead; color: #788394; }
+  .hy-canvas-ui :is(.hy-node-image,.hy-node-video) .hy-node-port { border-color: #a5acb9; color: #788394; }
+  .hy-canvas-ui .hy-generation-panel { border-color: var(--hy-line); }
+  /* 分隔线属于内容边界而不是可点击控件，不加入额外 hover 状态。 */
+  /* 普通 i 装饰线不参与辅助工具语义，真正按钮继续保留原有可访问名称。 */
+  .hy-canvas-ui :is(.hy-node-actions i,.hy-view-controls i,.hy-project-header i,.hy-counters i) { background: var(--hy-line); }
+
+  /* 胶囊、模式条和小区块使用稍深的表面，白卡上仍可看清控件范围。 */
+  /* 没有改胶囊的向上浮动与阴影机制；主题只换相应的灰阶值。 */
+  /* 复用家族选择器覆盖不同使用处，不能只给图片比例胶囊单独做一份白色版本。 */
+  /* 次级区块共用 raised 色，不表示它们会触发同一种业务。 */
+  /* 原生禁用模型入口仍是禁用，白色底板不会让它假装已经可选择模型。 */
+  /* 参数选项有更具体的规则，下面单独接它的色值，防止被原库半透明白底盖回去。 */
+  .hy-canvas-ui :is(.hy-chip,.hy-segmented,.hy-panel-expand,.hy-panel-tools .hy-chip,.hy-panel-tabs .hy-chip,.hy-materials .hy-segmented,.hy-settings nav,.hy-settings-content,.hy-setting-control .hy-segmented,.hy-material-empty,.hy-library-button,.hy-track>div,.hy-track>section,kbd) { background: var(--hy-raised); border-color: var(--hy-line); color: var(--hy-muted); }
+  .hy-canvas-ui .hy-panel-options .hy-chip:not(.hy-model-glow) { background: var(--hy-raised); border-color: var(--hy-line); color: #525c6e; box-shadow: 0 2px 4px #25304a0a; }
+  /* 失焦后选中模式继续保留较深底色；不能把 focus 当作 selected 的来源。 */
+  /* selected 的文字更深，既能读出值，也能区别旁边未选中的模式。 */
+  /* 不增加新的模式 ID，视频与音频仍按各自原有集合渲染。 */
+  /* 点阵开关使用 aria-pressed 的真实值，关闭后不能继续保留选中底色。 */
+  .hy-canvas-ui :is(.hy-segmented button,.hy-node-actions .hy-icon-button) { color: var(--hy-muted); }
+  .hy-canvas-ui :is(.hy-segmented button.is-active,.hy-materials .hy-segmented button.is-active,.hy-chip.is-active,.hy-icon-button[aria-pressed=true],.hy-settings nav button.is-active) { background: #dce1eb; color: #2f3c55; }
+  .hy-canvas-ui .hy-view-controls .hy-grid-button[aria-pressed=true] { background: #dce1eb; }
+  /* 普通按钮不增加按压缩放；浅色 hover 仍沿用细腻的背景变化。 */
+  /* 可用性判断仍取 :disabled，原生禁用项不因鼠标经过而表现得像能执行。 */
+  /* 同样的图标在节点工具条和底栏同步变色，不在调用处各写补丁。 */
+  /* 模式已选中再悬停略加深，移开后回到持续选择色。 */
+  .hy-canvas-ui :is(.hy-icon-button,.hy-node-actions .hy-icon-button,.hy-segmented button):hover:not(:disabled) { color: var(--hy-text); background: #e4e8ef; }
+  .hy-canvas-ui .hy-segmented button.is-active:hover:not(:disabled) { background: #d4dbe7; }
+  .hy-canvas-ui .hy-panel-options .hy-chip:not(.hy-model-glow):hover:not(:disabled) { background: #e1e6ef; color: #303c53; box-shadow: 0 3px 6px #25304a18; }
+  /* 菜单的按住比 hover 更深，保留资料中特有的持有反馈，不能套普通图标规则。 */
+  /* active 不覆盖普通图标家族，避免鼠标长按时突然出现额外边框或缩放。 */
+  /* 菜单关闭仍由业务回调决定，CSS 不保存或假装已经创建节点。 */
+  /* 键盘采用浅底标出位置，强制色彩模式另有系统可见焦点兜底。 */
+  .hy-canvas-ui :is(.hy-add-menu button,.hy-more-menu button):hover:not(:disabled) { background: #edf0f5; }
+  .hy-canvas-ui .hy-add-menu button:active:not(:disabled) { background: #dce2ec; }
+  .hy-canvas-ui :is(.hy-add-menu button,.hy-icon-button,.hy-chip):focus-visible:not(:disabled) { background: #e5eaf3; }
+  /* 徽标与键帽不继承黑底；斜体、字号和布局保持资料中已确认的值。 */
+  /* 徽标不是选项值，不能借其背景色让用户误判为已选中的生成模式。 */
+  /* 合成节点的原始背景更具体，需要独立覆盖，但不会赋予它媒体播放能力。 */
+  .hy-canvas-ui .hy-add-menu button small { background: #e8ebf0; color: #596378; }
+  .hy-canvas-ui .hy-node-composition .hy-node-card { background: var(--hy-node); }
+  .hy-canvas-ui :is(.hy-node-composition .hy-node-empty,.hy-node-composition .hy-node-empty svg) { color: var(--hy-muted); }
+  .hy-canvas-ui .hy-open-composer { background: var(--hy-raised); border-color: var(--hy-line); color: var(--hy-text); }
+  /* 功能禁用仍由原生 disabled 拦截；浅色只保证禁用底与文字没有反向白块。 */
+  /* 提交按钮的可用性仍由回调、忙碌与提示词决定，不按配色猜测服务是否可用。 */
+  /* 添加按钮使用较深实心底，与旁边普通图标保持主次，但没有新增边框。 */
+  .hy-canvas-ui .hy-submit:disabled { background: #e8ebf0; color: #9aa2af; }
+  .hy-canvas-ui .hy-submit { background: #424b60; color: #fff; }
+  .hy-canvas-ui .hy-canvas-dock .hy-dock-add { background: #343e52; color: #fff; }
+  /* 开关和范围输入使用同一灰蓝系，不改变它们真实 checked 与 value。 */
+  /* 只对存在的原生状态作外观反馈，没有设计一个点击后仍无效果的主题专属按钮。 */
+  /* 主题规则不影响输入法组合与光标索引，编辑行为仍属于原表单组件。 */
+  /* 开关圆点颜色在开启状态保持白色，便于和灰蓝轨道区分。 */
+  /* 范围滑块颜色和设置值来源独立，切主题不重置拖拽灵敏度。 */
+  /* WebKit 滑块伪元素适配 Electron Chromium，不另建自绘 range 组件。 */
+  .hy-canvas-ui .hy-switch { background: #d7dce5; }
+  .hy-canvas-ui .hy-switch.is-on { background: #6b7892; }
+  .hy-canvas-ui .hy-switch.is-on span { background: #fff; }
+  /* 这些入口在资料中有比通用胶囊更具体的底色，需同步替换，避免遗留黑色孤岛。 */
+  .hy-canvas-ui .hy-settings>header .hy-chip { background: var(--hy-raised); color: var(--hy-muted); }
+  .hy-canvas-ui .hy-composer>header .hy-icon-button:first-child { background: var(--hy-raised); }
+  .hy-canvas-ui input[type=range] { background: #d7dce5; accent-color: #61718e; }
+  .hy-canvas-ui input[type=range]::-webkit-slider-thumb { background: #61718e; }
+  /* 合成器仍是独立空态，只适配可读性，不因白色外观就宣称多轨播放已接通。 */
+  /* 预览占位底比节点稍灰，空画面仍有清晰区域；真实导入预览不经过这个容器。 */
+  /* 时间线示意换成浅灰背景，但刻度不因此变成真实工程时间模型。 */
+  .hy-canvas-ui .hy-preview { background: #eef0f4; }
+  .hy-canvas-ui .hy-timeline { background: #f3f5f8; }
+}

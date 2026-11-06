@@ -1,0 +1,12 @@
+{
+  "reference": "C:/Users/18305/Documents/Codex/2026-11-05/10-windows-electron-web-1-pe/outputs/实机截图/S06-局部.png",
+  "runtime": "reference-ui-video-parameters.png",
+  "runtimeCrop": [
+    818,
+    80,
+    1468,
+    650
+  ],
+  "resize": false,
+  "note": "左侧是参考证据；右侧来自正式 app://app/canvas。不是自动相似度结论。"
+}

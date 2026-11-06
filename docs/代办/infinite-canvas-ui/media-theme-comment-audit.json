@@ -1,0 +1,436 @@
+{
+  "baseline": "本轮白色主题与本地媒体导入开始前的工作区快照；上一轮已交付代码不算本轮新增。",
+  "baselineDirectory": "C:\\Users\\18305\\AppData\\Local\\Temp\\ir-canvas-media-baseline-jh_9qc5g",
+  "method": "新增文件全文；已有文件只计本轮新增/替换后的物理行。纯有效中文说明计C；混合行计B；排除空行与定界符，跨文件完全重复说明只计一次。已人工复核职责、约束、资源与测试证据说明。",
+  "files": [
+    {
+      "path": "apps/next/src/view/infinite-canvas/canvas-editor-context.tsx",
+      "category": "business",
+      "C": 8,
+      "B": 2,
+      "percent": 80.0,
+      "ranges": [
+        [
+          5,
+          5
+        ],
+        [
+          17,
+          25
+        ]
+      ],
+      "baselineSha256": "9acfd14cd175b0d1ae8643a38704beab492928ac75354360daa78217e7fb7070"
+    },
+    {
+      "path": "apps/next/src/view/infinite-canvas/canvas-media-import.ts",
+      "category": "business",
+      "C": 70,
+      "B": 25,
+      "percent": 73.68,
+      "ranges": [
+        [
+          1,
+          99
+        ]
+      ],
+      "baselineSha256": null
+    },
+    {
+      "path": "apps/next/src/view/infinite-canvas/canvas-media.css",
+      "category": "business",
+      "C": 27,
+      "B": 7,
+      "percent": 79.41,
+      "ranges": [
+        [
+          1,
+          34
+        ]
+      ],
+      "baselineSha256": null
+    },
+    {
+      "path": "apps/next/src/view/infinite-canvas/canvas-media.tsx",
+      "category": "business",
+      "C": 92,
+      "B": 41,
+      "percent": 69.17,
+      "ranges": [
+        [
+          1,
+          137
+        ]
+      ],
+      "baselineSha256": null
+    },
+    {
+      "path": "apps/next/src/view/infinite-canvas/canvas-model.ts",
+      "category": "business",
+      "C": 14,
+      "B": 2,
+      "percent": 87.5,
+      "ranges": [
+        [
+          29,
+          36
+        ],
+        [
+          48,
+          55
+        ]
+      ],
+      "baselineSha256": "df8f04c46920fb82c0fb4c1d5fc18254a74e7914836d653f7b8e4e637d7acc32"
+    },
+    {
+      "path": "apps/next/src/view/infinite-canvas/canvas-node.tsx",
+      "category": "business",
+      "C": 20,
+      "B": 8,
+      "percent": 71.43,
+      "ranges": [
+        [
+          15,
+          16
+        ],
+        [
+          42,
+          63
+        ],
+        [
+          78,
+          81
+        ]
+      ],
+      "baselineSha256": "e74fe6b7b16aea0ee6a4eb45bbc6c95cfe7ebad488ba40c981ca2bc7335dfa2b"
+    },
+    {
+      "path": "apps/next/src/view/infinite-canvas/canvas-reducer.ts",
+      "category": "business",
+      "C": 12,
+      "B": 2,
+      "percent": 85.71,
+      "ranges": [
+        [
+          33,
+          35
+        ],
+        [
+          162,
+          172
+        ]
+      ],
+      "baselineSha256": "c37bbb518503dea0ab995f02687264b4c3f12e8649c74b14f10368c0be3039b8"
+    },
+    {
+      "path": "apps/next/src/view/infinite-canvas/canvas-toolbar.tsx",
+      "category": "business",
+      "C": 9,
+      "B": 3,
+      "percent": 75.0,
+      "ranges": [
+        [
+          21,
+          26
+        ],
+        [
+          29,
+          29
+        ],
+        [
+          33,
+          37
+        ]
+      ],
+      "baselineSha256": "fe858de0339f24b812df37e275ce16909ececa51eadb54279008295c19d66725"
+    },
+    {
+      "path": "apps/next/src/view/infinite-canvas/canvas.module.css",
+      "category": "business",
+      "C": 20,
+      "B": 11,
+      "percent": 64.52,
+      "ranges": [
+        [
+          1,
+          9
+        ],
+        [
+          11,
+          12
+        ],
+        [
+          16,
+          20
+        ],
+        [
+          22,
+          24
+        ],
+        [
+          34,
+          36
+        ],
+        [
+          40,
+          40
+        ],
+        [
+          43,
+          45
+        ],
+        [
+          47,
+          48
+        ],
+        [
+          51,
+          53
+        ]
+      ],
+      "baselineSha256": "5da87c6cedabf0ddd71211e2b3254af9438a6f8afe53e4b17745efb881639a10"
+    },
+    {
+      "path": "apps/next/src/view/infinite-canvas/infinite-canvas-page.tsx",
+      "category": "business",
+      "C": 28,
+      "B": 12,
+      "percent": 70.0,
+      "ranges": [
+        [
+          21,
+          21
+        ],
+        [
+          35,
+          40
+        ],
+        [
+          98,
+          112
+        ],
+        [
+          123,
+          130
+        ],
+        [
+          134,
+          138
+        ],
+        [
+          142,
+          142
+        ],
+        [
+          144,
+          147
+        ]
+      ],
+      "baselineSha256": "59e6a592504fe9fddec7ecff4bf29f03bb652bba5e68659059e8febb68e74e3b"
+    },
+    {
+      "path": "apps/next/src/view/infinite-canvas/use-canvas-editor.ts",
+      "category": "business",
+      "C": 11,
+      "B": 2,
+      "percent": 84.62,
+      "ranges": [
+        [
+          19,
+          25
+        ],
+        [
+          80,
+          85
+        ]
+      ],
+      "baselineSha256": "dec884728a72eccf9e061891a2238fe3ea40584abbb9143df88d988e0b5da84f"
+    },
+    {
+      "path": "apps/next/src/view/infinite-canvas/use-canvas-media-import.ts",
+      "category": "business",
+      "C": 108,
+      "B": 55,
+      "percent": 66.26,
+      "ranges": [
+        [
+          1,
+          171
+        ]
+      ],
+      "baselineSha256": null
+    },
+    {
+      "path": "apps/next/src/view/infinite-canvas/reference-ui/canvas-chrome.tsx",
+      "category": "business",
+      "C": 10,
+      "B": 5,
+      "percent": 66.67,
+      "ranges": [
+        [
+          7,
+          7
+        ],
+        [
+          9,
+          9
+        ],
+        [
+          32,
+          38
+        ],
+        [
+          51,
+          56
+        ]
+      ],
+      "baselineSha256": "ac992295d21191513699d81e76ace88934e1c22f1ce8871586e49e90df885a53"
+    },
+    {
+      "path": "apps/next/src/view/infinite-canvas/reference-ui/canvas-theme.css",
+      "category": "business",
+      "C": 129,
+      "B": 65,
+      "percent": 66.49,
+      "ranges": [
+        [
+          1,
+          198
+        ]
+      ],
+      "baselineSha256": null
+    },
+    {
+      "path": "apps/next/src/view/infinite-canvas/reference-ui/composition-editor.tsx",
+      "category": "business",
+      "C": 1,
+      "B": 0,
+      "percent": 100.0,
+      "ranges": [
+        [
+          5,
+          5
+        ]
+      ],
+      "baselineSha256": "5f54d53f3a6c94331c90d4d8718fc804ae769f14aa4bd65e38afe7bc700f6a2f"
+    },
+    {
+      "path": "packages/shared/src/schemas/infinite-canvas.schema.ts",
+      "category": "business",
+      "C": 35,
+      "B": 8,
+      "percent": 81.4,
+      "ranges": [
+        [
+          8,
+          41
+        ],
+        [
+          50,
+          59
+        ]
+      ],
+      "baselineSha256": "7abc983b1d1baa4540bd6473fb60c07296395263fbd22a2f42e063cf1dc32f9a"
+    },
+    {
+      "path": "apps/next/src/i18n/locales/zh-CN/canvas.ts",
+      "category": "business",
+      "C": 25,
+      "B": 13,
+      "percent": 65.79,
+      "ranges": [
+        [
+          14,
+          14
+        ],
+        [
+          94,
+          94
+        ],
+        [
+          106,
+          141
+        ]
+      ],
+      "baselineSha256": "64395063dc707c10ec4be802061bd238eb1a78b109e368faf202e6050ef97dc2"
+    },
+    {
+      "path": "apps/next/src/i18n/locales/en/canvas.ts",
+      "category": "business",
+      "C": 23,
+      "B": 12,
+      "percent": 65.71,
+      "ranges": [
+        [
+          14,
+          14
+        ],
+        [
+          106,
+          140
+        ]
+      ],
+      "baselineSha256": "3859105e47d8b4ad5c3ada3afedb85b18e182a61ac34c872ddb65ba272b5f4f4"
+    },
+    {
+      "path": "scripts/smoke-infinite-canvas.js",
+      "category": "test",
+      "C": 4,
+      "B": 4,
+      "percent": 50.0,
+      "ranges": [
+        [
+          34,
+          36
+        ],
+        [
+          154,
+          154
+        ],
+        [
+          233,
+          233
+        ],
+        [
+          495,
+          497
+        ]
+      ],
+      "baselineSha256": "9e0e726d82f1e9d4f608e1d12e8f64bf40c9c86b04819f637e029f475bff8880"
+    },
+    {
+      "path": "scripts/lib/check-canvas-media.js",
+      "category": "test",
+      "C": 313,
+      "B": 131,
+      "percent": 70.5,
+      "ranges": [
+        [
+          1,
+          453
+        ]
+      ],
+      "baselineSha256": null
+    },
+    {
+      "path": "apps/next/src/app/globals.css",
+      "category": "business",
+      "C": 1,
+      "B": 2,
+      "scope": "新增两份CSS导入与一条有效说明，其他工作区改动排除"
+    }
+  ],
+  "summary": {
+    "business": {
+      "C": 643,
+      "B": 275,
+      "percent": 70.04,
+      "meets70Percent": true
+    },
+    "test": {
+      "C": 317,
+      "B": 135,
+      "percent": 70.13,
+      "meets70Percent": true
+    }
+  }
+}

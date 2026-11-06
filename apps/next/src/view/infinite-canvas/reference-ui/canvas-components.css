@@ -1,0 +1,280 @@
+/* 独立重建的截图样式。所有规则都限定在 .hy-canvas-ui 内；不依赖 Tailwind preflight。 */
+.hy-canvas-ui{--hy-canvas:#0f0f0f;--hy-dot:#343436;--hy-node:#161619;--hy-panel:#18181a;--hy-raised:#212123;--hy-hover:#2a2a2c;--hy-line:#303033;--hy-selected:#7b7b7b;--hy-text:#ddd;--hy-muted:#777;--hy-gold:#806c35;--hy-radius-node:20px;--hy-radius-panel:24px;--hy-font:Arial,"Microsoft YaHei",sans-serif;color:var(--hy-text);font:12px/1.5 var(--hy-font);color-scheme:dark;text-align:left;isolation:isolate}
+.hy-canvas-ui *,.hy-canvas-ui *:before,.hy-canvas-ui *:after{box-sizing:border-box}
+/* 工作区用负 tabindex 接回快捷键焦点，不是可选择作品，不能出现浏览器默认整圈白框。 */
+/* 内部节点的业务选框仍由 selected 维护；这里只清掉画布根元素自己的额外 outline。 */
+.hy-canvas-ui:focus{outline:none}
+.hy-canvas-ui button,.hy-canvas-ui textarea,.hy-canvas-ui input{font:inherit;color:inherit;margin:0}
+.hy-canvas-ui button{border:0;cursor:pointer;background:none;display:inline-flex;align-items:center;justify-content:center;gap:4px;padding:0;line-height:1.3;flex-shrink:0}
+.hy-canvas-ui button:disabled{cursor:default;opacity:.38}
+/* F01–F03: no extra focus outline; a business border is independent of focus. */
+.hy-canvas-ui :is(button,input,textarea,select,[tabindex],[contenteditable]):is(:focus,:focus-visible){outline:none!important;outline-offset:0}
+.hy-canvas-ui :is(.hy-icon-button,.hy-submit,.hy-segmented button,textarea,input):is(:focus,:focus-visible,:active){box-shadow:none!important}
+.hy-canvas-ui button:not(:disabled):hover{filter:none}
+/* 画布组件遵循样式库的细线反馈；全局按钮规则不能在这里叠出第二圈轮廓。 */
+:root .hy-canvas-ui :is(button,[role=button]):not(:disabled):not([aria-disabled=true]):hover{outline:none}
+.hy-canvas-ui svg{flex-shrink:0;display:block}
+.hy-canvas-ui .hy-icon-button{width:28px;height:28px;border-radius:8px;color:#aaa}
+.hy-canvas-ui .hy-icon-button:hover:not(:disabled){background:#ffffff0a}
+.hy-canvas-ui .hy-icon-button[aria-pressed=true]{background:#ffffff18;color:#eee}
+.hy-canvas-ui .hy-chip{height:28px;border:1px solid #ffffff0a;border-radius:20px;padding:0 10px;background:var(--hy-raised);font-size:12px;white-space:nowrap;font-weight:600;gap:4px}
+.hy-canvas-ui .hy-chip.is-active{background:#474749;color:#eee}
+.hy-canvas-ui .hy-segmented{display:inline-flex;align-items:center;padding:3px;background:#2a2a2c;border-radius:20px;height:30px;flex-shrink:0}
+.hy-canvas-ui .hy-segmented button{height:24px;border-radius:16px;padding:0 10px;color:#999;font-size:12px;font-weight:600;white-space:nowrap}
+.hy-canvas-ui .hy-segmented button.is-active{background:#4a4a4b;color:#ddd}
+.hy-canvas-ui .hy-switch{width:36px;height:20px;border-radius:12px;background:#333335;padding:3px;justify-content:flex-start}
+.hy-canvas-ui .hy-switch span{width:14px;height:14px;border-radius:50%;background:#626265}
+.hy-canvas-ui .hy-switch.is-on{background:#ccc;justify-content:flex-end}
+.hy-canvas-ui .hy-switch.is-on span{background:#55555b}
+.hy-canvas-ui input[type=range]{appearance:none;height:4px;border-radius:3px;background:#444;accent-color:#ccc;min-width:0;cursor:pointer}
+.hy-canvas-ui input[type=range]::-webkit-slider-thumb{appearance:none;width:13px;height:13px;border-radius:50%;background:#ccc}
+.hy-canvas-ui.hy-dot-canvas,.hy-canvas-ui.hy-fixture{background-color:var(--hy-canvas);background-image:radial-gradient(ellipse 1px 1.6px at center,var(--hy-dot) 65%,transparent 100%);background-size:20px 20px;background-position:8px 5px}
+.hy-canvas-ui.hy-fixture{position:relative;width:650px;height:590px;overflow:hidden}
+.hy-canvas-ui.hy-fixture-video{height:570px;background-position:-2px 5px}
+.hy-canvas-ui.hy-fixture-audio{height:560px}
+.hy-canvas-ui .hy-fixture-node{position:absolute;left:186px;top:83px}
+.hy-canvas-ui.hy-fixture-video .hy-fixture-node{left:76px}
+.hy-canvas-ui .hy-fixture-panel{position:absolute;left:28px;top:376px}
+.hy-canvas-ui.hy-fixture-video .hy-fixture-panel{top:377px}
+.hy-canvas-ui .hy-node-shell{position:relative;width:284px;height:285px}
+.hy-canvas-ui .hy-node-video{width:502px}
+.hy-canvas-ui .hy-node-card{position:relative;display:flex;align-items:center;justify-content:center;width:100%;height:100%;background:var(--hy-node);border:2px solid #3e3e41;border-radius:var(--hy-radius-node);overflow:hidden}
+.hy-canvas-ui .hy-node-shell.is-selected .hy-node-card{border-color:var(--hy-selected);box-shadow:0 0 0 1px #ffffff09}
+.hy-canvas-ui .hy-node-label{position:absolute;top:-21px;left:7px;display:flex;align-items:center;gap:11px;height:20px;font-size:13px;line-height:20px;color:#eee}
+.hy-canvas-ui .hy-node-label strong{font-weight:600}
+.hy-canvas-ui .hy-node-empty{color:#666;display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;font-size:13px;font-weight:600}
+.hy-canvas-ui .hy-node-empty svg{color:#616163}
+.hy-canvas-ui .hy-node-empty small{font-size:12px;color:#49494b}
+.hy-canvas-ui .hy-node-text .hy-node-empty{transform:translateY(0px);gap:8px}
+.hy-canvas-ui .hy-node-text .hy-node-empty svg{margin-bottom:0}
+.hy-canvas-ui .hy-node-result{width:100%;height:100%;padding:20px;overflow:auto;white-space:pre-wrap}
+.hy-canvas-ui .hy-state-loading svg{animation:hy-spin 2s linear infinite}
+.hy-canvas-ui .hy-state-error .hy-node-empty{color:#c39898}
+.hy-canvas-ui .hy-state-error button{color:#ccc;text-decoration:underline;font-size:12px}
+@keyframes hy-spin{to{transform:rotate(360deg)}}
+@media(prefers-reduced-motion:reduce){.hy-canvas-ui .hy-state-loading svg{animation:none}}
+.hy-canvas-ui .hy-node-port{position:absolute;top:132px;width:22px;height:22px;border:2px solid #7b7b7b;border-radius:50%;color:#7b7b7b;background:#0f0f0f}
+.hy-canvas-ui .hy-node-port-input{left:-46px}
+.hy-canvas-ui .hy-node-port-output{right:-46px}
+.hy-canvas-ui .hy-node-image .hy-node-port,.hy-canvas-ui .hy-node-video .hy-node-port{width:18px;height:18px;top:134px;border-color:#343436;color:#343436}
+.hy-canvas-ui .hy-node-image .hy-node-port-input{left:-39px}.hy-canvas-ui .hy-node-image .hy-node-port-output{right:-39px}
+.hy-canvas-ui .hy-node-video .hy-node-port-input{left:-38px}.hy-canvas-ui .hy-node-video .hy-node-port-output{right:-38px}
+.hy-canvas-ui .hy-resize-grip{position:absolute;right:7px;bottom:7px;width:12px;height:12px;background:repeating-linear-gradient(135deg,transparent 0 3px,#777 3px 4.5px,transparent 4.5px 7px);clip-path:polygon(100% 0,100% 100%,0 100%)}
+.hy-canvas-ui .hy-node-actions{position:absolute;left:50%;top:-62px;transform:translateX(-50%);height:38px;padding:0 10px;display:flex;align-items:center;gap:0;border:1px solid #303033;border-radius:24px;background:#18181b;white-space:nowrap}
+.hy-canvas-ui .hy-node-actions .hy-icon-button{width:28px;height:28px}
+.hy-canvas-ui .hy-node-actions svg{width:14px;height:14px}
+.hy-canvas-ui .hy-node-actions i{height:17px;width:1px;background:#444;margin:0 5px}
+.hy-canvas-ui .hy-history-button{height:28px;color:#aaa;font-weight:600;margin-right:8px;font-size:12px}
+.hy-canvas-ui .hy-node-actions-text{width:233px;justify-content:space-around}
+.hy-canvas-ui .hy-node-actions-image,.hy-canvas-ui .hy-node-actions-video{width:168px}
+.hy-canvas-ui .hy-node-actions-audio{width:50px;justify-content:center}
+.hy-canvas-ui .hy-generation-panel{position:relative;width:600px;height:198px;background:var(--hy-panel);border:1px solid #303033;border-radius:var(--hy-radius-panel);padding:12px;color:#bbb}
+.hy-canvas-ui .hy-panel-image{height:194px}
+.hy-canvas-ui .hy-panel-video{height:163px}
+.hy-canvas-ui .hy-panel-audio{height:156px}
+.hy-canvas-ui .hy-panel-expand{position:absolute;right:6px;top:6px;width:24px;height:24px;background:#262627;border:1px solid #3a3a3c;color:#777}
+.hy-canvas-ui .hy-panel-expand svg{width:15px;height:15px}
+.hy-canvas-ui .hy-reference-add{width:52px;height:52px;border:1px dashed #48484a;border-radius:12px;color:#777;margin-bottom:8px}
+.hy-canvas-ui .hy-panel-image .hy-reference-add{width:40px;height:40px;margin:2px 0 12px 2px}
+.hy-canvas-ui .hy-panel-tools{display:flex;gap:6px;margin-bottom:6px}
+.hy-canvas-ui .hy-panel-tools .hy-chip{height:28px;border-radius:7px;background:#262627;padding:0 9px;font-size:11px;color:#999}
+.hy-canvas-ui .hy-panel-image .hy-panel-tools{margin-bottom:8px}
+.hy-canvas-ui .hy-panel-tabs{display:flex;gap:8px;margin-bottom:5px;align-items:center;padding-right:25px}
+.hy-canvas-ui .hy-panel-video .hy-segmented button{padding:0 10px;font-size:11px}
+.hy-canvas-ui .hy-panel-tabs .hy-chip{height:30px;font-size:11px;color:#aaa;background:#262627}
+.hy-canvas-ui textarea{display:block;width:100%;resize:none;border:0;background:transparent;outline:none;color:#ccc;height:42px;padding:1px 1px;line-height:20px;font-size:13px;font-weight:600}
+.hy-canvas-ui textarea::placeholder{color:#68686b;opacity:1}
+.hy-canvas-ui .hy-panel-text textarea{height:42px}
+.hy-canvas-ui .hy-panel-image textarea{height:35px}
+.hy-canvas-ui .hy-panel-video textarea,.hy-canvas-ui .hy-panel-audio textarea{height:50px}
+.hy-canvas-ui .hy-panel-footer{position:absolute;bottom:12px;left:12px;right:12px;display:flex;align-items:center;justify-content:space-between;gap:8px;height:30px}
+.hy-canvas-ui .hy-panel-text .hy-panel-footer{bottom:12px}
+.hy-canvas-ui .hy-panel-options,.hy-canvas-ui .hy-panel-submit{display:flex;align-items:center;gap:6px}
+.hy-canvas-ui .hy-panel-image .hy-panel-submit{gap:14px}
+.hy-canvas-ui .hy-panel-image .hy-panel-options .hy-chip{padding:0 9px}
+.hy-canvas-ui .hy-panel-audio .hy-panel-options .hy-chip{padding:0 10px}
+.hy-canvas-ui .hy-model-glow{box-shadow:0 0 14px #bcbcbc55;background:#3c3c3e;border-color:#555}
+.hy-canvas-ui .hy-cost{color:#4b4b4d;font-size:13px;font-weight:700;white-space:nowrap;display:flex;align-items:center;gap:4px}
+.hy-canvas-ui .hy-cost b{color:var(--hy-gold);font-size:16px;font-weight:400}
+.hy-canvas-ui .hy-submit{height:30px;width:30px;border-radius:50%;background:#ccc;color:#222}
+.hy-canvas-ui .hy-submit:disabled{opacity:1;background:#272729;color:#424244}
+.hy-canvas-ui .hy-add-menu{width:180px;padding:10px 8px;background:#18181a;border:1px solid #202022;border-radius:16px;box-shadow:0 10px 30px #0004}
+.hy-canvas-ui .hy-menu-heading{color:#707072;font-size:10px;font-weight:700;padding:0 5px 5px;height:20px}
+.hy-canvas-ui .hy-add-menu button{width:100%;height:37px;justify-content:flex-start;gap:13px;padding:0 8px;border-radius:7px;font-size:13px;font-weight:600}
+.hy-canvas-ui .hy-add-menu button:hover:not(:disabled){background:#2b2b2e}
+.hy-canvas-ui .hy-add-menu button small{background:#2b2b2e;color:#aaa;font-size:10px;padding:3px 5px;border-radius:3px;margin-left:-7px;white-space:nowrap}
+.hy-canvas-ui .hy-add-menu .hy-menu-heading:not(:first-child){margin-top:1px}
+.hy-canvas-ui .hy-canvas-dock{display:flex;align-items:center;gap:6px;width:max-content;height:48px;border:1px solid #38383a;background:#18181beF;border-radius:28px;padding:6px 8px;box-shadow:0 4px 15px #0005}
+.hy-canvas-ui .hy-canvas-dock .hy-icon-button{width:30px;height:30px;border-radius:50%;color:#999}
+.hy-canvas-ui .hy-canvas-dock .hy-dock-add{width:34px;height:34px;background:#e5e5e5;color:#161619;margin-right:4px}
+.hy-canvas-ui .hy-view-controls{display:flex;align-items:center;height:34px;padding:2px 5px;border:1px solid #333;background:#18181beF;border-radius:20px;width:max-content;gap:2px}
+.hy-canvas-ui .hy-zoom-value{width:43px;font-size:11px;color:#aaa}
+.hy-canvas-ui .hy-view-controls i,.hy-canvas-ui .hy-project-header i{height:14px;width:1px;background:#38383a;margin:0 4px}
+.hy-canvas-ui .hy-project-header{display:flex;align-items:center;background:#1c1c1e;border:1px solid #333;border-radius:10px;height:38px;padding:0 5px;width:max-content}
+.hy-canvas-ui .hy-project-header>button:first-child{padding:0 5px;gap:9px;height:100%}
+.hy-canvas-ui .hy-neutral-mark{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;background:#dadada;color:#222;border-radius:7px;font-size:12px;font-weight:700}
+.hy-canvas-ui .hy-project-header strong{font-size:12px}
+.hy-canvas-ui .hy-counters{display:flex;align-items:center;gap:6px;color:#555;font-size:10px;white-space:nowrap}
+.hy-canvas-ui .hy-counters i{height:10px;width:1px;background:#333;margin:0 5px}
+.hy-canvas-ui .hy-settings{width:700px;height:420px;border:1px solid #272727;background:#202020ed;border-radius:24px;padding:14px 19px 12px 11px;color:#888;box-shadow:0 10px 40px #0004}
+.hy-canvas-ui .hy-settings>header{height:40px;display:flex;align-items:center;justify-content:space-between;padding:0 6px 8px}
+.hy-canvas-ui .hy-settings>header strong{font-size:16px;color:#ccc}
+.hy-canvas-ui .hy-settings>header>div{display:flex;gap:8px;align-items:center}
+.hy-canvas-ui .hy-settings>header .hy-chip{border-radius:8px;font-size:11px;color:#888;background:#292929}
+.hy-canvas-ui .hy-settings-body{display:flex;gap:8px;height:calc(100% - 40px)}
+.hy-canvas-ui .hy-settings nav{width:92px;flex-shrink:0;padding:8px;background:#ffffff04;border-radius:16px;display:flex;flex-direction:column;gap:1px}
+.hy-canvas-ui .hy-settings nav button{height:35px;border-radius:12px;font-size:12px;justify-content:flex-start;padding:0 10px;font-weight:600;white-space:nowrap}
+.hy-canvas-ui .hy-settings nav button.is-active{background:#ffffff1a;color:#ccc}
+.hy-canvas-ui .hy-settings-content{padding:12px;flex:1;min-width:0;border-radius:16px;background:#ffffff03;overflow:auto}
+.hy-canvas-ui .hy-settings-content>strong{display:block;font-size:12px;margin-bottom:14px;color:#ccc}
+.hy-canvas-ui .hy-settings-grid{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:22px 18px 36px 32px repeat(4,22px);gap:12px 20px;align-items:center}
+.hy-canvas-ui .hy-setting-control{display:flex;align-items:center;justify-content:space-between;gap:5px;height:22px;font-size:12px;font-weight:600;white-space:nowrap;min-width:0}
+.hy-canvas-ui .hy-setting-control>span{flex:1}
+.hy-canvas-ui .hy-setting-control input[type=range]{width:88px}
+.hy-canvas-ui .hy-setting-control small{width:42px;text-align:right;color:#707070;font-size:10px}
+.hy-canvas-ui .hy-setting-control .hy-segmented{height:32px;border-radius:10px;padding:3px;background:#353535}
+.hy-canvas-ui .hy-setting-control .hy-segmented button{height:26px;border-radius:9px;font-size:12px;padding:0 12px}
+.hy-canvas-ui .hy-unverified-panel{padding:24px 0;font-size:12px}
+.hy-canvas-ui .hy-composer{width:1520px;height:900px;border-radius:24px;background:linear-gradient(180deg,#151517,#101012);border:1px solid #1c1c20;padding:11px;color:#888;overflow:hidden}
+.hy-canvas-ui .hy-composer>header{display:flex;align-items:center;gap:10px;height:48px;padding:0 4px 14px}
+.hy-canvas-ui .hy-composer>header strong{font-size:16px;color:#ddd}
+.hy-canvas-ui .hy-composer>header>span,.hy-canvas-ui .hy-composer>header>small{font-size:12px;font-weight:600}
+.hy-canvas-ui .hy-composer-header-right{margin-left:auto;display:flex;gap:8px;align-items:center}
+.hy-canvas-ui .hy-composer>header .hy-icon-button:first-child{background:#343436}
+.hy-canvas-ui .hy-export{padding:0 14px;background:#eee;color:#141416;font-weight:600;border-radius:9px;height:30px}
+.hy-canvas-ui .hy-composer-main{height:606px;display:grid;grid-template-columns:236px 1fr 276px;gap:12px}
+.hy-canvas-ui .hy-materials{position:relative;padding:10px 4px}
+.hy-canvas-ui .hy-materials-title{display:flex;justify-content:space-between;margin:0 2px 8px;font-size:12px}
+.hy-canvas-ui .hy-materials-title b,.hy-canvas-ui .hy-properties>b{color:#ccc;font-size:12px}
+.hy-canvas-ui .hy-materials .hy-segmented{width:100%;border-radius:10px;background:#202022;height:34px;justify-content:space-between}
+.hy-canvas-ui .hy-materials .hy-segmented button{border-radius:8px;height:28px;padding:0 13px}
+.hy-canvas-ui .hy-materials .hy-segmented button.is-active{background:#414143}
+.hy-canvas-ui .hy-material-empty{font-size:11px;font-weight:600;line-height:20px;padding:12px;background:#0002;border-radius:12px;margin:8px 0;color:#6c6c6e}
+.hy-canvas-ui .hy-materials .hy-material-empty{text-align:center}
+.hy-canvas-ui .hy-library-button{position:absolute;bottom:8px;left:4px;right:4px;height:34px;background:#19191b;border-radius:10px;font-weight:600}
+.hy-canvas-ui .hy-preview{position:relative;border-radius:12px;background:#101010;display:flex;align-items:center;justify-content:center}
+.hy-canvas-ui .hy-preview-empty{display:flex;flex-direction:column;align-items:center;gap:12px;color:#68686a;transform:translateY(-30px)}
+.hy-canvas-ui .hy-preview-empty b{font-size:13px}
+.hy-canvas-ui .hy-preview footer{position:absolute;bottom:8px;left:6px;right:6px;display:flex;align-items:center;justify-content:space-between;height:50px}
+.hy-canvas-ui .hy-preview footer>span{display:flex;gap:8px;font-size:12px;font-weight:600}
+.hy-canvas-ui .hy-preview footer b{color:#ddd}
+.hy-canvas-ui .hy-preview-play{position:absolute;left:50%;transform:translateX(-50%);width:36px;height:36px;border-radius:50%;background:#eee;color:#141416}
+.hy-canvas-ui .hy-preview-ratio{font-weight:600;font-size:12px}
+.hy-canvas-ui .hy-properties{padding:10px 12px 0 16px}
+.hy-canvas-ui .hy-properties .hy-material-empty{margin:16px 0 12px}
+.hy-canvas-ui .hy-shortcut{display:flex;justify-content:space-between;margin:10px 0;font-weight:600;font-size:12px}
+.hy-canvas-ui kbd{background:#303033;border-radius:4px;font:10px Arial;padding:2px 5px;color:#999}
+.hy-canvas-ui .hy-timeline{height:222px;border-radius:16px;background:linear-gradient(#1a1a1c,#18181a);padding:8px 10px;margin-top:0;overflow:auto}
+.hy-canvas-ui .hy-timeline-tools{display:flex;align-items:center;gap:8px;height:34px}
+.hy-canvas-ui .hy-timeline-tools .hy-icon-button{width:26px;color:#555}
+.hy-canvas-ui .hy-timeline-tools>div{flex:1}
+.hy-canvas-ui .hy-timeline-tools input{width:96px}
+.hy-canvas-ui .hy-timeline-scroll{position:relative}
+.hy-canvas-ui .hy-ruler{display:flex;height:30px;font-size:10px;color:#777;align-items:flex-start;background:repeating-linear-gradient(90deg,transparent 0 19px,#4446 19px 20px);background-size:80px 5px;background-repeat:repeat-x;background-position:82px bottom}
+.hy-canvas-ui .hy-ruler>span{flex:1}
+.hy-canvas-ui .hy-ruler>span:first-child{flex:0 0 82px}
+.hy-canvas-ui .hy-track{display:flex;gap:6px;margin-bottom:4px;height:60px}
+.hy-canvas-ui .hy-track>div{display:flex;align-items:center;justify-content:center;gap:12px;width:76px;border-radius:9px;background:#212123;flex-shrink:0}
+.hy-canvas-ui .hy-track>section{background:#212123;border-radius:9px;flex:1}
+.hy-canvas-ui .hy-track:nth-of-type(n+3){height:48px}
+.hy-canvas-ui .hy-playhead{position:absolute;top:4px;bottom:0;left:82px;width:1px;background:#bbb;pointer-events:none}
+.hy-canvas-ui .hy-playhead:before{content:'';position:absolute;top:0;border:5px solid transparent;border-left-color:#eee}
+.hy-canvas-ui .hy-add-track{font-size:11px;height:22px;width:76px}
+.hy-canvas-ui .hy-more-menu{width:135px;background:#18181a;border:1px solid #303033;padding:6px;border-radius:12px;box-shadow:0 6px 20px #0004}
+.hy-canvas-ui .hy-more-menu button{display:flex;justify-content:flex-start;gap:10px;padding:0 9px;height:36px;width:100%;font-size:12px;border-radius:7px}
+.hy-canvas-ui .hy-more-menu button:hover{background:#2a2a2c}
+
+.hy-canvas-ui .hy-open-composer{height:32px;padding:0 16px;border-radius:8px;background:#29292c;border:1px solid #44444a;color:#ccc;font-size:12px;font-weight:700;margin-top:8px}
+.hy-canvas-ui .hy-node-composition .hy-node-card{background:#18191c}
+.hy-canvas-ui .hy-node-composition .hy-node-empty{color:#bbb;gap:10px}
+.hy-canvas-ui .hy-node-composition .hy-node-empty svg{color:#bbb;width:24px;height:24px}
+.hy-canvas-ui .hy-more-menu{width:132px;border-radius:16px;padding:6px}
+.hy-canvas-ui .hy-more-menu button{height:38px;font-size:13px;font-weight:700;padding:0 12px;white-space:nowrap}
+
+/* 新增工程按钮后固定 210px 已不足，名称应与图标共同决定标题栏实际宽度。 */
+/* 沿用原来的圆角、间距和高度，仅解除总宽度挤压，不另造标题组件。 */
+/* 100% 上限取宿主可用区，浅色与深色使用同样的名称布局。 */
+.hy-canvas-ui .hy-project-header{width:max-content;max-width:100%;height:36px;border:0;border-radius:22px;padding:0 8px;background:#19191b;gap:8px}
+.hy-canvas-ui .hy-project-header>button:first-child{padding:0 2px;gap:8px}
+.hy-canvas-ui .hy-project-header .hy-neutral-mark{width:22px;height:22px;border-radius:9px;font-size:11px}
+.hy-canvas-ui .hy-down-chevron{font-size:13px;color:#666}
+.hy-canvas-ui .hy-project-name{gap:5px;margin-right:auto}
+.hy-canvas-ui .hy-project-header .hy-icon-button{width:24px;height:24px}
+.hy-canvas-ui .hy-project-header .hy-icon-button svg{width:14px;height:14px}
+.hy-canvas-ui .hy-canvas-dock{height:48px;gap:6px}
+.hy-canvas-ui .hy-canvas-dock svg{width:18px;height:18px}
+.hy-canvas-ui .hy-canvas-dock .hy-dock-add{width:38px;height:38px;margin-right:2px}
+.hy-canvas-ui .hy-canvas-dock .hy-dock-add svg{width:24px;height:24px}
+.hy-canvas-ui .hy-view-cluster{display:flex;align-items:center;gap:8px}
+.hy-canvas-ui .hy-view-controls{height:36px;border:0;gap:2px;padding:3px 5px}
+.hy-canvas-ui .hy-view-controls .hy-icon-button{width:26px;height:26px}
+.hy-canvas-ui .hy-view-controls .hy-icon-button svg{width:13px;height:13px}
+.hy-canvas-ui .hy-view-controls .hy-grid-button{background:#38383a;border-radius:7px}
+/* 点阵关闭后取消持续底色，鼠标再次移入仍可使用普通悬停反馈。 */
+.hy-canvas-ui .hy-view-controls .hy-grid-button[aria-pressed=false]:not(:hover){background:transparent}
+.hy-canvas-ui .hy-zoom-value{width:61px;gap:5px;color:#999}
+.hy-canvas-ui .hy-round-button{width:36px;height:36px;border-radius:50%;background:#18181a;border:1px solid #363638}
+
+.hy-canvas-ui .hy-view-controls .hy-icon-button{width:28px;height:28px}
+.hy-canvas-ui .hy-view-controls{gap:4px}
+.hy-canvas-ui .hy-zoom-value{width:63px;font-weight:600}
+.hy-canvas-ui .hy-counters{width:110px;height:30px;border-radius:18px;background:#1b1b1d;padding:0 10px;gap:5px;color:#aaa;font-size:10px;line-height:1}
+.hy-canvas-ui .hy-counters span:nth-child(2){margin-right:6px}
+.hy-canvas-ui .hy-counters svg:nth-last-child(1){margin-left:10px}
+.hy-canvas-ui .hy-canvas-dock{border:0;padding:4px 6px 4px 2px;gap:8px}
+
+/* Screenshot-based geometry lives in canvas-components.css. These are CSS-evidence state/type refinements. */
+.hy-canvas-ui{--hy-font:"Poppins",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;font-family:var(--hy-font);font-synthesis:none;text-rendering:optimizeLegibility;-webkit-font-smoothing:antialiased}
+.hy-canvas-ui .hy-node-label{color:#fff}
+.hy-canvas-ui .hy-node-actions .hy-icon-button{color:rgba(255,255,255,.7);border:0;transition:background .2s,color .2s}
+.hy-canvas-ui .hy-node-actions .hy-icon-button:hover:not(:disabled){color:#fff;background:rgba(255,255,255,.1)}
+.hy-canvas-ui .hy-segmented button{font-weight:400;border:0;color:rgba(255,255,255,.6);transition:background .2s,color .2s}
+.hy-canvas-ui .hy-segmented button:hover:not(:disabled){color:rgba(255,255,255,.8);background:rgba(255,255,255,.08)}
+.hy-canvas-ui .hy-segmented button.is-active{color:rgba(255,255,255,.95);background:rgba(255,255,255,.15)}
+.hy-canvas-ui .hy-panel-video .hy-segmented button,.hy-canvas-ui .hy-panel-audio .hy-segmented button{font-size:11px}
+.hy-canvas-ui .hy-segmented button:disabled{opacity:.4;cursor:not-allowed}
+.hy-canvas-ui .hy-panel-options .hy-chip{font-weight:400;color:rgba(255,255,255,.75);transition:background .3s,color .3s,transform .3s}
+.hy-canvas-ui .hy-panel-options .hy-chip:not(.hy-model-glow):hover:not(:disabled){color:rgba(255,255,255,.9);background:rgba(255,255,255,.12);transform:translateY(-1px)}
+.hy-canvas-ui .hy-generation-panel textarea{color:#fff;font-size:13px;font-weight:400;line-height:1.5;letter-spacing:normal;white-space:pre-wrap;overflow-wrap:break-word;word-break:break-word;caret-color:#fff;border:0;outline:0;background:transparent}
+.hy-canvas-ui .hy-generation-panel textarea::placeholder{color:rgba(255,255,255,.35);font-weight:400;opacity:1}
+.hy-canvas-ui .hy-add-menu button{font-weight:500;border:0;transition:background .15s}
+.hy-canvas-ui .hy-add-menu button:hover:not(:disabled){background:rgba(255,255,255,.086)}
+.hy-canvas-ui .hy-add-menu button:active:not(:disabled){background:rgba(255,255,255,.14)}
+.hy-canvas-ui .hy-add-menu button small{font-size:10px;font-weight:600;font-style:italic}
+.hy-canvas-ui .hy-typography-sample{white-space:pre-wrap;overflow-wrap:break-word;line-height:1.5;margin-top:18px;color:#fff}
+
+/* Scoped source geometry refinements: do not apply media-specific rules to settings. */
+.hy-canvas-ui .hy-node-actions .hy-icon-button{border-radius:16px}
+.hy-canvas-ui :is(.hy-panel-audio,.hy-panel-video) .hy-segmented button{height:auto;padding:4px 10px;line-height:1.5;border-radius:12px}
+.hy-canvas-ui :is(.hy-panel-audio,.hy-panel-video) .hy-segmented button.is-active{box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.hy-canvas-ui .hy-panel-options .hy-chip:not(.hy-model-glow){height:auto;max-width:220px;padding:4px 10px;border-radius:16px;line-height:1.5;background:rgba(255,255,255,.04);box-shadow:0 2px 4px rgba(0,0,0,.15)}
+.hy-canvas-ui .hy-panel-options .hy-chip:not(.hy-model-glow):hover:not(:disabled){background:rgba(255,255,255,.12);box-shadow:0 3px 6px rgba(0,0,0,.25)}
+.hy-canvas-ui .hy-generation-panel textarea{padding:0 2px}
+.hy-canvas-ui .hy-add-menu button{line-height:1.5;border-radius:10px}
+/* 鼠标焦点不充当业务选中；只有键盘定位借用淡底提示当前位置，不添加主题光圈。 */
+/* 图标、模式和胶囊没有独立按下色证据，按住仍保持其悬停状态，不擅自添加缩放。 */
+.hy-canvas-ui :is(.hy-add-menu button,.hy-icon-button,.hy-chip):focus-visible:not(:disabled){background:rgba(255,255,255,.08)}
+/* 节点标题按二十个 UTF-16 单元截断；这里仅兜住过窄几何，完整名字仍由 title 提供。 */
+.hy-canvas-ui .hy-node-label strong{display:block;max-width:calc(100% - 24px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* 胶囊的阴影和向上浮动属于业务反馈，不能用父级 overflow:hidden 将它们裁掉。 */
+/* 省略只作用于文字 span；参数栏自身仍给悬停阴影和比例浮层保留绘制空间。 */
+.hy-canvas-ui .hy-generation-panel .hy-panel-options{min-width:0}
+.hy-canvas-ui .hy-generation-panel .hy-panel-options .hy-chip{min-width:0}
+.hy-canvas-ui .hy-chip>span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* 名称可占两百像素，超长才省略；完整名称仍保留在原按钮 title 中。 */
+/* 名称是唯一可收缩区，工程图标不能互相压扁挤进文字。 */
+/* 原来的 flex:1 在零剩余宽度时把名称完全吃掉，max-content 可保留短名的自然宽度。 */
+/* 最大名称宽度只控制显示，不截断用户保存的标题字符串。 */
+/* title 的全名悬停提示来自组件，CSS 不承担重命名或文档迁移。 */
+/* 工具按钮继续使用原有图标点击面积，不靠压缩按钮来挤出文字空间。 */
+/* 这里不改 hover、active 与 focus 颜色，已确认的触摸效果继续由公共规则控制。 */
+/* 标题栏本身不设置 overflow:hidden，按钮的悬停底色与焦点反馈仍能正常绘制。 */
+/* 只有 strong 负责文字省略，长名字不会把保存和刷新动作推出容器。 */
+.hy-canvas-ui .hy-project-header>button{flex-shrink:0}
+.hy-canvas-ui .hy-project-header>.hy-project-name{min-width:0;max-width:200px;flex:0 1 auto}
+.hy-canvas-ui .hy-project-name strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* 比例选项从所属面板向上展开；不进入节点布局测量，也不会推着节点和连线移动。 */
+.hy-canvas-ui .hy-ratio-popup{position:absolute;right:12px;bottom:48px;z-index:2;padding:6px;border:1px solid #303033;border-radius:12px;background:#202022;box-shadow:0 8px 22px #0005}
+/* 高对比度模式只恢复系统键盘标记，普通模式仍严格使用资料中的无额外边框反馈。 */
+@media(forced-colors:active){.hy-canvas-ui :is(button,[role=button],input,textarea):focus-visible{outline:1px solid Highlight!important}}
+@media(prefers-reduced-motion:reduce){.hy-canvas-ui *{transition:none!important;animation:none!important}}

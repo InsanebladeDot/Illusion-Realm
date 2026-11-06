@@ -1,0 +1,13 @@
+{
+  "evidence": "Pure reducer with real React Flow; not DOM FPS or manual drag proof",
+  "before": {
+    "nodes": 300,
+    "idReads": 90600,
+    "unchangedNodeReused": false
+  },
+  "after": {
+    "nodes": 300,
+    "idReads": 301,
+    "unchangedNodeReused": true
+  }
+}

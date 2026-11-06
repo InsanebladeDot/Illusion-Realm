@@ -1,0 +1,311 @@
+{
+  "baseline": "Original infinite-canvas task baseline; continuation is the same task, not a new baseline. All newly added canvas/reference/shared schema/locale/test files counted in full.",
+  "method": "Physical nonempty lines. Pure meaningful Chinese comments count as C; mixed code/comment lines count only as B; delimiters and English-only imported notes excluded. Existing integration files count only identified canvas changes. Package/lock/Markdown/JSON reports and prior accepted fill-only CSS update excluded.",
+  "files": [
+    {
+      "path": "apps/next/src/view/infinite-canvas/canvas-document.ts",
+      "category": "business",
+      "C": 8,
+      "B": 18,
+      "percent": 30.77,
+      "scope": "new file: full text"
+    },
+    {
+      "path": "apps/next/src/view/infinite-canvas/canvas-editor-context.tsx",
+      "category": "business",
+      "C": 7,
+      "B": 19,
+      "percent": 26.92,
+      "scope": "new file: full text"
+    },
+    {
+      "path": "apps/next/src/view/infinite-canvas/canvas-model.ts",
+      "category": "business",
+      "C": 28,
+      "B": 73,
+      "percent": 27.72,
+      "scope": "new file: full text"
+    },
+    {
+      "path": "apps/next/src/view/infinite-canvas/canvas-node.tsx",
+      "category": "business",
+      "C": 5,
+      "B": 49,
+      "percent": 9.26,
+      "scope": "new file: full text"
+    },
+    {
+      "path": "apps/next/src/view/infinite-canvas/canvas-overlay.tsx",
+      "category": "business",
+      "C": 7,
+      "B": 22,
+      "percent": 24.14,
+      "scope": "new file: full text"
+    },
+    {
+      "path": "apps/next/src/view/infinite-canvas/canvas-reducer.ts",
+      "category": "business",
+      "C": 39,
+      "B": 112,
+      "percent": 25.83,
+      "scope": "new file: full text"
+    },
+    {
+      "path": "apps/next/src/view/infinite-canvas/canvas-toolbar.tsx",
+      "category": "business",
+      "C": 2,
+      "B": 24,
+      "percent": 7.69,
+      "scope": "new file: full text"
+    },
+    {
+      "path": "apps/next/src/view/infinite-canvas/canvas.module.css",
+      "category": "business",
+      "C": 4,
+      "B": 33,
+      "percent": 10.81,
+      "scope": "new file: full text"
+    },
+    {
+      "path": "apps/next/src/view/infinite-canvas/infinite-canvas-page.tsx",
+      "category": "business",
+      "C": 5,
+      "B": 116,
+      "percent": 4.13,
+      "scope": "new file: full text"
+    },
+    {
+      "path": "apps/next/src/view/infinite-canvas/reference-ui/canvas-chrome.tsx",
+      "category": "business",
+      "C": 14,
+      "B": 55,
+      "percent": 20.29,
+      "scope": "new file: full text"
+    },
+    {
+      "path": "apps/next/src/view/infinite-canvas/reference-ui/canvas-components.css",
+      "category": "business",
+      "C": 12,
+      "B": 247,
+      "percent": 4.63,
+      "scope": "new file: full text"
+    },
+    {
+      "path": "apps/next/src/view/infinite-canvas/reference-ui/canvas-icon.tsx",
+      "category": "business",
+      "C": 1,
+      "B": 47,
+      "percent": 2.08,
+      "scope": "new file: full text"
+    },
+    {
+      "path": "apps/next/src/view/infinite-canvas/reference-ui/canvas-settings.tsx",
+      "category": "business",
+      "C": 6,
+      "B": 20,
+      "percent": 23.08,
+      "scope": "new file: full text"
+    },
+    {
+      "path": "apps/next/src/view/infinite-canvas/reference-ui/components.tsx",
+      "category": "business",
+      "C": 17,
+      "B": 39,
+      "percent": 30.36,
+      "scope": "new file: full text"
+    },
+    {
+      "path": "apps/next/src/view/infinite-canvas/reference-ui/composition-editor.tsx",
+      "category": "business",
+      "C": 3,
+      "B": 18,
+      "percent": 14.29,
+      "scope": "new file: full text"
+    },
+    {
+      "path": "apps/next/src/view/infinite-canvas/reference-ui/generation-panel.tsx",
+      "category": "business",
+      "C": 15,
+      "B": 56,
+      "percent": 21.13,
+      "scope": "new file: full text"
+    },
+    {
+      "path": "apps/next/src/view/infinite-canvas/reference-ui/node-components.tsx",
+      "category": "business",
+      "C": 9,
+      "B": 40,
+      "percent": 18.37,
+      "scope": "new file: full text"
+    },
+    {
+      "path": "apps/next/src/view/infinite-canvas/use-canvas-editor.ts",
+      "category": "business",
+      "C": 24,
+      "B": 86,
+      "percent": 21.82,
+      "scope": "new file: full text"
+    },
+    {
+      "path": "apps/next/src/view/infinite-canvas/use-canvas-persistence.ts",
+      "category": "business",
+      "C": 17,
+      "B": 44,
+      "percent": 27.87,
+      "scope": "new file: full text"
+    },
+    {
+      "path": "apps/next/src/app/canvas/page.tsx",
+      "category": "business",
+      "C": 1,
+      "B": 5,
+      "percent": 16.67,
+      "scope": "new file: full text"
+    },
+    {
+      "path": "apps/next/src/i18n/locales/zh-CN/canvas.ts",
+      "category": "business",
+      "C": 1,
+      "B": 105,
+      "percent": 0.94,
+      "scope": "new file: full text"
+    },
+    {
+      "path": "apps/next/src/i18n/locales/en/canvas.ts",
+      "category": "business",
+      "C": 1,
+      "B": 105,
+      "percent": 0.94,
+      "scope": "new file: full text"
+    },
+    {
+      "path": "packages/shared/src/schemas/infinite-canvas.schema.ts",
+      "category": "business",
+      "C": 6,
+      "B": 19,
+      "percent": 24.0,
+      "scope": "new file: full text"
+    },
+    {
+      "path": "packages/shared/src/types/infinite-canvas.ts",
+      "category": "business",
+      "C": 1,
+      "B": 1,
+      "percent": 50.0,
+      "scope": "new file: full text"
+    },
+    {
+      "path": "scripts/smoke-infinite-canvas.js",
+      "category": "test",
+      "C": 97,
+      "B": 401,
+      "percent": 19.48,
+      "scope": "new file: full text"
+    },
+    {
+      "path": "apps/next/src/utils/userDataDocument.ts",
+      "category": "business",
+      "C": 0,
+      "B": 1,
+      "percent": 0.0,
+      "scope": "canvas-specific integration lines; unrelated workspace changes excluded"
+    },
+    {
+      "path": "packages/shared/src/types/userData.ts",
+      "category": "business",
+      "C": 1,
+      "B": 1,
+      "percent": 50.0,
+      "scope": "canvas-specific integration lines; unrelated workspace changes excluded"
+    },
+    {
+      "path": "packages/shared/src/schemas/index.ts",
+      "category": "business",
+      "C": 0,
+      "B": 1,
+      "percent": 0.0,
+      "scope": "canvas-specific integration lines; unrelated workspace changes excluded"
+    },
+    {
+      "path": "packages/shared/src/types/index.ts",
+      "category": "business",
+      "C": 0,
+      "B": 3,
+      "percent": 0.0,
+      "scope": "canvas-specific integration lines; unrelated workspace changes excluded"
+    },
+    {
+      "path": "apps/next/src/app/globals.css",
+      "category": "business",
+      "C": 0,
+      "B": 1,
+      "percent": 0.0,
+      "scope": "canvas-specific integration lines; unrelated workspace changes excluded"
+    },
+    {
+      "path": "apps/next/src/data/navigation.ts",
+      "category": "business",
+      "C": 1,
+      "B": 2,
+      "percent": 33.33,
+      "scope": "canvas-specific integration lines; unrelated workspace changes excluded"
+    },
+    {
+      "path": "apps/next/src/components/MobileBottomNav.tsx",
+      "category": "business",
+      "C": 1,
+      "B": 2,
+      "percent": 33.33,
+      "scope": "canvas-specific integration lines; unrelated workspace changes excluded"
+    },
+    {
+      "path": "apps/next/src/i18n/locales/zh-CN/nav.ts",
+      "category": "business",
+      "C": 0,
+      "B": 1,
+      "percent": 0.0,
+      "scope": "canvas-specific integration lines; unrelated workspace changes excluded"
+    },
+    {
+      "path": "apps/next/src/i18n/locales/en/nav.ts",
+      "category": "business",
+      "C": 0,
+      "B": 1,
+      "percent": 0.0,
+      "scope": "canvas-specific integration lines; unrelated workspace changes excluded"
+    },
+    {
+      "path": "apps/next/src/i18n/locales/zh-CN/index.ts",
+      "category": "business",
+      "C": 0,
+      "B": 2,
+      "percent": 0.0,
+      "scope": "canvas-specific integration lines; unrelated workspace changes excluded"
+    },
+    {
+      "path": "apps/next/src/i18n/locales/en/index.ts",
+      "category": "business",
+      "C": 0,
+      "B": 2,
+      "percent": 0.0,
+      "scope": "canvas-specific integration lines; unrelated workspace changes excluded"
+    }
+  ],
+  "summary": {
+    "business": {
+      "C": 236,
+      "B": 1370,
+      "percent": 14.69,
+      "requiredC": 3197,
+      "meets70Percent": false
+    },
+    "test": {
+      "C": 97,
+      "B": 401,
+      "percent": 19.48,
+      "requiredC": 936,
+      "meets70Percent": false
+    }
+  },
+  "review": "人工核对职责、生命周期、连接约束、焦点及失败恢复说明；旧审计遗漏了 reference-ui 等新增文件，旧百分比不作为当前验收结果。当前仍低于70%，不标记注释规范验收通过。"
+}

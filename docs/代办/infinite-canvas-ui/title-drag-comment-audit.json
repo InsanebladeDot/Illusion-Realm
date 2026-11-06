@@ -1,0 +1,183 @@
+{
+  "baseline": "本轮画布标题与拖动更新优化前的工作区快照。",
+  "baselineDirectory": "C:\\Users\\18305\\AppData\\Local\\Temp\\ir-canvas-title-drag-baseline-qjo_iluy",
+  "method": "新增文件全文；已有文件只计新增及替换后的行。混合行只计 B。排除空行、注释定界符、纯类型标记与完全相同的注释。中文说明候选经过职责、机制、边界和证据核对，不把数量扫描单独视为有效性证明。",
+  "files": [
+    {
+      "path": "apps/next/src/view/infinite-canvas/canvas-editor-context.tsx",
+      "category": "business",
+      "C": 20,
+      "B": 13,
+      "ranges": [
+        [
+          3,
+          3
+        ],
+        [
+          35,
+          66
+        ]
+      ],
+      "excludedCommentLines": 0,
+      "baselineSha256": "d0926fd164ede4bb93659784d0c78f239934df8313176050168cefa1eedcc701"
+    },
+    {
+      "path": "apps/next/src/view/infinite-canvas/canvas-node.tsx",
+      "category": "business",
+      "C": 5,
+      "B": 3,
+      "ranges": [
+        [
+          6,
+          6
+        ],
+        [
+          34,
+          39
+        ],
+        [
+          102,
+          102
+        ]
+      ],
+      "excludedCommentLines": 0,
+      "baselineSha256": "81e7186e54b1de3609e5a8bda81f2e83410ac3173ac2870d22cf9993c6033953"
+    },
+    {
+      "path": "apps/next/src/view/infinite-canvas/canvas-reducer.ts",
+      "category": "business",
+      "C": 9,
+      "B": 4,
+      "ranges": [
+        [
+          68,
+          74
+        ],
+        [
+          199,
+          202
+        ],
+        [
+          204,
+          205
+        ]
+      ],
+      "excludedCommentLines": 0,
+      "baselineSha256": "62c7c24a6e2696067e88b5cbd937dab683b551a44c02f372a916e7d72821219e"
+    },
+    {
+      "path": "apps/next/src/view/infinite-canvas/canvas.module.css",
+      "category": "business",
+      "C": 3,
+      "B": 1,
+      "ranges": [
+        [
+          10,
+          13
+        ]
+      ],
+      "excludedCommentLines": 0,
+      "baselineSha256": "e29fd185e758b3e5c472c4962fa58745edf07141174052ee067b1b76af2666b2"
+    },
+    {
+      "path": "apps/next/src/view/infinite-canvas/reference-ui/canvas-components.css",
+      "category": "business",
+      "C": 12,
+      "B": 3,
+      "ranges": [
+        [
+          194,
+          197
+        ],
+        [
+          264,
+          274
+        ]
+      ],
+      "excludedCommentLines": 0,
+      "baselineSha256": "58b33763b00455ad7452e4eb38dae60e741a4c4874e927e3da4cd5c481fd26a3"
+    },
+    {
+      "path": "apps/next/src/view/infinite-canvas/use-canvas-persistence.ts",
+      "category": "business",
+      "C": 15,
+      "B": 3,
+      "ranges": [
+        [
+          6,
+          6
+        ],
+        [
+          22,
+          38
+        ]
+      ],
+      "excludedCommentLines": 0,
+      "baselineSha256": "6cdccac60d0cf17cccfef2692f528e9e2a858db1cb398fad51d7fa5ea84feaba"
+    },
+    {
+      "path": "scripts/lib/check-canvas-drag-model.js",
+      "category": "test",
+      "C": 99,
+      "B": 46,
+      "ranges": [
+        [
+          1,
+          148
+        ]
+      ],
+      "excludedCommentLines": 0,
+      "baselineSha256": null
+    },
+    {
+      "path": "scripts/smoke-infinite-canvas.js",
+      "category": "test",
+      "C": 60,
+      "B": 22,
+      "ranges": [
+        [
+          470,
+          473
+        ],
+        [
+          479,
+          557
+        ],
+        [
+          592,
+          592
+        ]
+      ],
+      "excludedCommentLines": 0,
+      "baselineSha256": "c5a0320ad2918f24689b59f3ed416293da780b5b6b44eb9972f29c0c9ccd680d"
+    },
+    {
+      "path": "scripts/verify-canvas-project.js",
+      "category": "test",
+      "C": 3,
+      "B": 1,
+      "ranges": [
+        [
+          355,
+          358
+        ]
+      ],
+      "excludedCommentLines": 0,
+      "baselineSha256": "d1bc0d88c77115d30ce7f12d42029fb97a96797f53a5c24cd725f8fb967e3636"
+    }
+  ],
+  "totals": {
+    "business": {
+      "C": 64,
+      "B": 27,
+      "percent": 70.33,
+      "pass70": true
+    },
+    "test": {
+      "C": 162,
+      "B": 69,
+      "percent": 70.13,
+      "pass70": true
+    }
+  }
+}

@@ -1,0 +1,78 @@
+/* 宿主与图引擎读取组件主题 token，改变镜头或应用主题都不会重建节点数据。 */
+/* 根背景、点阵、连线和框选分别取语义色，避免白色主题只换卡片却留下黑色宿主。 */
+/* 卡片几何仍由资料包维护；本文件只控制工作区定位、滚动和图引擎适配。 */
+/* 工作区背景使用主题 token，React Flow 本身透明以露出同一个底板。 */
+/* 点阵色由 --hy-dot 传给图库，不直接用深色截图的灰点覆盖白色主题。 */
+/* 连线和连接中的橡皮筋各取明确颜色，浅底不会出现不可见白线。 */
+/* 框选背景保持半透明，框选只反馈 UI 状态，不修改媒体像素。 */
+/* 这些变量在 CSS 层传播，主题变化不会触发作品 restore 或清空撤销栈。 */
+.workspace { position: relative; height: 100%; overflow: hidden; isolation: isolate; background: var(--hy-canvas); --xy-background-color: transparent; --xy-background-pattern-dots-color: var(--hy-dot); --xy-edge-stroke: var(--hy-edge); --xy-edge-stroke-selected: var(--hy-edge-selected); --xy-connectionline-stroke: var(--hy-edge-selected); --xy-selection-background-color: var(--hy-selection); --xy-selection-border: 1px solid #777; --xy-node-boxshadow-hover: none; }
+/* 标题栏按可用主区限制上限，不再由固定总宽度把画布名挤成几像素。 */
+/* 导航开合改变的是父容器，最大宽度跟父容器走，不重新拼导航偏移。 */
+/* 保存状态仍在标题栏下方，名称增宽不会覆盖主区的右边界。 */
+.identity { position: absolute; top: 18px; left: 18px; max-width: calc(100% - 36px); z-index: 3; }
+/* 保存状态是辅助消息，不沿用深色正文白色；颜色不作为保存是否成功的唯一信号。 */
+.persistence { margin-top: 5px; padding-left: 12px; color: var(--hy-muted); font-size: 10px; }
+.toolbar { position: absolute; bottom: 22px; left: 50%; transform: translateX(-50%); z-index: 3; }
+.viewTools { position: absolute; bottom: 22px; left: 18px; z-index: 3; }
+.counter { position: absolute; bottom: 22px; right: 18px; pointer-events: none; }
+/* 空画布的邀请文字与虚线圆圈都使用浅色语义值，真实控件仍只有一个添加入口。 */
+/* empty 的绝对定位不参与节点世界坐标，不会写到用户图文档里。 */
+.empty { position: absolute; left: 50%; top: 45%; transform: translate(-50%, -50%); flex-direction: column; gap: 14px !important; color: var(--hy-muted) !important; }
+.empty > span { display: grid; place-items: center; width: 64px; height: 64px; border-radius: 50%; border: 1px dashed var(--hy-line); }
+.empty strong { font-size: 15px; font-weight: 500; color: var(--hy-text); }
+.empty small { font-size: 11px; }
+.message { position: absolute; top: 75px; left: 50%; transform: translateX(-50%); max-width: calc(100% - 32px); font-size: 12px; color: var(--hy-muted); pointer-events: none; text-align: center; }
+/* 导入错误不占主布局高度，长名称在可用宽度中换行，不把节点和底栏推离位置。 */
+/* 消息不吃鼠标，用户仍能点击它后方的节点继续修复错误。 */
+.message:empty { display: none; }
+.menu { position: absolute; z-index: 5; max-height: calc(100% - 36px); overflow-y: auto; border-radius: 16px; }
+.node { position: relative; width: 284px; }
+.node[data-kind="video"] { width: 502px; }
+/* 自定义卡片仍用原外壳，端口跟随卡片中心，不再保留旧方形的固定高度。 */
+/* data-card 是明确的尺寸方案标记，只对已配置卡片启用覆盖。 */
+/* 旧卡继续走资料库的默认宽高，不被全局强制改成方形。 */
+/* article 宽度由节点 data 提供，shell 采用百分之百跟随。 */
+/* height 使用当前节点的变量，不从另一个节点读取同名尺寸。 */
+/* 相同变量名在各 article 作用域独立，不会让后改卡片影响前一张。 */
+/* 标题在外壳上方，参数在外壳下方，定制高度不把它们算进去。 */
+/* 媒体内容填在 shell 内，仍由原圆角裁切边界管理。 */
+/* 端口尺寸十八像素，所以中心位置减九像素。 */
+/* 端口按新高度居中，左右连线不会留在旧方卡的中线。 */
+/* Handle 自带变换在已有适配规则清掉，避免又减一次半高。 */
+/* 数据更新后图库重新测量节点外壳，缓存不跨粘贴复用。 */
+/* 这里没有为 square 与 rectangle 分别复制样式。 */
+/* 预设差异只在数据，不靠更多 CSS 类维护同一结构的分叉。 */
+/* 自定义大小只影响本节点，不调整世界缩放或其他节点间距。 */
+/* 方形视频仍显示完整横屏帧，留边属于 contain 而非损坏。 */
+/* 用户可选择长方形减少留边，但不会改变源文件内容。 */
+.node[data-card] :global(.hy-node-shell) { width: 100%; height: var(--canvas-card-height); }
+.node[data-card] :global(.hy-node-port) { top: calc(var(--canvas-card-height) / 2 - 9px); }
+/* 库 Handle 默认使用中心变换；资料端口使用左上定位，转换只在这个适配边界做一次。 */
+.node .handle { transform: none; display: flex; align-items: center; justify-content: center; }
+.node .handle:global(.react-flow__handle-right) { left: auto; }
+.node :global(.hy-node-label) { max-width: 100%; }
+.node :global(.hy-node-label strong) { overflow: hidden; white-space: nowrap; cursor: grab; }
+/* 重命名用主题表面与正文色，不能在白卡上保留原先的半透明白底白字。 */
+/* 名称输入仍是普通表单草稿，换主题不会提交或重置尚未失焦的内容。 */
+.node :global(.hy-node-label input) { width: 180px; max-width: 320px; padding: 3px 8px; border-radius: 6px; border: 0; background: var(--hy-raised); color: var(--hy-text); font-size: 13px; font-weight: 600; }
+.node :global(.hy-node-card textarea) { width: 100%; height: 100%; padding: 20px; background: transparent; resize: none; font-size: 13px; }
+/* 面板仍在节点世界坐标中，缩放不会改写参数或位置；选中才挂载，避免隐藏 Tab 目标。 */
+.parameters { position: relative; width: 600px; left: 50%; transform: translateX(-50%); margin-top: 10px; }
+.panelToggle { position: absolute; top: -22px; right: 2px; color: var(--hy-muted); width: 20px; height: 20px; }
+.overlay { position: absolute; inset: 0; z-index: 10; display: flex; align-items: center; justify-content: center; padding: 18px; overflow: auto; background: #0007; }
+.overlayContent { max-width: 100%; max-height: 100%; overflow: auto; flex-shrink: 0; }
+/* 确认与改名对话框读取和设置面板相同的表面色，不各自维护黑白分支。 */
+/* 对话框的滚动归属保持不变，主题只换色，不用整体缩放掩盖窄窗口内容。 */
+.dialog { width: 360px; padding: 18px; border: 1px solid var(--hy-line); border-radius: 20px; background: var(--hy-panel); color: var(--hy-text); }
+.dialog h2 { font-size: 15px; font-weight: 600; margin-bottom: 12px; }
+/* 输入背景比对话框略深以提示可编辑，焦点行为仍沿用统一浮层机制。 */
+.dialog input { width: 100%; padding: 8px; background: var(--hy-raised); border-radius: 6px; }
+.dialog p { font-size: 12px; line-height: 1.8; margin-bottom: 12px; }
+.dialog footer { display: flex; gap: 8px; justify-content: flex-end; margin-top: 14px; }
+/* 读取保护层用半透明工作台色，不让白色主题在首次加载时闪成纯黑。 */
+/* 加载是否结束仍由持久化状态决定，CSS 不添加假成功动画或固定延时。 */
+.loading { position: absolute; inset: 0; z-index: 9; display: grid; place-content: center; gap: 12px; background: var(--hy-cover); color: var(--hy-muted); text-align: center; }
+/* 窄窗口改为两排浮动控件，不缩小资料组件内部的字号、按钮和间距。 */
+@media (max-width: 1180px) { .toolbar { bottom: 68px; } }
+@media (max-width: 600px) { .identity { left: 12px; top: 12px; } .viewTools { left: 12px; } .counter { right: 12px; } }

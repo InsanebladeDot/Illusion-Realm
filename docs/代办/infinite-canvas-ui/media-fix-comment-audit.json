@@ -1,0 +1,309 @@
+{
+  "baseline": "本轮图片拖动、视频生命周期与复制/移动导入修复前的工作区快照。",
+  "baselineDirectory": "C:\\Users\\18305\\AppData\\Local\\Temp\\ir-canvas-media-fix-baseline-yys4pegz",
+  "method": "新增文件全文；已有文件只计新增及替换后的行。混合行只计 B。排除空行、注释定界符、纯类型标记与完全相同的注释。中文说明候选经过职责、机制、边界和证据核对，不把数量扫描单独视为有效性证明。",
+  "files": [
+    {
+      "path": "apps/electron/src/main/modules/canvas/project-assets.js",
+      "category": "business",
+      "C": 58,
+      "B": 25,
+      "ranges": [
+        [
+          1,
+          1
+        ],
+        [
+          29,
+          29
+        ],
+        [
+          144,
+          224
+        ],
+        [
+          245,
+          248
+        ]
+      ],
+      "excludedCommentLines": 2,
+      "baselineSha256": "d93d22a55543171d80bd446214fb972833cf3d0a8d62c938689c63760b9a90c2"
+    },
+    {
+      "path": "apps/electron/src/main/modules/canvas/project-validation.js",
+      "category": "business",
+      "C": 3,
+      "B": 1,
+      "ranges": [
+        [
+          209,
+          212
+        ]
+      ],
+      "excludedCommentLines": 0,
+      "baselineSha256": "bce8b0b62d036052964ee20342a756560168189ac72bcdb0d193e0f44c984767"
+    },
+    {
+      "path": "apps/next/src/i18n/locales/en/canvas.ts",
+      "category": "business",
+      "C": 7,
+      "B": 7,
+      "ranges": [
+        [
+          25,
+          38
+        ]
+      ],
+      "excludedCommentLines": 0,
+      "baselineSha256": "903156d74cdc0690e4c400b0644518d08415ee5166fbb7a8dd179e039e12ae9d"
+    },
+    {
+      "path": "apps/next/src/i18n/locales/zh-CN/canvas.ts",
+      "category": "business",
+      "C": 7,
+      "B": 7,
+      "ranges": [
+        [
+          25,
+          38
+        ]
+      ],
+      "excludedCommentLines": 0,
+      "baselineSha256": "af5cfa19ccfe4fe22cb9ed56f472f1dd84b3ecc22304e43a80c3eff636c2e70e"
+    },
+    {
+      "path": "apps/next/src/view/infinite-canvas/canvas-import-choice.tsx",
+      "category": "business",
+      "C": 40,
+      "B": 24,
+      "ranges": [
+        [
+          1,
+          68
+        ]
+      ],
+      "excludedCommentLines": 0,
+      "baselineSha256": null
+    },
+    {
+      "path": "apps/next/src/view/infinite-canvas/canvas-media.tsx",
+      "category": "business",
+      "C": 37,
+      "B": 5,
+      "ranges": [
+        [
+          121,
+          143
+        ],
+        [
+          168,
+          168
+        ],
+        [
+          193,
+          206
+        ],
+        [
+          218,
+          219
+        ],
+        [
+          226,
+          227
+        ]
+      ],
+      "excludedCommentLines": 0,
+      "baselineSha256": "bcb271a55d380124663acad8e4a66e4981346f7d1fc7869075f0cc90f03c3341"
+    },
+    {
+      "path": "apps/next/src/view/infinite-canvas/infinite-canvas-page.tsx",
+      "category": "business",
+      "C": 29,
+      "B": 6,
+      "ranges": [
+        [
+          24,
+          25
+        ],
+        [
+          44,
+          44
+        ],
+        [
+          83,
+          107
+        ],
+        [
+          275,
+          275
+        ],
+        [
+          277,
+          277
+        ],
+        [
+          295,
+          297
+        ],
+        [
+          317,
+          318
+        ]
+      ],
+      "excludedCommentLines": 0,
+      "baselineSha256": "4a9f34cb287d257d183dd9aa63dc4bc610965a9187976b7219d74353130a12f0"
+    },
+    {
+      "path": "apps/next/src/view/infinite-canvas/use-canvas-media-import.ts",
+      "category": "business",
+      "C": 49,
+      "B": 26,
+      "ranges": [
+        [
+          17,
+          17
+        ],
+        [
+          65,
+          65
+        ],
+        [
+          112,
+          115
+        ],
+        [
+          203,
+          203
+        ],
+        [
+          207,
+          208
+        ],
+        [
+          213,
+          275
+        ],
+        [
+          287,
+          287
+        ],
+        [
+          294,
+          294
+        ],
+        [
+          296,
+          296
+        ],
+        [
+          344,
+          344
+        ]
+      ],
+      "excludedCommentLines": 0,
+      "baselineSha256": "1094600c541603c36e09e1517c65cb808e793e20ac6faa50e8b1dbbfec002896"
+    },
+    {
+      "path": "packages/shared/src/schemas/canvas-project.schema.ts",
+      "category": "business",
+      "C": 9,
+      "B": 1,
+      "ranges": [
+        [
+          27,
+          36
+        ]
+      ],
+      "excludedCommentLines": 0,
+      "baselineSha256": "468ad493b121c40f8f7b3e8566b0c429bdca80a578b38a2c8fe03721dd521dad"
+    },
+    {
+      "path": "scripts/lib/check-canvas-media.js",
+      "category": "test",
+      "C": 111,
+      "B": 43,
+      "ranges": [
+        [
+          74,
+          94
+        ],
+        [
+          120,
+          136
+        ],
+        [
+          144,
+          233
+        ],
+        [
+          455,
+          474
+        ],
+        [
+          489,
+          493
+        ],
+        [
+          619,
+          619
+        ],
+        [
+          621,
+          622
+        ]
+      ],
+      "excludedCommentLines": 0,
+      "baselineSha256": "52116d8f0331b2920199fb02a03737be0cddbc91d03cff7dc70788d25e837877"
+    },
+    {
+      "path": "scripts/smoke-infinite-canvas.js",
+      "category": "test",
+      "C": 7,
+      "B": 2,
+      "ranges": [
+        [
+          13,
+          17
+        ],
+        [
+          527,
+          530
+        ]
+      ],
+      "excludedCommentLines": 0,
+      "baselineSha256": "ea4852f211a591ef7f9f56e5d1c92206d19eedee9fbbbea65a459543ede0ef53"
+    },
+    {
+      "path": "scripts/verify-canvas-project.js",
+      "category": "test",
+      "C": 55,
+      "B": 27,
+      "ranges": [
+        [
+          160,
+          241
+        ],
+        [
+          358,
+          358
+        ]
+      ],
+      "excludedCommentLines": 0,
+      "baselineSha256": "0710194b4d1fb8d81d0e65ff6b87ed1f0fe88e4addd5ecc5adb8e786f4587d91"
+    }
+  ],
+  "totals": {
+    "business": {
+      "C": 239,
+      "B": 102,
+      "percent": 70.09,
+      "pass70": true
+    },
+    "test": {
+      "C": 173,
+      "B": 72,
+      "percent": 70.61,
+      "pass70": true
+    }
+  }
+}

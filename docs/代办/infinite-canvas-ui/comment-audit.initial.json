@@ -1,0 +1,142 @@
+{
+  "baseline": "task-start snapshots in logs/infinite-canvas-baseline; new files full text",
+  "method": "Physical nonempty added/replaced lines; mixed code/comment counted as B; delimiter-only lines excluded; comments reviewed against current implementation.",
+  "files": [
+    {
+      "path": "apps/next/src/view/infinite-canvas/canvas-model.ts",
+      "category": "business",
+      "C": 22,
+      "B": 47,
+      "percent": 31.88
+    },
+    {
+      "path": "apps/next/src/view/infinite-canvas/canvas-node.tsx",
+      "category": "business",
+      "C": 14,
+      "B": 58,
+      "percent": 19.44
+    },
+    {
+      "path": "apps/next/src/view/infinite-canvas/canvas-reducer.ts",
+      "category": "business",
+      "C": 30,
+      "B": 91,
+      "percent": 24.79
+    },
+    {
+      "path": "apps/next/src/view/infinite-canvas/canvas-toolbar.tsx",
+      "category": "business",
+      "C": 8,
+      "B": 43,
+      "percent": 15.69
+    },
+    {
+      "path": "apps/next/src/view/infinite-canvas/canvas.module.css",
+      "category": "business",
+      "C": 11,
+      "B": 81,
+      "percent": 11.96
+    },
+    {
+      "path": "apps/next/src/view/infinite-canvas/infinite-canvas-page.tsx",
+      "category": "business",
+      "C": 12,
+      "B": 72,
+      "percent": 14.29
+    },
+    {
+      "path": "apps/next/src/view/infinite-canvas/use-canvas-editor.ts",
+      "category": "business",
+      "C": 10,
+      "B": 39,
+      "percent": 20.41
+    },
+    {
+      "path": "apps/next/src/app/canvas/page.tsx",
+      "category": "business",
+      "C": 1,
+      "B": 5,
+      "percent": 16.67
+    },
+    {
+      "path": "apps/next/src/i18n/locales/zh-CN/canvas.ts",
+      "category": "business",
+      "C": 1,
+      "B": 18,
+      "percent": 5.26
+    },
+    {
+      "path": "apps/next/src/i18n/locales/en/canvas.ts",
+      "category": "business",
+      "C": 1,
+      "B": 18,
+      "percent": 5.26
+    },
+    {
+      "path": "apps/next/src/data/navigation.ts",
+      "category": "business",
+      "C": 1,
+      "B": 2,
+      "percent": 33.33
+    },
+    {
+      "path": "apps/next/src/components/MobileBottomNav.tsx",
+      "category": "business",
+      "C": 1,
+      "B": 2,
+      "percent": 33.33
+    },
+    {
+      "path": "apps/next/src/i18n/locales/zh-CN/index.ts",
+      "category": "business",
+      "C": 1,
+      "B": 2,
+      "percent": 33.33
+    },
+    {
+      "path": "apps/next/src/i18n/locales/zh-CN/nav.ts",
+      "category": "business",
+      "C": 0,
+      "B": 1,
+      "percent": 0.0
+    },
+    {
+      "path": "apps/next/src/i18n/locales/en/index.ts",
+      "category": "business",
+      "C": 1,
+      "B": 2,
+      "percent": 33.33
+    },
+    {
+      "path": "apps/next/src/i18n/locales/en/nav.ts",
+      "category": "business",
+      "C": 0,
+      "B": 1,
+      "percent": 0.0
+    },
+    {
+      "path": "scripts/smoke-infinite-canvas.js",
+      "category": "test",
+      "C": 51,
+      "B": 234,
+      "percent": 17.89
+    }
+  ],
+  "summary": {
+    "business": {
+      "C": 114,
+      "B": 482,
+      "percent": 19.13,
+      "requiredC": 1125,
+      "meets70Percent": false
+    },
+    "test": {
+      "C": 51,
+      "B": 234,
+      "percent": 17.89,
+      "requiredC": 546,
+      "meets70Percent": false
+    }
+  },
+  "review": "已逐文件复核注释对应的职责、数据边界、取消与验证证据；没有把混合行计入C。未达到70%，不能标记规范验收通过。"
+}
