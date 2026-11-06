@@ -79,7 +79,10 @@ async def run(payload: dict[str, Any], fake_llm: bool) -> int:
     reached_final = False
     try:
         async with AgentSession(config=config, bridge=bridge) as agent:
-            async for event in agent.stream(question, history):
+            # 图片从 stdin 原样传入正式 stream，不能只解析 question 和 history。
+            # 旧桌面端不传 images 时仍走纯文本，非法数据由构造器明确报错。
+            # 图片字节不写入事件流，模型回复与工具产物仍采用原 NDJSON 契约。
+            async for event in agent.stream(question, history, payload.get("images")):
                 emit(event)
                 if event["type"] == "final":
                     reached_final = True

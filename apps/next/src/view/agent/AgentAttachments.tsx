@@ -64,7 +64,8 @@ export function pickImageFiles(): Promise<File[]> {
 
 /**
  * File 列表 → 附件项：预览用 object URL，路径用 Electron 的 `getPathForFile`
- * （浏览器语义下取不到路径，记 null —— 那时附件只在本地展示，不影响使用）。
+ * 本机路径仅用于本地预览说明；发送时读取所选 Blob 的字节，不把路径交给模型。
+ * 浏览器取不到文件路径时仍可通过同一个 Blob 编码并发送图片。
  */
 export function filesToAttachments(files: File[]): AgentAttachment[] {
   return files.map((file, index) => ({

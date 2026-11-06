@@ -1,0 +1,135 @@
+{
+  "baseline": "C:\\Users\\18305\\AppData\\Local\\Temp\\ir-workflow-loaders-irjvsf_9\\baseline.json",
+  "baselineSha256": "d5315e0322c9ec41f46dca3ff2d6335a64f050cf1e554b3d068f2767eed2a58b",
+  "scope": "本轮开始前工作区快照；新代码块文件按全文；修改文件仅新增/替换行；含双语 TS 文案数据；依赖锁文件为配置不入源码分母。",
+  "method": "SequenceMatcher 定位增量；空行与独占注释定界符不计；代码和注释混合行只计 B；逐文件核对职责、参数、状态隔离、路径、回落、测试前提与边界，不把历史上下文计入。",
+  "review": "已核对注释与实际行为；模型回归只验证构建和夹具页面，剪贴板替身仅验证传入文本；不把夹具当作真实 GPU 或操作系统权限证明。",
+  "files": [
+    {
+      "file": "apps/next/src/view/create/video-model-settings.tsx",
+      "category": "business",
+      "C": 61,
+      "B": 16
+    },
+    {
+      "file": "apps/next/src/utils/comfy/video-workflow-models.ts",
+      "category": "business",
+      "C": 28,
+      "B": 11
+    },
+    {
+      "file": "apps/next/src/view/create/VideoCreatePanel.tsx",
+      "category": "business",
+      "C": 6,
+      "B": 2
+    },
+    {
+      "file": "apps/next/src/view/create/RoleTtsPanel.tsx",
+      "category": "business",
+      "C": 10,
+      "B": 2
+    },
+    {
+      "file": "apps/next/src/view/CreatePage.tsx",
+      "category": "business",
+      "C": 15,
+      "B": 8
+    },
+    {
+      "file": "apps/next/src/stores/use-audio-create-store.ts",
+      "category": "business",
+      "C": 17,
+      "B": 5
+    },
+    {
+      "file": "apps/next/src/utils/comfy/audio-workflow.ts",
+      "category": "business",
+      "C": 10,
+      "B": 3
+    },
+    {
+      "file": "apps/next/src/utils/comfy/imageWorkflow.ts",
+      "category": "business",
+      "C": 15,
+      "B": 6
+    },
+    {
+      "file": "apps/next/src/utils/comfy/anima-edit-workflow.ts",
+      "category": "business",
+      "C": 10,
+      "B": 3
+    },
+    {
+      "file": "apps/next/src/utils/comfy/anima-control-workflow.ts",
+      "category": "business",
+      "C": 12,
+      "B": 6
+    },
+    {
+      "file": "apps/next/src/components/create-edit/anima-edit-settings.tsx",
+      "category": "business",
+      "C": 11,
+      "B": 6
+    },
+    {
+      "file": "apps/next/src/i18n/locales/zh-CN/create.ts",
+      "category": "business",
+      "C": 0,
+      "B": 2
+    },
+    {
+      "file": "apps/next/src/i18n/locales/en/create.ts",
+      "category": "business",
+      "C": 0,
+      "B": 2
+    },
+    {
+      "file": "scripts/verify-anima-control.js",
+      "category": "tests",
+      "C": 74,
+      "B": 39
+    },
+    {
+      "file": "scripts/verify-minimax-audio.js",
+      "category": "tests",
+      "C": 36,
+      "B": 2
+    },
+    {
+      "file": "scripts/smoke-minimax-workflow.js",
+      "category": "tests",
+      "C": 61,
+      "B": 36
+    },
+    {
+      "file": "apps/next/src/components/MarkdownResponse.tsx",
+      "category": "business",
+      "C": 5,
+      "B": 2
+    },
+    {
+      "file": "scripts/smoke-agent-markdown.js",
+      "category": "tests",
+      "C": 64,
+      "B": 22
+    },
+    {
+      "file": "apps/next/src/components/markdown-code-block.tsx",
+      "category": "business",
+      "C": 89,
+      "B": 49
+    }
+  ],
+  "totals": {
+    "business": {
+      "C": 289,
+      "B": 123,
+      "percent": 70.15
+    },
+    "tests": {
+      "C": 235,
+      "B": 99,
+      "percent": 70.36
+    }
+  }
+}

@@ -24,7 +24,7 @@ tools/
 
 ## 两类工具（别搞混）
 
-| | **内置 MCP 工具**（`tools/**`） | **宿主工具**（`apps/electron/agent/host-tools.js`） |
+| | **内置 MCP 工具**（`tools/**`） | **宿主工具**（`apps/electron/src/main/modules/agent/host-tools.js`） |
 |---|---|---|
 | 跑在哪 | 本包拉起的 MCP 子进程（stdio） | Electron 主进程 |
 | 适合 | 纯本地、与桌面端无关的能力（算数、列目录） | **应用自己的能力**（本地模型索引、图片 Meta、图库） |

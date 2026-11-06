@@ -1,4 +1,11 @@
 /**
+ * locate：从实际所在的归档资源根解析 Python sidecar。
+ * runner：直接调用 Agent 的 NDJSON 运行与事件转发实现。
+ * locate：开发版 Electron 加载待测 app.asar 时，宿主 resourcesPath 不代表待测包。
+ * runner：运行配置由主进程组装，页面不能读取或自行注入保存的凭据。
+ * locate：打包后的 cwd 应位于资源目录，不能继续指向开发源码目录。
+ */
+/**
  * 打包版 Agent 冒烟：验证 **asar 里的 locate/runner + `resources/agent` 那棵树**能真正跑通一次。
  *
  * 为什么需要它：今天已经连踩两次「打包后才炸」——
@@ -37,8 +44,8 @@ if (!fs.existsSync(ASAR) || !fs.existsSync(AGENT_DIR)) {
 // 手动指定的解释器会盖过打包产物，这里必须清掉，否则测的是别的东西
 delete process.env.ILLUSION_AGENT_PYTHON;
 
-const locate = require(path.join(ASAR, "agent", "locate.js"));
-const runner = require(path.join(ASAR, "agent", "runner.js"));
+const locate = require(path.join(ASAR, "src/main/modules/agent/locate.js"));
+const runner = require(path.join(ASAR, "src/main/modules/agent/runner.js"));
 
 const results = [];
 function check(name, ok, detail = "") {

@@ -21,8 +21,8 @@ const os = require("os");
 const path = require("path");
 const { createSmokeHarness } = require("./lib/smoke-harness");
 const { app, BrowserWindow } = require("electron");
-const { registerAppProtocol } = require("../apps/electron/appProtocol");
-const { registerAllIpcHandlers } = require("../apps/electron/ipc-handlers");
+const { registerAppProtocol } = require("../apps/electron/src/main/core/protocol");
+const { registerAllIpcHandlers } = require("../apps/electron/src/main/ipc/register.js");
 
 const workDir = fs.mkdtempSync(path.join(os.tmpdir(), "agent-key-smoke-"));
 /** 必须在注册 handler 之前设好：`secret.js` 在**调用时**才读这个变量 */
@@ -65,7 +65,7 @@ app.whenReady().then(async () => {
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: false,
-      preload: path.join(__dirname, "..", "apps", "electron", "preload.js"),
+      preload: path.join(__dirname, "../apps/electron/src/preload/index.js"),
       /** 与真实应用一致：被遮挡时渲染生命周期会停摆，过渡与轮询都会假死 */
       backgroundThrottling: false,
     },

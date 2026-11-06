@@ -1,7 +1,7 @@
 /**
  * Agent 事件流的**无 token 端到端自检**（纯 Node，不需要 Electron）。
  *
- * 它走的是主进程真正用的那条链路：`apps/electron/agent/runner.js` →
+ * 它走的是主进程真正用的那条链路：`apps/electron/src/main/modules/agent/runner.js` →
  * spawn Python sidecar（`apps/agent`，用 `fakeLlm` 假模型）→ 逐行解析 NDJSON。
  * 因此这条自检同时覆盖了「Python 侧事件契约」「主进程转发」「取消语义」三件事，
  * 而**不花一分钱**（假模型不调网络）。
@@ -21,9 +21,9 @@ const fs = require("fs");
 const os = require("os");
 const path = require("path");
 
-const { startAgentRun, cancelAgentRun } = require("../apps/electron/agent/runner");
-const { settleHostCall } = require("../apps/electron/agent/host-tools");
-const { IPC_CHANNELS } = require("../apps/electron/ipcChannels");
+const { startAgentRun, cancelAgentRun } = require("../apps/electron/src/main/modules/agent/runner");
+const { settleHostCall } = require("../apps/electron/src/main/modules/agent/host-tools");
+const { IPC_CHANNELS } = require("../apps/electron/src/common/ipc-channels");
 
 const AGENT_DIR = path.join(__dirname, "..", "apps", "agent");
 const RESULTS = [];

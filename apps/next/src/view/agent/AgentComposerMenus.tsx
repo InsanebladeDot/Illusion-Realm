@@ -46,7 +46,8 @@ function useDismissPopover(
 
 /**
  * `+`：添加内容 —— 对应 Codex 那个「添加」菜单。
- * 目前只有一项「添加图片」（后端接上后，附件会随消息一起交给 Agent）。
+ * 「添加图片」选取本地图片，发送时由统一入口编码后交给模型。
+ * 选择本身只生成预览，用户确认发送前不会向中转站提交图片。
  */
 export function AgentAddMenu() {
   const { t } = useTranslation();

@@ -4,6 +4,27 @@
  */
 export const agent = {
   title: "Agent",
+  providers: {
+    siliconflow: "硅基流动", euzhi: "Euzhi · Grok", title: "选择聊天模型",
+    // 明确区分卡片暂选与提交，只有应用按钮会保存模型配置。
+    // 此动作同时确认当前站点，不会单独保存一个跨站模型名称。
+    // 与英文使用同一键，避免切换语言后按钮回落成未翻译的键名。
+    apply: "应用",
+    description: "选择服务商和模型，使用你在该站点的 API Key。切换仅影响下一次对话。",
+    search: "搜索模型", refresh: "刷新列表", input: "输入 / 百万 token", output: "输出 / 百万 token",
+    free: "免费", budget: "经济", premium: "进阶", recommended: "低价推荐", unknownPrice: "未公布",
+    group: "参考分组：{group}", longPrice: "超过 {count} 输入 token：输入 {input} / 输出 {output}（每百万）",
+    unavailable: "当前令牌不可用", unverified: "尚未核对令牌权限", visible: "令牌可见 · 推理能力待实际使用验证",
+    priceNote: "价格为服务商公开参考价，每百万 token；分组、缓存、长上下文和充值折扣会影响实际账单。",
+    recommendNote: "低价推荐按输入、输出各一百万 token 的基础价排序；同价优先新版，不代表所有用量下最低。",
+    pricingLink: "查看服务商实时价目表", updated: "价格核实时间：{time}", live: "本次联网目录", cache: "本地缓存", snapshot: "随包参考目录",
+    authError: "令牌校验失败，请检查本站 API Key、模型权限和分组。公开价格仍可查看。",
+    refreshError: "目录或账户可见性刷新失败；已保留最近可用的参考数据，可稍后重试。",
+    loading: "正在读取模型目录…", empty: "没有匹配的可用模型", saveFailed: "未能保存模型选择，请重试。",
+    selectionUnavailable: "当前模型暂不可用或配置读取失败，请打开模型选择器检查后重试。",
+    euzhiHelp: "在 Euzhi 创建 API Key，并为令牌选择可用的 Grok 分组。这里仅接入 Grok 聊天模型。",
+    tokenLink: "打开 Euzhi 令牌管理", keyIsolation: "Euzhi 密钥独立保存在本机，与硅基流动密钥互不通用。",
+  },
   newChat: "新聊天",
   sessions: {
     title: "会话",
@@ -30,15 +51,16 @@ export const agent = {
     permissionReadonlyHint: "只读取本地文件，不修改、不联网",
     permissionFullHint: "可以修改文件与访问互联网",
     model: "模型",
-    modelTitle: "模型来自共享配置（工作区根 .env / packages/shared/src/data/agent.ts）",
-    effort: "强度",
-    effortLow: "低",
-    effortMedium: "中",
-    effortHigh: "高",
+    modelTitle: "选择服务商与聊天模型，切换只影响下一次对话。",
+    effort: "查询深度",
+    effortLow: "低 · 2 轮",
+    effortMedium: "中 · 4 轮",
+    effortHigh: "高 · 6 轮",
     add: "添加",
     addMenuLabel: "添加内容",
     addImage: "添加图片",
-    addImageHint: "把本地图片挂到这条消息上（后端接入后随消息一起发给 Agent）",
+    addImageHint: "把图片随消息发送给模型，支持多图与后续追问",
+    imageReadFailed: "图片读取失败、格式不支持或超过限制（最多 8 张、单张 8 MB、编码后上下文合计 32 MB）。请调整附件后重试，原输入已保留。",
     attachmentPreview: "放大预览",
     attachmentRemove: "移除附件",
     attachmentCount: "{count} 张图片",
@@ -46,7 +68,8 @@ export const agent = {
   status: {
     idle: "就绪",
     generating: "生成中…",
-    stop: "停止生成",
+    stop: "停止回答",
+    stopFailed: "回复已停止显示，但后台终止请求失败，请重试或关闭应用。",
     tools: "识别到 {count} 个工具",
   },
   notice: {
@@ -55,6 +78,7 @@ export const agent = {
     missingKeyLink: "去设置里填写",
   },
   message: {
+    process: "已处理 · {count} 项过程",
     you: "你",
     agent: "Agent",
     reasoning: "思考",

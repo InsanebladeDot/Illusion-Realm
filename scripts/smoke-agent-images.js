@@ -1,4 +1,15 @@
 /**
+ * protocol：使用客户端的 app:// 与 localfile:// 协议实现。
+ * register：调用完整的业务域注册表，而非只注册当前页面恰好使用的通道。
+ * host-tools：复用 Agent 的宿主工具声明和渲染端回执桥。
+ * icon.png：图像样本改从统一 assets 目录读取。
+ * index：窗口加载迁移后的真实 preload 桥接文件。
+ * protocol：Next 静态资源含绝对 URL，必须保持应用同源加载。
+ * register：注册表负责汇总失败域，避免缺少能力却继续启动。
+ * host-tools：宿主能力仍由已登记工具限定，不增加任意代码执行入口。
+ * icon.png：二进制样本本身未改动，字节比较仍应与原图一致。
+ */
+/**
  * Agent 生图结果展示冒烟：假模型 + 假生图结果，不联网、不写图库。
  *
  * 覆盖链路：generate_image → tool_artifacts → Agent store → localfile:// 懒加载缩略图
@@ -6,12 +17,12 @@
  */
 const path = require("path");
 const { app, BrowserWindow } = require("electron");
-const { registerAppProtocol } = require("../apps/electron/appProtocol");
-const { registerAllIpcHandlers } = require("../apps/electron/ipc-handlers");
-const { HOST_TOOLS } = require("../apps/electron/agent/host-tools");
+const { registerAppProtocol } = require("../apps/electron/src/main/core/protocol");
+const { registerAllIpcHandlers } = require("../apps/electron/src/main/ipc/register.js");
+const { HOST_TOOLS } = require("../apps/electron/src/main/modules/agent/host-tools");
 const { createSmokeHarness } = require("./lib/smoke-harness");
 
-const fixturePath = path.join(__dirname, "..", "apps", "electron", "icon.png");
+const fixturePath = path.join(__dirname, "../apps/electron/assets/icon.png");
 process.env.ILLUSION_AGENT_API_KEY = "agent-image-smoke-key";
 process.env.ILLUSION_AGENT_FAKE_LLM = "1";
 
@@ -53,7 +64,7 @@ app.whenReady().then(async () => {
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: false,
-      preload: path.join(__dirname, "..", "apps", "electron", "preload.js"),
+      preload: path.join(__dirname, "../apps/electron/src/preload/index.js"),
       backgroundThrottling: false,
     },
   });

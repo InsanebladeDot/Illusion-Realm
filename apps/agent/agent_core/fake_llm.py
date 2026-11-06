@@ -145,8 +145,13 @@ class _FakeCompletions:
         temperature: float | None = None,
         stream: bool = False,
     ) -> AsyncIterator[_Chunk]:
-        _ = (model, tool_choice, temperature, stream)
-        return self._stream(messages, tools or [])
+        # 假模型也要遵守最后一轮的禁用工具约定，不能只在真实 SDK 生效。
+        # 清空的是可用声明，不删除已有回执，仍可根据先前工具结果作答。
+        # 这只模拟接口规则，不能当作真实供应商一定遵循 none 的证明。
+        # core 还会拦截不遵守规则的调用，负向测试单独覆盖那个边界。
+        # 其余参数继续忽略，假模型不模拟温度或实际服务商采样。
+        _ = (model, temperature, stream)
+        return self._stream(messages, [] if tool_choice == "none" else tools or [])
 
     async def _stream(
         self,
