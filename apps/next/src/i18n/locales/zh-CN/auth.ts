@@ -1,7 +1,7 @@
-/** 登录入口、账号表单和游客有效期相关文案。 */
+/** 登录入口、账号表单和长期游客模式相关文案。 */
 export const auth = {
   brandSub: "幻域 · 灵感在这里成真", welcome: "开启你的创作世界", createAccount: "创建账号", login: "登录",
-  guest: "以游客身份进入", guestHint: "无需账号，访客会话有效期为 1 小时", social: "使用其他账号继续", provider: "使用 {name} 登录",
+  guest: "以游客身份进入", guestHint: "无需账号，可长期使用本地创作与生成；云端功能需登录。", social: "使用其他账号继续", provider: "使用 {name} 登录",
   signUpTitle: "创建 Illusion Realm 账号", loginTitle: "登录 Illusion Realm", email: "邮箱", emailPlaceholder: "请输入邮箱地址", displayName: "昵称", displayNamePlaceholder: "请输入昵称",
   password: "密码", passwordPlaceholder: "请输入密码", confirmPassword: "确认密码", confirmPlaceholder: "再次输入密码",
   showPassword: "显示密码", hidePassword: "隐藏密码", forgot: "忘记密码？", back: "返回", haveAccount: "已有账号？", needAccount: "还没有账号？",
@@ -15,6 +15,6 @@ export const auth = {
   authInvalid: "提交的信息格式不正确，请检查后重试。", authUnauthorized: "邮箱或密码不正确，或账户尚未激活。", authRateLimited: "操作过于频繁，请稍后再试。", authUnavailable: "账户服务暂时不可用，请稍后重试。",
   verifyTitle: "激活邮箱", verifyToken: "邮件中的验证凭据", verifyTokenPlaceholder: "粘贴 ve_ 开头的完整凭据", verify: "验证并激活", resend: "重新发送验证邮件", verificationSent: "如该邮箱需要验证，请查收邮件。", verifySuccess: "邮箱已激活，请返回登录。",
   footer: "为每一次灵感，留一个开始。", privacy: "密码仅通过 HTTPS 提交到账户服务，令牌由桌面端安全保存。", entering: "正在进入…",
-  accountStatus: "当前已登录：{name}", expired: "游客会话已到期，请重新选择进入方式。", sessionSaveFailed: "无法保存游客会话，请检查本地存储后重试。",
+  accountStatus: "当前已登录：{name}", sessionSaveFailed: "无法保存游客会话，请检查本地存储后重试。",
   sessionLoadFailed: "无法读取本地会话，请重试游客入口。", guestStatus: "当前以游客身份使用", logout: "退出游客模式",
 } as const;

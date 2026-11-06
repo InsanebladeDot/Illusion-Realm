@@ -44,6 +44,10 @@ export const errors = {
     "sdxlSeriesOnly": "The SDXL series only uses models under {root}"
   },
   "agentHostTool": {
+    "invalidLoras": "Invalid LoRA parameters: at most 20 items, each with a name and a finite weight between -5 and 5",
+    "invalidSeries": "Agent image generation supports only Anima and SDXL; other workflow or LoRA families cannot be used",
+    "loraModelRequired": "Specify the main model when using LoRAs",
+    "loraModelUnavailable": "ComfyUI has no unique model matching {name}; use its full relative name and check the model folders",
     "missingPrompt": "Missing prompt — nothing to draw",
     "unknownTool": "The renderer has no implementation for host tool: {name}",
     "savedImages": "Generated {count} image(s), saved to: {paths}.",

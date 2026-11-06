@@ -1,0 +1,55 @@
+{
+  "baseline": "C:\\Users\\18305\\AppData\\Local\\Temp\\ir-home-original-fg1el_j0\\baseline.json",
+  "method": "本轮前工作区快照；新添/替换后物理行；删除、上下文、空行、独占定界符不计；混合行只计 B；人工核对职责、字体回退、布局边界、测试前提与证明限度。",
+  "pureDeletions": [
+    "apps/next/src/view/home/template-v2/home-v2.tsx",
+    "apps/next/src/view/home/template-v2/home-v2.module.css",
+    "apps/next/src/view/home/template-v2/config.ts",
+    "apps/next/src/view/home/template-v2/backdrop.png",
+    "home.v2 双语词条"
+  ],
+  "files": [
+    {
+      "file": "apps/next/src/view/HomePage.tsx",
+      "C": 4,
+      "B": 1,
+      "category": "business"
+    },
+    {
+      "file": "apps/next/src/view/home/HomeHero.tsx",
+      "C": 4,
+      "B": 1,
+      "category": "business"
+    },
+    {
+      "file": "apps/next/src/i18n/locales/zh-CN/home.ts",
+      "C": 0,
+      "B": 0,
+      "category": "business"
+    },
+    {
+      "file": "apps/next/src/i18n/locales/en/home.ts",
+      "C": 0,
+      "B": 0,
+      "category": "business"
+    },
+    {
+      "file": "scripts/lib/check-home-template.js",
+      "C": 51,
+      "B": 20,
+      "category": "tests"
+    }
+  ],
+  "totals": {
+    "business": {
+      "C": 8,
+      "B": 2,
+      "percent": 80.0
+    },
+    "tests": {
+      "C": 51,
+      "B": 20,
+      "percent": 71.83
+    }
+  }
+}

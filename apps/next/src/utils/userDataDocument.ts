@@ -78,6 +78,7 @@ function mergeDocument(partial: Partial<UserDataDocument> | null): UserDataDocum
     },
     comicTemplates: partial.comicTemplates ?? { version: 1, templates: [] },
     promptAssistant: partial.promptAssistant ?? { provider: "glm", baseUrl: "https://open.bigmodel.cn/api/paas/v4", model: "glm-4.7-flash", customModel: "", presetId: "translate", presets: [] },
+    infiniteCanvas: partial.infiniteCanvas,
   };
 }
 

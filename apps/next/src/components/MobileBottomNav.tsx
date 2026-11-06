@@ -4,11 +4,11 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
   Bell,
-  Globe,
   History,
   Menu,
   User,
   WandSparkles,
+  Workflow,
 } from "lucide-react";
 import { showNotImplementedToast } from "@/stores/useToastStore";
 import { useTranslation, type MessageKey } from "@/i18n";
@@ -22,14 +22,6 @@ import {
 const MOBILE_NAV_ITEMS = [
   { id: "menu", label: "nav.mobile.menu", type: "button" as const, icon: Menu },
   {
-    id: "explore",
-    label: "nav.mobile.explore",
-    type: "link" as const,
-    href: "/explore",
-    icon: Globe,
-    implemented: false,
-  },
-  {
     id: "create",
     label: "nav.create",
     type: "link" as const,
@@ -37,6 +29,8 @@ const MOBILE_NAV_ITEMS = [
     icon: WandSparkles,
     implemented: true,
   },
+  // 窄屏用已可用的画布替换未实现的探索，保留六个入口，避免额外挤压。
+  { id: "canvas", label: "nav.canvas", type: "link" as const, href: "/canvas", icon: Workflow, implemented: true },
   {
     id: "history",
     label: "nav.mobile.history",

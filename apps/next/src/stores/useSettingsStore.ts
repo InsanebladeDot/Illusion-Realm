@@ -30,7 +30,6 @@ import {
 import {
   UNCATEGORIZED_LOCAL_CATEGORY,
   getFirstLevelCategory,
-  isNonDiffusionModelPath,
 } from "@/utils/localModelCategory";
 import {
   isElectronEnvironment,
@@ -109,20 +108,21 @@ return res
 async function collectModelsFromPaths(paths: SettingsPaths) {
   const batches: LocalModel[] = [];
 
-  /**
-   * 保留视频加载所需的 CLIP / text_encoders / VAE；主模型选择器独立排除这些资源。
-   * 放大模型等其他辅助资源继续按现有规则过滤。
-   */
-  const isUsableModel = (model: LocalModel) =>
-    model.type !== "checkpoint" || !isNonDiffusionModelPath(model.filePath) || /[/\\](?:clip|text_encoders|vae)(?:[/\\]|$)/i.test(model.filePath);
+  // 设置索引记录扫描到的所有模型，不能复用主模型选择器的排除规则。
+  // model_patches、controlnet 等辅助文件也是真实资源，必须在设置中可见。
+  // 类型判定只负责 checkpoint/lora/embedding，category 保留实际一级目录名。
+  // 空目录与只有图片、JSON、占位文件的目录由主进程扫描器自然排除。
+  // 是否能用于 UNet 或 LoRA 加载，在对应选择器和提交参数校验中决定。
 
   // 检索路径优先：只要填写了检索路径，就只在检索路径下搜索，忽略其他参数
   if (paths.searchPath) {
     const fromSearch = await scanLocalModels(paths.searchPath, "checkpoint");
-    // 先按路径判定类型（loras → lora），再剔除不可用作扩散模型的文件
+    // 检索根目录下不限定分类名称，新增模型目录无需再改页面代码。
+    // 先按路径判定类型（loras → lora），辅助资源仍留在完整索引中。
+    // 主进程只返回含识别格式模型文件的目录，不能凭目录名伪造空抽屉。
     const classified = applySearchPathClassification(fromSearch);
     batches.push(
-      ...annotateCategory(classified.filter(isUsableModel), paths.searchPath)
+      ...annotateCategory(classified, paths.searchPath)
     );
     return mergeLocalModels(batches);
   }
@@ -131,13 +131,13 @@ async function collectModelsFromPaths(paths: SettingsPaths) {
   if (paths.checkpointPath) {
     const scanned = await scanLocalModels(paths.checkpointPath, "checkpoint");
     batches.push(
-      ...annotateCategory(scanned.filter(isUsableModel), paths.checkpointPath)
+      ...annotateCategory(scanned, paths.checkpointPath)
     );
   }
 
   if (paths.lorasPath) {
     const scanned = await scanLocalModels(paths.lorasPath, "lora");
-    batches.push(...annotateCategory(scanned.filter(isUsableModel), paths.lorasPath));
+    batches.push(...annotateCategory(scanned, paths.lorasPath));
   }
 
   // diffusion_models 分类（Anima 系列模型，支持 .safetensors/.gguf）
@@ -148,7 +148,7 @@ async function collectModelsFromPaths(paths: SettingsPaths) {
     );
     batches.push(
       ...annotateCategory(
-        scanned.filter(isUsableModel),
+        scanned,
         paths.diffusionModelsPath
       )
     );
@@ -157,12 +157,18 @@ async function collectModelsFromPaths(paths: SettingsPaths) {
   if (paths.diffusionModelsPath) {
     const base = paths.diffusionModelsPath.replace(/[/\\]+$/, "");
     const parent = base.replace(/[/\\][^/\\]+$/, "");
-    if (parent !== base) {
-      for (const name of ["text_encoders", "clip", "vae"]) {
-        const root = `${parent}/${name}`;
-        const scanned = await scanLocalModels(root, "checkpoint");
-        batches.push(...annotateCategory(scanned.filter(isUsableModel), root));
-      }
+    // 只从标准 diffusion_models 子目录补扫其 models 父目录。
+    // 自定义独立 UNet 路径不向上扩大范围，避免扫描整个磁盘或无关项目。
+    // 父目录递归结果自动包含 model_patches 以及今后新增的资源目录。
+    // 不再维护 clip/text_encoders/vae 三项白名单，空目录仍不会产生模型条目。
+    // 父目录批次也重新判型，防止其中的 LoRA 被误当成 checkpoint。
+    // 标准父目录提供一级分类，mergeLocalModels 合并重叠扫描的版本而不重复显示。
+    if (parent !== base && folderName(base).toLowerCase() === "diffusion_models") {
+      const scanned = applySearchPathClassification(await scanLocalModels(parent, "checkpoint"));
+      // 标准父目录的一级分类作为权威名称，避免同一模型被标成 Anima 等子目录。
+      // 将这一批放在前面只决定展示分类，版本仍通过公共合并函数去重。
+      // 自定义独立路径仍保留上面的单根扫描语义。
+      batches.unshift(...annotateCategory(scanned, parent));
     }
   }
   return mergeLocalModels(batches);

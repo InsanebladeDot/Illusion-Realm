@@ -13,11 +13,42 @@ import type {
   AgentRunHandle,
   AgentRunOptions,
   AgentSecretStatus,
+  // 服务商是有限 ID，不允许页面通过 bridge 定义新的网络地址。
+  // 目录响应类型与运行时 schema 共用，避免可信边界只靠 TS。
+  // 原密钥仍只经过设置写入函数，不加入目录数据。
+  AgentProvider,
 } from "@illusion-realm/shared";
 import { t } from "@/i18n";
 import { CivitaiApiKeySchema } from "@illusion-realm/shared";
 import { unwrapIpc, unwrapIpcOr } from "@/utils/ipcResult";
 import { LocalModelMetadataEntrySchema, ReadLocalModelMetadataArgsSchema, type LocalModelMetadataEntry } from "@illusion-realm/shared";
+// 补全入口同时验证请求和响应，不让旧 preload 的缺失能力静默成功。
+// 本模块不读取模型字节，也不获取主进程保存的 Civitai 密钥。
+// 主进程仍会独立验证路径，不依赖这里的客户端 schema 作为授权。
+import { LocalModelRecoveryResultSchema, RecoverLocalModelArgsSchema } from "@illusion-realm/shared";
+
+/**
+ * 只提交用户选择的具体版本路径，不把相邻版本或整个目录交给识别器。
+ * IpcResult 的失败路径必须抛出，让 hook 转换为用户可见的失败状态。
+ * 返回业务状态通过 schema 验证，未知状态不能被显示为补全成功。
+ * 非桌面环境显式失败，避免网页开发模式下按钮看似可用。
+ * 后续刷新来源继续使用 readLocalModelMetadata，统一过滤说明和 URL。
+ */
+export async function recoverLocalModelMetadata(filePath: string) {
+  // 能力探测用于开发网页和旧主进程，不能仅判断 window 是否存在。
+  // 与现有下载功能一致，缺少对应 preload 时显式失败。
+  // 不使用默认“成功”对象降级，否则用户会误以为资料已经保存。
+  const api = getElectronAPI();
+  if (!api?.recoverLocalModelMetadata) throw new Error("desktop");
+  // trim 后再发送统一路径字符串，长度在 schema 内限制。
+  // absolute/realpath/根目录校验必须留在可信的主进程中完成。
+  // renderer 的校验只负责尽早捕获错误调用，不能代替主进程授权。
+  const [model] = RecoverLocalModelArgsSchema.parse([filePath]);
+  // 先解 IpcResult，再验证 data；两种失败都进入 hook 的 catch。
+  // 明确区分传输失败与业务 data.status，UI 不推断 HTTP 状态码。
+  // 返回模型结果不含来源文件原始 JSON，展示仍使用只读规范化接口。
+  return LocalModelRecoveryResultSchema.parse(unwrapIpc(await api.recoverLocalModelMetadata(model)));
+}
 
 /** 模型来源 JSON 和 LoRA 触发词共用这条只读链路，旧版 preload 明确失败而不是伪装为空。 */
 export async function readLocalModelMetadata(filePaths: string[]): Promise<LocalModelMetadataEntry[]> {
@@ -27,7 +58,10 @@ export async function readLocalModelMetadata(filePaths: string[]): Promise<Local
   return LocalModelMetadataEntrySchema.array().parse(unwrapIpc(await api.readLocalModelMetadata(paths)));
 }
 
-function getElectronAPI() {
+// 目录工具也经同一桥接入口探测能力，不在组件里分散访问全局对象。
+// 该函数仅返回 preload 的最小 API，不暴露 ipcRenderer 或 Electron 原生实例。
+// 服务商网络请求仍只能由主进程执行，导出本函数不增加桥接权限。
+export function getElectronAPI() {
   if (typeof window === "undefined") return null;
   const api = window.electronAPI;
   if (!api) return null;
@@ -210,7 +244,10 @@ export async function respondAgentHostCall(
  * 桥不在（浏览器 / 老主进程）时回落到 `configured: false` —— 与"没填密钥"同一条
  * 提示路径，比让界面卡在未知状态好。
  */
-export async function getAgentSecretStatus(): Promise<AgentSecretStatus> {
+// 读状态必须带服务商，默认参数只保留旧页面的兼容调用。
+// 不使用当前 UI 全局状态推断站点，避免异步等待期间切换串值。
+// 老 preload 的能力探测继续回落未配置。
+export async function getAgentSecretStatus(provider: AgentProvider = 'siliconflow'): Promise<AgentSecretStatus> {
   const api = getElectronAPI();
   const fallback: AgentSecretStatus = {
     configured: false,
@@ -219,23 +256,35 @@ export async function getAgentSecretStatus(): Promise<AgentSecretStatus> {
     tail: "",
   };
   if (typeof api?.agentSecretStatus !== "function") return fallback;
-  return unwrapIpcOr(await api.agentSecretStatus(), fallback, "agentSecretStatus");
+  // provider 随请求传入主进程，返回值不包含密钥全文。
+  // 读取失败沿用未配置提示，不能把另一个站点的成功状态拿来兜底。
+  // warning 不打印请求参数或 API Key。
+  return unwrapIpcOr(await api.agentSecretStatus(provider), fallback, "agentSecretStatus");
 }
 
 /**
  * 保存密钥。**用 `unwrapIpc`（失败抛错）**：填了但没存上必须让用户看见，
  * 静默成功会让用户以为配好了、然后在 Agent 页撞一句"缺少 API Key"。
  */
-export async function setAgentSecret(apiKey: string): Promise<AgentSecretStatus> {
+// 写入始终捕获本次服务商；切换 UI 后正在等待的操作不会改写新站点。
+// 参数默认值仅为旧调用兼容，不会从持久化偏好偷偷读取。
+// 原文仅用于本次 IPC 调用，不落 renderer 日志或持久化。
+export async function setAgentSecret(apiKey: string, provider: AgentProvider = 'siliconflow'): Promise<AgentSecretStatus> {
   const api = getElectronAPI();
   if (typeof api?.agentSetSecret !== "function") {
     throw new Error(t("errors.desktopOnly.agentUnavailable"));
   }
-  return unwrapIpc(await api.agentSetSecret(apiKey));
+  // 写失败必须抛给表单，不用默认成功状态掩盖系统加密或磁盘错误。
+  // 主进程独立检查站点和密钥长度，不能把页面表单当验证边界。
+  // 本函数不在闭包中保留原值，表单在成功后也会清空输入。
+  return unwrapIpc(await api.agentSetSecret(apiKey, provider));
 }
 
 /** 清除密钥（失败按"没配"处理即可，不值得打断用户） */
-export async function clearAgentSecret(): Promise<AgentSecretStatus> {
+// 清除范围明确到服务商，不能跟随之后发生的标签变化。
+// 仍使用原有未配置回退，网络目录缓存不受清除影响。
+// 清除凭据不代表撤销服务商令牌，用户可在官网自行管理。
+export async function clearAgentSecret(provider: AgentProvider = 'siliconflow'): Promise<AgentSecretStatus> {
   const api = getElectronAPI();
   const fallback: AgentSecretStatus = {
     configured: false,
@@ -244,7 +293,10 @@ export async function clearAgentSecret(): Promise<AgentSecretStatus> {
     tail: "",
   };
   if (typeof api?.agentClearSecret !== "function") return fallback;
-  return unwrapIpcOr(await api.agentClearSecret(), fallback, "agentClearSecret");
+  // 返回的状态只对应当前请求站点，不对另一站凭据做任何推断。
+  // 系统环境变量仍可能提供硅基流动密钥，主进程会如实标记 env。
+  // 错误输出使用固定操作名，不拼入令牌或用户路径。
+  return unwrapIpcOr(await api.agentClearSecret(provider), fallback, "agentClearSecret");
 }
 
 export interface CivitaiKeyStatus { configured: boolean; protection: "safeStorage" | "plain" | ""; tail: string }

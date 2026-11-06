@@ -1,5 +1,6 @@
 import {
   Bot,
+  Workflow,
   Home,
   Languages,
   Megaphone,
@@ -29,6 +30,8 @@ export const APP_NAME = "Illusion Realm";
 export const MAIN_NAV_ITEMS: LocalizedNavItem[] = [
   { id: "home", label: "nav.home", href: "/", icon: Home, implemented: true },
   { id: "create", label: "nav.create", href: "/create", icon: WandSparkles, implemented: true },
+  // 独立画布紧随创建，导航和页面转场都从同一张顺序表读取。
+  { id: "canvas", label: "nav.canvas", href: "/canvas", icon: Workflow, implemented: true },
   { id: "agent", label: "nav.agent", href: "/agent", icon: Bot, implemented: true },
   {
     id: "inspect",

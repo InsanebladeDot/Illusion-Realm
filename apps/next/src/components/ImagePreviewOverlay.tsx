@@ -7,6 +7,7 @@ import {
   useState,
   type MouseEvent as ReactMouseEvent,
   type WheelEvent as ReactWheelEvent,
+  type ReactNode,
 } from "react";
 import { createPortal } from "react-dom";
 import { ChevronLeft, ChevronRight, Minus, Plus, RotateCcw, X } from "lucide-react";
@@ -88,7 +89,10 @@ function PreviewGalleryImage({
   onContextMenu?: (event: ReactMouseEvent<HTMLElement>) => void;
 }) {
   const cachedSrc = resolveItemSrc(item);
-  const fileSrc = useLocalImageSrc(item.filePath ?? null);
+  // 已有生成预览地址时直接复用，不再为同图读取一份本地 base64。
+  // filePath 仍留作文件身份和右键动作，不能为省读取而丢掉。
+  // Hook 继续每次调用，传 null 只是禁用这次不需要的磁盘读取。
+  const fileSrc = useLocalImageSrc(item.src ? null : item.filePath ?? null);
   const src = item.src ?? cachedSrc ?? fileSrc ?? fallbackSrc;
   const isResolved = Boolean(item.src ?? cachedSrc ?? fileSrc);
   const { t } = useTranslation();
@@ -145,12 +149,27 @@ export function ImagePreviewOverlay({
     if (!open || items.length === 0) return;
 
     const neighborPaths = [
-      items[wrapIndex(index - 1, items.length)]?.filePath,
-      items[wrapIndex(index + 1, items.length)]?.filePath,
-      currentItem?.filePath,
-    ];
+      items[wrapIndex(index - 1, items.length)],
+      items[wrapIndex(index + 1, items.length)],
+      currentItem,
+    ].map((item) => item?.src ? null : item?.filePath);
+    // 邻图预取也跳过已有 src 的项，否则会绕开上方的读取去重。
+    // 纯磁盘历史仍按路径预取，不牺牲原来的左右切图体验。
+    // null 被原预取函数忽略，空列表边界无需新建加载器。
+    // 此处只减少无用读盘，不提前释放任务队列持有的 Blob。
+    // 不比较 URL 内容，相同文件的关联已由调用方用保存路径完成。
+    // 预取不会改变作品列表或选中索引，加载与展示身份仍分开。
+    // 上下文菜单继续收到完整 item，保留其可操作的文件路径。
+    // 取消订阅和缓存清理沿用原 Hook 与缓存，不增加永久监听器。
+    // 关闭浮层时原 effect 的 open 条件仍阻止后台预取。
+    // 当前图和邻图遵守同一规则，避免放大后又出现重复读取。
+    // src 为空字符串时仍允许磁盘回落，与加载条件一致。
+    // 路径不存在时继续由原读取错误回落处理，不伪造成功图片。
     prefetchLocalImages(neighborPaths);
-  }, [open, index, items, currentItem?.filePath]);
+  // 当前项的 src 从无到有时也要刷新预取策略，不能只监听路径。
+  // 使用完整当前项依赖，确保已有源时及时停止不必要的读盘。
+  // items 已由调用方管理身份，此处不创建用于 effect 的镜像状态。
+  }, [open, index, items, currentItem]);
 
   /**
    * 渲染期同步：当前图片变了就把「已解析的 src」切到新图可取到的值。
@@ -436,6 +455,8 @@ type ImagePreviewTriggerProps = {
   onIndexChange?: (index: number) => void;
   className?: string;
   imageClassName?: string;
+  /** 复用调用方已经加载的图片节点，避免触发器再渲染一张缩略图 */
+  children?: ReactNode;
   disabled?: boolean;
   onItemContextMenu?: (
     event: ReactMouseEvent<HTMLElement>,
@@ -452,7 +473,10 @@ function PreviewTriggerImage({
 }) {
   const { t } = useTranslation();
   const cachedSrc = getCachedLocalImageSrc(item.filePath);
-  const fileSrc = useLocalImageSrc(item.filePath ?? null);
+  // 内嵌主图使用与放大图相同的取源策略，已有预览不重复读本地文件。
+  // 仍使用同一 Hook，纯历史图片继续受缓存与并发读取去重保护。
+  // 传空路径不会改变 item 本身，文件右键能力保持完整。
+  const fileSrc = useLocalImageSrc(item.src ? null : item.filePath ?? null);
   const src = item.src ?? cachedSrc ?? fileSrc;
 
   if (!src) return null;
@@ -473,27 +497,42 @@ export function ImagePreviewTrigger({
   onIndexChange,
   className,
   imageClassName,
+  children,
   disabled = false,
   onItemContextMenu,
 }: ImagePreviewTriggerProps) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
-  const currentItem = items[index] ?? items[0];
+  const [localIndex, setLocalIndex] = useState(index);
+  const activeIndex = onIndexChange ? index : localIndex;
+  const changeIndex = onIndexChange ?? setLocalIndex;
+  const currentItem = items[activeIndex] ?? items[0];
 
   const cachedSrc = currentItem
     ? getCachedLocalImageSrc(currentItem.filePath)
     : null;
-  const fileSrc = useLocalImageSrc(currentItem?.filePath ?? null);
+  // 触发器的首帧种子也优先复用 src，避免父组件偷偷再加载一份。
+  // 图片子组件与大图层虽然各自订阅，但不会为预览发出冗余读盘请求。
+  // 普通图库条目没有 src，仍走原先的路径缓存。
+  const fileSrc = useLocalImageSrc(currentItem?.src ? null : currentItem?.filePath ?? null);
   const seedSrc = currentItem?.src ?? cachedSrc ?? fileSrc;
 
   useEffect(() => {
     if (items.length === 0) return;
     prefetchLocalImages([
-      items[index]?.filePath,
-      items[wrapIndex(index - 1, items.length)]?.filePath,
-      items[wrapIndex(index + 1, items.length)]?.filePath,
-    ]);
-  }, [index, items]);
+      items[activeIndex],
+      items[wrapIndex(activeIndex - 1, items.length)],
+      items[wrapIndex(activeIndex + 1, items.length)],
+    ].map((item) => item?.src ? null : item?.filePath));
+    // 内嵌预取与弹层预取配套，否则不用打开弹层也会重复读取最新图。
+    // 相邻的旧作品仍按需预取，修复不扩大为禁用整个历史缓存。
+    // 外部传入的 src 由调用者负责生命周期，此组件不自行 revoke。
+    // 去重仅针对同一个 item 已有可用源，不删除其他相似图片。
+    // 当前最新结果、filmstrip 和结果卡可因此共用任务预览地址。
+    // Chromium 的解码内存由浏览器管理，不能据此保证固定节省字节数。
+    // 缓存里原已读取的历史数据不在这里强制清空，避免影响其他页面。
+    // 数组与索引变化仍触发原 effect，不需要新增全局图片状态。
+  }, [activeIndex, items]);
 
   if (!currentItem) return null;
 
@@ -501,6 +540,7 @@ export function ImagePreviewTrigger({
     <>
       <button
         type="button"
+        data-image-preview-trigger
         disabled={disabled}
         aria-label={t("components.imagePreviewOverlay.triggerLabel")}
         onClick={() => setOpen(true)}
@@ -513,13 +553,13 @@ export function ImagePreviewTrigger({
           className
         )}
       >
-        <PreviewTriggerImage item={currentItem} imageClassName={imageClassName} />
+        {children ?? <PreviewTriggerImage item={currentItem} imageClassName={imageClassName} />}
       </button>
 
       <ImagePreviewOverlay
         items={items}
-        index={index}
-        onIndexChange={onIndexChange}
+        index={activeIndex}
+        onIndexChange={changeIndex}
         open={open}
         onOpenChange={setOpen}
         seedSrc={seedSrc}

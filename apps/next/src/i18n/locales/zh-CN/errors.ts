@@ -54,6 +54,10 @@ export const errors = {
    * 这些文本会作为工具结果进模型、再由模型转述给用户，所以照旧走词条表。
    */
   agentHostTool: {
+    invalidLoras: "LoRA 参数无效：最多 20 项，每项必须有名称，权重须为 -5 到 5 之间的有限数字",
+    invalidSeries: "Agent 生图只支持 Anima、SDXL，不能使用其他系列的工作流或 LoRA",
+    loraModelRequired: "使用 LoRA 时必须明确指定主模型 model",
+    loraModelUnavailable: "ComfyUI 未找到唯一匹配的模型：{name}；请使用完整相对名称并检查模型目录",
     missingPrompt: "缺少 prompt：不知道要画什么",
     unknownTool: "渲染层没有实现宿主工具：{name}",
     savedImages: "已生成 {count} 张图片，保存路径：{paths}。",

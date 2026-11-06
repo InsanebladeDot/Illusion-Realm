@@ -1,0 +1,67 @@
+@import "../../../../apps/next/node_modules/tailwindcss/index.css";
+@source "./source.html";
+
+/* 色板直接映射现有项目的冷白/藏蓝语义，不为原型另造一套品牌色。 */
+/* 页面只切换变量，模型图片保持原色，避免主题按钮改变内容素材。 */
+/* 系统字体保证 Electron 与浏览器预览接近，不依赖在线字体下载。 */
+:root{--shell:#f3f8ff;--surface:#f8faff;--workspace:#ebf2fe;--panel:#fff;--foreground:#354a75;--muted:#8595b7;--line:#dfe6f5;--soft:#e9efff;--accent:#4053e6;--accent-fill:#4b60ff;--accent-contrast:#fff;--shadow:#5670a10d;font-family:Inter,"Segoe UI","Microsoft YaHei",sans-serif;color-scheme:light}
+/* 深色继续沿用项目藏蓝外壳，边界亮度只略高于面板。 */
+/* 蓝紫用于当前态，普通工具保持低对比，避免 head 与模型封面争抢视线。 */
+/* color-scheme 同步原生输入控件，不留下突兀的浅色搜索框。 */
+:root[data-theme=dark]{--shell:#141d30;--surface:#172034;--workspace:#111a2c;--panel:#1b2539;--foreground:#d4def8;--muted:#8e9dbb;--line:#303a55;--soft:#293451;--accent:#b2bfff;--accent-fill:#96a7ff;--accent-contrast:#141d30;--shadow:#0003;color-scheme:dark}
+/* Tailwind 类使用这些语义颜色，局部样式也从同一变量读取。 */
+@theme inline{--color-shell:var(--shell);--color-surface:var(--surface);--color-workspace:var(--workspace);--color-panel:var(--panel);--color-foreground:var(--foreground);--color-muted:var(--muted);--color-line:var(--line);--color-muted-surface:var(--soft);--color-accent:var(--accent)}
+/* 控件统一继承字体；图标使用 currentColor，主题切换不用准备两套资源。 */
+/* hidden 必须胜过组件布局，防止提示和弹层在初始状态占位。 */
+/* focus-visible 提供键盘焦点，hover 不能代替可访问的操作反馈。 */
+*{box-sizing:border-box}button,input{font:inherit;color:inherit}button{cursor:pointer}button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}[hidden]{display:none!important}svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+/* 品牌标识借鉴参考图1的蓝青星光，但收进 27px 盒子适配 44px head。 */
+/* 渐变只出现在品牌，普通按钮继续使用单色线条。 */
+/* 星光不使用白底图片，深浅主题都能融入同一标题栏。 */
+.brand-mark{display:grid;width:27px;height:27px;place-items:center;color:#6674ff}.brand-mark svg{width:25px;height:25px;fill:url(#none)}
+/* head 工具保持同一命中区，计数角标不改变按钮几何。 */
+/* 打开态使用柔和底色，只有真实任务计数显示实色徽标。 */
+/* 所有交互区标记为 no-drag，真实 Electron 接入时可沿用这条边界。 */
+.app-head button,.page-toolbar button{-webkit-app-region:no-drag}.head-button,.icon-button{position:relative;display:inline-grid;width:34px;height:32px;place-items:center;border:0;border-radius:7px;background:transparent;color:var(--muted)}.head-button:hover,.icon-button:hover,.head-button.active,.icon-button.active{background:var(--soft);color:var(--accent)}.task-count{position:absolute;right:2px;top:1px;display:grid;min-width:14px;height:14px;place-items:center;border-radius:999px;background:var(--accent-fill);padding-inline:3px;color:var(--accent-contrast);font-size:9px}
+/* 参数生成的全局动作填满 head 高度，宽度固定后计数不会挤动相邻按钮。 */
+/* 这条只作用 data-global，不放大侧栏开关和页面的紧凑图标按钮。 */
+.head-button[data-global]{width:44px;height:100%;border-radius:0}
+/* 账户是全局身份入口，短分隔线区分任务工具与窗口控件。 */
+/* 名称在窄窗隐藏，头像和按钮仍保留稳定点击区。 */
+/* 系统控制不使用圆角卡片，关闭按钮只在悬停时表达危险性。 */
+.account-button{display:flex;height:100%;align-items:center;gap:8px;border:0;border-left:1px solid var(--line);background:transparent;padding:0 10px}.account-button>span{display:grid;width:28px;height:28px;place-items:center;border-radius:50%;background:#8f83d7;color:white;font-size:12px}.account-button b{font-size:12px;font-weight:500}.account-button svg{width:12px}.caption-controls button{width:42px;border:0;background:transparent;color:var(--muted)}.caption-controls button:hover{background:var(--soft);color:var(--foreground)}.caption-controls button:last-child:hover{background:#df4d5a;color:white}
+/* nav、main 与 head 共用 shell token；收起时只改变宽度和 main 起点。 */
+/* 导航行使用 36px 项目现有密度，避免二级工具栏加入后整体过高。 */
+/* 当前页只有一处显著蓝底，其他入口用低对比 hover。 */
+.nav-item{display:flex;width:100%;height:36px;align-items:center;gap:9px;overflow:hidden;border:0;border-radius:7px;background:transparent;padding:0 10px;color:var(--muted);white-space:nowrap}.nav-item svg{flex:none}.nav-item:hover{background:color-mix(in srgb,var(--soft) 65%,transparent);color:var(--foreground)}.nav-item.active{background:var(--soft);color:var(--accent);font-weight:600}.app-nav.collapsed{width:68px}.app-nav.collapsed .nav-item{width:48px;justify-content:center}.app-nav.collapsed .nav-label,.app-nav.collapsed>div{display:none}.main-shell.nav-collapsed{left:68px}
+/* 页面工具栏只用底边线建立层级，不套用参考图2的大白色悬浮卡。 */
+/* 数量是只读信息，用弱底徽章表达，不能看起来像可点击筛选器。 */
+/* 面包屑当前项加深，上级项可点击且不另画按钮边框。 */
+.count-chip{border-radius:5px;background:var(--soft);padding:2px 6px;color:var(--accent);font-size:10px}.crumb{display:inline-flex;min-width:0;align-items:center;gap:3px;border:0;background:transparent;padding:0;color:var(--muted)}.crumb:hover{color:var(--accent)}.crumb.current{max-width:220px;overflow:hidden;color:var(--foreground);font-weight:600;text-overflow:ellipsis;white-space:nowrap}.crumb svg{width:11px;height:11px}
+/* 页面动作统一为文字按钮、主按钮和更多菜单三种权重。 */
+/* 扫描状态靠近触发按钮，加载旋转只在真实等待阶段出现。 */
+/* 按钮高度与 head 的图标按钮接近，切换页面不会产生明显密度跳变。 */
+.text-button,.primary-button{display:inline-flex;min-height:32px;align-items:center;gap:6px;border:1px solid var(--line);border-radius:7px;background:var(--panel);padding:0 10px;color:var(--foreground);font-size:11px}.text-button:hover{border-color:color-mix(in srgb,var(--accent) 40%,var(--line));color:var(--accent)}.primary-button{border-color:transparent;background:var(--accent-fill);color:var(--accent-contrast);font-weight:600}.primary-button:hover{filter:brightness(1.05)}.spinning{animation:spin .8s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}
+/* 三栏面板延续项目模型库的真实几何，不把原型做成营销落地页。 */
+/* 面板阴影几乎不可见，模型封面和选中框承担主要视觉层级。 */
+/* 每列独立滚动，长目录不会把 head 或页面工具栏卷走。 */
+.panel{min-width:0;overflow:hidden;border:1px solid var(--line);border-radius:9px;background:var(--panel);box-shadow:0 3px 12px var(--shadow)}.segmented{display:grid;grid-template-columns:1fr 1fr;border-radius:6px;background:var(--soft);padding:2px}.segmented button{height:27px;border:0;border-radius:5px;background:transparent;color:var(--muted);font-size:10px}.segmented button.active{background:var(--panel);color:var(--accent);box-shadow:0 1px 3px var(--shadow)}
+/* 目录行和 Card 都由参数数组生成；选择状态不依赖列表下标。 */
+/* 目录数量靠右且不参与名称截断，模型名称允许两行。 */
+/* Card 选中只加一像素边框与柔和底色，不使用重发光。 */
+.folder-item{display:flex;width:100%;align-items:center;gap:7px;border:0;border-radius:6px;background:transparent;padding:8px;color:var(--muted);font-size:11px;text-align:left}.folder-item:hover,.folder-item.active{background:var(--soft);color:var(--accent)}.folder-item span:first-of-type{min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.folder-item small{font-size:9px}.status-dot{width:7px;height:7px;border-radius:50%;background:#42bb8b;box-shadow:0 0 0 3px color-mix(in srgb,#42bb8b 15%,transparent)}
+/* 搜索和视图工具属于模型列表，不上移到全局 head。 */
+/* 搜索使用真实 label，焦点描边包住组合而不是只照亮小图标。 */
+/* 网格以 170px 为基准自动填列，详情隐藏后能自然增加列数。 */
+.search-box{display:flex;min-width:120px;flex:1;align-items:center;gap:7px;border:1px solid var(--line);border-radius:7px;background:var(--surface);padding:0 10px;color:var(--muted)}.search-box:focus-within{border-color:var(--accent)}.search-box input{height:32px;min-width:0;flex:1;border:0;background:transparent;outline:none;font-size:11px}.model-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,160px),1fr));align-content:start;gap:10px}.model-card{min-width:0;overflow:hidden;border:1px solid var(--line);border-radius:8px;background:var(--panel);text-align:left;transition:border-color .15s,background .15s}.model-card:hover{border-color:color-mix(in srgb,var(--accent) 38%,var(--line))}.model-card.selected{border-color:var(--accent);background:var(--soft)}.model-card img{aspect-ratio:4/3;width:100%;object-fit:cover}.model-card div{padding:9px}.model-card h3{display:-webkit-box;overflow:hidden;font-size:11px;font-weight:650;-webkit-box-orient:vertical;-webkit-line-clamp:2}.model-card p{margin-top:4px;color:var(--muted);font-size:9px}.model-grid.list{display:flex;flex-direction:column}.model-grid.list .model-card{display:grid;grid-template-columns:72px 1fr}.model-grid.list .model-card img{height:58px;aspect-ratio:auto}
+/* 弹层由同一容器承载不同内容，标题栏不会同时挂多个独立菜单。 */
+/* 定位靠右且避开 44px head，窄窗用 max-width 防止横向溢出。 */
+/* toast 只说明原型动作，不谎称真实文件扫描已经完成。 */
+.popover{position:fixed;right:128px;top:48px;z-index:80;width:min(300px,calc(100vw - 24px));border:1px solid var(--line);border-radius:9px;background:var(--panel);padding:12px;box-shadow:0 14px 35px #1d2a4d26;font-size:11px}.toast{position:fixed;bottom:42px;left:50%;z-index:90;transform:translateX(-50%);border:1px solid var(--line);border-radius:7px;background:var(--panel);padding:8px 12px;box-shadow:0 8px 24px #1d2a4d1c;font-size:11px}
+/* 1040px 下详情收进卡片点击语义，页面工具仍保留完整。 */
+/* 720px 下应用 nav 隐藏，main 使用全宽；账户名称也让出窗口控制宽度。 */
+/* 520px 下扫描目录收进更多菜单，面包屑只保留当前位置。 */
+@media(max-width:720px){.app-nav{display:none}.main-shell,.main-shell.nav-collapsed{left:8px}.account-button b,.account-button svg{display:none}.account-button{padding-inline:6px}.page-toolbar{padding-inline:10px}.caption-controls button{width:34px}.model-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:520px){.brand-mark+strong{display:none}.page-toolbar{flex-wrap:wrap;align-items:flex-start;gap:7px;padding-block:8px}.page-actions{width:100%;justify-content:flex-end}.page-actions .text-button{display:none}.crumb:not(.current){display:none}.caption-controls button:nth-child(-n+2),.head-button[data-global=downloads],.head-button[data-global=more],[data-model-toolbar]>.text-button,[data-model-toolbar] [data-view=list]{display:none}[data-model-toolbar]{padding:8px}.model-grid{gap:8px;padding:8px}}
+/* 减少动态偏好关闭导航移动、加载旋转和 Card 过渡。 */
+/* 打印不是本原型目标，仍隐藏窗口控制和固定应用外壳。 */
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}@media print{.app-head,.app-nav,footer,.page-actions{display:none!important}.main-shell{position:static;border:0;padding:0}.page-toolbar{break-after:avoid}}

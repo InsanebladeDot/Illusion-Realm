@@ -1,4 +1,3 @@
-import type { ImageAsset } from "@/types/common";
 import amanatsuCover from "@/assets/icon/create/model.png";
 import animaOfficialBaseCover from "@/assets/icon/create/models/anima-official-base.webp";
 import animaPreview2Cover from "@/assets/icon/create/models/anima-preview2.webp";

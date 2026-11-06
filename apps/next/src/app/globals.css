@@ -1,4 +1,26 @@
 @import "tailwindcss";
+@import "./workspace-shell.css";
+@import "../view/infinite-canvas/reference-ui/canvas-components.css";
+/* 画布主题覆盖只换颜色，本地媒体规则只管理节点内容，不复制资料库几何。 */
+@import "../view/infinite-canvas/reference-ui/canvas-theme.css";
+@import "../view/infinite-canvas/canvas-media.css";
+
+/* 编辑器外部工作区用屏幕空间点阵，缩放图像不改变点间距。 */
+/* 语义色独立于图片像素，主题切换只更新预览底板。 */
+/* 24px 网格在深浅主题保持一致，低对比度小点不抢工具焦点。 */
+.mask-editor-stage { --mask-workspace-base: #edf0f4; --mask-workspace-dot: #bec5cf; background-color: var(--mask-workspace-base); background-image: radial-gradient(circle, var(--mask-workspace-dot) .75px, transparent .9px); background-size: 24px 24px; }
+/* 暗色只覆盖语义变量，图像与当前选区保持同一原坐标。 */
+/* 中性背景避免把既有紫色蒙版误认为工作区高亮。 */
+/* 本规则只影响 DOM 背景，不会让导出 PNG 出现纹理。 */
+:root[data-theme="dark"] .mask-editor-stage { --mask-workspace-base: #202328; --mask-workspace-dot: #41464f; }
+/* 棋盘仅在图片矩形内显示，用于区分真实透明像素与外围点阵。 */
+/* CSS 背景位于 canvas 像素下方，Delete 后可见而不写入缓冲。 */
+/* 使用固定 CSS 像素保持辨识度，不跟随原图自然尺寸扩大方格。 */
+.mask-editor-image { background-color: #fff; background-image: conic-gradient(#dce1e8 25%, transparent 0 50%, #dce1e8 0 75%, transparent 0); background-size: 16px 16px; }
+/* 暗色透明底仍使用棋盘，外围工作区始终保留点状纹理。 */
+/* 不给整个 stage 铺棋盘，避免透明范围与编辑工作区混为一体。 */
+/* data-theme 读取全局已解析主题，不自行订阅系统偏好或维护第二份状态。 */
+:root[data-theme="dark"] .mask-editor-image { background-color: #353a42; background-image: conic-gradient(#464c56 25%, transparent 0 50%, #464c56 0 75%, transparent 0); background-size: 16px 16px; }
 
 :root {
   --window-chrome-height: 0px;
@@ -30,7 +52,10 @@
 }
 
 :root[data-window-chrome="custom"] {
-  --window-chrome-height: 32px;
+  /* 顶栏按最新参考减少 10px；nav、登录页和全屏恢复均读取此唯一高度。 */
+  /* 不对整条 head 使用 transform，以免点击区域或弹层锚点仍停在旧坐标。 */
+  /* 普通浏览器与系统全屏仍由各自能力信号设置为 0，不占用内容空间。 */
+  --window-chrome-height: 44px;
 }
 
 .window-titlebar {
@@ -125,6 +150,33 @@ body:has([data-profile-scroll]) { position: fixed; inset: 0; }
   --task-accent: var(--accent-text);
 }
 
+/* 创建页的品牌与分栏 token；自选主题继续使用其强调色。 */
+.create-workspace {
+  container-type: inline-size;
+  --create-accent: #5262ff;
+  --create-gradient: linear-gradient(110deg, #49cdec, #5262ff 58%, #a769fa);
+}
+.create-rail-sized { flex: 0 0 clamp(340px, 34%, 420px); }
+.create-side-sized { width: clamp(280px, 25%, 320px); }
+.create-generate-button { background: var(--create-gradient); }
+:root[data-color-preset]:not([data-color-preset="default"]) .create-workspace {
+  --create-accent: var(--accent-text);
+  --create-gradient: linear-gradient(110deg, var(--accent-fill), var(--accent-stroke));
+}
+:root[data-color-preset="default"] .create-workspace {
+  --accent-fill: var(--create-accent);
+  --accent-stroke: var(--create-accent);
+  --accent-text: var(--create-accent);
+  --accent-soft: color-mix(in srgb, var(--create-accent) 10%, var(--background));
+}
+:root[data-theme="dark"] .create-workspace { --create-accent: #a6b3ff; }
+.create-workspace[data-create-layout="three"] { gap: 8px; background: var(--shell-background); }
+.create-workspace[data-create-layout="three"] > :is([data-create-rail], [data-create-stage], [data-create-side]) {
+  border-radius: 10px;
+  background: var(--background);
+}
+[data-create-prompt-tools] button { min-width: 0; }
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -171,10 +223,6 @@ body:has([data-profile-scroll]) { position: fixed; inset: 0; }
     --accent-soft: #0a0a0a;
   }
 
-  /* 创建页：表单、图库与预览共用柔和深灰底色，沿用 background token 向下继承。 */
-  #main-content[data-page-transition="/create"] {
-    --background: #1e1e1e;
-  }
 }
 
 html,
@@ -702,4 +750,56 @@ html.page-transition[data-page-direction="backward"]::view-transition-group(page
 
 html.page-transition[data-page-direction="backward"]::view-transition-group(page-panel) {
   z-index: 2;
+}
+
+/* 按钮交互以本地模型“更换封面”为基准：淡底反馈配单根细线。 */
+/* 公共入口统一交互线条，业务按钮仍自己决定主色、危险色和选中填充。 */
+/* 悬停描边向内画，不增减按钮尺寸，也不让相邻按钮跟着跳位置。 */
+/* 图片卡片与画布按钮不盖背景，真实图像和透明操作层不能被淡底遮住。 */
+/* 原本带hover:bg-muted的普通操作继续用相同语义背景，而非另一套配色。 */
+/* 原生禁用状态不响应悬停；可聚焦的aria-disabled入口仍显示键盘位置。 */
+/* 焦点只用一根线，清掉Tailwind额外光圈，避免两圈叠成截图中的粗蓝边。 */
+/* 输入框也走这条焦点规则，单击或键盘进入数值编辑不会再叠加厚阴影。 */
+/* 颜色混入前景提高深浅主题下的可辨性，线条宽度始终是一像素。 */
+/* 轮廓不承担选中数据，选中、加载和错误的业务状态保留在各自组件。 */
+/* 使用现有主题变量，换配色和系统深浅主题不需要重建控件。 */
+/* 高对比度系统模式交还系统Highlight，避免定制色把焦点藏掉。 */
+/* 这里不设置动画，减少动态效果偏好不会遭遇新增的闪动或缩放。 */
+/* 不给全部按钮加实体边框，顶栏与图标按钮的原有几何尺寸保持不变。 */
+/* 按钮规则放在已有globals入口，避免每个工具各复制一份hover/focus CSS。 */
+/* 边界只作用于交互线条，不触碰窗口定位、导航宽度或主区滚动归属。 */
+/* role=button覆盖项目中保留的可访问自定义按钮，不局限于原生button标签。 */
+/* 原生disabled与aria-disabled都排除悬停，灰色不可用入口不应显示像可以执行的反馈。 */
+/* focus-visible仍允许aria-disabled入口说明不可用原因，键盘焦点不能被一并隐藏。 */
+/* outline不参与盒模型，因此hover不让同一排按钮互相挤动或换行。 */
+/* outline-offset负一将轮廓放在现有边缘，避免外面多画一根形成视觉双框。 */
+/* focus比hover更高对比，键盘当前位置仍然明确，不能为了细边框把焦点去掉。 */
+/* 清除的是额外ring阴影，不是业务loading或选中状态，aria-pressed不被本规则重写。 */
+/* 输入框与按钮共用一像素焦点标准，外部fieldInput可通过局部规则统一负责整框。 */
+/* 背景仍交给原按钮的hover:bg-muted，不能给图像预览按钮刷一层灰遮住内容。 */
+/* 图标、文字、主操作和危险按钮的前景色保持原组件语义。 */
+/* 采用现有accent-stroke/foreground/border变量，不另建浅深主题开关。 */
+/* forced-colors使用系统高亮色是为了Windows辅助模式可辨，不改变普通配色。 */
+/* 没有transition或transform，按钮触摸效果不会产生尺寸弹跳。 */
+/* 规则同时适用于Portal内弹窗，不能因为不在AppShell子树就漏掉复制或关闭按钮。 */
+/* 顶栏按钮保留各自的浅底或危险色反馈，不套用页面操作按钮的悬停描边。 */
+/* 素材分类与翻页箭头同样只用颜色反馈，避免经过图标时出现参考图中的方框。 */
+/* 此处只排除hover规则，键盘focus-visible仍由下方规则提供可见的一像素提示。 */
+:root :is(button, [role="button"]):not(:disabled):not([aria-disabled="true"]):not(:where([data-window-titlebar] *, [data-media-library-tabs] *)):hover {
+  outline: 1px solid color-mix(in srgb, var(--foreground) 30%, var(--border));
+  outline-offset: -1px;
+}
+:root :is(button, input, textarea, select, [role="button"]):focus-visible {
+  outline: 1px solid color-mix(in srgb, var(--accent-stroke) 70%, var(--foreground));
+  outline-offset: -1px;
+  --tw-ring-shadow: 0 0 #0000;
+  --tw-ring-offset-shadow: 0 0 #0000;
+  box-shadow: none;
+}
+/* 旧的双像素工具按钮也收敛为细线，不修改普通卡片或布局分隔线。 */
+/* 仅命中明确声明border-2的按钮；无边框图标不凭空增加占位。 */
+/* 该规则处理常驻边框，focus-visible另行处理键盘轮廓，两者不叠加光圈。 */
+:root :is(button, [role="button"]).border-2 { border-width: 1px; }
+@media (forced-colors: active) {
+  :root :is(button, input, textarea, select, [role="button"]):focus-visible { outline-color: Highlight; }
 }

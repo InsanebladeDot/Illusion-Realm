@@ -4,6 +4,287 @@
  * 视频剪辑台子组件用 `toolBox.videoEdit.<语义>`。
  */
 export const toolBox = {
+  // 新工作区与旧 video 词条分开，旧剪辑/GIF 的按钮和错误文案保持原样。
+  // UI-01 所有操作原因共用 unavailable，不为每个禁用按钮复制含义相同的提示。
+  // 后续真实导入/保存/导出接入时，应分别引入业务错误，不能沿用统一占位原因。
+  // projectName 是统一演示项目的名称，文件名等用户内容不写成词条键。
+  // unsaved 不能翻成已保存，当前没有任何本地工程文件写入结果。
+  // 工具菜单属于项目级操作，AppShell 的品牌、账户和窗口控制继续用原命名空间。
+  // legacy 链接指向现有单片段处理工具，它是可用导航而非禁用动作。
+  // 英文同步使用相同键，静态导出首帧通过现有 locale 机制选择语言。
+  // 媒体分类键与只读样例 kind 对应，不通过扩展名或中文名称推断类型。
+  // program 明确表示节目预览，不能与未来素材查看模式共用模糊的“预览”标题。
+  // fit 与 fitAll 分开，前者适应画面，后者适合完整时间轴范围。
+  // inspector 只代表面板标题，不暗示 UI-01 已支持音频、多选或编辑提交。
+  // 变换字段单位保存在样例值中，词条只负责标签而不参与小数解析。
+  // previousFrame/nextFrame 是逐帧控制名称，不能翻成前一个/后一个素材。
+  // 独奏与静音是音频状态，可见则是视频状态，三者必须区分。
+  // lock 表达可执行的锁定意图，默认解锁状态仍由打开形状的图标表达。
+  // split/snap/linked 是时间轴动作，未接通时不会创建全局快捷键说明。
+  // resize 只命名未来上下区调整，ARIA 会明确指出 UI-01 的分隔条禁用。
+  // 不把当前步骤编号写入正式产品文字，区域编号留在 data 属性和文档。
+  // 所有文案保持项目现有零依赖翻译方式，不另装编辑器翻译框架。
+  editorUi: {
+    editTools: '编辑工具',
+    selectLeft: '向左全选',
+    selectRight: '向右全选',
+    removeLeft: '删除播放头左侧内容',
+    removeRight: '删除播放头右侧内容',
+    keyframeAdd: '在当前帧添加关键帧',
+    keyframeRemove: '删除当前帧关键帧',
+    keyframeUnavailable: '播放头需位于未锁定的视频片段内',
+    cropApply: '确认裁剪',
+    noUndo: '没有可撤销的操作，或目标轨道已锁定',
+    noRedo: '没有可重做的操作，或目标轨道已锁定',
+    selectEditableClip: '请先选择未锁定的时间线片段',
+    sectionBlocked: '当前位置无法剪辑：请检查片段选区、播放头和轨道锁定',
+    pasteBlocked: '无法粘贴：剪贴板为空、轨道锁定或当前位置存在重叠',
+    clipsCopied: '已复制 {count} 个片段，可在播放头位置粘贴',
+    libraryCategories: '资源类别',
+    library_media: '素材',
+    library_audio: '音频',
+    library_text: '文本',
+    library_effects: '特效',
+    library_transitions: '转场',
+    library_subtitles: '字幕',
+    library_stickers: '贴纸',
+    library_branding: '智能包装',
+    library_filters: '滤镜',
+    library_adjustments: '调节',
+    library_templates: '模板',
+    library_avatars: '数字人',
+    previousCategories: '向左显示类别',
+    nextCategories: '向右显示类别',
+    libraryUnavailable: '此类资源尚未接入；现有工程与素材保持不变',
+    audioImportUnavailable: '真实音频导入尚未接入，请在素材中导入视频',
+    listView: '列表视图',
+    gridView: '网格视图',
+
+    programMuted: '节目静音 · 尚未接入混音',
+    previewRatePreset: '预览倍速预设',
+    basicEdit: '基础编辑',
+    mirror: '镜像',
+    rotate90: '顺时针旋转 90°',
+    freezeFrame: '定格',
+    reverse: '倒放',
+    crop: '裁剪',
+    visualOnly: '仅视频或图片片段可用。',
+    basicUnavailable: '该编辑能力尚未接入，当前操作不会修改视频。',
+
+    previewRate: '预览倍速',
+    speedBlocked: '无法修改速度：轨道已锁定、数值无效，或变速后的片段与同轨素材重叠。',
+
+    // 边缘标签区分入点和出点，不能复用“移动片段”造成键盘操作歧义。
+    // 设置标题只打开当前会话轨道上限，不冒充全局工程偏好已保存。
+    // 上限说明同时写明默认五条、当前保护上界与图层覆盖方向。
+    // 视频与音频分别命名，用户调高一类时不应误以为两类一起增加。
+    // 类型拒绝提示不再提固定V1，因为现在允许同类多轨移动。
+    // 左右边缘的单位仍由数值字段显示，词条不把秒数拼进实例身份。
+    trimStart: "修剪片段入点",
+    trimEnd: "修剪片段出点",
+    trackSettings: "轨道设置",
+    trackLimits: "轨道数量上限",
+    videoTrackLimit: "视频轨上限",
+    audioTrackLimit: "音频轨上限",
+    trackLimitsHint: "当前工程会话生效，每类默认 5 条，可设至 20 条；拖到同类轨道组下方新增轨道。上方视频轨覆盖下方。",
+    // UI-05–07词条属于现有工具域，不能搬到Agent提示词或全局common改变其他页面含义。
+    // closePanel表示关闭临时栏，不是关闭工程、删除素材或退出软件。
+    // 宽容器常驻侧栏没有关闭按钮，文案不能写成“删除属性”。
+    // resizeHint的px指工作区CSS高度，不是项目视频像素。
+    // 上下键和Shift步长与分隔条处理保持一致，翻译不能擅自改快捷键。
+    // Home/End在此指上下布局边界，不是时间轴开始和结束。
+    // Escape只取消当前拖动，不表示撤销整个工程的上一步编辑。
+    // playhead名称是可聚焦滑块的无障碍说明，需同时包含用途与无鼠标方法。
+    // “播放起点”不是片段源入点，不能翻成“裁剪开始”。
+    // 方向键逐帧使用项目帧率，不要在提示里写死为30fps。
+    // Shift逐秒不等于跳到下一个片段，不能换成素材切换文案。
+    // 此处Home/End属于工程时间边界，与上面的布局提示语境不同。
+    // volume是属性字段名，单位由公共输入单独展示，不在标签再加百分号。
+    // duration既用于图片安排长度也用于项目事实，真实来源由调用处决定。
+    // positionX/Y指画面中心的项目坐标，不能改成“左边距/上边距”。
+    // 未来画布拖动仍是待办，位置标签出现不代表已接双向同步。
+    // projectParameters只读展示项目设置，不使用“已应用”暗示修改结果。
+    // frameRate区分项目帧率与素材元数据；此词条仅是公共字段标题。
+    // selectedCount的{count}由翻译器插值，必须原样保留占位符大小写。
+    // 计数单位是片段，不是去重后的源文件，同源两次安排应计为两项。
+    // noCommonProperties用于混合类型交集为空，与无选择是不同状态。
+    // 不写“文件损坏”，字段没有交集是合法选择组合。
+    // effectUnavailable明确当前效果未接入，不把只读默认值说成已有实际效果。
+    // 这个原因也供重置按钮使用，不能改成只适用于某一个输入的错误。
+    // propertyDefaults说明两种来源：未设置效果用默认值，安排时长用当前片段。
+    // 不得写成“读取自素材”，否则项目中心与工程占位会被误认为源探测事实。
+    // propertySampleOnly明确修改只留此实例，避免用户把演示当作工程已保存。
+    // “不处理真实媒体”不是失败提示，而是样板的能力边界。
+    // inspectorSamples是公开演示标题，正式工作区不以此作为项目名称。
+    // noneSelected用于样板选择操作和无目标说明，不意味着清空整个工程。
+    // mixedSelection指多对象值不一致，不表示当前处于多轨合成模式。
+    // 横线混合占位由控件提供，不能把“—”追加在每个字段标签上。
+    // 用户文件名不经词条翻译，也不以名称内容动态拼接翻译键。
+    // 所有新键同步英文登记，不能依赖中文回退掩盖缺键。
+    // 修改提示语后应核对实际键盘处理，快捷键文案本身不能替代功能验证。
+    // 这里没有真实保存或导出成功语句，UI完成不构成业务执行凭据。
+    // 以后效果接通应修改能力来源，不应只删掉禁用说明让输入看起来可用。
+    // 分隔调整属于局部布局，不承诺保存工程或改变媒体尺寸。
+    closePanel: "关闭面板",
+    resizeHint: "上下方向键调整 10px，Shift 调整 40px，Home/End 到边界，Escape 取消拖动",
+    // 只有正式工程接通定位回调；此名称也说明无鼠标定位方法。
+    playhead: "播放起点（方向键逐帧，Shift 逐秒，Home/End 到边界）",
+    volume: "音量",
+    duration: "时长",
+    // 属性来源和禁用原因在正式区与样板之间明确区分，不暗示媒体效果已生效。
+    positionX: "位置 X",
+    positionY: "位置 Y",
+    projectParameters: "项目参数",
+    frameRate: "帧率",
+    selectedCount: "已选 {count} 个片段",
+    noCommonProperties: "所选片段没有共同属性",
+    effectUnavailable: "真实效果尚未接入；当前参数仅供查看",
+    propertyDefaults: "未设置的效果显示项目默认值；时长取当前片段",
+    propertySampleOnly: "独立属性样板：修改仅影响此实例，不处理真实媒体",
+    inspectorSamples: "属性交互样板",
+    noneSelected: "无选择",
+    mixedSelection: "多选混合",
+  // LIVE-02的提示只报告当前安排结果，不把片段移动说成文件保存或媒体转码。
+  // 失败原因区分重叠、错误轨道和身份，便于用户更换落点而非重导源文件。
+  // 键盘替代和取消方式在同一个时间线说明中可发现，不抢搜索框的方向键。
+    // 入轨文案与导入文案分开，避免把复制素材引用说成复制本地文件。
+    // 末尾添加指真实工程最后结束帧，不是视口右端的空白时间。
+    // 选择提示要求ready视频，音频与失败素材不回落成默认演示对象。
+    // invalidPlacement覆盖身份或位置非法，不把这类错误描述成视频损坏。
+    // overlap明确表示没有放置，用户可换位置而无需重新导入。
+    // videoTrackOnly解释当前仅支持V1，不暗示已经自动提取音轨。
+    // validPlacement仅描述候选落点，必须松手后才有placementDone。
+    // placementDone提示工程未保存，不把页面内提交描述成磁盘保存成功。
+    // timelineHint同时说明鼠标与键盘替代，让拖动不是唯一操作路径。
+    // unsavedTimeline是离开提醒，不能承诺恢复、自动保存或撤销历史。
+    // 反馈通过固定status区域展示，红色轮廓被裁切时仍能读到原因。
+    // 数值起点由运行时拼入，词条不会把秒数写死成某个演示位置。
+    // 工程帧率与素材帧率保持业务值，翻译不会更改其计算方式。
+    // 同一key在两种已登记语言中都存在，切换语言不丢失错误原因。
+    // 英文版本保留V1轨道编号，避免把业务ID翻译成另一个不匹配的标识。
+    addToV1: "添加到 V1 末尾",
+    selectReadyVideo: "请先选择已就绪的视频素材",
+    canvasSelect: "选择并拖动画面",
+    transformLive: "位置使用项目像素；100%为完整适配画布，淡入淡出暂不可用",
+    trackLocked: "轨道已锁定，未修改工程",
+    invalidPlacement: "位置或素材身份无效，未修改工程",
+    overlap: "该位置与已有片段重叠，未放置",
+    videoTrackOnly: "视频只能放入视频轨",
+    // 轨道限制按当前安排表达，分离后的A1/A2不会套用“只可V1”的误导提示。
+    // 复制指工程同轨末尾新实例，删除只改安排，不删除磁盘文件。
+    // 分离提示明确无损引用与默认静音，不承诺wav导出或多轨合成。
+    sameTrackOnly: "音频只能放入音频轨",
+    clipActions: "片段操作",
+    detachAudio: "分离音频到音频轨",
+    alreadyDetached: "该视频实例已分离音轨，保持静音",
+    // 音频安排与无声视频是两种状态，不能共用“无音轨”的禁用原因。
+    // 该词条只用于分离菜单，不会覆盖源文件真实hasAudio元数据。
+    alreadyAudio: "当前已经是独立音频片段",
+    duplicateAtEnd: "复制到同轨末尾",
+    detachHint: "音轨独立引用原文件，不生成新文件；删除仅移除工程片段。",
+    audioPreview: "音轨独立预览，开启声音后可试听",
+    editDone: "工程已更新，尚未保存",
+    validPlacement: "可放置",
+    placementDone: "片段位置已更新，工程尚未保存",
+    timelineHint: "拖入视频到 V1；片段方向键移动一帧，Shift 加方向键移动一秒，Esc 取消拖动。",
+    unsavedTimeline: "工程尚未保存，离开后片段将清空。确定离开吗？",
+
+    staticProject: "静态演示工程",
+    liveProjectName: "未命名项目",
+    pause: "暂停",
+    enableSound: "开启声音",
+    retryPreview: "重试预览",
+    audioTrack: "含音轨",
+    waveformLoading: "读取波形…",
+    waveformError: "波形不可用",
+    noAudioTrack: "无音轨",
+    hiddenMedia: "有 {count} 项素材被当前筛选隐藏",
+    rejectedFiles: "未导入：{names}；仅支持本地视频，每批最多 20 个",
+    invalidDrop: "非本地视频或无效来源",
+    cancelImport: "取消导入",
+    importCancelled: "已取消导入，已有素材保留",
+    importTimeout: "读取视频超时，请重试",
+    probeFailed: "视频探测失败，请检查文件是否完整且包含视频轨",
+    coverFailed: "封面不可用，视频信息仍保留",
+    decodeFailed: "视频预览解码失败，已保留元数据；可重试或选择其他视频",
+    importDialogFailed: "无法打开视频选择器，请在桌面客户端重试",
+    importSummary: "已导入 {added} 项 · 重复 {duplicate} 项 · 拒绝 {rejected} 项 · 失败 {failed} 项",
+    dropHint: "可将视频拖入工作区，每批最多 20 个",
+    noClipSelected: "未选择时间线片段；选择素材仅打开源视频预览",
+
+    // 样板返回实际目标是编辑器，不能沿用“返回工具箱”误导导航。
+    // 路由字符串保留在视图，词条只负责用户可见标签。
+    // 英文对应同名键，静态导出与客户端语言切换使用同一入口。
+    backToEditor: "返回视频编辑器",
+    // UI-02 的状态说明仅用于真实组件反馈；样板说明不进入默认工作区。
+    // 加载、缺图和错误分别命名，不能把所有异常统一显示为空列表。
+    // 数字错误在提交时展示，不用于输入过程的动态强制纠正。
+    samples: "组件状态预览", sampleNotice: "样例交互仅在本页生效，不执行媒体处理或保存工程。", invalidNumber: "请输入范围内的有效数字", loading: "加载中", missing: "缺少封面", error: "素材不可用", empty: "没有素材",
+    projectName: "春日短片", unsaved: "未保存", projectActions: "项目操作",
+    unavailable: "此功能尚未接通", legacy: "原版剪辑工具", export: "导出",
+    file: "文件", edit: "编辑", view: "视图", undo: "撤销", redo: "重做",
+    // 素材区的固定工具与列表用同一分类标签，后续筛选不会引入第二套翻译。
+    // 搜索 placeholder 和 accessible label 共用短文字，禁用原因独立提供。
+    // 图片不显示虚构源时长，时长数字由展示数据提供，不写进媒体类型标签。
+    // audio 同时用于素材次行，voice/music 则区分两条独立工程轨道的职责。
+    // 空库与无搜索结果分别命名，等待/错误不复用会误导用户的空库说明。
+    // import 只命名入口，不承诺已经打开系统文件选择框或读取媒体文件。
+    media: "素材", import: "导入素材", search: "搜索素材…", all: "全部",
+    // 空库与条件不匹配是不同原因，清除条件仅适用于后者。
+    // 数量用于状态播报，不在紧凑素材栏再加一行调试信息。
+    // 导入原因明确真实业务边界，不把禁用解释为尚未选择某个素材。
+    // 整库等待和失败也阻止搜索，行缺封面不会触发这些整库提示。
+    // 样板场景名称只出现在独立预览页，默认工程不展示状态切换工具。
+    // 英文同步同名键，文件名和类型状态不由翻译层重新推断。
+    // 本轮不登记导入完成或探测成功等尚不存在的业务结果。
+    mediaTypes: "素材类型", noMediaResults: "没有符合搜索或类型条件的素材", clearMediaFilters: "清除搜索和筛选", mediaResultCount: "显示 {count} 项素材",
+    mediaLoading: "正在读取素材列表…", mediaError: "素材列表读取失败，来源暂不可用", mediaImportUnavailable: "演示素材库尚未接入真实导入与探测",
+    mediaSamples: "素材面板状态预览", mediaReady: "五项素材", mediaEdge: "异常与长列表",
+    video: "视频", audio: "音频", image: "图片", voice: "配音", music: "背景音乐",
+    // 同组控制名称明确预览对象，未来键盘提示应复用此处的可访问名称。
+    // 单帧导出与工程导出不同，不能在禁用时显示相同的虚假完成提示。
+    // 场景名 scene_02 保留媒体文件身份，不随语言重命名或改路径。
+    // 固定帧率的数字来自工程示例，这些词条不承担时间码格式化。
+    // UI-04 才接入解码与播放状态，因此没有登记会被误用的“播放完成”。
+    // 画面适应按钮与时间轴适合全部的归属按修正稿执行。
+    program: "节目预览", play: "播放", previousFrame: "上一帧", nextFrame: "下一帧",
+    // 节目与素材查看明确区分，返回只改变查看形态，不触发播放或选中同步。
+    // 黑场、未选片段、缺图与音频无画面分别提示，避免误判同一类媒体错误。
+    // 静态封面等待不等于真实视频解码，所有处理类入口仍给出禁用原因。
+    // 状态样板入口只在独立演示页出现，不进入正式工作区标题栏。
+    // 片段控制与素材控制分别命名，用户能看出两类选择互不替代。
+    // 同名英文键同步维护，文件名仍使用演示对象的原始名称。
+    // 不添加播放成功、导出完成或自动恢复等尚未接通的结果文案。
+    // 黑场文字只解释当前画面，不暗示轨道已静音或被隐藏。
+    // 加载与错误由调用方传状态，翻译不参与异步状态推进。
+    sourcePreview: "素材查看", backToProgram: "返回节目预览", previewUnavailable: "静态预览尚未接入播放、逐帧、缩放或导出",
+    previewEmpty: "未选择片段", previewLoading: "正在准备预览…", previewMissing: "片段引用的素材或封面缺失",
+    previewError: "预览不可用", previewBlack: "当前为黑场，无节目画面", previewAudio: "音频片段没有画面，播放尚未接入",
+    previewSamples: "节目预览状态样板", previewClipChoice: "选中片段", previewStateChoice: "预览状态", previewReady: "静态画面", previewBroken: "损坏封面", previewLong: "长文件名",
+    fit: "适应", exportFrame: "导出当前帧", inspector: "片段属性", reset: "重置",
+    // 属性标签共用于参数化分组，视频/图片差异通过实际 rows 组合表达。
+    // 速度保留固定速度语义，不提前承诺变速曲线或关键帧能力。
+    // 淡入淡出只是 UI-01 字段占位，音频和视频的实际提交目标留给业务层区分。
+    // opacity 指画面不透明度，不能与音量混用同一个通用 percentage 标签。
+    // 位置的 X/Y 是工程坐标，标记不翻译成另一种坐标轴名称。
+    // 小数位和单位由样例注入，英文翻译不负责重新计算数值。
+    transform: "变换", scale: "缩放", position: "位置", rotation: "旋转", opacity: "不透明度",
+    playback: "播放设置", speed: "固定速度", fades: "淡入淡出", fadeIn: "淡入", fadeOut: "淡出",
+    // 时间轴分组标签来自工程而非源片段修剪，避免旧工具的 trim 文案被错误复用。
+    // zoomIn/zoomOut 明确是视口控制，不是把工程时间或输出分辨率改长改短。
+    // fitAll 归 R06，与 R03 的 fit 只在文字上相近但属于不同操作。
+    // timelineZoom 用于禁用滑条的 accessible label，不靠数字 40 作为名称。
+    // 分隔条名称只描述区域，鼠标与键盘拖动待后续布局交互接入。
+    // 暂不添加具体快捷键字符，避免与原剪辑工具的实际快捷键冲突。
+    timeline: "时间轴", select: "选择", split: "切分", snap: "吸附", linked: "链接选择",
+    addTrack: "添加轨道", fitAll: "适合全部", zoomOut: "缩小时间轴", zoomIn: "放大时间轴",
+    timelineZoom: "时间轴缩放", visibility: "可见", mute: "静音", solo: "独奏", lock: "锁定",
+    // 锁定和独奏等状态将由后续受控参数提供，本轮只使用这些动作名称。
+    // 不为 UI-01 的固定样例创建“已静音/已独奏”的假状态文案。
+    // 区域尺寸取决于宿主实际宽度，这个标签不含固定像素或百分比承诺。
+    resize: "调整上下工作区",
+  },
+
   video: {
     title: "视频剪辑",
     description: "多片段拼接 · 起点终点剪切 · 变速 · 裁剪 —— 基于本机 ffmpeg",
@@ -186,7 +467,6 @@ export const toolBox = {
     exifDescription: "批量清除、打乱或自定义图片元数据",
     videoDescription: "视频剪切、变速与裁剪",
     gifDescription: "视频片段一键转换为动图",
-    cartoonDescription: "气泡素材、对白文字与图片合成",
     openHint: "点击开始使用",
     exifName: "EXIF 编辑器",
     videoName: "视频工具箱",
@@ -197,16 +477,66 @@ export const toolBox = {
     comicBadge: "AI 创作",
   },
   civitai: {
+    // 本地库排序与在线库的发布/热度排序分离，不能共用同一组语义。
+    // name 对应文件全名，date 明确指磁盘修改时间而非网站发布日期。
+    // size 使用原始字节数比较，显示文案不携带硬编码体积单位。
+    // mark 来源仅限已保存的触发词，提示必须同时解释无资料项排末尾。
+    // loading 表示小型本地 JSON 读取，不应出现“正在匹配 Civitai”的文案。
+    // failed 说明名称回退与手动重扫路径，不能假装排序资料已读取成功。
+    localSort: {
+      title: "排列方式",
+      name: "名称",
+      date: "日期",
+      size: "大小",
+      mark: "标记",
+      asc: "递增",
+      desc: "递减",
+      direction: "排列方向",
+      markHint: "按本地已保存的触发词排序，缺少标记的模型置后",
+      loading: "正在读取本地标记…",
+      failed: "本地标记读取失败，已按名称显示，请重新扫描后重试",
+    },
     metadata: {
+      batchOccupied: "批量补全正在执行，结束后可手动匹配此模型。",
       heading: "模型来源信息", source: "来源", title: "来源标题", creator: "作者",
       loading: "正在读取来源 JSON…", missing: "该版本没有同名 .civitai.json 来源文件。",
       invalid: "来源 JSON 无法读取或格式不正确。", unsupported: "来源 JSON 版本暂不支持。",
       unavailable: "无法读取模型来源，请检查模型目录配置并重启应用。",
-      hashHint: "来源接口提供的文件指纹；下载时用于校验文件完整性，不包含模型说明。",
+      hashHint: "文件的 SHA-256 指纹，用于精确匹配 Civitai 文件版本；说明和触发词来自匹配版本的公开资料。",
+      recover: "通过 SHA-256 补全资料", recovering: "正在流式读取模型并查询 Civitai…",
+      coverUnavailable: "来源资料已保存，预览图暂未能下载；可稍后手动设置封面。",
+      recovery: {
+        recovered: "已补全来源资料及 logo 封面。", existing: "来源资料和可用 logo 封面已齐全，原有资料已保留。",
+        notFound: "Civitai 未找到此文件的 SHA-256，可能尚未收录或已经删除。",
+        auth: "Civitai 拒绝访问，请在模型插件中检查 API Key 和访问权限。",
+        network: "无法连接 Civitai，请检查网络后重试。", timeout: "读取或查询超时，请稍后重试。",
+        invalid: "文件不在配置的模型目录内、文件无效，或服务返回的数据未通过精确匹配校验。",
+        changed: "识别期间模型文件发生变化，未保存资料；请等待文件稳定后重试。",
+        busy: "模型目录正在操作或识别任务已满，请稍后重试。", io: "无法读取模型或保存资料，请检查目录权限后重试。",
+        noPreview: "尚未补全：模型已匹配并保留文字资料，但 C 站没有当前可用的预览图，缺少 logo。",
+        coverFailed: "尚未补全：logo 下载、保存或图片解码失败。文字资料已保留，可重试或手动设置封面。",
+        metadataInvalid: "尚未补全：原有来源文件损坏、无法读取或版本不受支持，已保留原文件，请备份处理后重试。",
+        unsupportedType: "尚未补全：C 站存在对应文件，但当前补全仅适配 LoRA、Checkpoint 和 TextualInversion，暂不支持该模型类型。",
+      },
+    },
+    recoveryBatch: {
+      title: "批量补全模型资料", start: "批量补全", scope: "范围：当前筛选的全部模型，包含 {count} 个文件版本。",
+      hint: "完成标准：来源资料可读取，且有可显示的 logo 封面。只有文字资料不会计为完成。",
+      progress: "已检查 {processed}/{total} · 已完成 {completed} · 未完成 {incomplete}",
+      waiting: "等待补全", running: "正在读取 SHA-256、查询 C 站并补充 logo…", cancelled: "已停止，尚未执行。",
+      stop: "停止后续任务", stopping: "当前文件完成后停止…", retry: "重试未完成项", results: "模型补全逐项结果",
+      continueHint: "切换页面会继续处理；停止后续任务将等待当前文件结束。",
+      scanFailed: "批量检查已结束，但模型列表刷新失败，请点击重新扫描；已保存的资料仍然保留。",
     },
     fileInfo: "文件信息与校验", unavailable: "暂无可下载文件",
     online: "在线模型",
     local: "本地模型",
+    // 官方目录用于一级导航，用户目录保持真实层级，不把标签当作文件夹。
+    // 单文件卡片不能调用旧的整目录删除，原因在操作附近明确呈现。
+    officialModels: "官方模型分类", myFolders: "我的分类", chooseOfficial: "选择官方分类后逐层浏览文件夹", folderPath: "模型文件夹路径", toggleFolder: "展开或收起 {name}", folderOperationOnly: "此目录包含多个模型，当前移动和删除以文件夹为单位。为避免影响其他模型，单文件卡片不执行该操作。",
+    // 本地工作区只提供索引实际支持的名称排序，密度切换复用同一模型卡片。
+    fileName: "文件名", sourceHeading: "来源与作者", workspaceBack: "返回工作台", sortName: "名称 A–Z",
+    sortNameReverse: "名称 Z–A", viewLarge: "大卡片视图", viewGrid: "网格视图", viewList: "列表视图",
     localTitle: "本地模型库",
     localDescription: "使用设置中的模型扫描目录，显示已扫描的模型和本地封面",
     scan: "重新扫描",
@@ -221,8 +551,15 @@ export const toolBox = {
     allLoaded: "已显示全部模型",
     localFiles: "本地模型文件",
     localChoose: "选择本地模型，查看封面及文件版本",
-    localFound: "本地已有同名文件",
-    localMatchHint: "仅按文件名匹配，不代表文件内容或版本完全一致",
+    // 摘要提示删掉“同名”，因为文件改名后仍可能靠已有 JSON 命中。
+    // 悬停说明限定为保存过的完整摘要，避免用户误以为浏览列表时重算了模型。
+    localFound: "本地已有相同文件",
+    localMatchHint: "本地来源 JSON 保存的完整 SHA256 与 C站文件一致；此处未重新读取模型校验",
+    // 名称证据单列词条，不能借用摘要提示让同名看起来像内容验证通过。
+    // “前缀”在这里指去除权重扩展名后的完整主干，不指字符串开头部分。
+    // 名称提示保留未校验说明，文件夹和文件都相同仍不能保证字节未被替换。
+    localNameFound: "本地已有同名文件",
+    localNameMatchHint: "本地文件夹名与 C站标题、文件名前缀均完全一致；未校验文件内容",
     categoryMove: {
       acknowledge: "我已知晓：将移动整个模型文件夹，包含所有版本、封面和其他文件。",
       title: "切换分类", move: "移动到此分类", moving: "正在移动…", done: "模型分类已更新",
@@ -257,6 +594,9 @@ export const toolBox = {
     choose: "选择模型，查看预览图、版本和下载文件", version: "模型版本",
     files: "下载文件", noFiles: "此版本暂时没有可下载文件", preview: "版本预览图",
     noPreview: "暂无预览图", prevImage: "上一张预览图", nextImage: "下一张预览图",
+    // 模型说明阅读器的两个状态共用键，在线和本地不能各自添加不同操作文案。
+    // 只控制说明区，不表示展开全部模型或打开整页详情。
+    showAllDescription: "显示全部", collapseDescription: "收起",
     words: "触发词", about: "模型说明", noDescription: "作者未提供说明。",
     download: "下载模型", downloadHint: "保存到设置中的模型目录，可选择分类和更换封面。",
     transfer: {

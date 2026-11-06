@@ -10,7 +10,7 @@ UI 与交互直接复用视频剪辑台的共享组件，本目录只保留 GIF 
 | `src/components/videoEdit/` | `VideoImportZone`、`ClipPlaylist`、`PreviewStage`、`TimelineScrubber`、`FfmpegStatusBar`、`ExportPanel` | 导入、拖拽排序、PR 风格 `[` `]` 剪切、走带预览、导出面板 |
 | `src/hooks/useClipEditor.ts` | 片段列表状态 + 导入/选中/删除/排序/剪切/跳帧 | 视频剪辑与 GIF 制作共用的整套交互 |
 | `src/hooks/useFfmpegStatus.ts` | ffmpeg 探测与手动指定 | 与视频工具共享同一份 `videoTool` 持久化配置 |
-| `electron/ffmpeg/jobs.js` | `buildGifArgs` + `startEditJob` | 与剪切/拼接共用同一套 IPC、进度与取消 |
+| `apps/electron/src/main/modules/ffmpeg/jobs.js` | `buildGifArgs` + `startEditJob` | 与剪切/拼接共用同一套 IPC、进度与取消 |
 
 本目录自有内容：`gif.tsx`（页面编排）、`components/GifSettingsPanel.tsx`（帧率与分辨率）。
 

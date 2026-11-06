@@ -2,6 +2,9 @@
 
 /** Prompt credentials share the encrypted IPC facade; changing endpoints resets the key draft. */
 import { useEffect, useState } from "react";
+// 共享凭据说明可直达原 Agent 配置，模型选择仍只维护一个入口。
+// 使用现有 Next 链接和设置锚点，不新建站点配置路由。
+import Link from "next/link";
 import { useIsElectronEnvironment } from "@/hooks/useIsElectronEnvironment";
 import { useTranslation } from "@/i18n";
 import { usePromptAssistantStore } from "@/stores/usePromptAssistantStore";
@@ -82,6 +85,28 @@ export function PromptApiKeySetting() {
       <a href="https://docs.bigmodel.cn/cn/guide/start/api-key" target="_blank" rel="noopener noreferrer" className="text-xs text-foreground underline underline-offset-4">{t("create.promptAssistant.docs")}</a>
       <PromptCredentialForm connection={{ provider: "glm", baseUrl: "" }} />
       <p className="text-xs text-muted-foreground">{t("create.promptAssistant.freeHint")}</p>
+    </div>
+    {/* 提示词助手连接设置：Euzhi 复用原凭据表单，通过参数选择共享的 Agent 分区。 */}
+    {/* 明确告知保存与清除会同步作用于 Agent，避免用户以为只是当前输入框的密钥。 */}
+    {/* Grok 型号沿用 Agent 选择，不把同一供应商配置拆成两份普通用户数据。 */}
+    {/* 与另外两组凭据表单各自挂载 hook：明文草稿、保存中和错误提示不在分区间串用。 */}
+    {/* Agent 中已经填过密钥时，这里会读取同一状态，输入框仍保持空白而不回填原值。 */}
+    {/* 保存只更换本站密钥，不改变当前提示词助手供应商，查看设置不应自动切站。 */}
+    {/* 清除按钮沿用 busy 禁用，不能同时发起保存和清除两种互相覆盖的动作。 */}
+    {/* 清除未配置密钥仍不可用，状态读取失败不能假装远端账户已经退出。 */}
+    {/* 原凭据表单保留明文降级警示，复用 Agent 存储不意味着所有系统都具备加密能力。 */}
+    {/* 链接只携带固定锚点，提示词原稿、预设指令和密钥都不进入 URL。 */}
+    {/* #agent 由既有设置分类切换处理，进入后仍显示原站点切换和模型选择器。 */}
+    {/* 这里只说明共享的 Grok 选择，不另建会与 Agent 分离的模型文本输入框。 */}
+    {/* 相同表单获得明确 euzhi 参数，不能因 Agent 当前是硅基流动就读错凭据。 */}
+    {/* 标题使用 Agent 同一服务商词条，名称和语言更新不用两处手工维护。 */}
+    {/* 外框沿用设置页现有面板样式，深浅主题和窄屏换行均由原组件负责。 */}
+    {/* 新区域不依赖 custom 端点是否有效，错误的自定义地址不会阻止 Euzhi 配置。 */}
+    <div className="space-y-3 rounded-xl border border-border p-4">
+      <h3 className="text-sm font-medium">{t("agent.providers.euzhi")}</h3>
+      <p className="text-xs text-muted-foreground">{t("create.promptAssistant.euzhiShared")}</p>
+      <Link href="/settings#agent" className="text-xs text-primary underline">{t("create.promptAssistant.euzhiManage")}</Link>
+      <PromptCredentialForm connection={{ provider: "euzhi", baseUrl: "" }} />
     </div>
     <CustomPromptConnection />
   </div>;

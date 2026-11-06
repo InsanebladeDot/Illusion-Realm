@@ -27,7 +27,7 @@ src/utils/video/
   time.ts                      时间格式化与解析
   crop.ts                      裁剪比例与边界夹取
   localFileUrl.ts              绝对路径 → localfile://（供 <video> 预览，支持 Range）
-electron/ffmpeg/
+apps/electron/src/main/modules/ffmpeg/
   locate.js                    ffmpeg/ffprobe 查找（手动 → PATH → 常见位置 → 内置）
   probe.js                     ffprobe 元数据（时长/宽高/帧率/音轨）
   jobs.js                      buildEditArgs / buildConcatArgs / buildGifArgs / startEditJob
@@ -43,7 +43,7 @@ electron/ffmpeg/
 2. **排序**：`ClipPlaylist` 用 `@dnd-kit`（`PointerSensor` + `verticalListSortingStrategy`）拖拽卡片；`arrayMove` 后**列表顺序就是拼接顺序**。首段变化时重置裁剪框（输出尺寸基准随首段改变）。
 3. **剪切**：选中某张卡片后，`TimelineScrubber` 编辑**该片段**的 `trim`；拖动 `[` / `]` 时通过 `onSeek` 实时写 `video.currentTime`，画面跳到对应帧（滚动到选区外会自动暂停并回到起点）。
    - **跳帧必须串行化**（`useClipEditor.flushSeek`）：暂停状态下按指针频率连续赋 `currentTime`，会让正在进行的 seek 不断被改写目标、始终完不成，表现为「拖过一小段后画面不再刷新，松手才跳到最后一帧」。现在同一时刻只允许一个 seek 在途，拖动期间只记录最新目标，`seeked` 之后立即接续（另有 1.2s 卡死兜底）。
-4. **导出**：单片段 → `mode: "single"`；多片段 → `mode: "concat"`。渲染进程只传参数，所有 ffmpeg 参数在 `electron/ffmpeg/jobs.js` 里构建。
+4. **导出**：单片段 → `mode: "single"`；多片段 → `mode: "concat"`。渲染进程只传参数，所有 ffmpeg 参数在 `apps/electron/src/main/modules/ffmpeg/jobs.js` 里构建。
    - 输出位置默认是**文件夹**（`video:pickOutputFolder`，`openDirectory` 对话框），文件名自动生成并可**自定义**（`<源文件名>[_x段数][_倍速][_crop].mp4`）；
    - 已选文件夹后按钮变为「更换文件夹」，可反复更换；目录会被记住（`videoTool.outputFolder`，与 GIF 工具共用）；
    - **未选择文件夹**时点击「开始处理」才弹出系统保存文件对话框（`video:pickOutput`），直接指定单个输出文件；
@@ -69,6 +69,6 @@ electron/ffmpeg/
 
 ## 扩展方式
 
-- **新增导出参数**（如水印、滤镜）：在 `apps/electron/ffmpeg/jobs.js` 的 `buildEditArgs` / `buildConcatArgs` 里加分支，并在 `packages/shared/src/types/electron-api.ts` 的 `VideoEditJob` 补字段；渲染侧只在面板组件里收集参数。
+- **新增导出参数**（如水印、滤镜）：在 `apps/electron/src/main/modules/ffmpeg/jobs.js` 的 `buildEditArgs` / `buildConcatArgs` 里加分支，并在 `packages/shared/src/types/electron-api.ts` 的 `VideoEditJob` 补字段；渲染侧只在面板组件里收集参数。
 - **新增工作流/预设**：面板组件内部维护预设数组（参考 `SpeedPanel`），不要把这些常量写进 `video.tsx`。
 - **拖动相关交互**：统一用指针事件 + `setPointerCapture`（已在 `TimelineScrubber` 中对无法捕获指针的环境做了降级处理，便于自动化测试）。

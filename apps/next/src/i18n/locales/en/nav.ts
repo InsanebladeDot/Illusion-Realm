@@ -7,11 +7,12 @@
  * allows untranslated growth for *new* keys, never for regressions.
  */
 export const nav = {
+  canvas: "Infinite canvas",
+  brandTagline: "AI art · Create your own fantasy world",
   "agent": "Agent",
   "home": "Home",
   "create": "Create",
   "inspect": "Inspect",
-  "cartoon": "Comic Dialog",
   "comic": "Comic Storyboard",
   "tags": "Tags",
   "profile": "Profile",

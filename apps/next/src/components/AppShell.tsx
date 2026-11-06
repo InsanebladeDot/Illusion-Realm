@@ -11,7 +11,6 @@ import { useProfileStore } from "@/stores/useProfileStore";
 import { useCreateFormStore } from "@/stores/useCreateFormStore";
 import { sanitizePersistedFolderIds, useHistoryFolderStore } from "@/stores/useHistoryFolderStore";
 import { useQuickPhraseStore } from "@/stores/useQuickPhraseStore";
-import { useCartoonBubbleStore } from "@/stores/useCartoonBubbleStore";
 import { useCustomCategoryStore } from "@/stores/useCustomCategoryStore";
 import { useExifToolStore } from "@/stores/useExifToolStore";
 import { useVideoToolStore } from "@/stores/useVideoToolStore";
@@ -26,6 +25,9 @@ import {
   saveUserDataDocument,
 } from "@/utils/userDataDocument";
 import { primeUserDataDocument } from "@/utils/userDataStorage";
+// 统计读取同一个已加载的用户文档，不从当前四十条队列推测完整历史。
+// 用户旧文档没有账本时恢复空值，不扫描磁盘图片补造历史时间。
+import { useGenerationHistoryStore } from "@/stores/use-generation-history-store";
 import { normalizeLocalModels } from "@/utils/localModelScanner";
 import { isElectronEnvironment } from "@/utils/electronBridge";
 import { AVAILABLE_LOCALES, DEFAULT_LOCALE, useLocaleStore, t, type Locale } from "@/i18n";
@@ -33,6 +35,12 @@ import { resolveLocale } from "@/utils/localeResolution";
 import { applyLocaleSignals } from "@/utils/localeSignals";
 import { MOBILE_BOTTOM_NAV_HEIGHT } from "@/utils/layout";
 import { cn } from "@/utils/cn";
+// 导航与主区留白共享同一伸缩节奏，模型库也复用此配置。
+// 只抽取动画参数，原有导航 store 与主区布局仍各司其职。
+// duration-300 与 ease-in-out 的实际值保持原样，本次不调整全局导航的手感。
+// 属性清单仍在各调用点声明，避免共享参数把无关颜色或尺寸也变成动画。
+// 新增模型库调用方只复用动画配置，不订阅或写入应用导航的 expanded 状态。
+import { PANEL_RESIZE_MOTION } from "@/utils/panel-resize-motion";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { applyThemeSignals } from "@/utils/themeSignals";
 import { DEFAULT_THEME_PREFERENCE } from "@/utils/themeResolution";
@@ -41,7 +49,16 @@ import { resolveAppliedTheme } from "@/utils/themeSignals";
 import { subscribeAgentHostTools } from "@/utils/agentHostTools";
 import { subscribeModelDownloads } from "@/stores/useModelDownloadStore";
 import { WindowTitlebar } from "@/components/window-titlebar";
+import { WorkspaceStatus } from "@/components/workspace-status";
 import { AuthGate } from "@/components/auth-gate";
+// 画师收藏与其他本地设置共用启动水合，路由重挂不会反复加载。
+// 在文档缓存初始化之后读取，避免空集合抢先覆盖已有收藏。
+// 只有ID与分组进入store，不在这里加载任何预览图片。
+import { useArtistLibraryStore } from "@/stores/use-artist-library-store";
+// 收藏同样等用户文档读完再恢复，不能因 skipHydration 一直停在初始空集合。
+// 角色与静态库共享文档，却保留各自的条目身份和业务操作。
+import { useCharacterFavoriteStore } from "@/stores/useCharacterFavoriteStore";
+import { useLibraryFavoritesStore } from "@/stores/use-library-favorites-store";
 import { useGuestSessionStore } from "@/stores/useGuestSessionStore";
 import { applyWindowChromeSignals, subscribeWindowChromeSignals } from "@/utils/window-chrome";
 
@@ -170,9 +187,29 @@ export function AppShell({
       await useSidebarStore.persist.rehydrate();
       await useSettingsStore.persist.rehydrate();
       await useProfileStore.persist.rehydrate();
+      // 先恢复旧小票再允许面板读取；新任务终态也会独立等待水合。
+      // 账户资料与统计分段独立，修改用户名不会重置生成历史。
+      /*
+       * 统计水合的接入位置说明：
+       * loaded.data 已经由统一文档加载器合并旧默认值。
+       * primeUserDataDocument 在水合任何业务 store 之前执行。
+       * 所以新增账本读取与设置、个人资料相同的文件快照。
+       * 这个顺序不会再到另一个默认目录创建第二份统计文件。
+       * 个人资料先恢复，随后账本恢复，二者保持独立的数据段。
+       * 主界面挂载前的初始化 Promise 仍沿用原生命周期。
+       * 账本恢复不触发网络调用，因此离线游客也能查看自己生成的记录。
+       * 账本恢复不扫描输出目录，所以打开软件不会为统计计算图片或模型哈希。
+       * 旧文档完全没有账本段时，store.merge 会返回空账本。
+       * 该空状态只表达追踪尚未开始，不能解释成用户过去从未生成过图片。
+       * 真实新任务在极早终态时还有独立的水合等待作为第二道时序保护。
+       * 面板只订阅已恢复的数据，不持有另一份局部历史副本。
+       * 切换个人中心或创建页面不会重新定义账本来源。
+       * 初始化失败仍由 AppShell 原有失败边界处理，不在统计段吞掉全局错误。
+       * 新增调用不改变已有收藏、快捷短语或模型扫描的先后关系。
+       */
+      await useGenerationHistoryStore.persist.rehydrate();
       await useHistoryFolderStore.persist.rehydrate();
       await useQuickPhraseStore.persist.rehydrate();
-      await useCartoonBubbleStore.persist.rehydrate();
       await useCreateFormStore.persist.rehydrate();
       await useUpdatesStore.persist.rehydrate();
       await useCustomCategoryStore.persist.rehydrate();
@@ -181,6 +218,12 @@ export function AppShell({
       await useNegativePresetStore.persist.rehydrate();
       await useView3DStore.persist.rehydrate();
       await useGuestSessionStore.persist.rehydrate();
+      // 可选画师段缺失时由schema回退空值，旧文档无需强制迁移。
+      // 与已有store串行水合，使用同一份已prime的用户文档。
+      // 分组持久化方法不从磁盘恢复，保留本版本的受限action。
+      await useArtistLibraryStore.persist.rehydrate();
+      await useCharacterFavoriteStore.persist.rehydrate();
+      await useLibraryFavoritesStore.persist.rehydrate();
 
       useHistoryFolderStore.setState((state) =>
         sanitizePersistedFolderIds(state.selectedFolderId, state.openedFolderId)
@@ -204,7 +247,7 @@ export function AppShell({
   }, []);
 
   return (
-    <div data-app-shell className="h-[100dvh] overflow-hidden bg-shell pt-[var(--window-chrome-height)] text-foreground">
+    <div data-app-shell data-sidebar-expanded={expanded} className="h-[100dvh] overflow-hidden bg-shell pt-[var(--window-chrome-height)] text-foreground">
       {/* 界面：全局标题栏与下载管理入口 */}
       <WindowTitlebar />
       {/* 界面：登录入口与游客有效期统一控制应用页面；标题栏始终保留。 */}
@@ -214,7 +257,8 @@ export function AppShell({
       <div
         data-app-content-layout
         className={cn(
-          "h-[calc(100dvh-var(--window-chrome-height))] min-h-0 overflow-hidden p-3 transition-[padding-left] duration-300 ease-in-out",
+          "h-[calc(100dvh-var(--window-chrome-height))] min-h-0 overflow-hidden p-3 transition-[padding-left]",
+          PANEL_RESIZE_MOTION,
           "pb-[calc(var(--mobile-nav-height)+12px)] md:pb-3",
           expanded ? "md:pl-[232px]" : "md:pl-[68px]"
         )}
@@ -245,6 +289,8 @@ export function AppShell({
         </main>
       </div>
       <MobileBottomNav />
+      {/* 界面：底部状态条，显示实际生成队列状态。 */}
+      <WorkspaceStatus />
       <GenerationNotice />
       <UpdateAnnouncementHost />
       </AuthGate>

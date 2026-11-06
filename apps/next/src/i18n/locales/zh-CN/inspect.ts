@@ -41,10 +41,6 @@ export const inspect = {
     remixLoadedWithWarnings: "已载入二创参数 ({warnings})",
     remixLoaded: "已载入二创参数，正在跳转创作页",
   },
-  uploadDropzone: {
-    title: "上传图片解析",
-    hint: "点击或拖拽 PNG / JPEG / WebP 等到此处",
-  },
   metaField: {
     copied: "{key} 已复制",
     copyLabel: "复制{key}",

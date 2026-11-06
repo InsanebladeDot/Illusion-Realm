@@ -4,9 +4,11 @@ import {
   FileEdit,
   Film,
   Images,
-  MessageSquare,
   PanelsTopLeft,
   Puzzle,
+  // 气泡合成与分镜保持不同图标、入口，避免用户把两种工具混淆。
+  // 新入口复用下方已有工具卡，不复制一份漫画专用卡片样式。
+  MessageSquare,
 } from "lucide-react";
 import Link from "next/link";
 import { useTranslation } from "@/i18n";
@@ -17,6 +19,12 @@ export function ToolBoxMain() {
   const { t } = useTranslation();
   const { category, query } = useToolBoxStore();
   const tools = [
+    // 漫画对话框直接进入合成编辑，说明与窗口门牌共用语言词条。
+    // 分类仍归image，现有搜索与类别筛选无需新增特殊分支。
+    // 此记录只声明导航，不提前加载48种模板或创建编辑状态。
+    // 工具路由与旧/cartoon书签指向同一个正式页面。
+    { name: t("dialogue.title"), description: t("dialogue.hint"), icon: MessageSquare,
+      badge: null, href: "/tools/image/cartoon", category: "image" },
     {
       name: t("toolBox.main.exifName"),
       description: t("toolBox.main.exifDescription"),
@@ -47,14 +55,6 @@ export function ToolBoxMain() {
       icon: PanelsTopLeft,
       badge: t("toolBox.main.comicBadge"),
       href: "/tools/image/comic",
-      category: "image",
-    },
-    {
-      name: t("nav.cartoon"),
-      description: t("toolBox.main.cartoonDescription"),
-      icon: MessageSquare,
-      badge: null,
-      href: "/tools/image/cartoon",
       category: "image",
     },
     {

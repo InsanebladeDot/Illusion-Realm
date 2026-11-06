@@ -4,7 +4,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, LogIn } from "lucide-react";
-import { useTranslation } from "@/i18n";
+import { useTranslation, type MessageKey } from "@/i18n";
 import { APP_NAME } from "@/data/navigation";
 import { AUTH_PROVIDERS } from "@/data/auth-providers";
 import { useGuestSessionStore } from "@/stores/useGuestSessionStore";
@@ -53,13 +53,13 @@ function GuestEntry() {
     {error && <p role="alert" className="text-xs text-red-600 dark:text-red-400">{error}</p>}
   </div>;
 }
-function accountErrorMessage(error: unknown, translate: (key: "authNetworkError" | "authInvalid" | "authUnauthorized" | "authRateLimited" | "authUnavailable") => string): string {
+function accountErrorMessage(error: unknown, t: (key: MessageKey) => string): string {
   const code = error instanceof AccountApiError ? error.code : error && typeof error === "object" && "code" in error ? String(error.code) : "";
-  if (code === "NETWORK_ERROR") return translate("authNetworkError");
-  if (code === "INVALID_ARGUMENT") return translate("authInvalid");
-  if (code === "UNAUTHENTICATED") return translate("authUnauthorized");
-  if (code === "RATE_LIMITED") return translate("authRateLimited");
-  return translate("authUnavailable");
+  if (code === "NETWORK_ERROR") return t("auth.authNetworkError");
+  if (code === "INVALID_ARGUMENT") return t("auth.authInvalid");
+  if (code === "UNAUTHENTICATED") return t("auth.authUnauthorized");
+  if (code === "RATE_LIMITED") return t("auth.authRateLimited");
+  return t("auth.authUnavailable");
 }
 function EmailVerificationForm({ email, onBack, onVerified }: { email: string; onBack: () => void; onVerified: () => void }) {
   const { t } = useTranslation();
@@ -75,7 +75,7 @@ function EmailVerificationForm({ email, onBack, onVerified }: { email: string; o
     if (busy || verified) return;
     setBusy(true); setMessage("");
     try { if (resend) { await resendVerification(email); setMessage(t("auth.verificationSent")); } else { await verifyEmail(token.trim()); setVerified(true); setMessage(t("auth.verifyRedirect")); } }
-    catch (error) { setMessage(accountErrorMessage(error, key => t(`auth.${key}`))); }
+    catch (error) { setMessage(accountErrorMessage(error, t)); }
     finally { setBusy(false); }
   };
   return <div className="space-y-5 text-left">
@@ -96,7 +96,7 @@ function LoginContent() {
     try {
       if (mode === "register") { await register({ email: values.email, password: values.password, displayName: values.displayName || values.email.split("@")[0] }); setVerificationEmail(values.email); setMode("verify"); return t("auth.registerSuccess"); }
       await login({ email: values.email, password: values.password, deviceName: "Illusion Realm Desktop" }); router.replace("/"); return t("auth.loginSuccess");
-    } catch (error) { throw new Error(accountErrorMessage(error, key => t(`auth.${key}`))); }
+    } catch (error) { throw new Error(accountErrorMessage(error, t)); }
   };
   if (mode === "verify") return <EmailVerificationForm email={verificationEmail} onBack={returnToLogin} onVerified={returnToLogin} />;
   return mode === "landing" ? <div className="space-y-6">
@@ -115,47 +115,51 @@ function LoginContent() {
       </>;
 }
 
+function AuthBrand() {
+  const { t } = useTranslation();
+  return <header data-auth-brand className="mb-7 space-y-1.5 text-center [@media(max-height:720px)]:mb-5">
+    <h1 className="break-words text-[30px] font-bold leading-tight tracking-[-1.2px] text-sky-500 sm:text-[34px]">{APP_NAME}</h1>
+    <p className="text-xs font-medium text-sky-600 dark:text-sky-400">{t("auth.brandSub")}</p>
+  </header>;
+}
+
 function LoginCard({ split }: { split: boolean }) {
   const { t } = useTranslation();
-  const expired = useGuestSessionStore(state => state.expired);
   return <div data-auth-card className={cn("flex min-h-0 w-full flex-col overflow-hidden bg-background/95 text-center shadow-[0_16px_64px_rgba(15,23,42,0.16)] backdrop-blur-md",
-    split ? "h-full rounded-l-[24px]" : "max-h-full max-w-[392px] rounded-[24px] border border-white/30")}>
-      {/* 界面：品牌区固定；只让下方内容滚动，复用项目弹窗的 min-h-0 滚动布局。 */}
-      <div data-auth-brand className={cn("shrink-0 space-y-1.5 px-6 pb-7 sm:px-8", split ? "pt-16" : "pt-8 sm:pt-9")}><h1 className="break-words text-[32px] font-bold leading-tight tracking-[-1.2px] text-sky-500 sm:text-[36px]">{APP_NAME}</h1><p className="text-[11px] font-medium tracking-wide text-sky-600 dark:text-sky-400">{t("auth.brandSub")}</p></div>
-      <div data-auth-scroll className={cn("min-h-0 overflow-x-hidden overflow-y-auto overscroll-contain px-6 [scrollbar-width:thin] sm:px-8", split && "flex flex-1 flex-col")}>
-        <div className={cn("mx-auto w-full max-w-[328px] shrink-0", split && "my-auto py-1")}>
-          {expired && <p role="status" data-auth-expired className="mb-5 rounded-xl bg-amber-500/10 p-3 text-xs leading-relaxed text-amber-700 dark:text-amber-300">{t("auth.expired")}</p>}
+    split ? "h-full rounded-l-[24px]" : "max-h-full max-w-[420px] rounded-[24px] border border-white/30")}>
+      {/* 界面：品牌与表单共同滚动，矮窗口保持页脚与全局标题栏固定。 */}
+      <div data-auth-scroll className={cn("flex min-h-0 flex-col overflow-x-hidden overflow-y-auto overscroll-contain px-6 pb-5 pt-8 [scrollbar-width:thin] sm:px-8", split && "flex-1 px-9 pt-16 sm:px-9")}>
+        <div className={cn("mx-auto w-full max-w-[360px] shrink-0", split && "my-auto")}>
+          <AuthBrand />
           {/* 界面：账号操作、第三方入口和游客入口。 */}
           <LoginContent />
         </div>
       </div>
-      <div data-auth-card-footer className="shrink-0 px-6 pb-6 pt-5 sm:px-8">
-        <p className="border-t border-border/50 pt-4 text-[10px] leading-relaxed text-muted-foreground/75">{t("auth.privacy")}</p>
-        {split && <p className="mt-3 text-[11px] tracking-wide text-muted-foreground">{t("auth.footer")}</p>}
+      <div data-auth-card-footer className="shrink-0 px-6 pb-4 pt-3 sm:px-8">
+        <p className="border-t border-border/50 pt-3 text-[11px] leading-relaxed text-muted-foreground">{t("auth.privacy")}</p>
+        <p className="mt-2 text-[11px] tracking-wide text-muted-foreground">{t("auth.footer")}</p>
       </div>
     </div>;
 }
 
 export function LoginPage() {
-  const { t } = useTranslation();
-  // 复用项目的媒体查询订阅：宽且矮时分栏；只换容器样式，不卸载表单或丢失输入。
-  const split = useMediaQuery("(min-width: 960px) and (min-aspect-ratio: 2/1)");
+  // 宽屏或宽矮窗口采用有限右栏；只换容器样式，不卸载表单或丢失输入。
+  const split = useMediaQuery("(min-width: 1536px), (min-width: 1120px) and (max-height: 640px)");
   return <section data-login-page data-login-layout={split ? "split" : "centered"} className={cn(
     "relative isolate grid h-[calc(100dvh-var(--window-chrome-height))] min-h-0 w-full overflow-hidden bg-[#bdd6e4]",
-    split && "grid-cols-[minmax(0,2fr)_minmax(0,1fr)]",
+    split && "grid-cols-[minmax(0,1fr)_clamp(420px,28vw,480px)]",
   )}>
-    {/* 界面：分栏保持插画与登录面板 2:1；插画延伸到圆角背后，避免露出另一层底色。 */}
+    {/* 界面：插画使用剩余宽度，并延伸到面板左圆角背后。 */}
     <div data-auth-background aria-hidden className={cn("bg-[#bdd6e4] bg-cover bg-[position:center_42%]", split ? "relative col-start-1 row-start-1 -mr-6 min-h-0 min-w-0" : "absolute inset-0")} style={{ backgroundImage: "url('/images/login-background.webp')" }}>
       <div className="absolute inset-0 bg-slate-950/25 dark:bg-slate-950/45" />
     </div>
     {/* 界面：主题按钮固定；登录面板的品牌区为它预留空间。 */}
     <div className="absolute right-4 top-4 z-20"><ThemeToggle /></div>
     <div data-auth-pane className={cn("relative row-start-1 min-h-0 min-w-0", split ? "col-start-2" : "col-start-1")}>
-      <div data-auth-content className={cn("flex h-full min-h-0 flex-col items-center justify-center", !split && "px-4 pb-8 pt-16 sm:px-6 sm:pb-10")}>
+      <div data-auth-content className={cn("flex h-full min-h-0 flex-col items-center justify-center", !split && "px-4 pb-4 pt-14 sm:px-6 sm:pb-6 sm:pt-16")}>
         {/* 只有中间内容可收缩并滚动；外层卡片和页脚始终留在可视区域。 */}
-        <div data-auth-stack className={cn("flex max-h-full min-h-0 w-full flex-col items-center", split ? "h-full" : "gap-5")}>
+        <div data-auth-stack className={cn("flex max-h-full min-h-0 w-full flex-col items-center", split && "h-full")}>
           <LoginCard split={split} />
-          {!split && <p className="shrink-0 text-center text-xs tracking-wide text-white/90 drop-shadow-sm">{t("auth.footer")}</p>}
         </div>
       </div>
     </div>

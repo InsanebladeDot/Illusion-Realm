@@ -26,18 +26,31 @@ function Toggle({
   onToggle: () => void;
 }) {
   return (
-    <div
+    // 原来使用可点击 div；改为原生按钮，让键盘空格和 Enter 走相同 onToggle。
+    // role=switch 配合 aria-checked 表示开关，而不是一次性执行的改名动作。
+    // type=button 防止这个组件放进表单时意外提交外层表单。
+    // 仍由 checked 参数控制显示，不在公共组件里增加另一份 enabled state。
+    // 因此 EXIF 单文件、批量工具和图库都能独立持有自己的开关值。
+    // 外层 fieldset 的 disabled 会自然传递到按钮，无需图库专用的锁参数。
+    // 滑块内部 span 只呈现位置，不再监听点击，避免一次操作翻转两遍。
+    // 外侧已有 label 提供开关说明，按钮不使用固定中文覆盖外层当前语言。
+    // data-rename-toggle 只用于定位真实控件，不提供绕过业务回调的测试入口。
+    // 原色和尺寸保留，行为语义修正不要求其他调用方同步改 JSX。
+    // checked 为 true 才右移滑块，视觉状态始终和调用方实际 enabled 一致。
+    // 公共组件不执行任何文件操作，切换启用只是允许父层显示命名设置。
+    <button
+      type="button" role="switch" aria-checked={checked} data-rename-toggle
       className={`relative h-5 w-10 cursor-pointer rounded-full transition-colors ${
         checked ? "bg-sky-600" : "bg-muted-foreground/30"
       }`}
       onClick={onToggle}
     >
-      <div
+      <span
         className={`absolute left-0.5 top-0.5 h-4 w-4 rounded-full bg-background transition-transform ${
           checked ? "translate-x-5" : "translate-x-0"
         }`}
       />
-    </div>
+    </button>
   );
 }
 
@@ -65,6 +78,10 @@ function NumberStepper({
         </button>
         <input
           type="number"
+          data-rename-start
+          // 标记只是测试定位；数值仍经原 onChange 回调交给各自父层。
+          // 公共 stepper 保留原输入范围，图库额外的正数要求由图库自己的验证承担。
+          // 不为一个调用方更改所有 EXIF 使用处的数字业务规则。
           value={value}
           onChange={(event) => onChange(Number(event.target.value))}
           className="w-full px-2 py-2 text-center text-sm focus:outline-none"
@@ -118,6 +135,10 @@ export function RenameConfig({
               </label>
               <input
                 type="text"
+                data-rename-prefix
+                // 共享文本框不 trim 或翻译输入，父层能准确预览用户真正填写的前缀。
+                // 中文与英文界面切换只改变标签，已填写的文件名前缀保持原值。
+                // 图库与 EXIF 使用处分别注入 onPrefixChange，不共享用户正在编辑的文本。
                 placeholder={t("toolBox.exif.renameConfig.prefixPlaceholder")}
                 value={prefix}
                 onChange={(event) => onPrefixChange(event.target.value)}

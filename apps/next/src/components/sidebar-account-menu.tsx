@@ -1,6 +1,15 @@
 "use client";
 
-// 界面：账户、工具箱、更新与语言入口；设置常驻 nav，外观设置位于全局顶栏。
+// 界面：账户、设置、工具箱、更新与语言入口；外观设置继续位于全局顶栏。
+// 设置使用 BOTTOM_NAV_ITEMS 的同一配置，导航配置改名时菜单也会同步。
+// 筛选保留配置顺序，避免这里另写一份链接清单后出现路由漂移。
+// 工具箱与更新原入口继续由相同的菜单行生成。
+// 菜单行共用16px图标与 ROW 的点击区域，设置不需要独立尺寸。
+// 链接同时保留 href 和 navigate，沿用原来的路由与转场机制。
+// navigate 收起菜单后才开始跳转，避免新页面上覆盖旧浮层。
+// 账户未登录时也显示设置，因为本地配置无需账号服务。
+// caption 与侧栏回退共用本组件，两个宿主会获得相同的设置入口。
+// 菜单锚点和视口边界仍由本组件原有定位逻辑处理。
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type RefObject } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
@@ -34,6 +43,13 @@ function useMenuPosition(anchor: MenuProps["anchor"], expanded: boolean) {
       const rect = anchor.current.getBoundingClientRect();
       panel.current.style.display = rect.width ? "" : "none";
       const chrome = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--window-chrome-height")) || 0;
+      if (rect.top < chrome) {
+        panel.current.style.left = `${Math.max(8, Math.min(rect.right - 248, innerWidth - 256))}px`;
+        panel.current.style.top = `${rect.bottom + 8}px`;
+        panel.current.style.bottom = "auto";
+        panel.current.style.maxHeight = `${Math.max(0, innerHeight - rect.bottom - 16)}px`;
+        return;
+      }
       const bottom = Math.max(8, expanded ? innerHeight - rect.top + 8 : innerHeight - rect.bottom);
       panel.current.style.left = `${Math.max(8, Math.min(expanded ? rect.left : rect.right + 8, innerWidth - 256))}px`;
       panel.current.style.bottom = `${bottom}px`;
@@ -84,7 +100,10 @@ function AccountMenuItems({ onClose, onView }: { onClose: () => void; onView: (v
     <Link href="/profile" onClick={event => { event.preventDefault(); navigate("/profile"); }} className={cn(ROW, "mb-1 py-3")}><AccountAvatar name={name} source={avatar} /><span className="min-w-0 flex-1"><span className="block truncate font-medium">{name}</span><span className="block truncate text-xs text-muted-foreground">{account?.email ?? t("auth.guestStatus")}</span></span><ChevronRight size={14} className="text-muted-foreground" /></Link>
     <div className="mx-2 my-1 border-t border-border" />
     <Link href="/profile" className={ROW} onClick={event => { event.preventDefault(); navigate("/profile"); }}><User size={16} />{t("nav.profile")}</Link>
-    {BOTTOM_NAV_ITEMS.filter(item => item.id === "toolBox" || item.id === "updates").map(item => {
+    {/* 界面：设置与更新、工具箱共用同一菜单行，保持截图中的账户菜单密度。 */}
+    {/* 设置复用导航配置中的图标、词条与真实 /settings 路由，不新增平行入口。 */}
+    {/* 统一 navigate 会先关闭菜单再切页，避免设置页打开后仍残留账户浮层。 */}
+    {BOTTOM_NAV_ITEMS.filter(item => item.id === "settings" || item.id === "toolBox" || item.id === "updates").map(item => {
       const Icon = item.icon;
       return <Link key={item.id} href={item.href!} className={ROW} onClick={event => { event.preventDefault(); navigate(item.href!); }}><Icon size={16} />{t(item.label)}</Link>;
     })}
@@ -110,13 +129,13 @@ function AccountMenu({ anchor, expanded, onClose }: MenuProps) {
   </div>, document.body);
 }
 
-export function SidebarAccountMenu({ expanded }: { expanded: boolean }) {
+export function SidebarAccountMenu({ expanded, caption = false }: { expanded: boolean; caption?: boolean }) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false), anchor = useRef<HTMLButtonElement>(null);
   const close = useCallback(() => setOpen(false), []);
   const account = useAccountStore(state => state.profile), localName = useProfileStore(state => state.username), avatar = useProfileStore(state => state.avatarDataUrl);
   const name = account?.displayName ?? localName;
-  return <div className="w-full">
+  return <div data-caption-account={caption || undefined} className={caption ? "window-caption-action flex w-32 max-w-[26vw] items-center" : "w-full"}>
     <button ref={anchor} type="button" data-account-menu-trigger aria-label={t("auth.accountMenu")} title={name} aria-expanded={open} aria-haspopup="dialog" aria-controls={open ? "sidebar-account-menu" : undefined} onClick={() => setOpen(value => !value)} className={cn("flex min-h-10 w-full items-center gap-2 rounded-xl px-1.5 py-1.5 text-left hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-stroke", !expanded && "justify-center", open && "bg-muted")}><AccountAvatar name={name} source={avatar} />{expanded && <><span className="min-w-0 flex-1"><span className="block truncate text-sm">{name}</span>{account && <span className="block truncate text-[11px] text-muted-foreground">{account.email}</span>}</span><ChevronRight size={14} className="shrink-0 text-muted-foreground" /></>}</button>
     {/* 弹窗：账户菜单通过 Portal 显示，侧栏收起时也不会被裁掉。 */}
     {open && <AccountMenu anchor={anchor} expanded={expanded} onClose={close} />}

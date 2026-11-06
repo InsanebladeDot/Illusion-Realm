@@ -28,7 +28,7 @@ import { useIsHydrated } from "@/hooks/useIsHydrated";
  *      —— **不得依赖它**。
  *   2. 因此这里显式在 `change` / `resize` / `visibilitychange` 上都重读 `media.matches`，
  *      不采信事件载荷。`visibilitychange` 是第二层网：窗口重新可见时先到它，与尺寸变没变无关。
- *   3. 同族写法（`SimpleSelect` 的 resize → 重测 rect、`TruncatedTextPopover` 的 resize → 重新 measure）
+ *   3. 同族写法（`SimpleSelect` 的 resize → 重测 rect）
  *      本来就符合「以读为准」，未改动。
  *
  * 可复现的验伪：`SMOKE_SWALLOW_MEDIA_EVENT=1 npx electron scripts/smoke-prompt-assembly.js`

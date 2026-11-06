@@ -207,7 +207,11 @@ export function HomeHero() {
         <p className="text-[10px] font-medium tracking-[0.28em] text-white/80">
           {t("home.hero.studio")}
         </p>
-        <h1 className="mt-2 text-4xl font-bold tracking-tight sm:text-6xl">
+        {/* 品牌层：参考原图的细衬线斜体，保持真实文字可选中且可被读屏读取。 */}
+        {/* 优先使用系统 Times New Roman，离线安装不需要下载字体或等待远端服务。 */}
+        {/* 字号随窗口缩放并设置上下限，窄屏按单词自然换行，避免标题撑宽 main。 */}
+        {/* 沿用当前白字与父层投影，不为艺术字新建主题、图片或重复品牌组件。 */}
+        <h1 className="mt-2 font-['Times_New_Roman',Georgia,serif] text-[clamp(2.5rem,5.8vw,5.5rem)] leading-[1.1] font-normal italic tracking-[-0.035em]">
           {t("home.hero.title")}
         </h1>
         <p className="mt-3 text-lg font-medium sm:text-2xl">{t("home.hero.tagline")}</p>

@@ -1,0 +1,290 @@
+{
+  "classic-left": {
+    "name": "Classic left tail",
+    "sample": "Our story begins here.",
+    "use": "Classic left tail for concise comic dialogue.",
+    "note": "Keep dialogue concise and check readability against the background."
+  },
+  "classic-right": {
+    "name": "Classic right tail",
+    "sample": "Our story begins here.",
+    "use": "Classic right tail for concise comic dialogue.",
+    "note": "Keep dialogue concise and check readability against the background."
+  },
+  "oval": {
+    "name": "Oval dialogue",
+    "sample": "Our story begins here.",
+    "use": "Oval dialogue for concise comic dialogue.",
+    "note": "Keep dialogue concise and check readability against the background."
+  },
+  "compact": {
+    "name": "Compact box",
+    "sample": "Our story begins here.",
+    "use": "Compact box for concise comic dialogue.",
+    "note": "Keep dialogue concise and check readability against the background."
+  },
+  "soft": {
+    "name": "Soft dialogue",
+    "sample": "Our story begins here.",
+    "use": "Soft dialogue for concise comic dialogue.",
+    "note": "Keep dialogue concise and check readability against the background."
+  },
+  "double": {
+    "name": "Double outline",
+    "sample": "Our story begins here.",
+    "use": "Double outline for concise comic dialogue.",
+    "note": "Keep dialogue concise and check readability against the background."
+  },
+  "dashed": {
+    "name": "Dashed whisper",
+    "sample": "Our story begins here.",
+    "use": "Dashed whisper for concise comic dialogue.",
+    "note": "Keep dialogue concise and check readability against the background."
+  },
+  "borderless": {
+    "name": "Borderless subtitle",
+    "sample": "Our story begins here.",
+    "use": "Borderless subtitle for concise comic dialogue.",
+    "note": "Keep dialogue concise and check readability against the background."
+  },
+  "thought": {
+    "name": "Thought cloud",
+    "sample": "Our story begins here.",
+    "use": "Thought cloud for concise comic dialogue.",
+    "note": "Keep dialogue concise and check readability against the background."
+  },
+  "dream": {
+    "name": "Dream bubble",
+    "sample": "Our story begins here.",
+    "use": "Dream bubble for concise comic dialogue.",
+    "note": "Keep dialogue concise and check readability against the background."
+  },
+  "black": {
+    "name": "Black announcement",
+    "sample": "Our story begins here.",
+    "use": "Black announcement for concise comic dialogue.",
+    "note": "Keep dialogue concise and check readability against the background."
+  },
+  "whisper": {
+    "name": "Fading whisper",
+    "sample": "Our story begins here.",
+    "use": "Fading whisper for concise comic dialogue.",
+    "note": "Keep dialogue concise and check readability against the background."
+  },
+  "shout": {
+    "name": "Jagged shout",
+    "sample": "Our story begins here.",
+    "use": "Jagged shout for concise comic dialogue.",
+    "note": "Keep dialogue concise and check readability against the background."
+  },
+  "angry": {
+    "name": "Red anger",
+    "sample": "Our story begins here.",
+    "use": "Red anger for concise comic dialogue.",
+    "note": "Keep dialogue concise and check readability against the background."
+  },
+  "surprise": {
+    "name": "Yellow surprise",
+    "sample": "Our story begins here.",
+    "use": "Yellow surprise for concise comic dialogue.",
+    "note": "Keep dialogue concise and check readability against the background."
+  },
+  "tremble": {
+    "name": "Trembling voice",
+    "sample": "Our story begins here.",
+    "use": "Trembling voice for concise comic dialogue.",
+    "note": "Keep dialogue concise and check readability against the background."
+  },
+  "impact": {
+    "name": "Action impact",
+    "sample": "Our story begins here.",
+    "use": "Action impact for concise comic dialogue.",
+    "note": "Keep dialogue concise and check readability against the background."
+  },
+  "speed": {
+    "name": "Speed lines",
+    "sample": "Our story begins here.",
+    "use": "Speed lines for concise comic dialogue.",
+    "note": "Keep dialogue concise and check readability against the background."
+  },
+  "ice": {
+    "name": "Icy dialogue",
+    "sample": "Our story begins here.",
+    "use": "Icy dialogue for concise comic dialogue.",
+    "note": "Keep dialogue concise and check readability against the background."
+  },
+  "fire": {
+    "name": "Fiery declaration",
+    "sample": "Our story begins here.",
+    "use": "Fiery declaration for concise comic dialogue.",
+    "note": "Keep dialogue concise and check readability against the background."
+  },
+  "narration": {
+    "name": "Narration note",
+    "sample": "Our story begins here.",
+    "use": "Narration note for concise comic dialogue.",
+    "note": "Keep dialogue concise and check readability against the background."
+  },
+  "chapter": {
+    "name": "Chapter card",
+    "sample": "Our story begins here.",
+    "use": "Chapter card for concise comic dialogue.",
+    "note": "Keep dialogue concise and check readability against the background."
+  },
+  "stamp": {
+    "name": "Date stamp",
+    "sample": "Our story begins here.",
+    "use": "Date stamp for concise comic dialogue.",
+    "note": "Keep dialogue concise and check readability against the background."
+  },
+  "photo": {
+    "name": "Photo caption",
+    "sample": "Our story begins here.",
+    "use": "Photo caption for concise comic dialogue.",
+    "note": "Keep dialogue concise and check readability against the background."
+  },
+  "system": {
+    "name": "System notice",
+    "sample": "Our story begins here.",
+    "use": "System notice for concise comic dialogue.",
+    "note": "Keep dialogue concise and check readability against the background."
+  },
+  "terminal": {
+    "name": "Terminal output",
+    "sample": "Our story begins here.",
+    "use": "Terminal output for concise comic dialogue.",
+    "note": "Keep dialogue concise and check readability against the background."
+  },
+  "pixel": {
+    "name": "Pixel dialogue",
+    "sample": "Our story begins here.",
+    "use": "Pixel dialogue for concise comic dialogue.",
+    "note": "Keep dialogue concise and check readability against the background."
+  },
+  "radio": {
+    "name": "Radio channel",
+    "sample": "Our story begins here.",
+    "use": "Radio channel for concise comic dialogue.",
+    "note": "Keep dialogue concise and check readability against the background."
+  },
+  "phone": {
+    "name": "Phone call",
+    "sample": "Our story begins here.",
+    "use": "Phone call for concise comic dialogue.",
+    "note": "Keep dialogue concise and check readability against the background."
+  },
+  "ai": {
+    "name": "AI assistant",
+    "sample": "Our story begins here.",
+    "use": "AI assistant for concise comic dialogue.",
+    "note": "Keep dialogue concise and check readability against the background."
+  },
+  "neon": {
+    "name": "Neon cyber",
+    "sample": "Our story begins here.",
+    "use": "Neon cyber for concise comic dialogue.",
+    "note": "Keep dialogue concise and check readability against the background."
+  },
+  "glitch": {
+    "name": "Signal glitch",
+    "sample": "Our story begins here.",
+    "use": "Signal glitch for concise comic dialogue.",
+    "note": "Keep dialogue concise and check readability against the background."
+  },
+  "romance": {
+    "name": "Romantic whisper",
+    "sample": "Our story begins here.",
+    "use": "Romantic whisper for concise comic dialogue.",
+    "note": "Keep dialogue concise and check readability against the background."
+  },
+  "starlight": {
+    "name": "Starlight",
+    "sample": "Our story begins here.",
+    "use": "Starlight for concise comic dialogue.",
+    "note": "Keep dialogue concise and check readability against the background."
+  },
+  "scroll": {
+    "name": "Magic scroll",
+    "sample": "Our story begins here.",
+    "use": "Magic scroll for concise comic dialogue.",
+    "note": "Keep dialogue concise and check readability against the background."
+  },
+  "ghost": {
+    "name": "Ghost voice",
+    "sample": "Our story begins here.",
+    "use": "Ghost voice for concise comic dialogue.",
+    "note": "Keep dialogue concise and check readability against the background."
+  },
+  "villain": {
+    "name": "Villain speech",
+    "sample": "Our story begins here.",
+    "use": "Villain speech for concise comic dialogue.",
+    "note": "Keep dialogue concise and check readability against the background."
+  },
+  "fairy": {
+    "name": "Fairy guidance",
+    "sample": "Our story begins here.",
+    "use": "Fairy guidance for concise comic dialogue.",
+    "note": "Keep dialogue concise and check readability against the background."
+  },
+  "underwater": {
+    "name": "Underwater",
+    "sample": "Our story begins here.",
+    "use": "Underwater for concise comic dialogue.",
+    "note": "Keep dialogue concise and check readability against the background."
+  },
+  "glass": {
+    "name": "Glass overlay",
+    "sample": "Our story begins here.",
+    "use": "Glass overlay for concise comic dialogue.",
+    "note": "Keep dialogue concise and check readability against the background."
+  },
+  "halftone": {
+    "name": "Manga halftone",
+    "sample": "Our story begins here.",
+    "use": "Manga halftone for concise comic dialogue.",
+    "note": "Keep dialogue concise and check readability against the background."
+  },
+  "ink": {
+    "name": "Ink brush",
+    "sample": "Our story begins here.",
+    "use": "Ink brush for concise comic dialogue.",
+    "note": "Keep dialogue concise and check readability against the background."
+  },
+  "vertical": {
+    "name": "Vertical manga",
+    "sample": "Our story begins here.",
+    "use": "Vertical manga for concise comic dialogue.",
+    "note": "Keep dialogue concise and check readability against the background."
+  },
+  "sticker": {
+    "name": "Sticker",
+    "sample": "Our story begins here.",
+    "use": "Sticker for concise comic dialogue.",
+    "note": "Keep dialogue concise and check readability against the background."
+  },
+  "comedy": {
+    "name": "Comedy retort",
+    "sample": "Our story begins here.",
+    "use": "Comedy retort for concise comic dialogue.",
+    "note": "Keep dialogue concise and check readability against the background."
+  },
+  "shy": {
+    "name": "Shy voice",
+    "sample": "Our story begins here.",
+    "use": "Shy voice for concise comic dialogue.",
+    "note": "Keep dialogue concise and check readability against the background."
+  },
+  "silent": {
+    "name": "Silent pause",
+    "sample": "Our story begins here.",
+    "use": "Silent pause for concise comic dialogue.",
+    "note": "Keep dialogue concise and check readability against the background."
+  },
+  "breakout": {
+    "name": "Breakout declaration",
+    "sample": "Our story begins here.",
+    "use": "Breakout declaration for concise comic dialogue.",
+    "note": "Keep dialogue concise and check readability against the background."
+  }
+}

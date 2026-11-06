@@ -1,10 +1,11 @@
 /** 导航相关词条：侧栏、移动端底部导航 */
 export const nav = {
+  brandTagline: "AI 绘图 · 创造属于你的幻想世界",
   agent: "Agent",
   home: "首页",
+  canvas: "无限画布",
   create: "创建",
   inspect: "本地解析",
-  cartoon: "漫画对话框",
   comic: "漫画分镜",
   tags: "标签",
   profile: "我的主页",

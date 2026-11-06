@@ -1,0 +1,325 @@
+/* 与离线样例共用的外壳比例；业务组件和持久化状态继续由原组件管理。 */
+:root[data-color-preset="default"][data-theme="light"] {
+  /* head/nav 与 main 内容展示区域共用用户指定的 #f3f8ff。 */
+  /* 首帧 CSS 与 SHELL_PALETTES 的水合值一致，避免读盘后底色再次跳变。 */
+  /* head 和 nav 共用这个不透明底色；深色及其他配色继续使用各自主题。 */
+  --background: #fff; --foreground: #354a75; --shell-background: #f3f8ff;
+  /* main 占据右下区域，较深的底色在内容展示区周围形成可见留边。 */
+  /* 展示区另有浅蓝表面，不能继续使用通用的白色卡片背景。 */
+  /* 两层 token 仅属于默认浅色，其他配色及深色回退到各自的主题表面。 */
+  --workspace-background: #ebf2fe; --workspace-surface: #f3f8ff;
+  --muted: #f6f8ff; --muted-foreground: #8595b7; --border: #e8ecf8;
+  --input: #d7dff3; --popover: #fff; --accent: #edf0ff;
+  --accent-fill: #4b60ff; --accent-stroke: #4b60ff; --accent-text: #4b60ff;
+  --accent-soft: #e0e9ff; --primary: #4b60ff; --primary-foreground: #fff;
+  /* 选中导航以浅蓝为底，原强调蓝与该底色仅有 3.91:1 对比度。 */
+  /* 单独加深文字到 4.80:1，保留按钮填充和参考图的浅蓝选中表面。 */
+  /* 只覆盖默认浅色预设，其余色板继续由外观配置计算强调文字。 */
+  --accent-text: #4053e6;
+}
+:root[data-color-preset="default"][data-theme="dark"] {
+  --background: #1b2336; --foreground: #d4def8; --shell-background: #141d30;
+  --muted: #1d263b; --muted-foreground: #8e9dbb; --border: #303a55;
+  --input: #3c4968; --popover: #1b2336; --accent: #293251;
+  --accent-fill: #96a7ff; --accent-stroke: #96a7ff; --accent-text: #b2bfff;
+  --accent-soft: #293451; --primary: #96a7ff;
+  /* 浅紫实心填充不能继续配白字，原组合对比度只有 2.27:1。 */
+  /* 深色文字使勾选标记达到 7.43:1，不改变默认深色的填充颜色。 */
+  /* 同步 primary 文案，避免同一配色在其他实心控件上再次出现低对比度。 */
+  --accent-fill-foreground: #141d30; --primary-foreground: #141d30;
+}
+/* 展开导航在当前 127px 基础上加宽四分之一，保留精确的 158.75px。 */
+/* 导航宽度和主区左内边距引用同一个值，伸缩过渡不会留下独立空栏。 */
+/* 收起态仍为 68px，移动布局仍由下方媒体查询移除桌面左留白。 */
+/* head、nav 与外部留白属于同一实色外壳，避免渐变在接缝处形成不同色带。 */
+/* 淡色分界交给右下 main 的完整外框，不在 head 下方绘制贯穿导航的横线。 */
+/* 展开宽度继续共用原 token，收起导航与业务容器断点无需重新计算。 */
+/* 宽度只在外壳变量维护，导航与 main 同步移动，避免内容被加宽后的导航遮住。 */
+/* 不另设视口断点，创建页仍按扣除导航后的实际可用宽度决定分栏。 */
+[data-app-shell] { --nav-expanded-width: 158.75px; background-image: none; }
+/* 主区外框直接接在 head 下沿，避免顶栏下面再叠加一条 8px 空带。 */
+/* 右侧与底部留白继续容纳外壳和状态栏；头像仍在原高度 head 中上下居中。 */
+/* 上留白归零后，可用内容高度同步增加 8px，整屏页面不会在底部留下旧占位。 */
+[data-app-shell] [data-app-content-layout] { padding: 0 8px 40px var(--nav-expanded-width); --app-content-height: calc(100dvh - var(--window-chrome-height) - 40px); }
+[data-app-shell][data-sidebar-expanded="false"] [data-app-content-layout] { padding-left: 68px; }
+/* 角色图继续随容器缩放，保持透明边缘，不裁切用户参考中的立绘。 */
+/* 高度仍扣除顶栏和状态栏，仅改变用户指定的水平方向尺寸。 */
+/* 中等窗口也遵守手动展开状态，不用另一套宽度规则覆盖用户偏好。 */
+/* 转场的主内容快照会移到 nav 下方，导航自身必须有不透明表面才能阻挡它。 */
+/* 使用 shell token 而非白色，深色与自选配色切换时边缘不会出现异色条。 */
+/* nav 不再独立画分界线，main 外框拥有顶部、侧面及底部的完整圆角边界。 */
+[data-app-shell] [data-app-nav] { width: var(--nav-expanded-width); height: calc(100dvh - var(--window-chrome-height) - 32px); background: var(--shell-background); border-right: 0; }
+/* main 表示整个右下区域，外层缝隙由 8px 减半为 4px，仅露出一圈底色。 */
+/* 创建页也使用不透明的外层背景，避免透明规则抹掉与展示区之间的色差。 */
+/* 其他主题回退到 shell 底色，边框和尺寸保持原有布局契约。 */
+[data-app-shell] [data-app-main] { border: 1px solid var(--border); padding: 4px; background: var(--workspace-background, var(--shell-background)); }
+/* 展示层的 12px padding 与外层缝隙独立，让横幅、标签栏和工具内容不贴边。 */
+/* 圆角继承 main 的实际值，桌面 8px 与窄屏 9px 同步，避免内层出现直角缺口。 */
+/* 整屏高度须扣掉底部 40px、外框 10px 和展示层上下 24px，避免底部被裁切。 */
+/* 路由包装层拥有展示区底色，页面切换时不会露出白底或透出前一个页面。 */
+/* 高度变量继续只约束整屏内容，不强制普通长页面或创建栏的内部滚动高度。 */
+/* 深色与其他预设继续回退到原有内容表面，不把浅蓝固定值带入这些主题。 */
+[data-app-main] > div { --app-content-height: calc(100dvh - var(--window-chrome-height) - 74px - var(--mobile-shell-inset, 0px)); padding: 12px; border-radius: inherit; background: var(--workspace-surface, var(--background)); }
+/* Agent 是完整固定工作区，禁止浏览器聚焦附件或输入框时滚动外围容器。 */
+/* overflow:hidden 仍允许 scrollIntoView 改 scrollTop，clip 才能阻断这类程序滚动。 */
+/* 消息滚动由 data-agent-scroll 独占，不影响设置、个人页等长页面。 */
+[data-app-main][data-page-transition="/agent"], [data-app-main][data-page-transition="/agent"] > div { overflow: clip; }
+/* 固定 body 可避免根文档被焦点恢复带走，页面离开 Agent 后规则自然失效。 */
+/* 不给 composer 设窗口坐标，输入区仍由自己的 stage 底行定位。 */
+/* 自定义 head、nav、状态栏继续使用已有外壳尺寸与主题。 */
+body:has([data-app-main][data-page-transition="/agent"]) { position: fixed; inset: 0; overflow: clip; }
+/* 首页背景、创建页各栏和 Agent 主体直接填满展示区，不沿用个人主页的 12px 内容内边距。 */
+/* 仍保留 main 外层 4px 色带和 1px 边框，可用高度只扣这 10px 与底部 40px。 */
+/* 规则作用于路由包装层，首页、创建、Agent 和无限画布共用同一个展示边界。 */
+/* 首页的品牌与操作卡仍保留自身留白；取消的是背景外部多余的第二圈内边距。 */
+/* 高度与零内边距同步，否则背景底部会留下原来上下 24px 的缺口。 */
+/* 移动端继续扣除底部导航，个人主页等普通页面仍沿用上方 12px 内边距。 */
+/* Agent 在深浅主题都由自身 bg-background 铺满，外层只保留原 4px 色带。 */
+/* 聊天正文与输入框的阅读列内边距仍由各自组件管理，不扩大消息行的限宽。 */
+/* 复用已有路由选择规则，切换主题无需额外覆盖或重算工作区尺寸。 */
+/* 无限画布的父层原本留着普通页面的12px内边距，画布自身height:100%无法吃掉它。 */
+/* 在外壳统一取消这圈留白，避免用负外边距或固定定位把画布伸进导航和状态栏。 */
+[data-app-main]:is([data-page-transition="/"], [data-page-transition="/create"], [data-page-transition="/agent"], [data-page-transition="/canvas"]) > div { padding: 0; --app-content-height: calc(100dvh - var(--window-chrome-height) - 50px - var(--mobile-shell-inset, 0px)); }
+/* 新视频编辑器填满 main 展示层，保留 AppShell 的外框色带与圆角。 */
+/* 精确匹配入口路由，legacy 和 GIF 仍保留普通工具的 padding。 */
+/* 这条规则操作外壳父层，归全局布局维护；CSS Module 只管理编辑器内部类。 */
+/* 避免纯全局选择器放进 Module 后被 Webpack 的 pure 校验拒绝。 */
+[data-app-main][data-page-transition="/tools/video/editor"] > div { padding: 0; }
+/* 窄屏子页标题压到 40px，按钮和标题共享垂直中线，不让默认 py-2 再增加高度。 */
+/* 只匹配创建展示区里的页头，不改变宽屏资源弹窗的原版标题及工具条。 */
+/* 图片详情和文件管理与资源子页一致，避免导航时页头上下跳动。 */
+[data-create-page-host] :is([data-resource-main-page],[data-generated-image-main-page],[data-model-version-main-page]) > div:first-child, [data-create-subpage="history"] > header { height: 40px; min-height: 40px; padding-block: 0; align-items: center; }
+/* 返回按钮缩到 32px，完整保留图标和按钮命中区域，与 40px 页头上下各留 4px。 */
+/* 按钮仅负责返回当前页，不改动资源确认/取消的现有边界。 */
+/* 使用直接后代限制范围，避免把列表里的选择按钮也缩小。 */
+[data-create-page-host] :is([data-resource-main-page],[data-generated-image-main-page],[data-model-version-main-page]) > div:first-child > button, [data-create-subpage="history"] > header > button { width: 32px; height: 32px; }
+/* 3D普通工具页使用相同的40px标题，显式窗口全屏不在这个宿主内。 */
+/* 标题仍保留相机图标和返回按钮；只压缩原py-3，不改变场景及控制栏尺寸。 */
+/* 限定none模式避免把全屏时已隐藏的标题重新显示。 */
+[data-create-page-host] [data-view3d-dialog-fullscreen="none"] > header { height: 40px; min-height: 40px; padding-block: 0; }
+/* 返回按钮32px与其他替换页一致，图标本身继续沿用原20px。 */
+/* 只作用直接页头后代，不覆盖场景内的导入、视角和插入按钮。 */
+/* 宽屏居中3D弹窗不在宿主内，保留原始几何和交互。 */
+[data-create-page-host] [data-view3d-back] { width: 32px; height: 32px; }
+/* 分类内模型卡恢复约 200px 宽度，不能因展示区很宽而被三列布局拉成巨幅图片。 */
+/* auto-fill 按可用宽度增加列数，最窄容器则允许卡片随父层收缩。 */
+/* 卡片封面仍沿用原版 4:5 比例、标题与选择按钮，不改任何选择数据。 */
+[data-resource-version-grid] { grid-template-columns: repeat(auto-fill, min(100%, 200px)); }
+/* 移动导航仅在 768px 以下常驻，不能沿用隐藏桌面 nav 的 820px 断点。 */
+/* 百分比最小高度在普通滚动页没有确定父高度，因此这里保留视口高度运算。 */
+/* 仍读取共享的移动导航高度，未在首页组件复制另一份底栏尺寸。 */
+@media (max-width: 767px) { [data-app-main] { --mobile-shell-inset: var(--mobile-nav-height); } }
+/* nav 密度按紧凑参考恢复：一行 36px，业务入口之间只留 2px。 */
+/* 导航组顶距为 8px，与主内容上边距对齐，避免首项下方整体偏移。 */
+/* 外层仍保留 8px 水平留白，选中底色不会贴到窗口或内容区边界。 */
+[data-app-nav] > div { padding: 8px; justify-content: start; gap: 12px; }
+[data-app-nav] > div > div:first-child { gap: 2px; }
+/* 原版 h-9 的点击区域对应 36px，高度收紧不依赖缩放整个导航。 */
+/* 图文间距回到 8px；12px 内边距与原版 px-3 一致，文字不会过度右移。 */
+/* 正文使用 14px、500 字重，保持可读性并减弱之前大字号的视觉拥挤。 */
+/* 此规则由展开和收起共用，切换只影响宽度与文字显示，不改变行距。 */
+/* nav 的 158.75px/68px 外宽与主区留白同步，业务页继续读取真实剩余宽度。 */
+[data-app-nav] a { height: 36px; gap: 8px; padding-inline: 12px; font-size: 14px; font-weight: 500; }
+/* nav 图标沿用原版 Sidebar 的 h-4/w-4，避免外壳样式再次放大到 23px。 */
+/* 图形保持 16px，36px 导航行仍留出上下点击余量。 */
+/* 展开与收起共用此尺寸，切换时不应发生图标缩放或位置跳动。 */
+[data-app-nav] a > svg { width: 16px; height: 16px; }
+[data-app-nav] a[aria-current="page"] { background: var(--accent-soft); color: var(--accent-text); }
+[data-sidebar-art] { max-height: 38vh; width: calc(100% + 8px); flex-shrink: 0; object-fit: contain; object-position: bottom; }
+[data-app-shell]:has([data-caption-account]) [data-nav-account] { display: none; }
+/* 顶栏已有账户入口时，连同底部空槽一并移除，否则 flex 的 gap 仍占据插画下方。 */
+/* nav 比 main 底边低 8px；nav 内边距正好收回 8px，使插画盒底与 main 对齐。 */
+/* 插画继续 object-contain 保留透明边缘，不能用裁切或绝对定位掩盖占位问题。 */
+[data-app-shell]:has([data-caption-account]) [data-app-nav] > div > div:last-child { display: none; }
+[data-app-shell] [data-app-nav][aria-expanded="false"] { width: 68px; }
+[data-app-nav][aria-expanded="false"] a { width: 48px; justify-content: center; padding-inline: 10px; }
+/* 自定义窗口按钮位于 head 内，整个宽度都由同一个渲染表面拥有。 */
+/* 不再给原生 titleBarOverlay 预留 138px，避免账户区与按钮之间留下异色空块。 */
+/* 取消原来修补原生缝隙的阴影，页切换快照直接覆盖完整窗口宽度。 */
+/* 与 nav 直接使用同一个不透明 token，主题变更不会留下浅色混合层。 */
+/* head 不设置底边线；右下 main 的外框负责呈现局部边界。 */
+/* 取消原生预留仍适用于自定义控件，窗口右边保持三个完整点击区。 */
+[data-window-titlebar].window-titlebar { left: 0; width: 100%; max-width: 100%; box-shadow: none; background: var(--shell-background); border-bottom: 0; }
+/* 品牌、工具、账户和窗口控件共用整条 head 的高度，以同一条中线布局。 */
+/* 不用 translateY 修正个别图标，避免视觉位置与按钮命中区分离。 */
+/* 品牌区也填满高度；其内部的 SVG、文字和导航按钮仍分别由 flex 居中。 */
+.window-titlebar > div { height: 100%; align-items: center; }
+/* 标题与副标题字号不同，各自默认行距会使文字看起来上下错开。 */
+/* 单倍行高去除额外行距，文字盒与图标盒仍共享父级的垂直中点。 */
+/* 此处只约束品牌文字，不覆盖弹层或页面正文的阅读行距。 */
+.window-titlebar > div:first-child > span { line-height: 1; }
+.window-titlebar > div:nth-child(2) { margin-left: auto; }
+.window-head-account { padding-right: 8px; }
+/* 账户前的淡色竖线分隔任务工具与身份信息，不跟随 hover 产生第二条按钮边框。 */
+/* 账户容器继承 no-drag；头像与分隔线不能占用系统窗口按钮的点击区域。 */
+/* 账户容器只负责定位，完整高度的 border 会把分隔符误画成一整条竖线。 */
+/* 伪元素在容器中线绘制 18px 短竖线，深浅主题均沿用语义边框色。 */
+/* pointer-events:none 保证线条不拦截头像按钮，transform 不影响 flex 布局。 */
+[data-caption-account] { position: relative; height: 100%; border-left: 0; padding-left: 10px; }
+[data-caption-account]::before { content: ""; position: absolute; left: 0; top: 50%; transform: translateY(-50%); width: 1px; height: 18px; background: var(--border); pointer-events: none; }
+/* 账户按钮填满宿主高度，头像缩小后仍保留完整的 44px 点击区域。 */
+/* 去掉垂直内边距和独立最小高度，防止内容将按钮撑离 head 的共同中线。 */
+/* 直接子选择器只约束账户触发器，不改变 portal 内菜单行的尺寸。 */
+[data-caption-account] > button { height: 100%; min-height: 0; padding-block: 0; gap: 10px; }
+/* 首个 span 是 AccountAvatar 容器；从 40px 缩小五分之一到 32px。 */
+/* 宽高同时声明以保持圆形，缩窄窗口时头像仍由 shrink-0 保护形状。 */
+/* 仅影响 caption 模式，侧栏和菜单的头像尺寸继续使用原有规则。 */
+[data-caption-account] > button > span:first-child { width: 32px; height: 32px; }
+/* 参考账户名称恢复 14px，与头像一起垂直居中；长用户名继续 truncate。 */
+/* 邮箱在 caption 模式仍隐藏，避免两行文字改变工具栏高度。 */
+/* 名称采用与品牌一致的单倍行高，避免原来的默认行距影响文字居中。 */
+[data-caption-account] button > span:nth-child(2) > span { font-size: 14px; line-height: 1; }
+/* ChevronRight 在顶栏旋转为下拉指示，侧栏账户入口依然保留向右展开语义。 */
+/* 旋转不改变布局宽度，展开菜单时名称与头像不会水平跳动。 */
+/* 箭头只做视觉指示，点击仍落在原账户按钮上，不增加独立键盘焦点。 */
+[data-caption-account] > button > svg { transform: rotate(90deg); }
+[data-caption-account] button > span:nth-child(2) > span:nth-child(2) { display: none; }
+.create-workspace { gap: 8px; background: transparent; }
+.create-workspace > :is([data-create-rail], [data-create-stage], [data-create-side]) { border: 1px solid var(--background); border-radius: 9px; background: var(--background); box-shadow: 0 3px 12px #5670a108; }
+.create-workspace .create-rail-sized { flex: 0 0 clamp(350px, 35%, 464px); }
+.create-workspace .create-side-sized { width: 336px; }
+/* 单栏固钉悬浮于展示区右侧，不为它缩窄创建表单或保留独立空栏。 */
+/* 固钉只改变当前子页，表单、预览与文件管理都使用完整展示区。 */
+/* 仅去掉 rail 的旧留白，栏间 8px gap 和双栏/三栏宽度继续由原规则决定。 */
+.create-workspace[data-create-layout="single"] > [data-create-rail] { margin-right: 0; }
+/* 模式条复原离线原型：55px 固定高度、32px 按钮、柔和的选中底色。 */
+/* 只约束创建模式，其他仍复用 IconTabButton 的素材分类不受影响。 */
+/* align-items 居中且禁用高度伸缩，切换模式或窗口时不会增大顶部空白。 */
+/* 图片与编辑共用靠左排列，编辑铺满展示区时标签不会随父区域宽度分散。 */
+/* 标签之间固定 8px，右侧剩余空间留空，切换模式后入口位置保持稳定。 */
+/* 保留原来的 12px 两侧内边距、55px 行高和选中按钮尺寸。 */
+/* 窄屏仍由组件的 overflow-x-auto 横向滚动，不换行或缩小文字。 */
+[data-create-mode-tabs] { height: 55px; min-height: 55px; max-height: 55px; align-items: center; justify-content: flex-start; gap: 8px; padding-inline: 12px; scrollbar-width: none; }
+/* 清掉共用标签按钮的底边框，选中下划线交给定位在条底的伪元素。 */
+/* 按钮保留原 onClick，不用原型的演示脚本替换业务模式切换。 */
+/* 图标与文字一起在32px按钮内居中，避免整行高度改变导致视觉下坠。 */
+[data-create-mode-tabs] button { position: relative; height: 32px; min-height: 32px; border: 0; border-radius: 10px; padding: 0 10px; gap: 5px; font-size: 13px; color: var(--muted-foreground); }
+/* 选中使用主题语义色，深色与自选强调色也沿用相同的明确状态。 */
+/* 原型的淡底色仅作用于选中按钮，不将整条标签渲染成实心色块。 */
+/* 图标固定15px，与原型 SVG 尺寸一致，业务 nav 的16px不受影响。 */
+[data-create-mode-tabs] button[aria-selected="true"] { background: var(--muted); color: var(--accent-text); font-weight: 600; }
+[data-create-mode-tabs] button > svg { width: 15px; height: 15px; }
+/* 下划线距按钮底部12px，位于55px条的底边，与原型 active:after 一致。 */
+/* 使用伪元素而非布局边框，不会在选中前后改变按钮占用高度。 */
+/* 窄屏可以横向滚动整条，禁止换行产生第二行或垂直占位。 */
+[data-create-mode-tabs] button[aria-selected="true"]::after { content: ""; position: absolute; bottom: -12px; left: 10px; right: 10px; height: 2px; background: var(--accent-text); }
+[data-create-model-section] { border-bottom: 1px solid var(--border); padding-bottom: 16px; }
+[data-create-form-sections] > :not([data-create-model-section]) { padding-bottom: 16px; border-bottom: 1px solid var(--border); }
+[data-model-cover-select] { height: 87px; padding: 16px; border-radius: 9px; }
+[data-model-cover-select] > div > span:first-child { font-size: 15px; }
+[data-create-prompt-tools] { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+[data-create-prompt-tools] button { background: var(--muted); color: var(--muted-foreground); font-size: 11px; }
+.create-generate-footer { padding: 8px 13px 20px; border-top: 0; gap: 9px; }
+.create-generate-footer [data-generate-button] { min-height: 55px; font-size: 18px; }
+[data-create-stage] > header { min-height: 60px; border: 0; font-size: 16px; }
+[data-create-stage] > header::before { content: ""; width: 4px; height: 14px; border-radius: 4px; background: var(--border); margin-right: 8px; }
+[data-create-stage] > div { padding: 0 14px 16px; }
+.create-preview-image > img { transform: scale(var(--preview-zoom, 1)); }
+[data-create-stage] > [data-create-filmstrip] { padding: 6px 12px 12px; }
+[data-create-stage] > [data-stage-hero] > div { background: linear-gradient(135deg, var(--muted), var(--background)); border: 1px solid var(--border); }
+[data-create-stage][data-has-preview="true"] > [data-stage-hero] { flex: 0 1 auto; aspect-ratio: 1.025; max-height: 54vh; margin-inline: 14px; padding: 0; }
+[data-create-stage][data-has-preview="true"] > [data-stage-hero] > div { border-radius: 9px; }
+/* 单栏预览页将剩余高度交给当前图，不能沿用三栏双预览的54vh上限。 */
+/* 存在最近生成图时两块区域仍按flex分配，没有结果时不在缩略图下留下空白。 */
+/* 仅改变single舞台，三栏原参考图的主预览比例与最近结果布局继续保留。 */
+[data-create-layout="single"] [data-create-stage] > [data-stage-hero] { flex: 1 1 0%; aspect-ratio: auto; max-height: none; }
+
+#negative-prompt-editor { height: 162px; min-height: 100px; }
+[data-file-manager-head] { flex-shrink: 0; }
+[data-history-sidebar] > div:nth-child(2) { min-height: 0; flex: 1; height: auto; }
+[data-create-form-sections] :is(label[for="prompt-editor"], label[for="negative-prompt-editor"]) { font-size: 16px; font-weight: 650; }
+[data-create-size] { border: 0; border-radius: 0; padding: 0; }
+[data-model-series] > div { padding: 16px 16px 0; }
+[data-model-series] button { border-color: transparent; background: var(--muted); }
+[data-model-series] > div > div > button { height: 26px; padding-block: 3px; }
+[data-create-model-section] [data-selected-extensions] { flex: 1; min-width: 110px; }
+[data-create-model-section] [data-selected-extensions] > button { min-height: 24px; padding: 2px 6px; border-radius: 6px; }
+[data-create-model-section] [data-selected-extensions] > button > div:first-child { width: 16px; height: 16px; }
+[data-create-preview-empty] { color: var(--muted-foreground); }
+[data-create-rail-scroll] { scrollbar-color: #c7cfe8 transparent; }
+[data-history-sidebar] { scrollbar-color: #c7cfe8 transparent; }
+[data-file-manager-head] { padding: 16px; }
+[data-file-manager-head] h2 { font-size: 16px; font-weight: 650; margin-bottom: 14px; }
+[data-file-search] { min-height: 39px; width: 100%; padding: 9px 12px; border: 1px solid var(--input); background: var(--muted); border-radius: 8px; font-size: 12px; outline: none; }
+[data-file-upload] { width: 100%; min-height: 41px; margin-top: 10px; border-radius: 8px; background: var(--create-gradient); color: white; font-size: 13px; font-weight: 600; }
+/* 图库：工具图标固定一行，标题分到剩余宽度，不按完整目录名撑开整行。 */
+/* 像同排座位先留给固定工具，长标题只能使用剩余座位；省略不遮住操作入口。 */
+/* flex-basis 为零才会先分剩余宽度，auto 会按长标题宽度提前把图标挤到下一行。 */
+[data-history-toolbar] { flex-wrap: nowrap; gap: 8px; padding: 8px 12px; }
+/* 清掉历史居中定位与自动左推，视图组按 DOM 顺序接在标题后面。 */
+/* position/transform/translate 同时复位，避免旧 utility 只清掉一部分位移。 */
+/* 这条规则只选图库 toolbar 直接子层，不改变窗口顶栏或其他资源按钮组。 */
+[data-history-toolbar] > div { position: static; margin-left: 0; transform: none; translate: none; gap: 2px; }
+/* min-width:0 允许标题按钮真正收缩，默认的 min-content 会保住整个目录名。 */
+/* 取消旧的固定最大宽度，空闲空间多时标题不必无意义地过早省略。 */
+/* overflow 约束按钮自身，子文本仍保留 title 用于查看完整名称。 */
+[data-history-toolbar] > button { flex: 1 1 0%; min-width: 0; max-width: none; padding-inline: 8px; overflow: hidden; }
+/* 省略号需要单行、隐藏溢出与明确可收缩宽度一起成立，只有 truncate 名字不够。 */
+/* 直接限定标题标记，不让按钮下其他装饰文本意外套用相同溢出规则。 */
+/* width 与 max-width 继承已分配的标题空间，不采用按完整文件夹名测出的固有宽度。 */
+[data-history-toolbar] > button [data-history-media-title] { display: block; width: 100%; min-width: 0; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* 只有末尾动作组靠右，不能让中间视图组和末尾组各自争抢 auto margin。 */
+/* 动作按钮自身保持 shrink-0，缩窄时优先缩短标题，而不是挤小点击区域。 */
+[data-history-toolbar] > [data-history-actions] { margin-left: auto; }
+[data-history-toolbar] > div button { width: 26px; }
+[data-history-toolbar] > div > button:has(.lucide-image-play) { display: none; }
+[data-history-toolbar] > div > div { gap: 0; }
+[data-history-grid="stack"] > button { display: flex; align-items: center; gap: 12px; aspect-ratio: auto; min-height: 86px; padding: 10px 2px; border-bottom: 1px solid var(--border); background: transparent; }
+[data-history-grid="stack"] > button > img { width: 66px; height: 66px; flex-shrink: 0; border-radius: 6px; }
+[data-history-grid="stack"] > button > [data-file-caption] { display: block; min-width: 0; }
+[data-file-caption] { display: none; }
+@media (min-width: 1450px) {
+  [data-create-prompt-tools] { grid-template-columns: repeat(7, minmax(0, 1fr)); }
+  [data-create-prompt-tools] button { padding-inline: 2px; gap: 3px; font-size: 10px; }
+}
+@media (min-width: 821px) and (max-width: 1449px) {
+  /* 此断点只压缩创建表单和 side，不再强制覆盖 nav 的展开偏好。 */
+  /* nav 宽度、文字和透明立绘继续由 expanded 状态决定。 */
+  /* 主内容左侧留白与同一个状态同步，避免展开后覆盖内容或留下空栏。 */
+  /* 手动展开在中等窗口同样有效；创建页自行按剩余宽度调整栏数。 */
+  .create-workspace .create-rail-sized { flex-basis: clamp(350px, 35%, 420px); }
+  .create-workspace .create-side-sized { width: 290px; }
+}
+@media (max-width: 1100px) {
+  [data-brand-tagline], [data-window-reload] { display: none; }
+}
+@media (max-width: 820px) {
+  [data-app-shell] [data-app-nav] { display: none; }
+  [data-app-shell] [data-app-content-layout], [data-app-shell][data-sidebar-expanded="false"] [data-app-content-layout] { padding-left: 8px; padding-bottom: calc(var(--mobile-nav-height) + 40px); }
+  [data-workspace-status] { bottom: var(--mobile-nav-height, 52px); }
+  /* 窄屏控件缩至每枚 32px，保持三枚控件同时可用，不再次制造原生预留空白。 */
+  /* head 仍占全宽，品牌文字通过既有断点隐藏来释放空间。 */
+  /* 账户与工具区使用剩余空间，窗口按钮自身不得 flex 缩成不可点击的小图标。 */
+  [data-window-controls] { width: 96px; }
+  .window-titlebar > div:first-child { padding-left: 10px; gap: 6px; }
+  .window-titlebar > div:first-child > span { font-size: 14px; }
+  .window-titlebar > div:first-child > svg { width: 20px; }
+  .window-head-account { padding-right: 0; }
+  .window-head-account > a { display: none; }
+  /* 小窗口只展示 32px 头像，继续保留容器宽度以容纳内边距和短分隔线。 */
+  /* 隐藏名称仍由原规则处理，不压缩头像来补偿标题或窗口控件的空间。 */
+  /* 此处不改变主内容断点，创建页仍按真实容器宽度收缩。 */
+  [data-caption-account] { width: 52px; }
+  [data-caption-account] button { padding-inline: 2px; }
+  [data-caption-account] button > :not(:first-child) { display: none; }
+  [data-app-shell] [data-app-main] { border-radius: 9px; }
+  [data-create-prompt-tools] { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+[data-file-search]:focus-visible { outline: 2px solid var(--accent-stroke); outline-offset: 2px; }
+[data-create-form-sections] [data-create-prompt] button[role="switch"] { width: 29px; height: 17px; padding: 0; border-width: 2px; box-shadow: none; }
+[data-create-form-sections] [data-create-prompt] button[role="switch"] > span { width: 13px; height: 13px; }
+[data-create-form-sections] [data-create-prompt] button[role="switch"] > span { transform: none; translate: 0 0; }
+[data-create-form-sections] [data-create-prompt] button[role="switch"][aria-checked="true"] > span { translate: 12px 0; }
+@media (min-width: 768px) and (max-width: 820px) {
+  [data-app-shell] [data-app-content-layout] { padding-bottom: 40px; }
+  [data-workspace-status] { bottom: 0; }
+}
+@media (max-width: 600px) {
+  .window-titlebar > div:first-child > span { display: none; }
+}
+
+/* 模型库明确选择 workspace 宿主，外壳只取消这一条路由的重复 12px 留白。 */
+/* 三个面板之间的间隔由本地库控制，在线库的 padding 仍由自己的容器提供。 */
+/* 使用全局样式文件承接真实父层，不在 CSS Module 写不纯的全局选择器。 */
+/* 规则限定完整路由，GIF、视频和其他工具不会因为模型库改版丢掉外框。 */
+[data-app-main][data-page-transition="/tools/models/civitai"] > div { padding: 0; }

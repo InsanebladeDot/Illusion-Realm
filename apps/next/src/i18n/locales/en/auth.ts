@@ -1,7 +1,7 @@
 /** Login entry, account preview and guest-session copy. */
 export const auth = {
   brandSub: "Bring your inspiration to life", welcome: "Enter your creative world", createAccount: "Create an account", login: "Log in",
-  guest: "Continue as a guest", guestHint: "No account needed. Guest access lasts 1 hour.", social: "Continue with another account", provider: "Log in with {name}",
+  guest: "Continue as a guest", guestHint: "Use local creation and generation without a time limit. Sign in for cloud features.", social: "Continue with another account", provider: "Log in with {name}",
   signUpTitle: "Create an Illusion Realm account", loginTitle: "Log in to Illusion Realm", email: "Email", emailPlaceholder: "Enter your email address", displayName: "Display name", displayNamePlaceholder: "Enter your display name",
   password: "Password", passwordPlaceholder: "Enter your password", confirmPassword: "Confirm password", confirmPlaceholder: "Enter your password again",
   showPassword: "Show password", hidePassword: "Hide password", forgot: "Forgot password?", back: "Back", haveAccount: "Already have an account?", needAccount: "New here?",
@@ -15,6 +15,6 @@ export const auth = {
   authInvalid: "The submitted information is invalid. Check it and try again.", authUnauthorized: "The email or password is incorrect, or the account is not active.", authRateLimited: "Too many attempts. Please try again later.", authUnavailable: "The account service is temporarily unavailable. Please try again.",
   verifyTitle: "Verify your email", verifyToken: "Verification credential", verifyTokenPlaceholder: "Paste the complete ve_ credential", verify: "Verify and activate", resend: "Resend verification email", verificationSent: "If this email needs verification, check your inbox.", verifySuccess: "Email verified. Return to sign in.",
   footer: "A place for every new idea to begin.", privacy: "Passwords are sent only over HTTPS; desktop tokens are stored securely.", entering: "Opening…",
-  accountStatus: "Signed in as {name}", expired: "Your guest session has expired. Please choose how to continue.", sessionSaveFailed: "Cannot save your guest session. Check local storage and retry.",
+  accountStatus: "Signed in as {name}", sessionSaveFailed: "Cannot save your guest session. Check local storage and retry.",
   sessionLoadFailed: "Cannot read the saved session. Please retry guest access.", guestStatus: "You are using guest access", logout: "Leave guest mode",
 } as const;

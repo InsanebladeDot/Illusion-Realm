@@ -4,7 +4,8 @@ interface AccentPalette { light: string; dark: string; swatch: string }
 
 // 外壳底色独立于内容表面：head、nav 和页面留白始终同色，作品区域保持中性。
 export const SHELL_PALETTES: Record<ColorPreset, { light: string; dark: string }> = {
-  default: { light: "#f4f4f5", dark: "#1c1c1c" },
+  // 默认浅色使用指定的展示区同色值，并与外壳首帧 CSS 保持一致。
+  default: { light: "#f3f8ff", dark: "#141d30" },
   sand: { light: "#f2e6d8", dark: "#382e26" },
   rose: { light: "#f7e3e9", dark: "#3a2830" },
   teal: { light: "#deefeb", dark: "#213732" },

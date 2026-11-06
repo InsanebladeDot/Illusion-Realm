@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Illusion Realm · Head 快速设计</title>
+  <!-- 产物内嵌 Tailwind CSS 4 编译结果，预览时不请求 CDN。 -->
+  <!-- 主题色来自项目现有语义变量，浅色为冷白蓝灰，深色为藏蓝。 -->
+  <!-- 页面只模拟界面交互，不连接模型扫描、下载或系统窗口接口。 -->
+  <!-- 本文件是方便评审顶部方案的独立原稿，不替代 Next.js 中的正式组件。 -->
+  <!-- 构建器会把现有 Tailwind 编译结果填入占位符，最终只需打开 index.html。 -->
+  <!-- 不加载外部字体，避免断网时字形变化干扰标题栏尺寸判断。 -->
+  <!-- 320px 是原型最低宽度，低于该值时不承诺完整桌面工具的操作体验。 -->
+  <!-- 全局动作、模型数据和导航项都由脚本中的配置生成，HTML 只负责稳定区域。 -->
+  <!-- 真实接入时仍应使用项目 i18n；这里的中文只用于独立设计稿演示。 -->
+  <!-- 单文件产物会保留全部图片为仓库相对路径，因此应从当前目录或预览服务打开。 -->
+  <!-- 演示按钮全部使用原生 button，键盘用户无需额外脚本即可进入操作顺序。 -->
+  <style>/* CSS */</style>
+</head>
+<body class="m-0 min-w-[320px] overflow-hidden bg-shell text-foreground antialiased">
+  <!-- SVG 图标统一复用同一组 symbol，按钮只改变尺寸和颜色。 -->
+  <!-- 这像一套公共印章：页面各处引用同一图形，不分别复制路径。 -->
+  <!-- 图标承担视觉识别，按钮仍提供 aria-label 和 title 作为完整名称。 -->
+  <!-- symbol 不带固定颜色，让按钮状态通过 currentColor 统一控制明暗。 -->
+  <!-- 同一个图标若出现在不同业务区，只共享图形，不因此合并对应业务动作。 -->
+  <!-- 线性图标统一使用 24px 坐标系，实际显示尺寸由各类按钮规则约束。 -->
+  <!-- 隐藏的 SVG 图集不参与阅读顺序，aria-hidden 可避免读屏逐个朗读路径。 -->
+  <!-- 原型不用图标库，既满足单文件要求，也避免不同平台加载结果不一致。 -->
+  <!-- 正式页面应优先继续使用项目已有图标组件，不能复制本图集形成第二套规范。 -->
+  <svg class="absolute h-0 w-0 overflow-hidden" aria-hidden="true"><defs>
+    <symbol id="i-sparkle" viewBox="0 0 24 24"><path d="M12 2c.8 5.2 3.8 8.2 9 9-5.2.8-8.2 3.8-9 9-.8-5.2-3.8-8.2-9-9 5.2-.8 8.2-3.8 9-9Z"/><path d="M19 2c.25 1.7 1.3 2.75 3 3-1.7.25-2.75 1.3-3 3-.25-1.7-1.3-2.75-3-3 1.7-.25 2.75-1.3 3-3Z"/></symbol>
+    <symbol id="i-panel" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/></symbol><symbol id="i-palette" viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 0 18h1.5a1.5 1.5 0 0 0 0-3H12a2 2 0 0 1 0-4h2a7 7 0 0 0-2-11Z"/><circle cx="7.5" cy="10" r=".8"/><circle cx="9.5" cy="6.7" r=".8"/><circle cx="14" cy="6.5" r=".8"/></symbol>
+    <symbol id="i-images" viewBox="0 0 24 24"><rect x="4" y="4" width="15" height="15" rx="2"/><path d="m6.5 16 3.5-4 2.7 3 1.8-2 4.5 5"/><path d="M8 2h11a3 3 0 0 1 3 3v11"/></symbol><symbol id="i-download" viewBox="0 0 24 24"><path d="M12 3v12m-4-4 4 4 4-4"/><path d="M5 20h14"/></symbol>
+    <symbol id="i-more" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></symbol><symbol id="i-chevron" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></symbol><symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></symbol>
+    <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20 6v5h-5"/><path d="M18 9a7 7 0 1 0 1 7"/></symbol><symbol id="i-folder" viewBox="0 0 24 24"><path d="M3 6.5A1.5 1.5 0 0 1 4.5 5H9l2 2h8.5A1.5 1.5 0 0 1 21 8.5v9A1.5 1.5 0 0 1 19.5 19h-15A1.5 1.5 0 0 1 3 17.5Z"/></symbol><symbol id="i-grid" viewBox="0 0 24 24"><rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><rect x="14" y="14" width="6" height="6" rx="1"/></symbol>
+    <symbol id="i-list" viewBox="0 0 24 24"><path d="M8 6h12M8 12h12M8 18h12"/><circle cx="4" cy="6" r=".7"/><circle cx="4" cy="12" r=".7"/><circle cx="4" cy="18" r=".7"/></symbol><symbol id="i-settings" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19 13.5v-3l-2-.6-.8-1.8 1-1.8-2.1-2.1-1.8 1-1.8-.8-.6-2h-3l-.6 2-1.8.8-1.8-1-2.1 2.1 1 1.8-.8 1.8-2 .6v3l2 .6.8 1.8-1 1.8 2.1 2.1 1.8-1 1.8.8.6 2h3l.6-2 1.8-.8 1.8 1 2.1-2.1-1-1.8.8-1.8Z"/></symbol>
+  </defs></svg>
+
+  <!-- head 第一层：只承载应用级入口和窗口控制，保持项目现有 44px 高度。 -->
+  <!-- 中间的空白仍是可拖动区域；原型按钮使用 data-action 模拟真实行为。 -->
+  <!-- 品牌控制在 210px 内，导航开关紧跟品牌，避免挤占全局任务区。 -->
+  <!-- 第一层回答“这是哪个应用”和“有哪些全局状态”，不解释当前模型目录。 -->
+  <!-- 44px 与现有 WindowTitlebar 对齐，可直接比较改版前后的信息密度。 -->
+  <!-- z-index 高于侧栏和 main，页面滚动内容不会透过透明区域覆盖按钮。 -->
+  <!-- 标题栏使用实色语义背景，主题切换期间也不会短暂露出下层内容。 -->
+  <!-- 品牌名称允许截断，避免极窄窗口把系统窗口按钮推到可视区外。 -->
+  <!-- 全局按钮均保留约 36px 点击面，图标本身只有 16 至 18px。 -->
+  <!-- 可拖动区域只占中间空白，可交互按钮在正式 Electron 中应标记 no-drag。 -->
+  <!-- 原型无法真正移动窗口，因此只保留结构位置供评审，不伪造拖拽结果。 -->
+  <header class="app-head fixed inset-x-0 top-0 z-50 flex h-11 select-none items-center border-b border-line bg-shell" data-head>
+    <div class="flex min-w-0 items-center gap-2.5 px-4"><span class="brand-mark"><svg><use href="#i-sparkle"/></svg></span><strong class="truncate text-[17px] font-semibold">Illusion Realm</strong><button class="head-button ml-1" data-action="sidebar" aria-label="收起应用导航" title="收起应用导航"><svg><use href="#i-panel"/></svg></button></div>
+    <div class="min-w-8 flex-1 self-stretch" aria-label="窗口拖动区域"></div>
+    <!-- 全局动作由脚本读取参数数组统一生成，避免每个按钮维护不同 DOM。 -->
+    <!-- 任务与下载拥有独立计数；外观仅切主题，业务动作仍保持各自边界。 -->
+    <!-- 配置只共享按钮外壳、图标、文案和弹层入口，不共享任务或下载数据源。 -->
+    <!-- 计数为零时应隐藏徽标而不是显示 0，减少没有动作价值的视觉噪声。 -->
+    <!-- 图标按钮通过聚焦样式支持键盘定位，不能只依赖鼠标悬停反馈。 -->
+    <!-- 弹层紧贴触发按钮出现，反馈位置靠近用户刚刚操作的上下文。 -->
+    <nav id="global-actions" class="flex h-full items-center" aria-label="全局工具"></nav>
+    <!-- 账户与系统按钮固定在最右，页面工具不会跨过这条边界。 -->
+    <!-- guest 是账户入口而不是当前页面筛选器，所以留在应用层而非模型工具栏。 -->
+    <!-- 账户区域保留文字，避免仅凭通用头像字母无法判断当前登录身份。 -->
+    <!-- 最小化、最大化和关闭沿用系统熟悉顺序，降低桌面端误操作风险。 -->
+    <!-- 关闭按钮只有悬停时提高警示色，不让高危颜色持续抢占模型内容注意力。 -->
+    <!-- 系统按钮在本原型仅给出提示，正式能力必须继续走 Electron 窗口接口。 -->
+    <button class="account-button" data-action="account"><span>G</span><b>guest</b><svg><use href="#i-chevron"/></svg></button>
+    <div class="caption-controls flex h-full border-l border-line"><button data-window="min" aria-label="最小化">−</button><button data-window="max" aria-label="最大化">□</button><button data-window="close" aria-label="关闭">×</button></div>
+  </header>
+
+  <!-- nav 沿用现有应用侧栏角色，不在顶部重复首页、创建、Agent 等导航。 -->
+  <!-- 原型保留展开/收起交互，main 左边距跟随同一个状态同步变化。 -->
+  <!-- 当前模型入口用柔和蓝底标记，明显强调色只出现一次。 -->
+  <!-- 侧栏是全局路由导航，收起后只保留图标，不缩小 main 内部的字号。 -->
+  <!-- 导航宽度变化与 main 的 left 使用同一状态，避免出现空隙或内容压在侧栏下。 -->
+  <!-- 宽度动画只改变几何边界，不对整个页面做缩放，因此文字仍保持可读。 -->
+  <!-- 当前项使用背景、文字和图标三重提示，不只依赖颜色表达选中状态。 -->
+  <!-- 底部索引状态属于侧栏辅助信息，空间不足时可隐藏，不影响核心导航。 -->
+  <!-- 正式产品中的路由、权限和未保存确认仍由 AppShell 与调用页面管理。 -->
+  <aside id="app-nav" class="app-nav fixed bottom-7 left-0 top-11 z-30 w-[158px] overflow-hidden bg-shell px-2 py-3 transition-[width] duration-200" aria-label="应用导航">
+    <nav id="nav-items" class="space-y-1"></nav>
+    <div class="absolute inset-x-3 bottom-4 border-t border-line pt-3 text-[10px] leading-5 text-muted"><p>本地工作台</p><p>模型索引已就绪</p></div>
+  </aside>
+
+  <!-- main 外壳继续保留项目现有的淡色边界和 4px 色带。 -->
+  <!-- 页面工具栏在 main 内，负责当前页面标题、路径、数量和页面动作。 -->
+  <!-- 它不是第二个应用导航，也不复制账户、外观或窗口控制。 -->
+  <!-- 4px 外层留白保留项目现有壳层关系，使标题栏与业务画布边界清楚。 -->
+  <!-- main 自己裁切内部内容，页面滚动不会带动全局标题栏和底部状态条。 -->
+  <!-- 圆角只用于业务主画布边界，没有把每个页面区域都包装成悬浮卡片。 -->
+  <!-- 冷白工作区与纯白内容面形成轻微层差，靠明度而非重阴影区分层级。 -->
+  <!-- 收起导航后只扩大可用内容区，卡片列数由容器空间自然重排。 -->
+  <!-- 真实 AppShell 仍决定 main 几何，本原型不把这里的固定偏移带回产品代码。 -->
+  <main id="main" class="main-shell fixed bottom-7 left-[158px] right-2 top-11 overflow-hidden rounded-lg border border-line bg-workspace p-1 transition-[left] duration-200">
+    <section class="flex h-full min-h-0 flex-col overflow-hidden rounded-md bg-surface">
+      <!-- 页面工具栏把参考图2的面包屑压成紧凑工作区尺寸。 -->
+      <!-- 当前层级加深，上级可点击；路径过长时中间层折叠为省略项。 -->
+      <!-- 扫描属于模型库业务，放在第二层；按钮不会出现在其他页面的全局 head。 -->
+      <!-- 第二层回答“当前在哪里”和“本页能做什么”，与第一层职责互补。 -->
+      <!-- 52px 足以容纳双行标题路径，同时保持比模型卡片更克制的信息密度。 -->
+      <!-- 页面标题为第一阅读点，模型数量紧随其后，招聘式扫描也能快速读出规模。 -->
+      <!-- 面包屑是目录路径而不是页签；点击上级只改变当前目录上下文。 -->
+      <!-- 当前路径文字对比更强，上级路径降低对比，帮助视线停在所在层级。 -->
+      <!-- 数量使用轻量胶囊而非主按钮，避免把只读信息误认为可执行操作。 -->
+      <!-- 重新扫描是当前页最高频动作，保留图标与文字以降低含义猜测。 -->
+      <!-- 扫描目录频率较低，在窄屏隐藏文字按钮并通过更多菜单保留入口。 -->
+      <!-- 扫描进行中使用就近状态文本，结束后同步更新底部状态与短提示。 -->
+      <!-- 重复点击扫描应被脚本锁定，避免多个模拟任务互相覆盖完成时间。 -->
+      <!-- 业务接入时需要真实加载、失败和权限反馈，本原型只验证视觉状态切换。 -->
+      <!-- 路径和标题都允许收缩，右侧主操作始终保持完整可点击尺寸。 -->
+      <header class="page-toolbar flex min-h-[52px] shrink-0 items-center gap-4 border-b border-line px-4">
+        <div class="min-w-0 flex-1"><div class="flex items-center gap-3"><h1 class="shrink-0 text-sm font-semibold">本地模型库</h1><span class="count-chip">82 个模型</span></div><nav id="breadcrumb" class="mt-1 flex min-w-0 items-center gap-1 text-[11px] text-muted" aria-label="模型目录"></nav></div>
+        <div class="page-actions flex shrink-0 items-center gap-2"><span id="scan-state" class="hidden text-[11px] text-muted" role="status"></span><button class="text-button hidden sm:inline-flex" data-action="folders"><svg><use href="#i-settings"/></svg>扫描目录</button><button class="primary-button" data-action="scan"><svg><use href="#i-refresh"/></svg><span>重新扫描</span></button><button class="icon-button" data-action="page-menu" aria-label="更多页面操作" title="更多页面操作"><svg><use href="#i-more"/></svg></button></div>
+      </header>
+
+      <!-- 内容区只为说明 head 与页面工具栏的层级，卡片数据来自参数数组。 -->
+      <!-- 左侧目录、模型网格、右侧详情对应项目现有三栏模型库结构。 -->
+      <!-- 相同 Card 通过内容和选中状态参数复用，不为每个模型写一套结构。 -->
+      <!-- 三栏按浏览顺序排列为目录、结果、详情，支持从范围到对象逐步缩小。 -->
+      <!-- 中等窗口隐藏详情栏，模型选择仍保留，详情可在正式产品用抽屉承接。 -->
+      <!-- 窄窗口隐藏目录并改为单列，避免三个窄栏同时存在导致正文无法阅读。 -->
+      <!-- 目录树只负责切换分类，不承担重新扫描、安装或删除等副作用。 -->
+      <!-- 搜索仅过滤已加载的演示数组，不声称覆盖真实磁盘索引。 -->
+      <!-- 网格与列表共用同一份模型数据，切换只改变呈现方式和密度。 -->
+      <!-- 每个卡片带稳定标识，排序或过滤后仍能把选择同步到正确详情。 -->
+      <!-- 选中态同时改变边框与背景，键盘焦点则使用独立轮廓，二者不能混淆。 -->
+      <!-- 图片使用固定宽高比和 object-cover，素材比例变化不会推挤卡片文字。 -->
+      <!-- 长模型名允许换行或截断，卡片操作区尺寸不会随名称长度跳动。 -->
+      <!-- 图片加载失败应在正式页面回退占位资源；本稿使用仓库内已有封面验证比例。 -->
+      <!-- 详情从同一参数对象读取名称、封面和元信息，避免卡片与详情显示不同模型。 -->
+      <!-- “在创建页使用”只展示动作层级，原型不会修改路由或真实创建参数。 -->
+      <!-- Card 的共同视觉可以复用，但安装、删除等业务回调必须由各调用方注入。 -->
+      <!-- 面板边界使用 1px 低对比线，让大量信息可分组但不形成厚重卡片墙。 -->
+      <!-- 各面板拥有自己的滚动区，标题栏和页面工具栏始终留在可视区域。 -->
+      <div class="grid min-h-0 flex-1 grid-cols-[190px_minmax(0,1fr)_280px] gap-2 p-2 max-[1040px]:grid-cols-[174px_minmax(0,1fr)] max-[720px]:grid-cols-1">
+        <aside class="panel flex min-h-0 flex-col max-[720px]:hidden"><div class="border-b border-line p-3"><div class="segmented"><button class="active">本地模型</button><button>Civitai</button></div></div><nav id="folder-tree" class="min-h-0 flex-1 overflow-y-auto p-2"></nav><div class="flex items-center justify-between border-t border-line p-3 text-[10px] text-muted"><span>上次扫描 2 分钟前</span><span class="status-dot"></span></div></aside>
+        <section class="panel flex min-h-0 flex-col"><div data-model-toolbar class="flex shrink-0 items-center gap-2 border-b border-line p-3"><label class="search-box"><svg><use href="#i-search"/></svg><input id="search" placeholder="搜索当前目录" aria-label="搜索当前目录"></label><button class="text-button hidden md:inline-flex">名称 ↑</button><div class="ml-auto flex gap-1"><button class="icon-button active" data-view="grid" aria-label="网格视图"><svg><use href="#i-grid"/></svg></button><button class="icon-button" data-view="list" aria-label="列表视图"><svg><use href="#i-list"/></svg></button></div></div><div id="model-grid" class="model-grid min-h-0 flex-1 overflow-y-auto p-3"></div></section>
+        <aside id="details" class="panel flex min-h-0 flex-col max-[1040px]:hidden"><div class="border-b border-line px-4 py-3 text-xs font-semibold">模型详情</div><div class="min-h-0 flex-1 overflow-y-auto p-3"><img id="detail-cover" class="aspect-[16/10] w-full rounded-md object-cover" alt="当前模型封面"><h2 id="detail-name" class="mt-3 text-sm font-semibold"></h2><p id="detail-meta" class="mt-1 text-[11px] leading-5 text-muted"></p><dl class="mt-4 space-y-3 border-t border-line pt-4 text-[11px]"><div><dt class="text-muted">基础模型</dt><dd class="mt-1">Anima SDXL</dd></div><div><dt class="text-muted">触发词</dt><dd class="mt-1 rounded bg-muted-surface px-2 py-1.5">anime style, refined lighting</dd></div></dl></div><div class="border-t border-line p-3"><button class="primary-button w-full justify-center">在创建页使用</button></div></aside>
+      </div>
+    </section>
+  </main>
+
+  <!-- 底部状态区延续 AppShell 的全局状态，不承载模型库页面动作。 -->
+  <!-- 状态条只报告应用级就绪或最近动作结果，不放置高频主操作。 -->
+  <!-- 27px 延续现有壳层比例，正文不会因为状态信息增加而上下跳动。 -->
+  <!-- 左侧说明当前能力域，右侧给出最新状态，阅读顺序稳定且便于扫视。 -->
+  <!-- 原型状态不会持久化，刷新页面后回到初始就绪状态。 -->
+  <footer class="fixed inset-x-0 bottom-0 z-40 flex h-7 items-center justify-between bg-shell px-4 text-[10px] text-muted"><span>● AI 绘图 · 本地模型索引</span><span id="footer-status">工作区已就绪</span></footer>
+  <!-- 浮层共用一套定位与样式；参数决定标题、内容和锚点。 -->
+  <!-- 点击空白或按 Escape 关闭，避免多个菜单叠在标题栏下方。 -->
+  <!-- popover 每次只呈现一个配置内容，新的触发动作会替换旧内容。 -->
+  <!-- 浮层拥有独立边界和阴影，但不会遮盖窗口控制区或改变主布局尺寸。 -->
+  <!-- toast 只确认短暂结果，不承载用户必须抄写或长期阅读的重要错误。 -->
+  <!-- role=status 让辅助技术能听到反馈，又不会抢占当前输入焦点。 -->
+  <!-- Escape 关闭后正式实现应把焦点还给触发按钮，本稿主要验证视觉与点击路径。 -->
+  <!-- 减少动态效果偏好下，CSS 会关闭非必要过渡，避免强迫用户观看动画。 -->
+  <div id="popover" class="popover" hidden></div><div id="toast" class="toast" role="status" hidden></div>
+  <script>/* SCRIPT */</script>
+</body>
+</html>
