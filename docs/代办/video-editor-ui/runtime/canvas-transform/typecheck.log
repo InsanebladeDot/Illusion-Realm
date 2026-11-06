@@ -1,0 +1,2 @@
+$ pnpm --filter @illusion-realm/next typecheck && pnpm --filter @illusion-realm/electron exec tsc -p tsconfig.json
+$ tsc --noEmit

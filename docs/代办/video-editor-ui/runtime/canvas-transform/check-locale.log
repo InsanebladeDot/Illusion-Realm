@@ -1,0 +1,26 @@
+$ node scripts/verify-locale-resolution.js
+(node:52428) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Code/Illusion-Realm/Illusion-Realm/scripts/verify-locale-resolution.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\D:\Code\Illusion-Realm\Illusion-Realm\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS  缺字段（undefined）→ zh-CN，reason=missing  (locale=zh-CN reason=missing)
+PASS  缺字段（null）→ zh-CN，reason=missing  (locale=zh-CN reason=missing)
+PASS  空串 → zh-CN，reason=missing  (locale=zh-CN reason=missing)
+PASS  纯空白 → zh-CN，reason=missing  (locale=zh-CN reason=missing)
+PASS  zh-CN → zh-CN，reason=stored  (locale=zh-CN reason=stored)
+PASS  en → en，reason=stored  (locale=en reason=stored)
+PASS  两侧空白被裁掉后合法  (locale=en reason=stored)
+PASS  未来语言 "ja" → zh-CN，reason=invalid  (locale=zh-CN reason=invalid)
+PASS  大小写不符的 zh-cn → zh-CN（不做模糊匹配）  (locale=zh-CN reason=invalid)
+PASS  数字 42 → zh-CN  (locale=zh-CN reason=invalid)
+PASS  对象 → zh-CN  (locale=zh-CN reason=invalid)
+PASS  布尔 true → zh-CN  (locale=zh-CN reason=invalid)
+PASS  非法值时结果**绝不为 undefined**（否则 LOCALES[undefined] 取不到词条）
+PASS  非法值产出告警文案且带上脏值  ([locale] invalid locale in user data, fell back to zh-CN: rejected="ja". Likely a hand-edited user document or a dirty value written by a migration.)
+PASS  合法/缺字段**不产生**告警（避免日常噪音）
+PASS  负向对照：把 allowed 换成空列表时，合法值也应被拒（证明上面不是恒真）  ({"locale":"zh-CN","reason":"invalid","rejected":"en"})
+PASS  被测模块就是产品源码（防止将来被替换成测试桩）  (apps\next\src\utils\localeResolution.ts)
+OK  locale 决议：三格真值表 + 边界 + 告警（17 项）
+(node:52428) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Code/Illusion-Realm/Illusion-Realm/apps/next/src/utils/localeResolution.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\D:\Code\Illusion-Realm\Illusion-Realm\apps\next\package.json.

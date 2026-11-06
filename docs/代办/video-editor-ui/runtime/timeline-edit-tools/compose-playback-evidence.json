@@ -1,0 +1,52 @@
+[
+  {
+    "stage": "overlap",
+    "time": 1.60060000000149,
+    "phase": "ready",
+    "layers": [
+      {
+        "id": "cd81511d-41ca-4403-8c5e-9712272eaaa7",
+        "time": 1.641619,
+        "paused": false,
+        "muted": true,
+        "seeking": false,
+        "ready": 4,
+        "width": 360,
+        "height": 640
+      },
+      {
+        "id": "bec91945-d8d2-4cbd-80f4-d8fefbb11888",
+        "time": 0.539704,
+        "paused": false,
+        "muted": true,
+        "seeking": false,
+        "ready": 4,
+        "width": 640,
+        "height": 360
+      }
+    ]
+  },
+  {
+    "stage": "gap",
+    "time": 4.672366666669647,
+    "phase": "ready",
+    "layers": []
+  },
+  {
+    "stage": "tail-paused",
+    "time": 6.551600000001491,
+    "phase": "ready",
+    "layers": [
+      {
+        "id": "560a371f-5acd-4b0e-8bbb-00c65bc4a988",
+        "time": 0.5516,
+        "paused": true,
+        "muted": true,
+        "seeking": false,
+        "ready": 4,
+        "width": 640,
+        "height": 360
+      }
+    ]
+  }
+]

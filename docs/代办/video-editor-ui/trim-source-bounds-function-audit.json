@@ -1,0 +1,27 @@
+{
+  "method": "增量相交函数；TypeScript AST去除注释后正常打印物理非空行，包含括号行。",
+  "maxOrdinaryLines": 16,
+  "functions": [
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/timeline-track-model.ts",
+      "name": "trimClip",
+      "start": 116,
+      "end": 129,
+      "lines": 15
+    },
+    {
+      "file": "scripts/lib/check-video-multitrack.js",
+      "name": "modelChecks",
+      "start": 117,
+      "end": 132,
+      "lines": 16
+    },
+    {
+      "file": "scripts/lib/check-video-multitrack.js",
+      "name": "checkFractionalTrim",
+      "start": 162,
+      "end": 172,
+      "lines": 11
+    }
+  ]
+}

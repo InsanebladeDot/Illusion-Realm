@@ -1,0 +1,123 @@
+{
+  "baseline": "C:\\Users\\18305\\AppData\\Local\\Temp\\ir-trim-bounds-baseline-43vxzgf2\\baseline.json",
+  "method": "任务前工作区快照，新增/替换后的物理行；C为人工核对后的纯有效注释，B为非空代码及混合行。只统计本轮两个修改文件。",
+  "files": [
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/timeline-track-model.ts",
+      "group": "business",
+      "C": 12,
+      "B": 3,
+      "percent": 80.0,
+      "commentLines": [
+        54,
+        65,
+        83,
+        88,
+        89,
+        90,
+        91,
+        92,
+        93,
+        94,
+        95,
+        96
+      ],
+      "codeLines": [
+        120,
+        121,
+        125
+      ],
+      "changedLineRanges": [
+        {
+          "start": 54,
+          "end": 54
+        },
+        {
+          "start": 65,
+          "end": 65
+        },
+        {
+          "start": 83,
+          "end": 83
+        },
+        {
+          "start": 88,
+          "end": 96
+        },
+        {
+          "start": 120,
+          "end": 121
+        },
+        {
+          "start": 125,
+          "end": 125
+        }
+      ],
+      "baselineSha256Lf": "b54d966bcff7d18bb0e84f249557c42907ee99dcb30831ecc707c80d12383e44",
+      "currentSha256Lf": "03120de67adaa379439e9b6257c921b4bb0590c2f02f27a7fec74dfc89e454fd"
+    },
+    {
+      "file": "scripts/lib/check-video-multitrack.js",
+      "group": "test",
+      "C": 28,
+      "B": 12,
+      "percent": 70.0,
+      "commentLines": [
+        134,
+        135,
+        136,
+        137,
+        138,
+        139,
+        140,
+        141,
+        142,
+        143,
+        144,
+        145,
+        146,
+        147,
+        148,
+        149,
+        150,
+        151,
+        152,
+        153,
+        154,
+        155,
+        156,
+        157,
+        158,
+        159,
+        160,
+        161
+      ],
+      "codeLines": [
+        128,
+        132,
+        162,
+        163,
+        164,
+        165,
+        166,
+        167,
+        168,
+        169,
+        170,
+        171
+      ],
+      "changedLineRanges": [
+        {
+          "start": 128,
+          "end": 128
+        },
+        {
+          "start": 132,
+          "end": 171
+        }
+      ],
+      "baselineSha256Lf": "5d4b96e6a55b1bffdee610cb4b76c9a453bacd15dbfcd08ed6d37df59c4fdab2",
+      "currentSha256Lf": "8c9be92f43734c51844f626cdd8a8a12cf59ed264f7dd7d7c0e35e09924a2988"
+    }
+  ]
+}

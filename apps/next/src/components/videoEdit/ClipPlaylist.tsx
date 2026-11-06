@@ -1,19 +1,8 @@
 "use client";
 
-import {
-  DndContext,
-  PointerSensor,
-  closestCenter,
-  useSensor,
-  useSensors,
-  type DragEndEvent,
-} from "@dnd-kit/core";
-import {
-  SortableContext,
-  arrayMove,
-  useSortable,
-  verticalListSortingStrategy,
-} from "@dnd-kit/sortable";
+// 视频与提示词共用同一拖拽容器；片段卡片的选择、删除仍由本组件负责。
+import { SortableList } from "@/components/sortable-list";
+import { arrayMove, useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Film, GripVertical, Trash2 } from "lucide-react";
 import { useTranslation } from "@/i18n";
@@ -139,31 +128,30 @@ export function ClipPlaylist({
   onRemove,
   onContextMenu,
 }: ClipPlaylistProps) {
-  const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 4 } })
-  );
-
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
-    if (!over || active.id === over.id) return;
-
-    const oldIndex = clips.findIndex((clip) => clip.id === active.id);
-    const newIndex = clips.findIndex((clip) => clip.id === over.id);
+  // 回调只提供稳定身份；从当前 clips 重新定位，不使用拖起时的旧下标。
+  // 视频仍把完整片段交回原业务，保留剪切范围和特效等视频专有字段。
+  // 视频与 GIF 都继续使用这份片段列表。
+  // 它们的导入、预览、剪切和导出不进入公共拖拽容器。
+  // 原有 onReorder 仍收到 ClipItem 数组，调用方不用改变业务契约。
+  // 当前片段依旧由 selectedId 定位，列表换位不把选中身份改成数组下标。
+  // 同一视频的多个剪切区间有各自 id，按路径排序会把它们错误地合并。
+  // 所以起止定位仍使用 clip.id，路径只用于视频业务显示与范围编号。
+  // arrayMove 沿用原算法，公共部分的抽取不重新解释拼接先后。
+  // 找不到起点或终点时不调用业务回调，保持原有片段集合。
+  // 父页可以在 onReorder 中调整首段相关设置，这个既有责任没有挪到公共组件。
+  // 卡片的 useSortable 仍注册完整行，碰撞尺寸不会退化成小手柄宽度。
+  // 原有 disabled 一并传进容器，忙碌时不只禁用删除与选中。
+  // 上下文菜单继续由本卡片负责，共享排序不拦截右键业务事件。
+  const handleMove = (activeId: string, overId: string) => {
+    const oldIndex = clips.findIndex((clip) => clip.id === activeId);
+    const newIndex = clips.findIndex((clip) => clip.id === overId);
     if (oldIndex < 0 || newIndex < 0) return;
 
     onReorder(arrayMove(clips, oldIndex, newIndex));
   };
 
   return (
-    <DndContext
-      sensors={sensors}
-      collisionDetection={closestCenter}
-      onDragEnd={handleDragEnd}
-    >
-      <SortableContext
-        items={clips.map((clip) => clip.id)}
-        strategy={verticalListSortingStrategy}
-      >
+    <SortableList ids={clips.map(clip => clip.id)} layout="vertical" disabled={disabled} onMove={handleMove}>
         <div className="space-y-2">
           {clips.map((clip, index) => (
             <SortableClipCard
@@ -179,7 +167,6 @@ export function ClipPlaylist({
             />
           ))}
         </div>
-      </SortableContext>
-    </DndContext>
+    </SortableList>
   );
 }

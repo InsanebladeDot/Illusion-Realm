@@ -1,0 +1,72 @@
+
+[构建自检] record：内容指纹一致（863 个文件，记录于 2026-11-04T05:15:36.675Z）
+Error occurred in handler for 'theme:setThemeSource': Error: No handler registered for 'theme:setThemeSource'
+    at Session.<anonymous> (node:electron/js2c/browser_init:2:120175)
+    at Session.emit (node:events:514:28)
+Error occurred in handler for 'theme:setThemeSource': Error: No handler registered for 'theme:setThemeSource'
+    at Session.<anonymous> (node:electron/js2c/browser_init:2:120175)
+    at Session.emit (node:events:514:28)
+Error occurred in handler for 'theme:setThemeSource': Error: No handler registered for 'theme:setThemeSource'
+    at Session.<anonymous> (node:electron/js2c/browser_init:2:120175)
+    at Session.emit (node:events:514:28)
+Error occurred in handler for 'models:downloadList': Error: No handler registered for 'models:downloadList'
+    at Session.<anonymous> (node:electron/js2c/browser_init:2:120175)
+    at Session.emit (node:events:514:28)
+Error occurred in handler for 'account:me': Error: No handler registered for 'account:me'
+    at Session.<anonymous> (node:electron/js2c/browser_init:2:120175)
+    at Session.emit (node:events:514:28)
+Error occurred in handler for 'changelog:read': Error: No handler registered for 'changelog:read'
+    at Session.<anonymous> (node:electron/js2c/browser_init:2:120175)
+    at Session.emit (node:events:514:28)
+PASS  preload 已注入 window.electronAPI
+PASS  GIF 页渲染完成
+PASS  空态复用视频导入区
+PASS  两个片段进入卡片列表  (handles=2)
+PASS  复用 PR 风格时间轴
+PASS  帧率控件为可输入组合框  (input/combobox)
+PASS  默认 20 帧/秒  (20)
+PASS  右侧有展开下拉的箭头按钮
+PASS  显示单位与 120 上限说明
+PASS  下拉提供 1/5/10/20/30/60/120  ([1,5,10,20,30,60,120])
+PASS  20 标注为推荐
+PASS  当前值在下拉中高亮  (20)
+PASS  点选预设后生效并收起下拉  (10)
+PASS  自定义超过 120 自动夹取到 120  (120)
+PASS  自定义小于 1 自动夹取到 1  (1)
+PASS  自定义帧率生效（45）  (45)
+PASS  存在分辨率滑块
+PASS  滑块上限 = 源分辨率 320  (320)
+PASS  默认宽度取源分辨率  (320)
+PASS  缩放后等比高度正确（160×120）
+PASS  导出说明同步参数
+PASS  拖动 ] 后终点 ≈ 50% 时长（3 秒源 → 1.5 秒）  (00:01.500)
+PASS  拖动时预览跳到对应帧  (currentTime=1.500)
+PASS  帧数按 10fps × 两段选区（3.5s → 35 帧）估算  (35)
+PASS  导出区显示「输出文件夹」
+PASS  初始按钮为「选择文件夹」
+PASS  提供可编辑的文件名输入框
+PASS  提示未选文件夹时会弹出保存对话框
+PASS  未选文件夹时点击开始处理弹出保存文件对话框  ({"title":"保存 GIF 文件","defaultPath":"clip-a_x2_10fps_160px.gif"})
+PASS  保存对话框默认文件名按参数生成  (clip-a_x2_10fps_160px.gif)
+PASS  导出到保存对话框指定的文件  (C:\Users\18305\AppData\Local\Temp\gif-editor-smoke-qEmdgu\另存为动图.gif)
+PASS  该流程未使用文件夹对话框
+PASS  输出选择使用文件夹对话框（openDirectory）  (["openDirectory","createDirectory"])
+PASS  界面显示已选择的输出文件夹
+PASS  按钮变为「更换文件夹」（允许再次选择）
+PASS  输入框只填前缀（自动名不带扩展名）  (clip-a_x2_10fps_160px)
+PASS  .gif 以固定后缀展示（无需手写扩展名）
+PASS  输入框保留原始输入（不打断输入）  (我的动图)
+PASS  出现「恢复自动命名」按钮
+PASS  自定义前缀名导出成功  (我的动图.gif)
+PASS  输出是合法 GIF  (GIF89a)
+PASS  输出尺寸 160×120  (160x120)
+PASS  输出帧率 = 下拉设定 10  (10.00fps)
+PASS  帧数 ≈ 两段选区 3.5 秒 × 10fps  (35 帧)
+PASS  输出选择使用文件夹对话框（openDirectory）  (["openDirectory","createDirectory"])
+PASS  可以再次选择文件夹（更换为新目录）  (C:\Users\18305\AppData\Local\Temp\gif-editor-smoke-qEmdgu\out-b)
+PASS  新文件夹导出成功（沿用自定义前缀）  (我的动图.gif)
+PASS  同名文件自动追加序号，不覆盖  (我的动图 (2).gif, 我的动图.gif)
+PASS  导出完成后不再显示转圈图标（bug 回归）  (spinning=false)
+PASS  导出完成后回到可再次处理状态
+GIF EDITOR SMOKE OK ✓
+gif-editor SMOKE OK ✓  50/50

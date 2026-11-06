@@ -1,0 +1,54 @@
+$ node ../../scripts/sync-changelog.mjs && node ../../scripts/prepare-opencv.mjs && next build && node ../../scripts/record-build-fingerprint.js
+[sync-changelog] copied logs.md -> apps/next/public/changelog.md
+[prepare-opencv] Local OpenCV runtime and license ready
+▲ Next.js 16.2.10 (Turbopack)
+- Experiments (use with caution):
+  ✓ externalDir
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 8.6s
+  Running TypeScript ...
+  Finished TypeScript in 17.3s ...
+  Collecting page data using 19 workers ...
+  Generating static pages using 19 workers (0/28) ...
+  Generating static pages using 19 workers (7/28) 
+  Generating static pages using 19 workers (14/28) 
+  Generating static pages using 19 workers (21/28) 
+✓ Generating static pages using 19 workers (28/28) in 542ms
+  Finalizing page optimization ...
+
+Route (app)
+┌ ○ /
+├ ○ /_not-found
+├ ○ /agent
+├ ○ /cartoon
+├ ○ /comic
+├ ○ /create
+├ ○ /inspect
+├ ○ /login
+├ ○ /profile
+├ ○ /settings
+├ ○ /toolBox
+├ ○ /toolBox/civitai
+├ ○ /toolBox/comic
+├ ○ /toolBox/exif
+├ ○ /toolBox/gif
+├ ○ /toolBox/video
+├ ○ /tools
+├ ○ /tools/image/cartoon
+├ ○ /tools/image/comic
+├ ○ /tools/image/exif
+├ ○ /tools/models/civitai
+├ ○ /tools/video/editor
+├ ○ /tools/video/editor/legacy
+├ ○ /tools/video/editor/samples
+├ ○ /tools/video/editor/samples/project
+├ ○ /tools/video/gif
+└ ○ /updates
+
+
+○  (Static)  prerendered as static content
+
+[build-fingerprint] 已记录源码指纹：888 个文件 / 998c7596e136
+[build-fingerprint] 产物目录：D:\Code\Illusion-Realm\Illusion-Realm\apps\next\out
+[build-fingerprint] 摘要：998c7596e1362e5c1dd9a2c564e517c4569e8ed9d912a21f060a677d4c8fab41

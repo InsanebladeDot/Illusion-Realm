@@ -1,0 +1,9 @@
+2026-11-03T17:06:00.999Z | video-live-02 | OK | 65/65 | exit=0 | occlude=no | 2026-11-03T17-05-43-272Z-52172
+2026-11-03T17:31:21.929Z | video-live-02 | OK | 65/65 | exit=0 | occlude=no | 2026-11-03T17-31-01-673Z-56224
+2026-11-03T17:32:29.940Z | video-live-01 | OK | 19/19 | exit=0 | occlude=no | 2026-11-03T17-32-01-677Z-30180
+2026-11-03T17:33:23.557Z | video-editor-ui | OK | 97/97 | exit=0 | occlude=no | 2026-11-03T17-32-59-362Z-46560
+2026-11-03T17:35:07.695Z | create-layout | FAILED | 5/7 | exit=1 | occlude=no | failed=Folder right-click targets its own name and fits the viewport / Shared destructive row removes only the selected comic image | 2026-11-03T17-35-00-837Z-29380
+2026-11-03T17:36:10.497Z | create-layout | OK | 7/7 | exit=0 | occlude=no | 2026-11-03T17-36-05-776Z-38812
+2026-11-03T17:36:34.044Z | video-clip-effects | OK | 9/9 | exit=0 | occlude=no | 2026-11-03T17-36-22-812Z-51044
+2026-11-03T17:38:22.062Z | create-layout | OK | 134/134 | exit=0 | occlude=no | 2026-11-03T17-37-12-560Z-24268
+2026-11-03T17:39:28.791Z | video-live-02 | OK | 65/65 | exit=0 | occlude=no | 2026-11-03T17-39-08-985Z-10052

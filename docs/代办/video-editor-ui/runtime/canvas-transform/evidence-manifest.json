@@ -1,0 +1,227 @@
+{
+  "date": "2026-11-04",
+  "buildFingerprint": "3f64e256366224472a3550cced7714a3d8fb31f63b050ebbfa75e0bcf26703a8",
+  "roots": {
+    "live02": "C:\\Users\\18305\\AppData\\Local\\Temp\\ir-video-live02-fH9Ltd",
+    "live01": "C:\\Users\\18305\\AppData\\Local\\Temp\\ir-video-live01-yZXTP2",
+    "ui": "C:\\Users\\18305\\AppData\\Local\\Temp\\ir-video-ui01-v25l5r",
+    "cartoon": "C:\\Users\\18305\\AppData\\Local\\Temp\\ir-cartoon-smoke-69M2FH"
+  },
+  "results": {
+    "live02": {
+      "passed": 109,
+      "total": 109,
+      "exit": 0
+    },
+    "ui": {
+      "passed": 139,
+      "total": 139,
+      "exit": 0
+    },
+    "live01": {
+      "passed": 19,
+      "total": 19,
+      "exit": 0
+    },
+    "ranges": {
+      "passed": 9,
+      "total": 9,
+      "exit": 0
+    },
+    "gif": {
+      "passed": 50,
+      "total": 50,
+      "exit": 0
+    },
+    "cartoon": {
+      "passed": 54,
+      "total": 54,
+      "exit": 0
+    },
+    "typecheck": 0,
+    "lint": "0 errors / 33 existing warnings",
+    "build": 0,
+    "pnpmCheck": "exit 1; 3 existing unused locale keys",
+    "meta": "exit 1; existing MetaFieldRow.tsx comment scan failure",
+    "remainingCheckSteps": "outputpath/foldercount/locale/refs/initlocale: exit 0"
+  },
+  "levels": {
+    "live02": "真实磁盘H264视频/生产探测/真实媒体事件与实际像素；内部CDP鼠标、DOM键盘；chooser返回值夹具；暂停旧timeupdate为显式反例",
+    "live01": "真实原生选择框UIAutomation多选/取消；未替换chooser结果；Explorer人工拖入SKIP",
+    "ui": "独立样板与A/B、主题和三容器自动交互，不能作为正式媒体导入证明",
+    "image": "冻结图片片段纯模型及共享图片渲染入口；真实图片导入与非默认图片画面实机验收未完成"
+  },
+  "manual": "UI08原人工限制不变：Explorer拖入、完整人工键盘路径、系统125%/150%缩放、多屏、扬声器试听、操作录屏未验证",
+  "files": [
+    {
+      "name": "build.log",
+      "bytes": 1812,
+      "sha256": "17f2585705144f6ce9c2ebcab4327dfd19dd91607f9a251341c932900a168298"
+    },
+    {
+      "name": "canvas-after-real-video-dark.png",
+      "bytes": 203423,
+      "sha256": "546ce89463c79533019d2b71f8fa47b4ea5bbcf4de7be7b4929d24d14e91d8c8"
+    },
+    {
+      "name": "canvas-after-real-video.png",
+      "bytes": 198817,
+      "sha256": "66262352b1c00e93e769811ab0d81de63f1f495954b0869b2c659891aec3e65d"
+    },
+    {
+      "name": "canvas-before-real-video.png",
+      "bytes": 219723,
+      "sha256": "b87afa4ef75e2a783e3118174bb47fe6fe751d6a4628b04ba8bf33c35e88bcee"
+    },
+    {
+      "name": "canvas-portrait-narrow.png",
+      "bytes": 114921,
+      "sha256": "a3cca2ae908251ebd302fabd321adbc7c56825a8e6b679b4dabeeda33fbfa4ce"
+    },
+    {
+      "name": "cartoon.log",
+      "bytes": 4773,
+      "sha256": "2ee27436b4a17c4f50324cf4b951038e9870d286f65f31d965533e8fdb741c3a"
+    },
+    {
+      "name": "check-foldercount.log",
+      "bytes": 504,
+      "sha256": "11d2e4096d83a3bb97a82b09223323116be9e88297f6fd21fc08cbc0748e7006"
+    },
+    {
+      "name": "check-i18n-en.log",
+      "bytes": 667,
+      "sha256": "da0b3e64d90c7da35f83d838f104d588a6d79b9244391108b13196e24e5c21ed"
+    },
+    {
+      "name": "check-i18n.log",
+      "bytes": 215,
+      "sha256": "e5d7abf3851e851b3b4b39233c980f0455af42356da461e0459cb8f4c8339a7d"
+    },
+    {
+      "name": "check-initlocale.log",
+      "bytes": 2356,
+      "sha256": "5e6ddfe81632ac93862fad551f2a31945a87acc688de95504c403bd1fe06544f"
+    },
+    {
+      "name": "check-locale.log",
+      "bytes": 2526,
+      "sha256": "d3951ea8dca9863f69ff1c7ac4ae071ba8a298c007213abb89d19a05bf79b13f"
+    },
+    {
+      "name": "check-meta.log",
+      "bytes": 4777,
+      "sha256": "40c497e2234a71ee85b4a9c921e2bd67efc3c39f214903f2651b305ef89801ef"
+    },
+    {
+      "name": "check-outputpath.log",
+      "bytes": 1010,
+      "sha256": "bbad8a08ecd5f59b1414bef5297cf393ed9f4042f10157f34a72740895d74091"
+    },
+    {
+      "name": "check-refs.log",
+      "bytes": 130,
+      "sha256": "353fd3e4b77dd80ea3671fa9c9d7e98cf622c5bf28322b50562e4dd32e4be940"
+    },
+    {
+      "name": "check-smoke.log",
+      "bytes": 598,
+      "sha256": "4372ab04a7ea075af3271823ace7d854e2da12a6fa800b78d303015f41dcea60"
+    },
+    {
+      "name": "check.log",
+      "bytes": 9428,
+      "sha256": "a4c7fa871600e2ccef67f24b019fc7207709e7c0de41c81e3ff4e1b2a8085dfa"
+    },
+    {
+      "name": "gif.log",
+      "bytes": 4405,
+      "sha256": "5e1beeabff4c1614e57e9e7f34a1b560d56ecd59aadff60770d9dce1f40e763d"
+    },
+    {
+      "name": "lint.log",
+      "bytes": 12434,
+      "sha256": "c55c92ecbcb655c6125a1a269e06af075089f0ddb19accd36ff5326fcead6f90"
+    },
+    {
+      "name": "live-01-decode-error-dark.png",
+      "bytes": 155464,
+      "sha256": "7fd8d62474686bfb8d4b46c043197e72d83e5bbc6098070226785a4b6d23e6bc"
+    },
+    {
+      "name": "live-01-import-light.png",
+      "bytes": 196980,
+      "sha256": "7901635e8505326b2460308d08e15a5325717bd999eee40df277ed54bb8a8712"
+    },
+    {
+      "name": "live-03-dark-1280x800.png",
+      "bytes": 214526,
+      "sha256": "a80a15f256879a588fa353ed87f8d1732f703667f5fc0c510dbe3b21cae186a6"
+    },
+    {
+      "name": "live-03-dark-1600x1000.png",
+      "bytes": 264215,
+      "sha256": "2205e8a5927acc7c922b93923469b190aa3878b2620e3f0250d8509b252a9169"
+    },
+    {
+      "name": "live-03-dark-960x720.png",
+      "bytes": 149382,
+      "sha256": "46fbfc5cd9c2f153cd7c4c2e5dba35c1aef17580b6fe56f5c621e0d61aac6dd0"
+    },
+    {
+      "name": "live-03-light-1280x800.png",
+      "bytes": 209199,
+      "sha256": "a5538744b91ef16c41e22565efe95eb1eb79702263ede3d568f81873c68a4349"
+    },
+    {
+      "name": "live-03-light-1600x1000.png",
+      "bytes": 258957,
+      "sha256": "9311df2f1c23285df084eb53004ce53b43bbe0456fffc211717537d5ce46eb1f"
+    },
+    {
+      "name": "live-03-light-960x720.png",
+      "bytes": 145723,
+      "sha256": "cb71401245142de049ceafd5b6fee4c275664342ef954d980430c783a20fb117"
+    },
+    {
+      "name": "live01.log",
+      "bytes": 2286,
+      "sha256": "ffdead5d3f914b277710d444b69be9344d1745a4e64fb1429622cd4b5b03b23c"
+    },
+    {
+      "name": "live02-final.log",
+      "bytes": 8590,
+      "sha256": "c9f86a2cdd8e83b3c7bdda789bdd09c42d7fb0ae8907f4b12677aee318a6d194"
+    },
+    {
+      "name": "locale.log",
+      "bytes": 162,
+      "sha256": "f8c3d765cce3787307e0c7593feec26f1cf67535e7f0cef5dd954b7e35e960a3"
+    },
+    {
+      "name": "media-facts.json",
+      "bytes": 7201,
+      "sha256": "6c433c17eaa652fba87e1c0e4eea3a63189eeb72d4dc2e72942eb69f9943294b"
+    },
+    {
+      "name": "placement-facts.json",
+      "bytes": 613,
+      "sha256": "8426c59fe7f4f5d13e36ac95feb27bad050eba7d5b35df000b013006b3050e79"
+    },
+    {
+      "name": "ranges.log",
+      "bytes": 1224,
+      "sha256": "6256800a402696693d257cd727781df86277204b681cfaffa82a904d5ec10bf2"
+    },
+    {
+      "name": "typecheck.log",
+      "bytes": 132,
+      "sha256": "03334bacc26bbd7d006f0308c861410c67d94747095b162bf5642eea3dfbb56d"
+    },
+    {
+      "name": "ui.log",
+      "bytes": 9336,
+      "sha256": "91c226661578d215d30b138a0a021a3355743b0049891866d2832b33f45c85e4"
+    }
+  ]
+}

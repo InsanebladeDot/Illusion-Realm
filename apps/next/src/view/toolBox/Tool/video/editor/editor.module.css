@@ -1,0 +1,942 @@
+/* host 读取可用编辑器宽度，导航展开/收起改变父宽时容器查询自然重新计算。 */
+/* 不把 main 的导航宽度再减一次，不使用 position:fixed 覆盖全局应用外壳。 */
+/* 编辑器默认表面复用工作区颜色，浅蓝、文字和边框跟随现有主题系统。 */
+/* 局部强调色沿用 accent，而不是工具页面向 FFmpeg 的 primary 青色覆盖。 */
+/* 项目内容不足 544px 高时由 host 滚动，不能压到时间轴和走带按钮消失。 */
+/* overscroll 隔离只作用于这个视图，返回普通工具后由原有滚动容器接管。 */
+.host { container: video-editor / inline-size; height: 100%; min-width: 0; overflow: auto; overscroll-behavior: contain; color: var(--foreground); background: var(--workspace-surface, var(--background)); --editor-video-fill: color-mix(in srgb, var(--accent-fill) 26%, var(--background)); --editor-audio-fill: color-mix(in srgb, #2ca8ad 32%, var(--background)); --editor-playhead: var(--accent-stroke); }
+/* 一套五行 grid 管理整体高度，避免上区和时间轴各自使用 vh 导致高度相加溢出。 */
+/* 项目栏 44px、分隔条 8px、信息条 30px 均固定，剩余高度按 1.65:1 分给上下区。 */
+/* 44+260+8+202+30=544，最小总高度与 grid 的下限相同，避免产生隐藏的负剩余空间。 */
+/* 1600×1000 的 host 有充分高度，素材标题与属性标题不靠视口固定偏移对齐。 */
+/* 1280px 边界仍三栏，只有严格小于该值才收起属性，符合文档区间定义。 */
+/* 1040px 边界仍保留素材，严格小于才切成节目单区，避免断点重叠。 */
+/* 页面改变尺寸不改变项目时长、片段 start/end 或预览暂停时间。 */
+/* 缩放视图是后续 UI-06 行为，这里不为填满空间擅自拉长每段工程时长。 */
+/* 浏览器的 box-sizing 继承全局 Tailwind 重置，边框包含在区域宽高里。 */
+/* 单轨 68px 中片段 48px，顶部 10px 与底部 10px 相等，不出现额外下沉。 */
+/* 片段顶部不依赖上一行内容自然高度，音频波形再高也不会挤歪 V1/A1/A2 基线。 */
+/* 标尺行 36px 单独计入时间轴 grid，播放头从其中 22px 起贯穿下方内容。 */
+/* 轨道头的 opaque 背景使横滚时片段不会透出来，沿用此前 nav 防转场穿透的原则。 */
+/* 稀疏工程的时间轴底部可留下中性空区，空区不是额外的轨道或虚构片段。 */
+/* 刻度区域没有左右 12px 内边距，原图中的边缘视觉通过标签文本偏移实现。 */
+/* 因而 0 秒内容起点与第一个视频片段左边界完全相同，不差一个 padding。 */
+/* 内容列与轨道头的合计最小宽度决定内部横滚；紧凑轨道头下该值为 896px。 */
+/* 轨道的纵向滚动和节目画面互不影响，滚动不会把项目名带出视口。 */
+/* CSS 不设置 will-change 或持续动画，静态样例不会为了装饰产生常驻合成层。 */
+/* 使用 cqw 的宽度只在已声明 container 的 host 内解析，不影响普通工具页。 */
+/* 搜索框、素材封面和数值字段都使用 border-box，不会增加侧栏的隐含最小宽度。 */
+/* 时间轴选中描边也用内边框，保证几何测试可按 start/end 准确验证。 */
+/* 焦点样式服务可用导航、纯 UI 控件与滚动入口，静态分隔条不进入 Tab。 */
+/* 仅等待图标新增旋转，底部 reduced-motion 规则关闭它而保留状态文字。 */
+/* 正常宿主中上区约 62%，接近原图；最低高度分别保障预览和至少一条轨道可见。 */
+/* 这些是骨架初始值，后续可拖动分隔条只需替换比例，不改区域 DOM。 */
+/* 13px 基础正文沿用应用字体，数字在专属时间码元素中启用等宽。 */
+/* min-width:0 允许 grid 列实际收缩，长文件名不能撑开宿主 main。 */
+.workspace { display: grid; grid-template-rows: 44px minmax(260px, 1.65fr) 8px minmax(202px, 1fr) 30px; height: 100%; min-height: 544px; min-width: 0; font-size: 13px; }
+/* 项目工作栏拥有内部操作，边框只分隔其下方工作区，不画穿应用 nav/head。 */
+/* gap 与 padding 均使用既有 4/8/12 梯度，按钮命中区域不随标题变长缩小。 */
+/* 名称与菜单可收缩，但导出和真实导航链接保持在工作栏内可达。 */
+.projectBar { display: flex; align-items: center; gap: 12px; min-width: 0; padding: 4px 12px; border-bottom: 1px solid var(--border); }
+/* 返回、旧版两个真实链接共用样式，操作语义仍由 Link href 决定。 */
+/* 焦点轮廓来自现有 accent 语义色，不能仅用 hover 表示可操作。 */
+/* 不用按钮的 disabled 颜色覆盖链接，用户能区分可用导航和未接通功能。 */
+.navigation { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 32px; flex-shrink: 0; border-radius: 6px; padding: 0 6px; text-decoration: none; }
+/* 辅助链接的 hover 仍使用全局主题表面，深色不出现纯白块。 */
+/* 焦点用 2px 实线而非阴影，窄屏也能明确看出键盘当前所在位置。 */
+.navigation:hover { background: var(--accent); }
+/* outline-offset 防止焦点与面板细边框重合，观察和键盘操作更清楚。 */
+/* 只有真实可聚焦元素使用该样式，disabled 按钮不伪造可用焦点路径。 */
+.navigation:focus-visible, .timelineScroll:focus-visible { outline: 2px solid var(--accent-stroke); outline-offset: -2px; }
+/* 项目名可省略，未保存状态保持独立文本，长名称不会覆盖状态。 */
+/* 图标由父级固定尺寸，文件/项目语义不借用云同步图案。 */
+/* 顶栏主项目区保留最少空间，菜单过长时由后续收缩规则先收起菜单。 */
+.projectName { display: flex; align-items: center; gap: 8px; min-width: 0; flex: 1; }
+/* 标题仅视觉省略，DOM 完整文字和 title 保留可访问名称。 */
+/* 文件名等内容不会通过 white-space 的全局覆盖影响其他区域。 */
+.projectName strong { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+/* 未保存使用辅助文字，不用成功色或云图标冒充已保存/已同步。 */
+/* nowrap 保证它不把 44px 顶栏撑成两行，紧凑模式再按明确规则隐藏。 */
+.projectName > span { font-size: 12px; white-space: nowrap; color: var(--muted-foreground); }
+/* 菜单在宽工作区并排显示，不为 UI-01 创建未定义的弹层或焦点栈。 */
+/* 旧版链接保持靠近导出，方便用户使用仍可用的原单片段处理流程。 */
+.projectMenus { display: flex; gap: 4px; }
+/* 同一个禁用动作外层持有 title，悬停仍能查看尚未接通原因。 */
+/* 禁止容器 flex 压扁按钮，工具栏不足时应滚动或执行明确收缩策略。 */
+.actionHint { display: inline-flex; flex-shrink: 0; vertical-align: middle; }
+/* 按钮保留 32px 高度与 16px 图标，未接通状态降低饱和度但标签仍可读。 */
+/* 不设置 pointer-events:none，原因提示能够响应悬停。 */
+/* 共用边框与圆角令项目导出、预览帧导出和属性重置保持一致。 */
+/* opacity 不是唯一禁用表达，生产 DOM 同时有原生 disabled 属性。 */
+.action { display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 32px; padding: 0 10px; border: 1px solid var(--input); border-radius: 6px; background: transparent; color: inherit; white-space: nowrap; cursor: not-allowed; opacity: .62; font-size: 12px; }
+/* 图标按钮宽度与高度相同，compact 不会缩成仅 16px 的小命中区域。 */
+/* 分组内的间距交给容器，调用方不用覆盖按钮内部 DOM。 */
+.iconAction { width: 32px; padding: 0; }
+/* 强调按钮映射现有 accent 颜色，保持原图蓝紫气质而不创建第二套主题状态。 */
+/* 强调表面的前景色使用应用配对变量，深浅主题都不强行写白字。 */
+/* 主色按钮悬停需要配对处理前景与背景，不能保留浅字却改成浅底。 */
+/* 选择器同时包含action与accentAction，优先于后面的普通按钮hover规则。 */
+/* 普通工具按钮仍使用muted悬停，导入等强调动作保持主色层级。 */
+/* 这个局部修复不覆盖图像卡片背景，也不将整站危险按钮统一成主色。 */
+/* 细边框只调整border-color，不临时加两像素border改变按钮占位。 */
+/* 禁用按钮不进入hover强调，加载中的导入仍由原disabled和aria-busy控制。 */
+/* 焦点使用独立细线规则，不能用仅鼠标hover反馈代替键盘可见焦点。 */
+/* 浅深主题读取原accent配对变量，不额外假定白字在所有主题都可读。 */
+.action.accentAction:not(:disabled):hover { color: var(--accent-fill-foreground, var(--primary-foreground)); background: var(--accent-fill); border-color: var(--foreground); }
+.accentAction { color: var(--accent-fill-foreground, var(--primary-foreground)); background: var(--accent-fill); border-color: var(--accent-stroke); }
+/* 宽屏素材栏像固定书架：宽度增长有上限，额外空间优先留给中间播放器。 */
+/* 素材栏按容器25%增长，到420px停止；不能在超宽窗口继续吞掉一半主区。 */
+/* 属性栏继续保持原有300–353px边界，避免通过挤压字段伪造更大的节目画面。 */
+/* 剩余列minmax(0,1fr)才是节目区，视频源比例不能反过来撑开整个网格。 */
+/* 这里读取实际编辑器容器，导航开合后会自然重排，不额外扣一次导航宽度。 */
+/* 1280以下由原紧凑面板规则接管，扩大节目区不改变面板互斥或焦点生命周期。 */
+/* 保留position:relative供紧凑入口定位，不覆盖全局应用外壳。 */
+.upper { --inspector-width: clamp(300px, 22.3cqw, 353px); position: relative; display: grid; grid-template-columns: clamp(300px, 25cqw, 420px) minmax(0, 1fr) var(--inspector-width); min-height: 0; min-width: 0; }
+/* 面板标题为统一 40px，节目、素材和属性顶部基线一致。 */
+/* 标题不在列表滚动体中，滚动素材时仍能识别所属区域。 */
+/* 14px/600 为面板级标题，不让其字号超过应用级 head。 */
+.panelTitle { display: flex; align-items: center; height: 40px; flex-shrink: 0; margin: 0; padding: 0 16px; font-size: 14px; font-weight: 600; }
+/* 素材与属性栏只保留细分隔，拒绝为每个区域再堆一个带阴影的浮卡片。 */
+/* min-height:0 是内部列表滚动能生效的前提，不允许内容撑高整条上区。 */
+/* 面板背景透明继承 host，避免列表和标题变成不一致的白灰块。 */
+.mediaPanel, .inspector { display: flex; flex-direction: column; min-height: 0; min-width: 0; }
+/* 左栏边界只画在右侧，和主区网格连接，不制造重复双线。 */
+/* 该规则局限编辑器模块，不改变 GIF 素材面板或公共卡片。 */
+.mediaPanel { border-right: 1px solid var(--border); }
+/* 导入和搜索同一行，搜索允许收缩，按钮仍保持自己的最小命中宽度。 */
+/* 元素高度由共享 action 和 search 控制，不靠图片加载后撑出布局。 */
+.mediaTools { display: flex; gap: 8px; padding: 0 12px; }
+/* 搜索标签共享现有 input 边框和主题，不调用默认浏览器搜索装饰。 */
+/* min-width:0 防止 placeholder 较长时把整个左栏推宽。 */
+.search { display: flex; align-items: center; gap: 6px; flex: 1; min-width: 0; padding: 0 8px; height: 32px; border: 1px solid var(--input); border-radius: 6px; color: var(--muted-foreground); }
+/* 搜索输入保留原生键盘编辑，焦点在下方规则中明确描边。 */
+/* 透明背景继承面板，主题切换不会残留原生 input 的白底。 */
+.search input { width: 100%; min-width: 0; background: transparent; border: 0; font-size: 12px; }
+/* 分类为同一按钮模板，四项在素材区里固定，不跟着长列表滚动。 */
+/* 筛选与素材选择分别保存，切换类型不改变时间轴选中对象。 */
+.filters { display: flex; gap: 6px; padding: 12px; }
+/* 圆角 pill 是分类的稳定几何差异，仍使用共享 action 的禁用和主题机制。 */
+/* 去掉实边框只针对素材分类组，不改变项目栏和导入按钮。 */
+.filters .action { height: 28px; padding: 0 12px; border-radius: 18px; border-color: transparent; background: var(--muted); }
+/* 分类高亮跟随 pressed，选音频后“全部”不能仍保留静态强调。 */
+/* 颜色源自 accent-soft，深色下也沿用同一主题变量。 */
+.filters .action[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent-text); border-color: var(--accent-stroke); }
+/* 唯一素材滚动区位于固定工具区下方，滚动时不带走导入入口。 */
+/* list-style 与 margin 在模块内重置，不覆盖其他工具的 ul。 */
+.mediaList { flex: 1; min-height: 0; overflow: auto; list-style: none; margin: 0; padding: 0 10px 12px; }
+/* 所有媒体共用 70px 行高与间距，视频/图片/音频仅替换左侧内容。 */
+/* disabled 不额外降整行透明度，静态素材名称仍需清楚可读。 */
+/* 文本收缩由第二列 minmax(0,1fr) 保障，不让长名撑出横向滚动。 */
+.mediaItem { display: grid; grid-template-columns: 96px minmax(0, 1fr); align-items: center; gap: 12px; width: 100%; min-height: 70px; margin-bottom: 6px; padding: 4px; border: 1px solid transparent; border-radius: 7px; text-align: left; color: inherit; cursor: not-allowed; }
+/* 选中边框与浅底共同出现，保留 aria-current 的可访问选择信息。 */
+/* 不给整张图片加彩色滤镜，原参考图内容保持原色。 */
+.mediaItem[aria-current="true"] { border-color: var(--accent-stroke); background: var(--accent-soft); }
+/* 缩略图和属性封面共用定位外壳，Image fill 不会撑高素材行。 */
+/* 相同圆角和裁切规则也服务无图的音频波形槽。 */
+.mediaCover, .selectedCover { position: relative; display: flex; align-items: center; justify-content: center; aspect-ratio: 16 / 9; overflow: hidden; border: 1px solid var(--input); border-radius: 6px; color: var(--accent-text); }
+/* 说明区是可收缩列，类型行与文件名保持固定的上下关系。 */
+/* gap 为 8px 对应原图密度，不让音频文件比图片多出一行空白。 */
+.mediaDescription { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+/* 文件名和轨道名统一单行省略，title 保留真实内容。 */
+/* 规则列明作用区域，不用全局 strong/span 覆盖影响应用其他页面。 */
+.mediaDescription strong, .trackHeader > span, .selectedClip strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* 素材次行用图标加类型文字，不单靠颜色分辨音频与视频。 */
+/* 12px 辅助字与现有 muted-foreground 对齐主题。 */
+.mediaDescription small { display: flex; align-items: center; gap: 6px; color: var(--muted-foreground); font-size: 12px; white-space: nowrap; }
+/* 波形槽不创建真正音频元素，也不在主题变化时重算采样。 */
+/* 原始 SVG 只有展示作用，尺寸由使用场景的容器控制。 */
+.waveform { width: 100%; height: 100%; min-height: 24px; }
+/* 节目区分三行：40px 标题、可收缩画面、64px 控制条。 */
+/* 预览的 minmax(0,1fr) 确保任意横纵比都不挤掉控制条。 */
+/* padding 只留原图预览的 12px 窄边，面板本身不另加外卡片。 */
+.previewPanel { display: grid; grid-template-rows: 40px minmax(0, 1fr) 64px; min-width: 0; min-height: 0; padding: 0 12px 8px; }
+/* 中间画布固定填满剩余空间，图片用 object-contain 保持 16:9 原比例。 */
+/* 深色是预览未占满部分的中性底，不是编辑器全局主题。 */
+/* 相框外不再铺灰色垫板，正式宿主将多出的宽度归还素材库。 */
+/* 相框自身仍保持黑场与项目比例，透明只作用于其外层的布局空间。 */
+.previewSurface { position: relative; display: grid; place-items: center; container-type: size; min-width: 0; min-height: 0; overflow: hidden; border-radius: 5px; background: transparent; }
+/* 预览标题与文件名共享原来的 40px 标题行，不能为长名称另撑一行。 */
+/* 文件名不抢占标题和素材返回入口，剩余宽度不足时单行省略。 */
+/* min-width:0 让标题内容在原上区网格中收缩，不反过来撑宽宿主。 */
+.previewHeading { display: flex; align-items: center; gap: 8px; min-width: 0; }
+/* 标题复用 panelTitle，额外名称只作为当前查看对象的辅助说明。 */
+/* title 保留全名，视觉省略不意味着素材被重命名或路径被截断。 */
+/* muted-foreground 在深浅主题都与现有辅助信息保持同一层级。 */
+/* 文件名之后可以有宿主动作槽，不能再用last-child误把名称样式丢掉。 */
+/* 名称像一段可收缩空白，动作按自身宽度占位，避免两者互相覆盖。 */
+/* 右对齐保持原有标题方向；完整名称依旧由title提供。 */
+.previewName { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: right; font-size: 12px; color: var(--muted-foreground); }
+/* 比例框从 surface 的容器尺寸推导，像把相框放进更大的中性画板。 */
+/* width 取可用宽与可用高推算宽的较小值，始终完整保留项目比例。 */
+/* 这不是根据窗口固定定位，所以导航开合与窄窗口都走同一条布局规则。 */
+.previewFrame { position: relative; display: grid; place-items: center; min-width: 0; max-width: 100%; max-height: 100%; background: #11151d; color: #dbe1ed; }
+/* 媒体占位复用现有外壳，画布中只调整继承色与文字宽度。 */
+/* 固定深色画布不随浅色主题变成白底，状态文字必须仍能清楚阅读。 */
+/* 长反馈允许换行并在本画布内滚动，不挤走走带工具栏。 */
+.previewFrame > [data-editor-placeholder] { width: 100%; max-height: 100%; overflow: auto; padding: 12px; color: inherit; text-align: center; overflow-wrap: anywhere; }
+/* 控制条在画面下固定，不能按画面高宽比被拉伸成整块空白。 */
+/* 最小控件宽度由内部按钮保障，窄宽度不足时本条内部横向滚动。 */
+/* nowrap 只作用于时间码和控制按钮，不改变上层 grid 高度。 */
+.transport { display: flex; align-items: center; gap: 8px; min-width: 0; overflow-x: auto; padding: 8px 0; }
+/* 时间码使用等宽数字，当前值加粗，总时长和帧率保持辅助层级。 */
+/* 当前 12 秒与总 30 秒放在同一内容块，不能被工具按钮隔开。 */
+.timecode { display: flex; align-items: center; gap: 8px; flex-shrink: 0; white-space: nowrap; font-size: 12px; font-variant-numeric: tabular-nums; }
+/* 非当前时间的文本略弱化，但仍使用主题语义色，不硬编码淡蓝文字。 */
+/* 后续 UI-07 将对完整状态测对比度，本轮不声称已做颜色可访问性验收。 */
+.timecode > span, .timecode small { color: var(--muted-foreground); }
+/* 走带按钮作为中间组自然占用剩余空间，左右控制保持原图的关系。 */
+/* 窄容器不隐藏播放状态，而是通过 transport 横向滚动查看。 */
+.transportActions { flex-shrink: 0; display: flex; gap: 4px; margin-inline: auto; }
+/* 属性面板只有左细线，与预览之间不叠加阴影或两条边框。 */
+/* 其内独立滚动，外层不设置 overflow:auto 防止标题跟着滚走。 */
+.inspector { border-left: 1px solid var(--border); }
+/* 当前片段头固定在标题下方，缩略图、文件名和链接图标共享中线。 */
+/* 名称占剩余可收缩宽度，图标不会被长文件名推到面板外。 */
+.selectedClip { display: flex; align-items: center; gap: 12px; flex-shrink: 0; min-width: 0; padding: 10px 16px 16px; border-bottom: 1px solid var(--border); }
+/* 小封面固定 72px 宽，避免右栏标题因 Image fill 而变成任意高度。 */
+/* 高度由共享 16:9 比例推导，后续换真实素材仍保持字段起点稳定。 */
+.selectedCover { width: 72px; flex-shrink: 0; }
+/* 属性内容拥有自己的纵向滚动，不与素材列表共享 scrollTop。 */
+/* min-height:0 使其在固定上区高度内正确收缩。 */
+.propertyBody { min-height: 0; overflow: auto; }
+/* 分组以单条底线区分，不把每个字段另包一张卡片。 */
+/* 16px 水平边距沿用原图属性区的紧凑对齐。 */
+.propertySection { padding: 8px 16px 12px; border-bottom: 1px solid var(--border); }
+/* 组标题、下拉箭头与重置按钮同一行，字段不参与标题高度计算。 */
+/* 重置按钮通过 margin-left:auto 靠右，不依赖绝对窗口坐标。 */
+.propertySection h3 { display: flex; align-items: center; gap: 6px; margin: 0 0 6px; font-size: 13px; font-weight: 600; }
+/* 只选择本组标题直接子动作，避免未来嵌套字段按钮也被错误推右。 */
+/* 样式归公共组布局，不由具体“速度/淡入”调用方各写一份。 */
+.propertySection h3 > .actionHint { margin-left: auto; }
+/* 标签列保持 84px，值列使用剩余空间，所有属性共用同一字段对齐。 */
+/* 浮点或单位属于值字符串，本轮没有整数解析或输入校正事件。 */
+.propertyRow { display: grid; grid-template-columns: 84px minmax(0, 1fr); align-items: center; gap: 8px; margin-top: 8px; color: var(--muted-foreground); }
+/* 关键帧菱形与数值框同行，固定按钮宽度不挤动项目坐标输入。 */
+.keyframeField { display: flex; align-items: center; gap: 4px; min-width: 0; }
+.keyframeField > label { flex: 1; min-width: 0; }
+/* 裁剪是独立操作层；半透明遮边只用于交互，不进入真实节目像素。 */
+.cropOverlay { position: absolute; pointer-events: auto; cursor: crosshair; border: 1px solid rgb(255 255 255 / 65%); touch-action: none; }
+.cropRect { position: absolute; border: 1px solid #fff; background: rgb(255 255 255 / 8%); pointer-events: none; }
+.cropControls { position: absolute; left: 50%; top: 50%; display: flex; gap: 4px; background: var(--background); padding: 4px; border-radius: 4px; }
+/* 同帧多属性合并成一枚时间线标记，位置沿用片段的工程时间尺。 */
+.clipKeyframe { position: absolute; top: 41px; width: 8px; height: 8px; transform: translateX(-50%) rotate(45deg); border: 1px solid #fff; background: rgb(30 40 40 / 45%); pointer-events: none; z-index: 2; }
+.clipKeyframe[data-active="true"] { background: #24cbd1; border-color: #053e41; }
+/* 属性输入使用现有主题背景，避免原生 disabled 的灰块违背参考图。 */
+/* 数值仍可清楚阅读，disabled 语义不以降低文字对比度作为唯一提示。 */
+/* 所有字段同为 32px 高，速度/淡入不额外使用默认浏览器下拉。 */
+.propertyRow input { min-width: 0; width: 100%; height: 32px; padding: 0 10px; border: 1px solid var(--input); border-radius: 6px; background: transparent; color: var(--foreground); font-size: 13px; font-variant-numeric: tabular-nums; }
+/* 分隔槽 8px 来自整体 grid，抓手视觉细，不画成粗重工具栏。 */
+/* 目前禁用，不设置 row-resize 鼠标或拖动事件误导用户。 */
+.splitter { display: flex; align-items: center; justify-content: center; border-block: 1px solid var(--border); color: var(--muted-foreground); background: var(--muted); }
+/* 时间轴自身只有工具栏与滚动体两行，信息条属于更外层的固定 grid 行。 */
+/* overflow:hidden 仅隔离内部滚动，不能掩盖 workspace 的最小高度溢出。 */
+.timeline { display: flex; flex-direction: column; min-height: 0; min-width: 0; overflow: hidden; }
+/* 工具栏固定 44px，控件不足时独立横向滚动，轨道不会被按钮挤高。 */
+/* 缩放组在宽容器靠右，紧凑容器保留所有入口的滚动可达性。 */
+/* 44px 总高扣掉边框和两侧 4px 留白仍容纳 32px 按钮，避免出现 1px 纵向滚动。 */
+.timelineToolbar { display: flex; align-items: center; gap: 4px; height: 40px; flex-shrink: 0; overflow-x: auto; padding: 2px 8px; border-bottom: 1px solid var(--border); }
+/* 缩放组与编辑动作之间的自动间距等同原图左编辑、右缩放的排列。 */
+/* range 保持固定长度，不能占满整条工具栏挤掉适合全部标签。 */
+.timelineZoom { display: flex; align-items: center; gap: 4px; margin-left: auto; padding-left: 12px; }
+/* 原生 range 禁用，不通过 CSS 伪造正在缩放的可交互 thumb。 */
+/* accent-color 使用已有强调色，主题切换后与播放头仍保持同一视觉体系。 */
+.timelineZoom input { width: 80px; accent-color: var(--accent-stroke); }
+/* 时间轴唯一横纵滚动视口，轨道头与内容不需要两套 scroll 同步代码。 */
+/* Tab 可聚焦滚动区域，用户无需鼠标也能用方向键查看超出部分。 */
+/* flex:1 与 min-height:0 将其限制在宿主分配的时间轴预算内。 */
+.timelineScroll { flex: 1; min-height: 0; overflow: auto; overscroll-behavior: contain; }
+/* 轨道头约 220px，内容至少 720px，宽屏时轨道内容自动填满剩余。 */
+/* 第 1 行刻度 36px，三行轨道默认各 68px，余高只留在底部背景。 */
+/* grid 总宽度与内容起点共用 --track-header，不能给播放头另写固定像素偏移。 */
+/* 内容列上的百分比统一指向 30 秒项目时长，因此所有时间元素天然对齐。 */
+.timelineGrid { --track-header: 160px; position: relative; display: grid; grid-template-columns: var(--track-header) minmax(720px, 1fr); grid-template-rows: 36px; grid-auto-rows: auto; align-content: start; min-width: calc(var(--track-header) + 720px); min-height: 100%; }
+/* 左上角同时固定上下左右，防止横向滚动时刻度钻到轨道编号后面。 */
+/* z-index 只在时间轴内部排序，远低于应用菜单与通知。 */
+.rulerCorner { position: sticky; top: 0; left: 0; z-index: 5; background: var(--workspace-surface, var(--background)); border-bottom: 1px solid var(--border); border-right: 1px solid var(--border); }
+/* 标尺与轨道共用第二列，背景每 1/30 宽度表示一秒细分。 */
+/* sticky top 使轨道纵向滚动时保留主刻度，不创建独立时间坐标。 */
+/* 线条用 input 语义边界色，不采用过重黑线破坏浅色密度。 */
+.ruler { position: sticky; top: 0; z-index: 3; background-color: var(--workspace-surface, var(--background)); background-image: repeating-linear-gradient(to right, var(--input) 0 1px, transparent 1px calc(100% / var(--timeline-range, 30))); background-size: 100% 10px; background-repeat: no-repeat; background-position: bottom; border-bottom: 1px solid var(--border); }
+/* 主刻度标签按 0/5/10…秒定位，辅助线图案不参与秒数计算。 */
+/* 中间标签向左右各半偏移，让文字中心对应精确工程时刻。 */
+.ruler > span { position: absolute; top: 6px; transform: translateX(-50%); font-size: 11px; color: var(--muted-foreground); }
+/* 首末标签向内容区内部放置，滚动容器不能裁掉 0s 或 30s 的一半。 */
+/* 这只影响文本位置，刻度线与片段边界仍使用原来的百分比。 */
+.ruler > :first-child { transform: none; padding-left: 4px; }
+/* 30 秒位于精确的右边界，不为文字额外增加一段假的工程时长。 */
+/* 向左移整段标签使末尾可读，又不改变示例音乐终点。 */
+.ruler > span:last-of-type { transform: translateX(-100%); padding-right: 4px; }
+/* 轨道头固定在左，行高由同一个 grid 轨道定义，与内容一一对应。 */
+/* 背景不透明，横向滚动时片段不会透到轨道编号下面。 */
+/* 局部 z-index 仅高于片段和播放头，不覆盖上区或应用导航。 */
+.trackHeader { position: sticky; left: 0; z-index: 2; display: flex; align-items: center; gap: 4px; min-width: 0; padding: 0 10px; border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); background: var(--workspace-surface, var(--background)); }
+/* 轨道身份保留在整行title与无障碍名称，图标区不再用大段文字挤占时间轴。 */
+/* 轨道头和内容属于同一grid行，视频88px、音频68px时仍一一对齐。 */
+.trackHeader { gap: 2px; padding-inline: 8px; }
+.trackHeader > svg { flex-shrink: 0; margin-right: 4px; color: var(--muted-foreground); }
+/* 片段的定位上下文就是轨道内容列，背景露出的宽度表示真实空隙。 */
+/* 行内上下 10px 留白不影响横向时间宽度，所有轨道保持相同基线。 */
+.trackLane { position: relative; min-width: 0; border-bottom: 1px solid var(--border); background: color-mix(in srgb, var(--muted-foreground) 7%, transparent); }
+/* 所有媒体片段复用同一外壳：绝对定位、圆角、描边与文本裁切。 */
+/* left/width 由秒数计算后注入，CSS 不擅自为文件名增加时间宽度。 */
+/* 正式时间轴传真实修剪回调，样板不传时不会出现可操作边缘。 */
+.timelineClip { position: absolute; top: 10px; height: 48px; display: flex; align-items: center; min-width: 0; overflow: hidden; border: 1px solid color-mix(in srgb, var(--accent-stroke) 40%, var(--input)); border-radius: 2px; }
+/* 视频和图片共享蓝色语义填充，媒体内容本身仍是原色。 */
+/* 该 token 仅属于编辑器，不能改变外部模型卡片选中状态。 */
+.visualClip { background: var(--editor-video-fill); }
+/* 音频使用青绿填充区分媒体类别，并有波形和文件名共同表达身份。 */
+/* 边框混合已有 input 色，深色下不出现大面积刺眼荧光。 */
+.audioClip { color: var(--foreground); background: var(--editor-audio-fill); border-color: color-mix(in srgb, #2ca8ad 65%, var(--input)); }
+/* 封面只占片段左端，不把整个 8 秒内容做成没有来源的多帧缩略带。 */
+/* 宽度不足时自然裁切，不能为了完整显示封面推长工程时间区间。 */
+.clipCover { align-self: stretch; width: 78px; max-width: 45%; flex-shrink: 0; background-size: cover; background-position: center; border-right: 1px solid var(--input); }
+/* 名称在片段里单行裁切，title 可查看完整文件名。 */
+/* 内边距属于内容视觉，不改变 timelineClip 的工程起点和终点。 */
+.clipName { position: relative; z-index: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 0 12px; font-size: 12px; }
+/* 音频波形绝对铺在底部，文字留在独立层，不让波形把标签挤出行高。 */
+/* opacity 只弱化装饰图形，声音大小并非由此表示或计算。 */
+.audioClip > svg { position: absolute; inset: 15px 0 2px; height: 30px; color: #218c95; opacity: .6; }
+/* 音频名称靠近顶边，模拟原图波形下面留出的展示区。 */
+/* 不使用 button 嵌套，后续统一片段选择可挂在外壳上实现。 */
+.audioClip .clipName { align-self: flex-start; padding-top: 4px; }
+/* 选中边框通过内描边呈现，不扩大 10–18 秒的布局宽度。 */
+/* 左右把手同时提供形状线索，避免选中仅靠填充颜色区分。 */
+/* 选中边框固定一像素且使用主题前景混合色，深色呈浅线，浅色呈可辨认细线。 */
+/* 悬停或键盘焦点不再叠另一圈粗描边，几何宽度仍与工程起止百分比一致。 */
+/* 修剪热区是透明可操作覆盖层，不铺白色厚条，也不改变内部帧带宽度。 */
+/* 左右边缘分别使用w-resize和e-resize，鼠标移动到边界才提示对应方向。 */
+/* 片段主体仍保留移动语义，不能把整个视频块都设为单向修剪光标。 */
+/* 原生边缘命中区域大于可见线宽，细边框不以牺牲可抓取性为代价。 */
+/* 不把选中状态写成新的margin，多个相邻片段不会因点击而互相挤开。 */
+/* 整体圆角压到两像素，帧带靠近时间边界时不会被大圆角裁出明显缺口。 */
+.timelineClip[aria-current="true"], .timelineClip[aria-current="true"]:hover, .timelineClip[aria-current="true"]:focus-visible { border-color: color-mix(in srgb, var(--foreground) 82%, var(--background)); box-shadow: none; outline: none; }
+/* 装饰把手固定贴片段内边界，不占据工程时间坐标外的额外宽度。 */
+/* 修剪层优先命中边缘，pointerdown阻止冒泡，主体的移动抓取点不会同时被更新。 */
+.trimStart, .trimEnd { position: absolute; top: 4px; bottom: 4px; width: 12px; border-radius: 2px; color: var(--foreground); background: color-mix(in srgb, var(--background) 75%, transparent); cursor: ew-resize; opacity: 0; z-index: 2; touch-action: none; }
+/* 自定义光标的竖线代表源边界，箭头分别朝外；系统不支持SVG光标时回退到方向缩放。 */
+/* 黑色内线外包白色描线，在浅色和深色视频帧上都能识别，不依赖画面背景色。 */
+.trimStart { left: 0; cursor: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M17%204v16%20M12%207l-5%205%205%205%20M7%2012h10%22%20fill%3D%22none%22%20stroke%3D%22white%22%20stroke-width%3D%223.5%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%2F%3E%3Cpath%20d%3D%22M17%204v16%20M12%207l-5%205%205%205%20M7%2012h10%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%221.5%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%2F%3E%3C%2Fsvg%3E") 12 12, w-resize; }
+/* 右把手位于实际 end 边界内侧，不会跨过 18–20 秒的空隙。 */
+/* 选中外观仍保留同一个 clip 宽度，不通过 margin 产生定位误差。 */
+.trimEnd { right: 0; cursor: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M7%204v16%20M12%207l5%205-5%205%20M7%2012h10%22%20fill%3D%22none%22%20stroke%3D%22white%22%20stroke-width%3D%223.5%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%2F%3E%3Cpath%20d%3D%22M7%204v16%20M12%207l5%205-5%205%20M7%2012h10%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%221.5%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%2F%3E%3C%2Fsvg%3E") 12 12, e-resize; }
+/* 播放头容器覆盖第二列从标尺到三条轨道，排除固定轨道头宽度。 */
+/* 它不参与 grid 行高或宽度分配，pointer-events:none 令下方片段事件可达。 */
+/* z-index 高于片段低于固定刻度角与轨道头，滚动时不会穿进左侧编号。 */
+.playheadColumn { position: absolute; inset: 22px 0 0 var(--track-header); pointer-events: none; z-index: 1; }
+/* 40% 来自 12/30 的秒数比值，线宽不计入时间范围。 */
+/* 竖线贯穿轨道区，不需要每条轨道各计算一次偏移。 */
+.playheadColumn > i { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--foreground); }
+/* 顶部小三角标识播放位置，与主线共用颜色，不额外绑定可拖动行为。 */
+/* 纯伪元素不会进入 Tab 顺序或被读屏解释为未命名按钮。 */
+.playheadColumn > i::before { content: ""; position: absolute; top: -1px; left: -5px; width: 12px; height: 12px; background: var(--editor-playhead); clip-path: polygon(0 0, 100% 0, 100% 60%, 50% 100%, 0 60%); }
+/* 固定信息条底线与项目栏同色，表面复用 host，不再加一套任务状态。 */
+/* nowrap+ellipsis 保证窄工作区仍为 30px 高，完整参数由 title 可查看。 */
+/* 只读参数等宽数字方便和预览控制条核对。 */
+.infoStrip { display: flex; align-items: center; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; padding: 0 16px; border-top: 1px solid var(--border); font-size: 11px; font-variant-numeric: tabular-nums; }
+/* 三栏时不生成多余侧栏开关占位；紧凑形态只在上区角落呈禁用入口。 */
+/* 后续临时面板功能明确后再实现焦点进入/退出，本轮不放一个无效遮罩。 */
+/* 入口现在属于预览标题行，宽度按内容计算，不依赖绝对坐标。 */
+/* 禁止flex压扁入口，优先压缩前面的辅助文件名。 */
+/* 深浅主题与焦点样式继续由已有EditorAction提供。 */
+.compactPanels { display: none; flex-shrink: 0; gap: 4px; }
+/* 容器不足 1280px 先收起属性，保留素材和节目两栏，不照搬创建页 760px 断点。 */
+/* 这只是骨架安全收缩，完整临时属性面板和状态演示保留 UI-07 待办。 */
+/* 作用对象仍是编辑器实际宽度，导航开合会自然触发，无需额外监听 window。 */
+@container video-editor (width < 1280px) {
+  /* 中列继续占剩余，素材初始 280px，属性不再占布局空白。 */
+  /* 不用 visibility:hidden，否则会保留一整列造成用户所说的多余空区。 */
+  /* 双栏的书架也有上限，空间足够就增加播放器，而非把素材卡拉大。 */
+  /* 280px下限可容纳两张112px卡片、间距和滚动条，搜索仍能收缩。 */
+  /* 低于1040时沿用原单栏入口，不在窄窗口硬塞两块不可操作的面板。 */
+  .upper { grid-template-columns: clamp(280px, 28cqw, 340px) minmax(0, 1fr); }
+  /* display:none 同时移除属性展示和焦点路径，节目画面获得其空间。 */
+  /* 禁用输入原本不能 Tab，后续可编辑字段也会遵守该容器显示边界。 */
+  .inspector { display: none; }
+  /* 紧凑入口仅占上区标题行的右侧，绝不盖住下方时间轴。 */
+  /* 当前禁用，不显示虚假弹窗或遮挡原工作区的透明层。 */
+  /* 只切换显隐，不把按钮从标题流中抽走，避免窄窗名称遮挡。 */
+  .compactPanels { display: flex; }
+  /* 双栏已有素材，不重复显示“素材”入口，仅保留未实现的属性入口。 */
+  /* 入口外层在未来可绑定焦点回退，UI-01 不先维护面板栈。 */
+  .compactPanels > :first-child { display: none; }
+  /* 项目菜单收起为后续视图任务的边界，返回、旧版与导出继续可达。 */
+  /* 并非把保存等能力藏掉：这些功能本轮原本就未接入且明确禁用。 */
+  .projectMenus { display: none; }
+}
+/* 1040px 以下节目优先，临时素材/属性功能留在上区，主轨道永远在下方。 */
+/* 没有复制一份移动版时间轴，依旧使用同一 DOM 与滚动坐标。 */
+@container video-editor (width < 1040px) {
+  /* 单列仍使用可收缩网格，不能以固定宽度把画面撑到 nav 下面。 */
+  /* 上区高度不变，收起侧栏不会重置演示播放头和片段。 */
+  .upper { grid-template-columns: minmax(0, 1fr); }
+  /* 真正移除素材占位，预览不会在左边保留空洞。 */
+  /* UI-03 的查询状态后续应由业务组件保持，不依赖永久挂载列表。 */
+  .mediaPanel { display: none; }
+  /* 单栏两个临时区入口都展示为禁用，不盖住原预览控制条。 */
+  /* 这些入口不会跳路由或克隆 AppShell。 */
+  .compactPanels > :first-child { display: inline-flex; }
+  /* 轨道头只压缩到约定 176px，时间内容仍至少 720px 并允许滚动。 */
+  /* 使用同一变量同步刻度角、片段列与播放头内容起点。 */
+  .timelineGrid { --track-header: 160px; }
+  /* 轨道名可省略，编号与有效状态图标保持可辨认的按钮大小。 */
+  /* 不隐藏音频独奏入口导致 A1/A2 与 V1 的语义混乱。 */
+  .trackHeader { padding-inline: 6px; gap: 2px; }
+}
+/* 极窄容器不把顶栏拆成两行，优先保留返回、项目名、旧版链接和导出。 */
+/* 该收缩只控制次要文字，后续 UI-07 才做完整键盘和系统缩放验收。 */
+@container video-editor (width < 600px) {
+  /* 返回图标仍有链接和 title，省略的只是工具箱文本。 */
+  /* 未保存仍可通过项目完整文案和禁用原因判断，不用错误的成功状态补位。 */
+  .optionalText, .projectName > span { display: none; }
+  /* 项目栏留边减为 8px，按钮维持 32px，不能用整体 transform 缩小界面。 */
+  /* 文件名继续截断，保留所有真实路由操作的可达性。 */
+  .projectBar { gap: 4px; padding-inline: 8px; }
+  /* 旧版链接使用更小文字但命中高度不变，让可用功能仍有明确入口。 */
+  /* 不把链接变成没有 accessible label 的孤立箭头。 */
+  .legacyLink { font-size: 11px; }
+}
+
+/* UI-02 局部 token 映射：沿用应用语义色，不新建编辑器主题状态。 */
+/* 这些增量规则服务已有工作区和状态样板，作用域不延伸到 GIF。 */
+/* 可用按钮恢复 pointer，原有只读骨架的整体灰度不再覆盖局部交互。 */
+/* 颜色从 accent-soft/stroke/text 三个现有语义信号读取。 */
+/* 背景、描边和文字各有用途，不把深色主题简单反相。 */
+/* pressed 样式独立于 hover，所以鼠标离开后开关状态仍可辨认。 */
+/* disabled 选择器先排除不可用控件，不能让悬停暗示可以保存。 */
+/* focus-visible 只在键盘等需要焦点提示的操作中显示，不制造鼠标常驻描边。 */
+/* 片段保留选中内描边，外侧焦点圈另行表达键盘当前位置。 */
+/* 素材行和片段不共用布局尺寸，只共享符合语义的焦点规则。 */
+/* 标题开关与重置按钮同排，不能把重置嵌入可折叠按钮的命中范围。 */
+/* 箭头旋转不参与布局，展开不会让标题和右侧动作突然错位。 */
+/* 组内容建立新的格式化上下文，使首行 margin 进入高度测量。 */
+/* 这一修正属于调用方内容边界，不改 CollapsiblePanel 的全局动画机制。 */
+/* 字段槽同时容纳输入与错误文本，错误增加行高而不叠在下一项上。 */
+/* 单位的 flex-shrink 为零，数值输入承担横向收缩。 */
+/* 输入的 min-width 沿用零下限，长草稿不会反向撑大属性面板。 */
+/* 输入边框由外槽统一绘制，防止原 propertyRow 规则叠出双圈。 */
+/* focus-within 覆盖输入和单位整体，用户能看出当前正在编辑哪个数值。 */
+/* 错误以文字和 aria-invalid 共同表达，不只依赖红色深浅。 */
+/* 错误颜色优先读取应用 destructive，回退色仅用于缺省语义变量。 */
+/* 占位容器的 anywhere 断行只处理状态文字，不切碎实际文件名数据。 */
+/* compact 只缩小状态密度，图文结构和无障碍状态不变。 */
+/* error 与 missing 不共用红色，缺封面不一定代表素材完全不可用。 */
+/* Spinner 是装饰动画，完成与否仍由调用方状态决定。 */
+/* reduced-motion 关闭旋转后仍保留等待图标与文字，不留下空白按钮。 */
+/* 样板网格采用 auto-fit，不创建另一份移动版 JSX。 */
+/* min(100%,320px) 保证窄内容区也不会被固定最小列宽撑破。 */
+/* 样板页 padding 是本页内容留白，不改变默认编辑器铺满展示区的规则。 */
+/* 实例外框仅用于对照两个状态作用域，不增加项目窗口或工程存储。 */
+/* 两个实例使用同一套间距，状态不同不应导致控件尺寸不一致。 */
+/* action 区域允许换行，长翻译下仍保留所有不可用原因的提示入口。 */
+/* sampleLane 明确高度后，绝对定位片段才不会覆盖其后的空态内容。 */
+/* 锁定降低透明度只作用于对应片段，不使整条音轨或另一实例变暗。 */
+/* 样板没有自设最大高度，统一宿主滚动可同时查看最后的片段和空态。 */
+/* 窄屏图文比例不靠 transform 缩小，字体和按钮命中尺寸保持稳定。 */
+/* 媒体缩略图继续由原 mediaCover 管尺寸，错误图标不另建一套图片外框。 */
+/* CSS Module 名称只描述 UI 角色，不用 isAudio 等业务开关复制表面样式。 */
+/* 样板与默认工作区共享局部变量，主题菜单一次切换即可同步所有调用方。 */
+/* 同一规则同时用于默认工作区和独立样板，避免仅在样板中修焦点。 */
+/* 默认 cursor 不再表示全部不可用，可用性以原生 disabled 为准。 */
+.action:not(:disabled), .mediaItem:not(:disabled), .timelineClip:not(:disabled) { cursor: pointer; opacity: 1; }
+/* 悬停只在可用控件生效，禁用不能因 hover 看起来重新可点击。 */
+/* 选中与按下有明确信号，颜色只是辅助，aria-pressed 同时更新。 */
+.action:not(:disabled):hover, .mediaItem:not(:disabled):hover { background: var(--muted); border-color: var(--border); }
+/* 按下仍用已有强调色，不改变按钮或素材行尺寸，松开后选中状态继续独立表达。 */
+/* 只匹配可用控件，加载与未接通动作不会出现可执行的按压反馈。 */
+/* action 同时服务主工作区与样板，修正只维护这一条公共规则。 */
+.action:not(:disabled):active, .mediaItem:not(:disabled):active { background: var(--muted); }
+/* 片段有各自的视频/音频底色，悬停只改描边，避免抹掉媒体类型。 */
+/* 锁定或未接通片段不应用悬停描边，鼠标经过不会暗示可修剪。 */
+/* 不增加阴影厚度或移动位置，工程时间坐标与主时间轴保持一致。 */
+.timelineClip:not(:disabled):hover { border-color: var(--accent-stroke); }
+.action[aria-pressed="true"] { border-color: var(--accent-stroke); color: var(--accent-text); background: var(--accent-soft); }
+/* 同一焦点圈覆盖按钮、素材、片段和分组，不依赖特定区域选择器。 */
+/* outline-offset 保留边框本身，既有选中边框仍可同时辨认。 */
+.action:focus-visible, .mediaItem:focus-visible, .timelineClip:focus-visible, .groupToggle:focus-visible { outline: 1px solid color-mix(in srgb, var(--accent-stroke) 65%, var(--foreground)); outline-offset: -1px; }
+/* 分组标题是真按钮，重置保持兄弟节点，键盘不会进入嵌套按钮。 */
+/* 开合仅旋转箭头，不通过改变文本宽度推挤右侧动作。 */
+.groupToggle { display: flex; align-items: center; gap: 6px; min-height: 32px; text-align: left; border-radius: 4px; }
+.closedChevron { transform: rotate(-90deg); }
+/* 数值行的顶部 margin 留在测量容器内，否则 scrollHeight 少算首行留白。 */
+/* flow-root 阻止父子 margin 合并，折叠容器展开时末行才不会被裁掉。 */
+.groupContent { display: flow-root; }
+/* fieldBody 包含输入和就地错误，错误出现只增高本行，不覆盖下方字段。 */
+/* 单位在输入右侧固定，宽度不足由输入收缩，不让单位挤出面板。 */
+.fieldBody { min-width: 0; }
+.fieldInput { display: flex; align-items: center; border: 1px solid var(--input); border-radius: 6px; padding-right: 8px; }
+/* 已有属性行输入规则不再叠第二圈边框，公共槽负责统一外观。 */
+/* disabled 的输入保留可读性，错误与焦点状态由字段槽集中表示。 */
+.fieldInput input { border: 0; outline: 0; }
+.fieldInput small { flex-shrink: 0; }
+.fieldInput:focus-within { outline: none; border-color: color-mix(in srgb, var(--accent-stroke) 65%, var(--foreground)); }
+/* 漫画属性选择淡细焦点，视频各调用处不传参数时继续保留原样。 */
+/* 通过本组件的语义参数注入，不依赖父页面覆盖私有DOM样式。 */
+/* 轮廓仍存在以支持键盘定位，不用outline:none抹去全部焦点反馈。 */
+/* 错误的红色边框保持独立，不被这个浅色轮廓覆盖。 */
+.propertyRow[data-focus-tone="subtle"] .fieldInput:focus-within { outline: none; border-color: color-mix(in srgb, var(--accent-stroke) 65%, var(--foreground)); }
+.fieldInput:has(input[aria-invalid="true"]) { border-color: var(--destructive, #b34b60); }
+.fieldError { display: block; margin-top: 4px; font-size: 11px; color: var(--destructive, #b34b60); }
+/* 反馈外壳共用图文布局，缺图与错误不再留下破图标或空白。 */
+/* 文字可折行，长名状态不会反向撑宽预览或素材列。 */
+.placeholder { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 64px; padding: 8px; color: var(--muted-foreground); font-size: 12px; overflow-wrap: anywhere; }
+.compactPlaceholder { width: 100%; min-height: 0; font-size: 10px; }
+.placeholder[data-editor-placeholder="error"] { color: var(--destructive, #b34b60); }
+/* 加载动画仅表达等待，不驱动任何完成状态或虚构处理百分比。 */
+/* 系统减少动态效果时关闭旋转，状态文字仍能完整表达等待。 */
+.spinner { animation: editor-spin 1s linear infinite; }
+@keyframes editor-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .spinner { animation: none; } }
+/* 独立样板页拥有自己的滚动体，不把长状态清单塞进默认编辑器三栏。 */
+/* 两个实例复用同一尺寸规则，窄容器改为单列而不缩小点击目标。 */
+.samplePage { padding: 16px; }
+.samplePage h1 { font-size: 18px; margin: 12px 0; }
+.samplePage > p { font-size: 12px; color: var(--muted-foreground); }
+.sampleGrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); gap: 16px; margin-top: 16px; }
+/* 每个实例的边框是展示范围，不代表创建了第二个编辑器工程。 */
+/* 列表不重复铺满整窗高度，样板页统一纵滚，分组内部可按内容扩展。 */
+.sampleInstance { min-width: 0; border: 1px solid var(--border); border-radius: 8px; padding: 12px; }
+.sampleInstance h2 { font-size: 14px; }
+.sampleActions { display: flex; flex-wrap: wrap; gap: 8px; margin-block: 12px; }
+/* 片段示例用相同的绝对时间坐标，容器明确高度保证不会压到下一组。 */
+/* 锁定外观仅降低当前片段，不影响邻近可选片段或其他实例。 */
+.sampleLane { position: relative; height: 68px; margin-top: 12px; background: var(--muted); border-radius: 6px; }
+.timelineClip[data-editor-locked] { opacity: .5; }
+/* R02 内层 ul 只负责行结构，外层 mediaList 才拥有滚动条。 */
+/* 同一滚动槽可装列表或占位，错误/空库时控件仍留在固定位置。 */
+/* 清除条件按钮也在该槽里，不绝对定位覆盖列表最后一行。 */
+.mediaRows { list-style: none; margin: 0; padding: 0; }
+/* 可见焦点沿用其他编辑器控件的轮廓色，深浅主题不硬编码颜色。 */
+/* outline 不占布局宽度，不让聚焦时搜索框把导入按钮挤走。 */
+/* 只覆盖搜索输入，不更改 GIF 或旧剪辑器的字段样式。 */
+.search input:focus-visible { outline: 1px solid color-mix(in srgb, var(--accent-stroke) 65%, var(--foreground)); outline-offset: -1px; }
+/* 状态样板也使用真实 MediaPanel，高度固定才能验证列表独立滚动。 */
+/* 默认工作区仍遵守 UI-01 的容器断点，这里不提前实现 UI-07 面板抽屉。 */
+/* 样板页的窄列保持面板可见，便于单独验收 R02 的内部收缩。 */
+.mediaSample .mediaPanel { display: flex; height: 380px; border: 1px solid var(--border); border-radius: 8px; }
+/* 样板操作属于演示页，不塞进默认素材区工具栏占用用户空间。 */
+/* 同一组按钮允许换行，窄窗口不缩小命中尺寸或产生横向整页滚动。 */
+/* 标题与控制区沿用 sampleInstance 的间距，不复制另一套 Card 外观。 */
+.mediaSample { min-width: 0; }
+/* 节目样板复用默认面板，固定展示高度使状态切换不改变下方选项位置。 */
+/* samples 的长页面由 host 滚动，preview 自己只容纳比例框和控制条。 */
+/* 窄容器仍用同一个 DOM，不隐藏时间码；控制条原有横向滚动负责可达性。 */
+.previewSample > .previewPanel { height: 360px; border: 1px solid var(--border); border-radius: 8px; }
+/* 样板素材行是实际 MediaItem，选择状态由该样板单独持有。 */
+/* 两列仅是样板的排列差异，缩略图和标题外观不复制素材行规则。 */
+/* 极窄列回到单列，长文件名继续由公共行的 minmax 和省略处理。 */
+.previewSampleMedia { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)); gap: 4px; list-style: none; padding: 0; margin: 12px 0 0; }
+
+/* LIVE-01 的素材事实分行显示，长文件名仍沿用同一行控件的省略规则。 */
+.mediaMetadata, .mediaNotice { overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+/* 状态不占用封面宽度，错误文字在独立滚动的素材栏内阅读。 */
+.mediaNoticeBar, .dropHint { margin: 6px 12px; font-size: 11px; color: var(--muted-foreground); overflow-wrap: anywhere; }
+/* 全工作区接收外部文件，不依赖窄屏时隐藏的素材栏。 */
+/* 文件导入不挂大遮罩，内部片段拖动不会覆盖上方预览。 */
+.workspace { position: relative; }
+/* 视频铺进既有预览相框，contain 保留完整画面，不把竖片拉伸为横屏。 */
+.liveVideo { width: 100%; height: 100%; min-width: 0; min-height: 0; object-fit: contain; }
+/* 解码状态盖在播放器上，保留媒体节点供重试，不丢掉已有元数据。 */
+.playerOverlay { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #11151d; overflow: auto; }
+/* 未选片段时右侧展示空态，选择素材不会伪造 scene_02 的片段属性。 */
+.inspectorEmpty { display: grid; place-items: center; flex: 1; min-height: 0; }
+
+/* LIVE-02候选沿用片段相同的工程列，只叠加轮廓，不拦截真正drop。 */
+/* 有效与无效同时用文字和颜色区分，不能让红绿色成为唯一反馈。 */
+/* 文字保持单行，完整原因同时在时间线固定状态栏内可读。 */
+/* 草稿不改变轨道高度，也不影响原片段的点击与选择。 */
+/* negative起点可以露出左缘警告，但只有真正有效结果才允许提交。 */
+/* 候选使用虚线边框，与已经提交的实线选中片段有视觉区别。 */
+/* 无效候选仍显示预计秒数，方便用户从冲突位置向旁边调整。 */
+/* 草稿文本不参与片段名称排版，长原因不会反向拉长占位宽度。 */
+/* 草稿宽度与素材实际可显示帧无关，缺封面也能按时长正确落点。 */
+/* 固定反馈栏占据独立高度，提示从成功变错误不会挤压轨道行。 */
+/* 轨道头和lane的高度由同一grid行统一管理，横滚不产生上下错位。 */
+/* 页面导航展开会改变容器宽度，真实手势在resize时取消而非使用旧比例。 */
+/* 选中描边在border-box内，视觉突出不会增加碰撞区域。 */
+/* 名称采用省略号，但title仍保留完整源文件名供查看。 */
+/* 播放头为pointer-events:none，用户能在它覆盖的片段处继续抓取。 */
+/* 本轮未加入全屏遮罩，拖动时应用导航仍维持原宿主可用性。 */
+/* 拖动反馈只存在于当前编辑器CSS模块，GIF样式不读取这些状态。 */
+/* 窄容器保留最小内容宽度，横向滚动归timelineScroll而非整个main。 */
+.timelineDraft { position: absolute; top: 8px; height: 52px; border: 1px dashed var(--accent-stroke); background: var(--accent-soft); pointer-events: none; z-index: 2; border-radius: 5px; }
+/* 失败仍保留预计时间，用户知道往哪边移动能够避开已有安排。 */
+/* 与公共错误占位使用相同的destructive回退，主题未定义该变量时仍有红色警示。 */
+.timelineDraft[data-valid="false"] { border-color: var(--destructive, #b34b60); color: var(--destructive, #b34b60); }
+/* 只缩短候选文字，不截断固定状态栏，长失败原因仍有阅读位置。 */
+/* overflow留在这个展示span，不把整条时间线改成clip掩盖横滚问题。 */
+.timelineDraft > span { display: block; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; padding: 4px; font-size: 11px; }
+/* 状态栏固定在滚动体外，自动横滚不会带走取消与失败说明。 */
+/* 最小高度避免从提示变为成功时重新挤压轨道行。 */
+/* 长内容允许自然换行，窄窗口仍可读，不与导出或播放状态混用。 */
+.timelineNotice { margin: 0; padding: 3px 12px; min-height: 24px; font-size: 11px; color: var(--muted-foreground); }
+
+
+/* 属性说明跟随内容换行，不挤占标题或覆盖后面的数值框。 */
+/* 来源说明用主题辅助文字，不另写一套只适用于浅色的灰色。 */
+/* 允许断开很长的无空格内容，避免英文错误或文件名撑宽右栏。 */
+/* 说明在属性滚动体之外，正式页一直可见未接效果的能力边界。 */
+.propertyNotice { margin: 8px 12px; color: var(--muted-foreground); font-size: 11px; overflow-wrap: anywhere; }
+/* 项目事实使用同一属性滚动区，空选择时不留上一对象的字段。 */
+/* 两列对应名称与值，项目分辨率不是额外可编辑表单。 */
+/* gap给时间、帧率留读取间隔，不用空格字符在翻译里凑对齐。 */
+/* 外侧padding属于内容，紧凑面板打开后依然与公共字段保持相同边距。 */
+.projectFacts { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 12px; }
+/* 样板固定自己的展示高度，正式检查器仍由工作区分配，不新增移动版实现。 */
+/* 480px用于稳定展示独立输入样板，超出的组在已有propertyBody内滚动。 */
+/* 不把这个高度应用到upper里的正式检查器，避免分隔调整后右栏超出预算。 */
+/* 复用同一inspector类才能让深浅表面、字段焦点和省略规则同步生效。 */
+.inspectorSample > .inspector { display: flex; height: 480px; border: 1px solid var(--border); }
+
+/* 播放定位只捕获标尺，轨道上的贯穿线仍不拦截片段选择和拖动。 */
+/* 三角命中区比可见尖角大，键盘与鼠标都能定位，不给细线绑定整列命中。 */
+/* margin-left抵消半个按钮宽，使尖角中心和实际工程时间完全对齐。 */
+/* clip-path只裁可见外形，坐标仍按同一个内容列百分比决定。 */
+/* touch-action:none将定位交给pointer capture，避免触摸时同时横滚页面。 */
+/* 这里用accent-text而不是低对比填充，让深浅主题下的小手柄仍清楚。 */
+/* 播放头细线和顶部抓取柄共用时间位置，不使用两套独立left值。 */
+/* 白色外观在深色由foreground提供，浅色自动切成可辨认的深线。 */
+/* 可见线宽一像素，抓取柄仍保留可用热区，不能只留一个难以点击的像素。 */
+/* 柄的margin补偿使中心对准时间坐标，改变外形不移动实际播放时间。 */
+/* clip-path只裁外形，不决定拖动落点，落点仍通过公共尺子换算。 */
+/* 横向滚动后柄和线随同一列移动，不通过document鼠标位置追赶。 */
+/* 锁轨不锁节目书签，查看位置与修改片段内容属于不同权限。 */
+/* 播放头是节目起始书签，不改变素材自己的入点或文件内容。 */
+.playheadHandle { position: absolute; top: 18px; height: 18px; width: 12px; margin-left: -6px; background: var(--foreground); clip-path: polygon(0 0,100% 0,100% 68%,55% 100%,45% 100%,0 68%); cursor: ew-resize; touch-action: none; }
+/* 使用内描边以免三角裁切掉外侧焦点圈，聚焦仍可与当前时间线位置区分。 */
+/* 负outline-offset把圈画在按钮内部，不借扩大按钮尺寸改变时间定位几何。 */
+/* 焦点颜色取foreground，与手柄填充形成轮廓，不能只依赖悬停色。 */
+.playheadHandle:focus-visible { outline: 2px solid var(--foreground); outline-offset: -3px; }
+/* 正式手柄在标尺层，静态样板仍保留旧纯装饰三角，两者不叠成两个指针。 */
+/* data-interactive只由是否注入seek能力决定，不根据工程名字猜测正式或样板。 */
+/* 贯穿竖线仍显示，只关闭旧伪元素三角，不隐藏真正的播放位置。 */
+.playheadColumn[data-interactive="true"] > i::before { display: none; }
+/* 轨道锁定同时禁用片段回调与拖动，浅深主题使用同一个只读填充。 */
+/* 锁轨底色与片段选中边框职责不同，选中不等于当前轨道可编辑。 */
+/* 实际权限由原生disabled和提交校验控制，此背景本身不充当安全边界。 */
+.trackLane[data-locked] { background: var(--muted); }
+/* 缩放滑杆现在是实际视口控制，显示焦点但不改工程像素或媒体帧率。 */
+/* 焦点在公共滑杆上，不给整条工具栏添加假的可点击光圈。 */
+/* outline不占布局空间，键盘聚焦不会挤动相邻放大和适合全部按钮。 */
+.timelineZoom input:focus-visible { outline: 2px solid var(--accent-text); outline-offset: 2px; }
+
+/* 临时面板复用原节点：仅在对应容器断点覆盖上区，不创建body遮罩或第二个导航。 */
+/* 同时只允许一个data-open-panel值，互斥由工作区状态控制，时间轴不被覆盖。 */
+@container video-editor (width < 1280px) {
+  /* absolute的包含块是upper，top/bottom零只填上区，不覆盖AppShell。 */
+  /* width上限353沿用常驻属性密度；极窄上区以100%封顶，不向nav外延伸。 */
+  /* 背景必须是不透明语义表面，不能让节目视频透过输入文字降低可读性。 */
+  /* border-left保留与节目区的边界，z-index只高过上区内容，不是全窗口遮罩。 */
+  .upper[data-open-panel="inspector"] > .inspector { display: flex; position: absolute; right: 0; top: 0; bottom: 0; width: min(353px, 100%); z-index: 4; background: var(--workspace-surface, var(--background)); border-left: 1px solid var(--border); }
+}
+/* 1040以上素材本就常驻，不额外浮起它，避免双栏时重复覆盖节目。 */
+@container video-editor (width < 1040px) {
+  /* 素材仍在左侧，类型筛选和搜索继续使用原面板的内部滚动归属。 */
+  /* display:flex只恢复布局，不创建副本，因此当前筛选和高亮能原样保留。 */
+  /* 没有open标记时继续沿用前面的display:none，隐藏控件不参与Tab布局。 */
+  /* 两个临时面板通过单一状态互斥，不需要用更高z-index压住另一个已展开层。 */
+  .upper[data-open-panel="media"] > .mediaPanel { display: flex; position: absolute; left: 0; top: 0; bottom: 0; width: min(342px, 100%); z-index: 4; background: var(--workspace-surface, var(--background)); border-right: 1px solid var(--border); }
+}
+/* 关闭按钮位于当前面板标题角落，不随属性体或素材列表滚动离开。 */
+/* 这是同一枚按钮的位置规则，面板差异不值得再造另一种关闭控件。 */
+/* 只比当前面板高一层，不能挡住时间轴右键菜单或应用窗口控制。 */
+.panelClose { position: absolute; right: 6px; top: 4px; z-index: 5; }
+/* 左面板与右面板使用相同关闭按钮，只由位置参数选择所在标题角落。 */
+/* 左栏不足342px时用100%-38收回按钮，避免关闭入口被裁到窗口外。 */
+/* 按钮固定在标题角，不通过transform缩小点击区域来适应窄窗。 */
+.upper[data-open-panel="media"] > .panelClose { right: auto; left: min(calc(100% - 38px), 304px); }
+/* 分隔命中至少八像素，touch-action阻止系统纵滚与指针捕获争抢。 */
+/* user-select只限制抓手区域，素材名称和属性文本仍可按原规则选择或复制。 */
+/* ns-resize表示已接通的上下布局动作，不能给未接剪辑把手套这个鼠标样式。 */
+.splitter { cursor: ns-resize; touch-action: none; user-select: none; }
+/* 焦点使用与其他控件同一主题色，不能只靠鼠标悬停发现布局可调整。 */
+/* 内描边保留八像素行高，方向键调节不会因为focus增加额外高度。 */
+/* 分隔没有入场动画，减少动态设置下也不会依赖过渡延迟才能操作。 */
+.splitter:focus-visible { outline: 2px solid var(--accent-text); outline-offset: -2px; }
+
+/* 节目构图：根层跟项目相框等大，像素值在内部换百分比，不靠屏幕缩放修改工程。 */
+/*
+ * 项目底色固定黑色，主题只改变编辑器外壳，不能把透明像素染成面板背景色。
+ * root铺满现有frame，不在这里设新的宽高比，避免横竖工程互相挤压。
+ * crop仅裁媒体像素，选框作为兄弟层保留项目外的操作反馈。
+ * 内容层不响应指针，所以实际video不会抢走上方选框的拖动捕获。
+ * 交互层透明覆盖自身画面尺寸，项目黑边不是额外的拖动热区。
+ * content与selection共享相同left/top/width/height/rotate，避免两套盒模型漂移。
+ * 媒体填满的是已按源比例计算的基础盒，因此fill不会在常规探测尺寸下拉伸。
+ * 若再对video套一次contain，会出现层内留边，导致选框包含并非真实画面的区域。
+ * 绝对定位不改变frame文档流，移动内容不能反过来撑大项目容器。
+ * transform-origin保持中心，位置字段无需随角度补偿左上角。
+ * 选择细线使用inset阴影，不新增边框宽度，不影响几何测量。
+ * focus-visible另有外描边，键盘焦点不会只依赖选中颜色提示。
+ * 选中和聚焦是两种状态，失去焦点仍可保留当前片段高亮。
+ * aria-disabled配合事件权限检查，视觉光标本身不能阻止程序调用。
+ * 锁定仍允许查看和选中，禁止的是构图写入，所以不使用pointer-events:none。
+ * touch-action限制本对象手势的浏览器默认行为，不禁用整个工具页滚动。
+ * 没有transition拖慢跟手，指针候选即时对应媒体和字段。
+ * 没有对选中对象提高层级，未来轨道叠放必须由合成规则明确决定。
+ * 透明度只由内容style设置，交互按钮不继承opacity，零透明仍能恢复。
+ * 选框没有图像资源或canvas内容，未来输出管线不能采集此操作界面层。
+ */
+.canvasRoot { position: absolute; inset: 0; pointer-events: none; }
+/* 媒体和交互分两层：只裁真实画面，细选框可以跨过项目边界供操作辨认。 */
+.canvasCrop { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+/* 基础尺寸已经contain，媒体自身铺满同宽高比例的内容盒，不再进行第二次适配。 */
+.canvasContent { position: absolute; transform-origin: center; }
+.canvasContent > video, .canvasContent > img { display: block; width: 100%; height: 100%; object-fit: fill; }
+/* 透明按钮只承载命中与焦点，不以边框改变真实媒体盒宽高；0透明画面仍能选回。 */
+.canvasSelection { pointer-events: auto; position: absolute; padding: 0; border: 0; background: transparent; outline: 0; transform-origin: center; touch-action: none; cursor: move; }
+/* 选框使用内部描边，不使基础适配尺寸因边线增减，减少拖动时一像素跳动。 */
+.canvasSelection[data-canvas-selection="true"] { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent-text) 55%, transparent); }
+/* 焦点仍清楚可见；锁轨只禁止写入，允许点击辨认当前画面，不把锁当成隐藏。 */
+.canvasSelection:focus-visible { outline: 1px solid var(--accent-text); outline-offset: 2px; }
+.canvasSelection[data-canvas-locked="true"] { cursor: default; }
+
+/* 修剪把手贴实际边缘，悬停/键盘焦点显示；不再叠加第二圈选中边框。 */
+.timelineClip:hover .trimStart, .timelineClip:hover .trimEnd, .trimStart:focus-visible, .trimEnd:focus-visible { opacity: 1; outline: none; }
+/* 白色空心圆只提示已选片段的边界；透明12px热区仍负责真实修剪命中。 */
+/* 拖动过程中保留细框，收起圆点，避免圆点掩盖正在查看的源帧。 */
+.timelineClip[aria-current="true"] .trimStart, .timelineClip[aria-current="true"] .trimEnd { opacity: 1; }
+.timelineClip[aria-current="true"]:not([data-editor-trimming]) .trimStart::after,
+.timelineClip[aria-current="true"]:not([data-editor-trimming]) .trimEnd::after { content: ""; position: absolute; top: calc(50% - 3px); width: 6px; height: 6px; border: 1px solid #fff; border-radius: 50%; background: transparent; pointer-events: none; }
+.trimStart::after { left: 1px; }
+.trimEnd::after { right: 1px; }
+.fieldInput input[data-number-scrub="true"] { cursor: ns-resize; touch-action: none; }
+.trackSettings { flex-shrink: 0; padding: 0; }
+.trackSettings p { font-size: 11px; color: var(--muted-foreground); }
+
+/* 节目底板只画一次黑色；各轨透明相框才能透出下面的真实视频。 */
+/* 黑底归预览容器，缩小上层素材不会把下层内容擦成灰色。 */
+/* 不在每个ClipCanvas设置底色，否则上层相框会遮住所有低层。 */
+.previewFrame:has([data-clip-canvas], [data-program-composite]) { background: #000; }
+
+/* 数值框由包含单位的外框提示焦点，内部input不再重复画第二圈。 */
+/* 同一个键盘位置只保留一个一像素外轮廓，文字编辑和拖值共用。 */
+/* 这里带局部类名，满足CSS Modules纯选择器要求，不改其他输入框。 */
+:global(:root) .fieldInput input:focus-visible { outline: none; }
+
+/* 拖动时出现新轨会增加纵向内容，预先预留滚动条位置，横向秒尺才不会突然变窄。 */
+/* 不用当前候选反算起点比例，抓取时与落下时始终使用同一条实体标尺。 */
+/* 原有横滚仍归timelineScroll，gutter不增加第二个滚动区。 */
+.timelineScroll { scrollbar-gutter: stable; }
+
+/* 线条规则说明：按钮保留原边界，焦点只向内画一像素，不叠加发光阴影。 */
+/* accent按钮依旧表达主操作，细描边统一并不意味着把导入和危险操作都涂成灰色。 */
+/* 悬停颜色取muted，与本地模型更换封面使用同一主题语义变量。 */
+/* 按下使用现有aria-pressed，不能为了悬停效果把业务开关状态清掉。 */
+/* 片段选中不再叠一个inset光圈，原一像素边框承担选择反馈。 */
+/* 细选框不占时间宽度，片段的工程百分比不能被边框粗细撑大。 */
+/* 修剪热区保持十二像素易抓取，但显示的边线只有一像素，两者职责不同。 */
+/* 热区绝对定位，不参与标题排版，因此短片段仍保持准确的时间占位。 */
+/* opacity隐藏把手不禁用其键盘入口，获得焦点后必须明确显露。 */
+/* locked片段不挂把手，所以隐藏不是绕开权限的唯一保护。 */
+/* ns-resize只提示数字可上下拖，不取代普通文字输入与单位说明。 */
+/* touch-action避免拖数触发页面纵向手势，页面其他区域滚动沿用原规则。 */
+/* 轨道设置位于滚动区外，内容再多也不带走上限入口与视口工具。 */
+/* 时间网格动态行高由同一声明控制，不能给候选行单独改成另一种高度。 */
+/* 透明canvasRoot只承担定位；真正裁切由canvasCrop负责。 */
+/* 操作层不被内容裁切层剪掉，旋转或移出边界仍能看到选择反馈。 */
+/* 内容层按项目边界裁切，操作选框不能进入未来导出画面。 */
+/* 多个canvasRoot共用inset，容器变化后所有层仍依同一个项目比例重新投影。 */
+/* 画布根关闭pointer-events，未被上层图像覆盖的部分才能命中下层。 */
+/* 每层选择按钮重新启用pointer-events，真实图像范围仍可以直接抓取。 */
+
+/* 片段胶片带只画真实采样帧；画布不接收事件，选择与边缘热区仍归同一片段壳。 */
+/* 片段长度缩放时整带随宽度变化，标题不压入帧图，源文件不会因展示变化被改写。 */
+/* 单张封面仍用于无法解码的回退，不能重复封面并将其宣称为视频的连续帧。 */
+.clipFilmstrip { position: absolute; inset: 16px 0 auto; width: 100%; height: 40px; pointer-events: none; object-fit: fill; }
+/* 标题占独立窄条，像胶片盒上的标签，不遮住下方每个时间采样的画面。 */
+/* 背景沿用编辑器视频填充，长文件名只省略显示，不影响工程片段身份。 */
+.visualClip .clipName { position: absolute; inset: 0 0 auto; height: 16px; line-height: 16px; text-align: left; font-size: 10px; padding: 0 5px; }
+/* 倍速输入复用数值字段的草稿、范围与错误规则；窄预览仍有独立固定槽位。 */
+/* 不给整个播放器缩放，确保键盘焦点和图标命中尺寸不受视频比例影响。 */
+/* 倍速字段保留数值单位，不用一个只有数字的匿名input让用户猜测含义。 */
+/* 字段宽度固定是控制条布局约束，实际值仍可手动输入两位小数。 */
+/* 超范围草稿的错误由公共fieldError显示，不能隐藏overflow把错误也裁掉。 */
+/* transport本身承担横向滚动，所以右侧适应与帧导出仍可被滚动访问。 */
+/* 不为新增字段缩小整个预览区的字号，保持其他按钮命中尺寸。 */
+/* 深浅色字段都使用原语义input与foreground，没有新增独立暗色开关。 */
+/* 字段的聚焦边框与属性区一致，避免播放器里又出现一圈粗蓝框。 */
+/* 这里没有CSS动画驱动时间码，真实播放进度只来自媒体事件。 */
+.previewRate { display: flex; align-items: end; gap: 4px; width: 176px; flex-shrink: 0; }
+.previewRate > label { flex: 1; min-width: 0; }
+/* 键盘或鼠标靠近片段边缘时只有方向光标，整片选中边框不因热区显示而增粗。 */
+/* 热区保留十二像素便于抓取，但不再铺一块厚实的背景遮住真实帧。 */
+.trimStart, .trimEnd { top: 0; bottom: 0; background: transparent; color: transparent; }
+
+/* 素材网格继续由MediaItem的cards参数开启，列表样板与业务状态保持独立。 */
+/* 像一排固定相框：列宽112px不分配尾部余量，面板增宽只增加列数。 */
+/* 卡片高94px由74px封面、4px间距和16px文件名组成，不显示额外三行参数。 */
+/* 自动填列以实际列表可用宽为准，纵向滚动条出现后也不产生半张横向溢出卡。 */
+/* 空库、搜索无结果和导入失败继续使用原占位逻辑，不生成虚构卡片补齐空位。 */
+.mediaCards { display: grid; grid-template-columns: repeat(auto-fill, 112px); gap: 12px; align-content: start; }
+/* 外按钮不画整卡底色或边框，选中反馈只围绕封面，文件名留在左下方。 */
+/* outline不叠加在整卡上；键盘焦点改由下方封面轮廓显示，不取消可见焦点。 */
+/* 定位宿主是按钮，两侧短白线只提示选中，不变成能修剪源文件的拖动手柄。 */
+/* 按钮overflow可见供短线伸出，源画面裁切仍只由mediaCover管理。 */
+.mediaItem.mediaCard { position: relative; display: flex; flex-direction: column; align-items: stretch; gap: 4px; margin: 0; padding: 0; border: 0; border-radius: 0; width: 112px; height: 94px; overflow: visible; background: transparent; outline: none; }
+/* 通用行hover规则优先级较低，这里明确覆盖，鼠标经过不会重新铺一整卡灰底。 */
+/* 选中状态也保持透明，避免原浅紫底与新细青框同时出现两套视觉反馈。 */
+/* 此规则只命中cards派生类，旧列表行的高亮、点击和键盘路径不改变。 */
+.mediaItem.mediaCard:hover, .mediaItem.mediaCard[aria-current="true"] { background: transparent; }
+/* 横竖源都完整放进同一个暗底槽，object-contain保留画幅，不能裁掉竖视频的上下。 */
+/* 封面边框始终预留1px，选中只换颜色，不会让图片和文件名随点击跳位。 */
+/* 封面圆角与参考一致，图片和错误占位都被限制在这一小块固定区域。 */
+/* 小封面来自导入首帧的有限尺寸JPEG，不为每张卡片挂载隐藏的播放实例。 */
+.mediaCard .mediaCover { width: 112px; height: 74px; flex: 0 0 74px; border: 1px solid transparent; border-radius: 5px; background: #222a37; }
+/* 青色沿用编辑器已有音轨色相，只用于素材选框，不改变应用全局强调色。 */
+/* focus-visible与选中用同一个1px框，键盘经过时也能辨认当前操作对象。 */
+/* 缺图卡片仍能显示选框，图片成功与选中身份是两个独立状态。 */
+.mediaCard[aria-current="true"] .mediaCover, .mediaCard:focus-visible .mediaCover { border-color: #2ca8ad; }
+/* 参考图左右两根短白线属于装饰，pointer-events:none确保内部拖动仍落到按钮。 */
+/* top居中于74px封面，不居中于含文件名的整个94px按钮，避免短线位置偏低。 */
+/* 辅助线不创建DOM按钮或Tab停靠点，素材选择与时间线修剪不会混淆。 */
+/* 只在当前选中时生成；切换素材后原卡片马上恢复普通封面。 */
+.mediaCard[aria-current="true"]::before, .mediaCard[aria-current="true"]::after { content: ""; position: absolute; top: 31px; width: 3px; height: 12px; border-radius: 1px; background: #fff; box-shadow: 0 0 1px #222a37; pointer-events: none; z-index: 1; }
+.mediaCard[aria-current="true"]::before { left: -2px; }
+.mediaCard[aria-current="true"]::after { right: -2px; }
+/* 时长小字叠在右上角，深色半透明底使白字在明暗封面上都可辨认。 */
+/* 时长不参与flex排版，超长文件名只能在下方省略，不能把角标挤走。 */
+/* pointer-events:none使角标不截获素材拖放；它不是可调整区间的字段。 */
+/* 源总长通过现有分秒工具格式化，卡片不按项目fps制造第二份时间模型。 */
+.mediaDuration { position: absolute; top: 2px; right: 2px; padding: 0 2px; border-radius: 2px; background: rgb(0 0 0 / 55%); color: #fff; font-size: 10px; line-height: 14px; pointer-events: none; }
+/* 名称左对齐单行，title仍保留原始文件名，不能为省空间改掉真实素材身份。 */
+/* 只限制视觉行高，不截断拖动载荷中的名称；键盘可访问文本仍是完整字符串。 */
+/* 正常元数据留在sr-only文本供读屏与状态核对，卡片不展示额外属性行。 */
+/* 分辨率、帧率和音轨仍保存在素材metadata，不能因视觉压缩删除探测结果。 */
+.mediaCard .mediaDescription { gap: 0; width: 100%; }
+.mediaCard strong { font-size: 11px; font-weight: 400; line-height: 16px; }
+/* 连续帧真正成功才收起左端单封面，辅助解码失败仍留真实封面作为回退。 */
+/* 封面与胶片带不另增片段宽度，时间线几何始终由工程区间控制。 */
+.timelineClip:has([data-filmstrip-ready="true"]) .clipCover { visibility: hidden; }
+
+/* 正式视频为16px标题、40px方形帧带、16px波形，加两像素细边框。 */
+/* 音轨不预留帧带，52px整体配68px轨道行；视频行88px配74px片段。 */
+/* 用内容节点的类型决定grid行高，左侧轨道头自动拉满同一行，不需要追赶滚动。 */
+/* 秒数只决定横向left/width，改变行高不能改变源区间或工程时长。 */
+.trackLane[data-track-type="video"] { height: 88px; }
+.trackLane[data-track-type="audio"] { height: 68px; }
+.referenceClip { top: 7px; height: 74px; border-radius: 1px; padding: 0; color: #e4f6f6; background: #06494b; border-color: #388b8d; }
+/* 青色面板取参考中的声音轨色相，媒体缩略图始终保留源像素，不随主题染色。 */
+/* 选中在深色用浅线、浅色用深线，沿用原细框语义，不增加粗outline或布局宽度。 */
+/* hover只改变细边框，不能通过降低透明度让帧带或文字突然消失。 */
+/* 标题条与波形条有固定底色，因此源画面非常亮时也不会吞掉文件名。 */
+.referenceClip .clipName { position: absolute; inset: 0 0 auto; height: 16px; line-height: 16px; padding: 0 5px; display: flex; gap: 6px; align-items: center; text-align: left; font-size: 10px; color: #e4f6f6; background: #06494b; }
+/* 名称只截断自己的槽，时长不被长文件名挤掉，窄片段由外壳裁切。 */
+/* 不设置标题最小宽度，标题不能反过来撑大按秒计算的工程宽度。 */
+/* 标题span不创建新焦点停靠，方向键、菜单键继续由同一片段按钮处理。 */
+/* 时长跟随名称排在左侧，不使用space-between把短文件的时间码推到最右端。 */
+/* 名称和时长共用16px行高，避免不同数字字形导致两段文字基线错位。 */
+/* 字体采用等宽数字仅作用于时间码，文件名仍沿用应用字体。 */
+/* 超短片段无法显示完整名称时不另开浮层，用户可用原title或放大时间轴查看。 */
+.referenceClip .clipName > span:first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.referenceClip [data-clip-timecode] { flex-shrink: 0; font-variant-numeric: tabular-nums; }
+/* 帧带只占中间40px，底部声音有独立空间；取消请求时仍有原封面可回退。 */
+/* canvas缓冲仍由原有界抽帧器管理，CSS不把16:9图片按片段总宽无限拉长。 */
+/* 封面回退只占同一中间槽，不会把标题或声音盖住，也不冒充连续帧。 */
+.referenceClip .clipFilmstrip { top: 16px; bottom: 16px; height: 40px; }
+.referenceClip .clipCover { position: absolute; inset: 16px auto 16px 0; width: 40px; height: 40px; }
+/* 分离音轨没有视频帧，声音槽改用标题下面的全部空间，继续同源区间映射。 */
+/* 原音符不再叠在波形上，静态演示音轨仍保留自己的旧占位。 */
+/* 音轨分离标记不改变源metadata.hasAudio，视频块仍能显示源声音摘要。 */
+.referenceClip.audioClip > svg { display: none; }
+.referenceClip.audioClip { height: 52px; background: #113054; border-color: #244869; }
+.referenceClip.audioClip .clipName { background: #113054; padding-top: 0; }
+.referenceClip.audioClip .clipWaveform { top: 16px; height: auto; background: #113054; color: #0e87b6; }
+/* 深蓝音频块上的浅框始终清楚，选中不额外叠加粗条或改变文件名位置。 */
+.referenceClip[aria-current="true"] { border-color: #e9edf3; }
+/* 声音包络是真实8kHz下混后的振幅概览，不使用随机线条或CSS动画伪造采样。 */
+/* data状态区分加载、失败、无音轨和就绪，失败保留标题与片段操作能力。 */
+/* 中心线让真实静音可见；读到的零值保持直线，不能为视觉丰满补出音量。 */
+/* pointer-events:none确保底部仍可拖动片段，靠近两侧仍命中原修剪手柄。 */
+/* SVG局部1000×32坐标只负责显示，项目像素、源秒和工程帧都不由CSS改写。 */
+/* 轻声开方压缩在路径生成时处理，不影响实际播放音量或音高。 */
+.clipWaveform { position: absolute; inset: auto 0 0; height: 16px; background: #06494b; color: #71bbbd; pointer-events: none; overflow: hidden; }
+.clipWaveform > svg { display: block; width: 100%; height: 100%; fill: currentColor; stroke: currentColor; stroke-width: .5px; }
+.clipWaveform > small { display: block; padding: 0 4px; font-size: 9px; line-height: 16px; color: #b2d5d6; white-space: nowrap; }
+
+/* 修剪光标由黑芯白边的箭头与竖线组成，明暗视频画面上都能看清。 */
+/* 数据SVG随CSS分发，不依赖网络或用户机器有没有安装某套光标。 */
+/* 热点固定在12×12，视觉箭头改变不会让实际抓取边界偏移。 */
+/* 不支持自定义光标的平台回退到对应方向的标准resize，修剪行为保持可用。 */
+
+/* 紧凑数值布局由公共字段自己维护，播放器不穿透子节点重写属性组件。 */
+/* 一列两行让标签与输入各有完整宽度，不再被属性区84px标签列压扁。 */
+/* 默认inline调用不受影响，漫画与属性检查器继续采用原横排。 */
+/* 错误文本仍跟输入留在同一字段内，非法自定义速度不会藏到控制栏外。 */
+.stackedField { grid-template-columns: minmax(0, 1fr); gap: 2px; margin-top: 0; }
+.stackedField > span:first-child { font-size: 10px; white-space: nowrap; }
+
+/* 合成内容与操作各用一层透明底板；顺序只由tracks反向铺放决定。 */
+/* 不设isolation或选中z-index，下面选框的状态不能改动上面视频的颜色。 */
+/* 两个plane本身不拦指针，只有ClipCanvas中的可编辑选择矩形会恢复命中。 */
+/* 没有给选中picture提高z-index，否则下层被选中会篡改合成颜色。 */
+/* 节目底板的黑场不跟主题改变，深浅切换只调整外框与操作文案。 */
+/* 未就绪时用visibility隐藏内容而非display:none，以保留解码节点生命周期。 */
+/* 播放按钮组保持固有宽度，过窄时由原走带区横向滚动，不把图标压成零宽。 */
+/* 静音提示使用nowrap，避免中文被挤成竖排而遮住进度或倍速字段。 */
+/* 提示放在标题动作槽，素材查看不传该提示，原有声音入口继续独立展示。 */
+/* CSS没有在各层设置背景，透明位置才会透出下方真实视频。 */
+/* 这组样式不修改应用外壳高度或导航宽度，不给工具创建第二套窗口布局。 */
+/* 内容栈与操作栈共用同一inset，响应式变宽不需要复制项目坐标。 */
+.compositePlane { position: absolute; inset: 0; pointer-events: none; }
+/* 静音说明放在标题动作槽，不依赖悬停提示，文字保持单行。 */
+.programMuted { white-space: nowrap; flex-shrink: 0; color: var(--muted-foreground); font-size: 10px; }
+
+/* 正式桌面以黑色项目画幅反推播放器宽度，余额交给素材库，不保留两侧灰色墙。 */
+/* 属性列继续用原宽度变量，避免此次分配改变右侧字段/滚动契约。 */
+/* 只在原素材可见的断点使用预算，紧凑面板仍沿用UI-07的覆盖与焦点逻辑。 */
+/* minmax允许素材收缩到可访问导入入口的下限，长文件名不撑破列。 */
+/* --program-width由上区真实高度计算，分隔条拖动与导航开合会重新测量。 */
+/* 不用transform缩小整个播放器，控制条和焦点仍保持正常命中大小。 */
+@container (min-width: 1280px) {
+  .upper[data-fitted-preview] { grid-template-columns: minmax(280px, 1fr) minmax(0, var(--program-width, 1fr)) var(--inspector-width); }
+}
+@container (min-width: 1040px) and (max-width: 1279px) {
+  .upper[data-fitted-preview] { grid-template-columns: minmax(280px, 1fr) minmax(0, var(--program-width, 1fr)); }
+}
+/* 分类像固定书脊，宽窗不会把间距均分拉大；窄窗只移动这一条窗口。 */
+/* 箭头覆盖边缘的小槽位，不参与分类数量，也不改变下方素材卡片的固定大小。 */
+/* 选中只变青色，保持与参考一致的无底块、无下划线展示。 */
+.libraryTabs { position: relative; flex: 0 0 48px; min-width: 0; border-bottom: 1px solid var(--border); }
+.libraryTabViewport { display: flex; align-items: stretch; gap: 2px; height: 100%; padding-inline: 8px; overflow-x: auto; scrollbar-width: none; }
+.libraryTabViewport::-webkit-scrollbar { display: none; }
+.libraryTabs button { display: flex; flex: 0 0 44px; flex-direction: column; align-items: center; justify-content: center; gap: 3px; padding: 3px 2px; border: 0; color: var(--muted-foreground); background: transparent; font-size: 10px; white-space: nowrap; cursor: pointer; }
+.libraryTabs button:hover { color: var(--foreground); }
+.libraryTabs button[aria-pressed="true"] { color: #27bfc4; }
+.libraryTabs button:focus-visible { outline: 1px solid var(--accent-stroke); outline-offset: -2px; }
+.libraryTabs .libraryPageLeft, .libraryTabs .libraryPageRight { position: absolute; top: 0; bottom: 0; width: 24px; background: var(--workspace-surface, var(--background)); }
+.libraryPageLeft { left: 0; }
+.libraryPageRight { right: 0; }
+/* 导入与搜索同排，右侧排列/入轨是小图标，不再占一整行按钮。 */
+/* 卡片继续固定112×94，只因素材库变宽而自然增加列，不拉伸源封面。 */
+/* 导入状态保留可见播报，默认拖入说明从视觉移除但不禁用外部导入。 */
+/* 不可用类别显示真实原因，不渲染假素材卡，也不挂隐藏可聚焦的列表。 */
+.mediaPanel[data-media-library] .mediaTools { padding: 10px 12px 0; align-items: center; }
+.mediaPanel[data-media-library] .mediaTools .search { flex: 1; min-width: 60px; }
+.mediaPanel[data-media-library] .mediaNoticeBar { margin-block: 4px; }
+.mediaPanel[data-media-library] .filters { padding-block: 8px; }
+.libraryUnavailable { flex: 1; min-height: 0; display: grid; place-items: center; overflow: auto; padding: 20px; text-align: center; }
+/* 编辑图标组保持单行；大分辨率只增加时间线空间，不把图标放成大文本按钮。 */
+/* 菜单外壳沿用创建页公共薄边样式，当前工具可通过按钮图标与鼠标形状辨认。 */
+/* 分隔线是装饰，不能进入Tab顺序或拦截点击。 */
+.editTools { display: flex; align-items: center; gap: 3px; flex-shrink: 0; }
+.toolDivider { width: 1px; height: 18px; margin: 0 5px; background: var(--border); }
+/* 选择工具保持原鼠标，分割与方向选择只替换片段主体的光标。 */
+/* 边缘slider继续保留原修剪光标，不能让切刀覆盖左右修剪热区。 */
+/* SVG有黑白双边，在浅深主题和真实视频帧上都能识别，不依赖外部图片请求。 */
+/* 工具状态来自同一editing.tool；禁拖片段避免切刀误触原生拖动。 */
+.timeline[data-timeline-tool="razor"] .timelineClip { cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M4 5h16v5H4zM4 14h16v5H4zM12 2v20' fill='white' stroke='black' stroke-width='1.5'/%3E%3C/svg%3E") 12 12, crosshair; }
+.timeline[data-timeline-tool="selectLeft"] .timelineClip { cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24'%3E%3Cpath d='M3 12l7-7v4h11v6H10v4z' fill='white' stroke='black'/%3E%3C/svg%3E") 3 12, w-resize; }
+.timeline[data-timeline-tool="selectRight"] .timelineClip { cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24'%3E%3Cpath d='M21 12l-7-7v4H3v6h11v4z' fill='white' stroke='black'/%3E%3C/svg%3E") 21 12, e-resize; }
+
+/* 属性菱形沿用按钮外壳，当前帧实心，其他位置保留细浅色空心。 */
+.keyframeField .actionHint { margin-top: 8px; }
+.keyframeField .action { width: 22px; min-width: 22px; height: 24px; padding: 0; border-color: transparent; }
+.keyframeField .action[aria-pressed="true"] svg { fill: currentColor; color: var(--accent); }
+
+/* 裸图标是公共按钮的明确外观参数，沿用相同禁用、提示和焦点契约。 */
+/* 透明边框始终占一像素，hover仅加浅底；不让旧按钮hover规则重新画出盒子。 */
+/* 固定28px命中尺寸用于工具条和轨道头，普通项目栏按钮继续采用默认外观。 */
+.action.plainAction { width: 28px; min-width: 28px; height: 28px; padding: 0; border: 1px solid transparent; border-radius: 4px; background: transparent; box-shadow: none; }
+.action.plainAction:hover:not(:disabled) { border-color: transparent; background: var(--muted); box-shadow: none; }
+.action.plainAction[aria-pressed="true"] { color: var(--accent-text); border-color: transparent; background: var(--accent-soft); }
+.action.plainAction:focus-visible { outline: 1px solid var(--accent-stroke); outline-offset: -1px; }

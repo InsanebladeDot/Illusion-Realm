@@ -1,3 +1,16 @@
+/**
+ * protocol：使用客户端的 app:// 与 localfile:// 协议实现。
+ * index：使用媒体业务域的真实 IPC 注册入口。
+ * result：沿用统一 IPC 结果和参数校验入口。
+ * probe：通过实际 FFprobe 封装读取媒体信息。
+ * index：窗口加载迁移后的真实 preload 桥接文件。
+ * protocol：Next 静态资源含绝对 URL，必须保持应用同源加载。
+ * index：视频与 GIF 共用媒体任务能力，不在页面内另起本地进程。
+ * result：注册时先移除同名 handler，返回值仍为 IpcResult。
+ * probe：时长和流信息用于校验输出，不能以界面进度代替成品验证。
+ * index：contextIsolation 保持启用，CommonJS 本地依赖仍需要 sandbox 为 false。
+ * protocol：协议定位失败属于资源路径问题，应先于界面样式判断排查。
+ */
 /** Real editor regression: one video, independent ranges, same-source seeking, reorder/delete and merged pixels/duration. */
 const fs = require("node:fs");
 const os = require("node:os");
@@ -5,10 +18,10 @@ const path = require("node:path");
 const assert = require("node:assert/strict");
 const { execFileSync } = require("node:child_process");
 const { app, BrowserWindow, dialog } = require("electron");
-const { registerAppProtocol } = require("../apps/electron/appProtocol");
-const { registerVideoToolIpc } = require("../apps/electron/ffmpeg");
-const { registerHandle } = require("../apps/electron/ipcHandlers");
-const { probeVideo } = require("../apps/electron/ffmpeg/probe");
+const { registerAppProtocol } = require("../apps/electron/src/main/core/protocol");
+const { registerVideoToolIpc } = require("../apps/electron/src/main/modules/ffmpeg/index.js");
+const { registerHandle } = require("../apps/electron/src/main/ipc/result");
+const { probeVideo } = require("../apps/electron/src/main/modules/ffmpeg/probe");
 const smoke = require("./lib/smoke-harness").createSmokeHarness({ name: "video-ranges", timeoutMs: 120000 });
 smoke.installWatchdog(app);
 const work = fs.mkdtempSync(path.join(os.tmpdir(), "ir-video-ranges-"));
@@ -185,9 +198,17 @@ async function main() {
   await app.whenReady(); smoke.assertBuildFresh({ app }); generateVideo();
   const win = new BrowserWindow({ width: 1200, height: 900, show: false, webPreferences: { contextIsolation: true,
     nodeIntegration: false, sandbox: false, backgroundThrottling: false,
-    preload: path.resolve(__dirname, "../apps/electron/preload.js"), additionalArguments: ["--initial-locale=zh-CN"] } });
+    preload: path.resolve(__dirname, "../apps/electron/src/preload/index.js"), additionalArguments: ["--initial-locale=zh-CN"] } });
   smoke.attachWebContents(win.webContents); await smoke.hardenWindow(win);
-  await win.loadURL("app://app/tools/video/editor");
+  // 原单片段工具已保留到 legacy，本专项继续验证真实 FFmpeg 处理而非 UI-01 演示。
+  // 只更新路由前提，原导入、处理与输出断言不变，不把功能测试换成静态截图。
+  // 新工作区由独立 UI 冒烟覆盖，不向它发送旧版导入/修剪事件。
+  // 多剪切区间的选择、拖动与输出留在原 source trim 逻辑中，独立于工程时间轴。
+  // 本专项仍使用原始选区开始/结束值，避免迁移时把两种时间模型混用。
+  // 区间复用同源视频的行为不由 UI-01 的五个静态片段替代。
+  // 改变入口不改区间持久状态与素材导入夹具，原先的上下文继续成立。
+  // 真实拼接后的区间输出仍由原断言判读，不能仅检查屏幕上存在三条轨道。
+  await win.loadURL("app://app/tools/video/editor/legacy");
   const run = smoke.createRun();
   await waitFor(run, `Array.from(document.querySelectorAll('button')).some(b => b.textContent.includes('点击添加视频片段') && !b.disabled)`, "editor hydration");
   await run(`(() => { Array.from(document.querySelectorAll('button')).find(b => b.textContent.includes('点击添加视频片段')).click(); return true; })()`);

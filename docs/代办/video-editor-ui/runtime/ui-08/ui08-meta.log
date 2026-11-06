@@ -1,0 +1,63 @@
+$ pnpm --filter @illusion-realm/next check:meta
+$ node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/verify-image-meta.mjs
+== 1. 静态一致性 ==
+PASS  能从源码读出 GENERATED_IMAGE_META_VERSION  (1)
+PASS  标记关键字与校验脚本一致  (illusionRealmMeta)
+PASS  遗留版本推理等于当前版本（无标记的图按当前版本处理）  (v1)
+PASS  版本标记写进独立块，不改动 prompt 块  (EMBED_KEYWORDS)
+PASS  生成保存时带上版本标记  (saveGeneratedImages)
+PASS  读取侧把标记块排除出展示字段  (inspectSdImage)
+PASS  自管理块清单存在且包含标记块（新增块必须登记，否则会改变分档）  (NON_PARAM_CHUNK_TYPES)
+PASS  字段标识已与文案分离（无中文字面量）: inspectSdImage.ts
+PASS  字段标识已与文案分离（无中文字面量）: remixFromInspect.ts
+FAIL  字段标识已与文案分离（无中文字面量）: MetaFieldRow.tsx  ({/* 弹窗：当前字段全文，保持原始/JSON 选择同步。 */})
+
+== 2. 夹具往返（格式约定） ==
+PASS  当前格式：标记块可解析出版本  (v1)
+PASS  当前格式：能读出 promptId
+PASS  当前格式：工作流图仍可解析  (3 节点)
+PASS  遗留格式：没有标记块
+PASS  遗留格式：版本按当前版本推理（旧图仍可二创）  (v1)
+PASS  遗留格式：工作流图仍可解析
+PASS  未来格式：版本号高于当前可识别  (v2 > v1)
+PASS  未来格式：会被版本闸门拦下（不做二创）
+PASS  标记块不出现在可展示字段里（读取侧已过滤）  (NON_PARAM_CHUNK_TYPES 过滤)
+
+== 4. 进程内往返（真实写入 → 真实读取） ==
+PASS  别名自检：入口及其传递依赖全部可解析  (51 个本地模块，候选根 2 个)
+PASS  别名自检：不存在的 specifier 必被报出（判据有区分度）  (@/definitely/not/here)
+PASS  真实模块里的版本常量与校验脚本一致  (v1)
+PASS  真实模块里的遗留版本推理等于当前版本  (v1)
+PASS  往返：写入的图片能被真实读取器读出当前版本  (v1)
+PASS  往返：prompt 块逐字未被改动（等于送入的工作流 JSON）
+PASS  往返：标记块不会泄漏成展示字段
+PASS  往返：友好字段仍在（标记块不参与文本块分档）  (metaType=SD-WEBUI)
+PASS  往返：无标记的图按遗留版本读出  (v1)
+PASS  往返：新旧两种图的解析结果一致（旧图行为未变）  (6 字段)
+PASS  往返：重复写入不会堆叠标记块  (1 个)
+
+== 5. 分档契约（文本块数量决定解析分档） ==
+PASS  分档基线：单参数块切成三个友好字段且顺序不变  (SD-WEBUI [app:prompt,app:negativePrompt,app:otherParams])
+PASS  分档基线：提示词是切分结果而非整段原文  ("masterpiece, 1girl\n")
+PASS  分档基线：负面提示词被切出来（不是兜底的「无」）  ("lowres\n")
+PASS  分档契约：加了标记块后仍是三个友好字段、顺序不变（未退化为原始块列表）  (SD-WEBUI [app:prompt,app:negativePrompt,app:otherParams])
+PASS  分档契约：字段总数与基线一致（没有多出原始块字段）  (单参数块 SD-WEBUI 6 字段 / 加标记块 SD-WEBUI 6 字段)
+PASS  分档契约：标记块本身不出现在字段里
+PASS  分档契约：提示词内容与基线一致
+PASS  单源：chunk "illusionRealmMeta" 的过滤行为与 NON_PARAM_CHUNK_TYPES 一致（清单含该类型）  (行为=被剔除（SD-WEBUI/6 字段）)
+PASS  单源：chunk "watermark" 的过滤行为与 NON_PARAM_CHUNK_TYPES 一致（清单不含该类型）  (行为=参与分档（NOVELAI/4 字段）)
+PASS  单源：chunk "copyright" 的过滤行为与 NON_PARAM_CHUNK_TYPES 一致（清单不含该类型）  (行为=参与分档（NOVELAI/4 字段）)
+PASS  单源：chunk "Comment" 的过滤行为与 NON_PARAM_CHUNK_TYPES 一致（清单不含该类型）  (行为=参与分档（NOVELAI/4 字段）)
+PASS  单源：chunk "workflow" 的过滤行为与 NON_PARAM_CHUNK_TYPES 一致（清单不含该类型）  (行为=参与分档（NOVELAI/4 字段）)
+PASS  分档契约：负向对照——两块输入确实走另一档（证明本断言的判据有区分度）  (SD-WEBUI/6 → NOVELAI/4)
+
+== 3. 真实语料 golden baseline ==
+
+NOTE: 真实语料不存在，跳过 golden baseline（这不算失败）
+
+格式契约校验失败 1 项：
+  - 字段标识已与文案分离（无中文字面量）: MetaFieldRow.tsx
+D:\Code\Illusion-Realm\Illusion-Realm\apps\next:
+[ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL] @illusion-realm/next@0.1.0 check:meta: `node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/verify-image-meta.mjs`
+Exit status 1
+[ELIFECYCLE] Command failed with exit code 1.

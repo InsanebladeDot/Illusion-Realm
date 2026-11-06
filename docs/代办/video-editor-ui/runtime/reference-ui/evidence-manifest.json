@@ -1,0 +1,136 @@
+{
+  "date": "2026-11-05",
+  "build": "998c7596e1362e5c1dd9a2c564e517c4569e8ed9d912a21f060a677d4c8fab41",
+  "evidence": "Electron capturePage, real encoded local videos; automatic CDP/DOM actions; picker result fixture; not human or Explorer manual evidence",
+  "checks": {
+    "live02": "213/213",
+    "assistant": "78/78",
+    "ui": "139/139 (before final equivalent position-hook extraction)",
+    "typecheck": "pass",
+    "lint": "0 errors, 33 existing warnings",
+    "build": "pass",
+    "check": "failed: 3 existing unused locale keys"
+  },
+  "files": [
+    {
+      "file": "baseline-snapshot.json",
+      "bytes": 1562477,
+      "sha256": "b9311756d18822f6c6c94f008686dd7476d53dcec39e85048453cf41a38e8485"
+    },
+    {
+      "file": "build-fingerprint.json",
+      "bytes": 109719,
+      "sha256": "ab5d3b2132f72ac5eb1461684a885c6551c9acf7b27fa133dccce16b4487245a"
+    },
+    {
+      "file": "editing-final-real-workspace.png",
+      "bytes": 256923,
+      "sha256": "f0272ed7c4fcb74860e156caf8971c2c9dd636adafa1810c6923ccf3ee360f10"
+    },
+    {
+      "file": "function-audit.json",
+      "bytes": 18266,
+      "sha256": "a1155b00dcce38e4eef8f202651aba7beb70ae5d17fda044dd44218f13a02753"
+    },
+    {
+      "file": "live-02-after-move-light.png",
+      "bytes": 221739,
+      "sha256": "11419a7891fb9f18cfbadfde7db095bddc7101ac0278bd6a6970bfee5d42fff0"
+    },
+    {
+      "file": "live-02-before-move-light.png",
+      "bytes": 221880,
+      "sha256": "b03d428a6af14f757b253f893150c088f5b5b9dcf634b036460ee817276e5856"
+    },
+    {
+      "file": "live-02-narrow-dark.png",
+      "bytes": 139073,
+      "sha256": "441b4932f7f437b8d1ae6c2be18d83fcf4b84634770ccd45a742775b6f6166bc"
+    },
+    {
+      "file": "placement-facts.json",
+      "bytes": 613,
+      "sha256": "1ac85d4d74448404878de42398eb57ebdf867830360aca3b90b4dea07ec202c9"
+    },
+    {
+      "file": "prompt-assistant-dark.png",
+      "bytes": 308124,
+      "sha256": "16c44c6610b5971fb88b83ffbb70974ff9aa7523a1555d8078a7ff3a614f9735"
+    },
+    {
+      "file": "prompt-assistant-left.png",
+      "bytes": 321026,
+      "sha256": "588650b476b3e66f630394ff37762874afb4b7c658d68ef8b0d79a8405407bf0"
+    },
+    {
+      "file": "prompt-assistant-light.png",
+      "bytes": 305872,
+      "sha256": "a5f96fc10395f7db9307e7cf83dfe378400abaad8eabf4692845e79ec90e4c3e"
+    },
+    {
+      "file": "prompt-assistant-narrow.png",
+      "bytes": 99753,
+      "sha256": "89b4014254ed6caef63d15a3ed0ecd4d17907742252b5bc3720763d12c0fc5dc"
+    },
+    {
+      "file": "reference-audio-selected.png",
+      "bytes": 230664,
+      "sha256": "c53bd2675ffacd4092503f8d09815fa9242c342039449e5a5733c0a3c6278f1d"
+    },
+    {
+      "file": "reference-cascade-real-workspace.png",
+      "bytes": 229884,
+      "sha256": "90c8f999d23f56f595aafb6c9f2504486459077de6da32ca2c1e1821f630f1c5"
+    },
+    {
+      "file": "reference-compact-library.png",
+      "bytes": 241134,
+      "sha256": "49784cf8964101ef332618b38ce7a1fb52a87950de5067ff7440d0e2114c0b04"
+    },
+    {
+      "file": "shared-baseline.json",
+      "bytes": 12246,
+      "sha256": "7d0aa5427432c3df1f3765b20a898b76577cca04413854a7c7c15fe534024851"
+    },
+    {
+      "file": "timeline-three-layer-real-video.png",
+      "bytes": 223253,
+      "sha256": "816153a4e14b5cdbb772b0f718ebcc802ee6118bd8b68e5fd307572b6277d28f"
+    },
+    {
+      "file": "video-reference-assistant.log",
+      "bytes": 5291,
+      "sha256": "6c4a471d7fa290add2a7d1c772aed0abafbf5f01401dacd584b32b9d6cf1044c"
+    },
+    {
+      "file": "video-reference-build.log",
+      "bytes": 1812,
+      "sha256": "8de9f1f50ca30b999baf749b6283632c1f2a84787ce491ed310173cdb5b93e88"
+    },
+    {
+      "file": "video-reference-check.log",
+      "bytes": 9428,
+      "sha256": "dd894fc089084e8e7c21db5214fad7af6101ecebe4926ab6ee9dfe918283bd73"
+    },
+    {
+      "file": "video-reference-lint.log",
+      "bytes": 12434,
+      "sha256": "c55c92ecbcb655c6125a1a269e06af075089f0ddb19accd36ff5326fcead6f90"
+    },
+    {
+      "file": "video-reference-live02.log",
+      "bytes": 17185,
+      "sha256": "0a6c6e4add4f33e29cd0e706c41d1f345d179252cbd3ba879565cb8440196bed"
+    },
+    {
+      "file": "video-reference-typecheck.log",
+      "bytes": 132,
+      "sha256": "03334bacc26bbd7d006f0308c861410c67d94747095b162bf5642eea3dfbb56d"
+    },
+    {
+      "file": "video-reference-ui.log",
+      "bytes": 9336,
+      "sha256": "4a3c604e87a0e2148c14d7bf0cc63f32b4d11998841c84a18b476f7ad46c82d4"
+    }
+  ]
+}

@@ -1,4 +1,8 @@
 /**
+ * protocol：使用客户端的 app:// 与 localfile:// 协议实现。
+ * index：使用媒体业务域的真实 IPC 注册入口。
+ */
+/**
  * 视频剪辑台 UI 冒烟测试（真实 Electron 渲染进程 + 真实 ffmpeg）
  *
  * 覆盖用户要求的交互：
@@ -15,9 +19,9 @@ const path = require("path");
 const { spawnSync } = require("child_process");
 const { createSmokeHarness } = require("./lib/smoke-harness");
 const { app, BrowserWindow, dialog, ipcMain: realIpcMain } = require("electron");
-const { registerAppProtocol } = require("../apps/electron/appProtocol");
-const { registerVideoToolIpc } = require("../apps/electron/ffmpeg");
-const { resolveTools } = require("../apps/electron/ffmpeg/locate");
+const { registerAppProtocol } = require("../apps/electron/src/main/core/protocol");
+const { registerVideoToolIpc } = require("../apps/electron/src/main/modules/ffmpeg/index.js");
+const { resolveTools } = require("../apps/electron/src/main/modules/ffmpeg/locate");
 
 /**
  * 本脚本注册的 IPC stub 统一包装成真实的 IpcResult 形状
@@ -185,7 +189,7 @@ app.whenReady().then(async () => {
       // 与真实应用 main.js 一致：preload 是手写 CommonJS，需 Node 环境才能 require 本地模块
       sandbox: false,
       // 必须加载 preload，否则渲染进程拿不到 window.electronAPI
-      preload: path.join(__dirname, "..", "apps", "electron", "preload.js"),
+      preload: path.join(__dirname, "../apps/electron/src/preload/index.js"),
     },
   });
 
@@ -226,7 +230,15 @@ app.whenReady().then(async () => {
 
   try {
     // ---------- 1. 打开页面并导入两个片段 ----------
-    await win.loadURL("app://app/toolBox/video");
+  // 原单片段工具已保留到 legacy，本专项继续验证真实 FFmpeg 处理而非 UI-01 演示。
+  // 只更新路由前提，原导入、处理与输出断言不变，不把功能测试换成静态截图。
+  // 新工作区由独立 UI 冒烟覆盖，不向它发送旧版导入/修剪事件。
+  // legacy 仍加载原 ClipPlaylist、PreviewStage 与 ExportPanel，拼接顺序的断言继续有效。
+  // 输入夹具是实际临时视频，不把参考图裁片传进旧工具冒充媒体。
+  // 真实导出文件仍用原探测逻辑核对时长、分辨率与音轨，不只等待成功提示。
+  // 新页面的静态节目图不拥有 trim 或视频事件，因此不能继续对其运行旧修剪测试。
+  // 工具箱新入口与 legacy 的导航由 UI 专项验证，此处专注保留的处理能力。
+    await win.loadURL("app://app/tools/video/editor/legacy");
     await sleep(2500);
     await dismissAnnouncement();
 

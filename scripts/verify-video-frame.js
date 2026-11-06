@@ -1,3 +1,11 @@
+/**
+ * index：使用媒体业务域的真实 IPC 注册入口。
+ * probe：通过实际 FFprobe 封装读取媒体信息。
+ * index：窗口加载迁移后的真实 preload 桥接文件。
+ * index：视频与 GIF 共用媒体任务能力，不在页面内另起本地进程。
+ * probe：时长和流信息用于校验输出，不能以界面进度代替成品验证。
+ * index：contextIsolation 保持启用，CommonJS 本地依赖仍需要 sandbox 为 false。
+ */
 /** Exercise frame export through the real preload and IPC: PNG pixels, dimensions, naming, cancellation and invalid input. */
 const fs = require("node:fs");
 const os = require("node:os");
@@ -5,8 +13,8 @@ const path = require("node:path");
 const assert = require("node:assert/strict");
 const { execFileSync } = require("node:child_process");
 const { app, BrowserWindow, dialog } = require("electron");
-const { registerVideoToolIpc } = require("../apps/electron/ffmpeg");
-const { probeVideo } = require("../apps/electron/ffmpeg/probe");
+const { registerVideoToolIpc } = require("../apps/electron/src/main/modules/ffmpeg/index.js");
+const { probeVideo } = require("../apps/electron/src/main/modules/ffmpeg/probe");
 const smoke = require("./lib/smoke-harness").createSmokeHarness({ name: "video-frame", timeoutMs: 60000 });
 smoke.installWatchdog(app);
 const work = fs.mkdtempSync(path.join(os.tmpdir(), "ir-video-frame-"));
@@ -78,7 +86,7 @@ async function main() {
     return { canceled: cancelDialog, filePath: cancelDialog ? undefined : output };
   };
   const win = new BrowserWindow({ show: false, webPreferences: { contextIsolation: true, nodeIntegration: false,
-    sandbox: false, backgroundThrottling: false, preload: path.resolve(__dirname, "../apps/electron/preload.js") } });
+    sandbox: false, backgroundThrottling: false, preload: path.resolve(__dirname, "../apps/electron/src/preload/index.js") } });
   smoke.attachWebContents(win.webContents);
   await win.loadURL("data:text/html,<html><body>Frame export IPC verification</body></html>");
   const run = smoke.createRun();

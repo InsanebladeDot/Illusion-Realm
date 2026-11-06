@@ -1,0 +1,86 @@
+
+[构建自检] record：内容指纹一致（888 个文件，记录于 2026-11-05T05:38:05.836Z）
+PASS  Old documents open an empty history without translating
+PASS  Viewing empty history preserves the prompt
+PASS  Single subtle icon rests inside each plain editor
+PASS  Hover expands the toolbar
+PASS  Leaving collapses the toolbar
+[IPC] prompt:transform failed (INTERNAL): missingKey
+PASS  Missing credentials preserve the original input
+PASS  Provider and GLM models form three cascade columns
+PASS  Root position and height stay fixed when a taller submenu opens
+PASS  Preset submenu uses extra height and scrolls within the viewport
+PASS  Child columns open right when there is space
+PASS  Child columns flip left without exceeding the window
+PASS  Left-opening tall submenu also leaves the root unchanged
+PASS  Assistant settings deep-link selects the API keys category
+PASS  Toolbox settings no longer contain credentials
+PASS  Model settings no longer contain Civitai credentials
+PASS  Existing Agent anchor still opens the credential category
+PASS  Saved credentials clear the draft input
+PASS  Settings clear removes the isolated credential
+PASS  Selected model and original text reach the API
+PASS  Translation replaces the input
+PASS  Undo restores the exact original text
+PASS  A deferred result cannot overwrite newer edits
+PASS  Explicit apply accepts the preserved result
+PASS  Undo after explicit apply restores the newer edit
+[IPC] prompt:transform failed (INTERNAL): unauthorized
+PASS  Authentication errors preserve input
+[IPC] prompt:transform failed (INTERNAL): forbidden
+PASS  Access denial differs from invalid authentication and preserves input
+PASS  Only successful responses are recorded with original text and selected model
+PASS  History defaults to newest first
+PASS  History copies only the exact translated text
+PASS  Time order can be reversed without altering stored history
+PASS  Reading and copying history leave the current draft untouched
+PASS  Custom preset becomes the system instruction
+PASS  Custom compatible API receives authenticated POST and selected model
+PASS  Preferences and custom presets persist without credentials
+PASS  GLM credential remains separate, encrypted, and only status is exposed
+PASS  A different proxy endpoint cannot reuse the previous key
+PASS  IPC rejects insecure non-local endpoints
+PASS  Built-in assistant presets have no editing entry
+PASS  Custom preset management remains visible after scrolling  ({"visible":true,"entry":[843.875,935.25,29,29],"menu":[473.875,485,208,142]})
+PASS  Editing replaces the original preset without changing selection
+PASS  The next request uses the edited system instruction
+PASS  Menu follows the application's dark theme
+PASS  Narrow screens show a navigable single-column menu inside viewport
+PASS  Escape closes the menu
+PASS  Switching tabs during translation cannot overwrite another category
+PASS  Original category retains its deferred translation for review
+PASS  Applying translation updates the assembly category and merged prompt
+PASS  Assembly translation also supports undo
+PASS  Negative prompt translation writes only to the negative editor
+[IPC] prompt:transform failed (INTERNAL): truncatedResponse
+PASS  Truncated model output cannot replace the original text
+PASS  Order mode replaces normal controls and keeps the input DOM
+PASS  Escape cancels a pointer drag within the order draft
+PASS  Pointer sorting changes only the draft before confirmation
+PASS  Cancel returns to the original group order and text
+PASS  Keyboard sorting also keeps generation uncommitted
+PASS  Done returns to the arranged browse state and restores focus
+PASS  Narrow ordering has one fixed mode bar and no horizontal overflow
+PASS  Closing ordering after responsive changes keeps the confirmed queue
+PASS  Credentials and edited custom instructions survive reload
+PASS  Prompt group queue survives document hydration
+PASS  Cancelling deletion preserves the preset and selection
+PASS  Deleting an inactive preset preserves the active selection
+PASS  Deleting the active preset falls back to English translation
+PASS  Preset deletion and fallback survive page reload
+[IPC] prompt:transform failed (INTERNAL): missingKey
+PASS  Euzhi missing key preserves draft without reusing GLM credentials
+PASS  Prompt settings save the same Euzhi credential visible to Agent
+PASS  Euzhi receives fixed endpoint auth, Agent Grok model and selected instruction
+PASS  Choosing Euzhi for creation does not switch Agent or persist a key
+PASS  Euzhi supplier selection survives reload
+PASS  Clearing Euzhi in Agent also clears prompt credentials
+PASS  Euzhi rejects image model IDs through production IPC validation
+PASS  History shares assembly and negative translations but excludes truncated output
+PASS  Provider snapshots survive later model and provider changes
+PASS  Translation history survives a complete renderer reload
+PASS  Narrow history uses the main host with no horizontal overflow
+PASS  Mask queue starts independently from the reordered image queue
+PASS  Mask order stays uncommitted until Done
+PASS  Mask ordering updates its instruction and preserves image groups
+prompt-assistant SMOKE OK ✓  78/78

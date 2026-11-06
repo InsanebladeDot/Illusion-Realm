@@ -1,12 +1,15 @@
 /**
+ * protocol：使用客户端的 app:// 与 localfile:// 协议实现。
+ */
+/**
  * 运行期验证：
  * 1) appProtocol 具名导出可用（主进程 require 解构不再为 undefined）
  * 2) ffmpeg/ffprobe 自动探测（手动 → PATH → 常见位置 → 内置）
  * 运行：npx electron scripts/verify-video-runtime.js
  */
 const { app, protocol } = require("electron");
-const { registerAppProtocol } = require("../apps/electron/appProtocol");
-const { resolveTools } = require("../apps/electron/ffmpeg/locate");
+const { registerAppProtocol } = require("../apps/electron/src/main/core/protocol");
+const { resolveTools } = require("../apps/electron/src/main/modules/ffmpeg/locate");
 
 let schemeOk = false;
 const results = [];

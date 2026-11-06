@@ -1,0 +1,7 @@
+$ node scripts/verify-folder-image-count.js
+PASS  顶层文件夹：行上的张数 = 点开看到的张数  (行=3 点开=3)
+PASS  嵌套文件夹：行上的张数 = 点开看到的张数  (行=2 点开=2)
+PASS  空文件夹为 0（不是 undefined / 不报错）  (行=0)
+PASS  非图片后缀不计入（根目录两个 .txt 不算）  (子=2 全部递归=7)
+PASS  负向对照：行上是「直接计数」而不是「递归计数」  (行=3 直接=3 递归=5)
+FOLDER IMAGE COUNT OK ✓  5/5

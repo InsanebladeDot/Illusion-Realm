@@ -1,3 +1,16 @@
+/**
+ * protocol：使用客户端的 app:// 与 localfile:// 协议实现。
+ * index：使用媒体业务域的真实 IPC 注册入口。
+ * result：沿用统一 IPC 结果和参数校验入口。
+ * probe：通过实际 FFprobe 封装读取媒体信息。
+ * index：窗口加载迁移后的真实 preload 桥接文件。
+ * protocol：Next 静态资源含绝对 URL，必须保持应用同源加载。
+ * index：视频与 GIF 共用媒体任务能力，不在页面内另起本地进程。
+ * result：注册时先移除同名 handler，返回值仍为 IpcResult。
+ * probe：时长和流信息用于校验输出，不能以界面进度代替成品验证。
+ * index：contextIsolation 保持启用，CommonJS 本地依赖仍需要 sandbox 为 false。
+ * protocol：协议定位失败属于资源路径问题，应先于界面样式判断排查。
+ */
 /** 区间效果真实回归：右键编辑/复制拆分 + FFmpeg 导出的时长、画面顺序、音量与静音。 */
 const fs = require("node:fs");
 const os = require("node:os");
@@ -5,10 +18,10 @@ const path = require("node:path");
 const assert = require("node:assert/strict");
 const { execFileSync } = require("node:child_process");
 const { app, BrowserWindow, dialog } = require("electron");
-const { registerAppProtocol } = require("../apps/electron/appProtocol");
-const { registerVideoToolIpc } = require("../apps/electron/ffmpeg");
-const { registerHandle } = require("../apps/electron/ipcHandlers");
-const { probeVideo } = require("../apps/electron/ffmpeg/probe");
+const { registerAppProtocol } = require("../apps/electron/src/main/core/protocol");
+const { registerVideoToolIpc } = require("../apps/electron/src/main/modules/ffmpeg/index.js");
+const { registerHandle } = require("../apps/electron/src/main/ipc/result");
+const { probeVideo } = require("../apps/electron/src/main/modules/ffmpeg/probe");
 const smoke = require("./lib/smoke-harness").createSmokeHarness({ name: "video-clip-effects", timeoutMs: 180000 });
 smoke.installWatchdog(app);
 const work = fs.mkdtempSync(path.join(os.tmpdir(), "ir-clip-effects-"));
@@ -204,11 +217,27 @@ async function verifyExports(run) {
 }
 async function main() {
   await app.whenReady(); smoke.assertBuildFresh({ app }); generateVideo();
-  const win = new BrowserWindow({ width: 1200, height: 900, show: true, webPreferences: {
+  // 右键样式回归使用离屏真实窗口，避免抢占用户当前全屏程序的系统焦点。
+  // 媒体与FFmpeg导出仍是真实文件，离屏不替换探测、滤镜或输出字节。
+  // backgroundThrottling继续关闭，倒放预览的实际媒体事件不依赖前台窗口。
+  // 这个设置只影响测试，不修改正式客户端的可见性或硬件加速策略。
+  // SMOKE_OCCLUDE需要可见窗口，本次不把离屏运行说成已覆盖遮挡维度。
+  // 截图依然来自capturePage，原UI交互断言与真实导出断言继续执行。
+  // 本轮没有人工系统右键证据，公开DOM事件会在交付中单列。
+  // 仅管理这份隔离窗口，不能为解锁测试关闭用户已运行的Electron应用。
+  const win = new BrowserWindow({ width: 1200, height: 900, show: false, webPreferences: { offscreen: true,
     contextIsolation: true, nodeIntegration: false, sandbox: false, backgroundThrottling: false,
-    preload: path.resolve(__dirname, "../apps/electron/preload.js"), additionalArguments: ["--initial-locale=zh-CN"] } });
+    preload: path.resolve(__dirname, "../apps/electron/src/preload/index.js"), additionalArguments: ["--initial-locale=zh-CN"] } });
   smoke.attachWebContents(win.webContents); await smoke.hardenWindow(win);
-  await win.loadURL("app://app/tools/video/editor");
+  // 原单片段工具已保留到 legacy，本专项继续验证真实 FFmpeg 处理而非 UI-01 演示。
+  // 只更新路由前提，原导入、处理与输出断言不变，不把功能测试换成静态截图。
+  // 新工作区由独立 UI 冒烟覆盖，不向它发送旧版导入/修剪事件。
+  // 每个区间的倍速、音量和倒放继续绑定旧 clip effects，而非只读属性样例。
+  // UI-01 的 1.00× 与 0.0s 只是占位，不参与这里的实际效果计算。
+  // 导出参数的合成仍由旧工具产生，新布局不重写 FFmpeg 参数构建器。
+  // 源片段的独立效果状态必须由原断言证明，不能把三栏布局通过当作效果通过。
+  // 路由变动不改变本测试的真实输入文件和输出探测条件。
+  await win.loadURL("app://app/tools/video/editor/legacy");
   const execute = smoke.createRun();
   const run = async code => { try { return await execute(code); }
     catch (error) { console.error("Failed page step:", code); throw error; } };

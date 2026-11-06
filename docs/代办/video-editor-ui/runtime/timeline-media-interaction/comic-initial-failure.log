@@ -1,0 +1,61 @@
+
+[构建自检] record：内容指纹一致（869 个文件，记录于 2026-11-04T08:02:05.495Z）
+PASS  Two-column workspace starts without a persistent template library
+PASS  Tool description uses the shared caption slot
+PASS  Adding and editing templates creates two independent layers
+PASS  Delete in the text field preserves bubble instances
+PASS  Delete on the selected bubble removes exactly that instance
+PASS  Undo restores the deleted bubble and its text
+PASS  Choosing the same template twice creates distinct layer IDs
+PASS  Opening the template dialog focuses its search field
+PASS  Tab brings escaped focus back into the template dialog
+PASS  All 48 new template images load through the real app protocol
+PASS  Search empty state leaves the artwork unchanged
+PASS  Delete does not pass through the open template dialog
+PASS  Closing the template dialog restores focus to its trigger
+PASS  Pointer dragging moves only the top selected bubble
+PASS  A single undo restores an entire drag gesture
+PASS  Corner se resizes independently and fixes the opposite corner
+PASS  One undo restores se resize size and position
+PASS  Corner nw resizes independently and fixes the opposite corner
+PASS  One undo restores nw resize size and position
+PASS  Corner ne resizes independently and fixes the opposite corner
+PASS  One undo restores ne resize size and position
+PASS  Corner sw resizes independently and fixes the opposite corner
+PASS  One undo restores sw resize size and position
+PASS  Corner se resizes independently and fixes the opposite corner
+PASS  One undo restores se resize size and position
+PASS  All six property fields remain readable and update the selected SVG layer
+PASS  All six numeric fields stay read-only after a single click and ordinary typing
+PASS  Real double click unlocks only the targeted numeric field
+PASS  Escape discards the numeric draft and locks the field again
+PASS  A valid Enter commits the number and restores its lock
+PASS  F2 provides an explicit keyboard unlock for a focused number
+PASS  Invalid Enter retains the editable draft and its accessible error
+PASS  Blur commits a valid draft and leaves both fields locked  ([{"value":"30","readOnly":true,"active":false},{"value":"1.45","readOnly":true,"active":true},{"value":"0.0","readOnly":true,"active":false},{"value":"460","readOnly":true,"active":false},{"value":"0","readOnly":true,"active":false},{"value":"1.00","readOnly":true,"active":false}])
+PASS  Undo updates locked numeric fields without unlocking them  ([{"value":"24","readOnly":true,"active":false},{"value":"1.45","readOnly":true,"active":true},{"value":"0.0","readOnly":true,"active":false},{"value":"460","readOnly":true,"active":false},{"value":"0","readOnly":true,"active":false},{"value":"1.00","readOnly":true,"active":false}])
+PASS  Single click selects styles while keeping text locked and the outline faint
+FAIL  Numeric focus uses a single thin outline and leaves text locked
+PASS  Double click unlocks the one text editor and moves focus into it
+PASS  Escape locks text while retaining the selected layer
+PASS  Top rotation control rotates only the selected layer without changing width  ({"before":{"x":850,"y":602,"width":460,"transforms":["translate(640 360) rotate(0) scale(0.71875)","translate(640 360) rotate(0) scale(0.71875)","translate(640 360) rotate(0) scale(0.71875)"]},"after":{"x":756,"y":682,"width":460,"transforms":["translate(640 360) rotate(0) scale(0.71875)","translate(640 360) rotate(0) scale(0.71875)","translate(640 360) rotate(35.839341367361726) scale(0.71875)"]},"point":{"x":679,"y":369}})
+PASS  A single undo restores the entire rotation gesture
+PASS  Font read failure reports an error and preserves the previous font
+PASS  All ten bundled fonts decode through the real application protocol
+PASS  Font selection remains independent for each bubble
+PASS  Two offline comic fonts produce different real exported glyph pixels
+PASS  Imported square image shows its actual dimensions
+PASS  Cancel leaves the imported image and all bubbles intact
+PASS  Decode failure reports an error and preserves the existing background
+PASS  Export creates a real PNG at the artwork dimensions
+PASS  Export contains artwork layers, rather than only the source background
+PASS  Narrow viewport keeps the page within the available width
+PASS  Small workspace stacks the same canvas and properties without overflow
+PASS  The local model library retains its content in the shared title slot
+PASS  Leaving the editor clears its caption and preserves the ordinary GIF host
+PASS  No React rendering or hydration errors
+CARTOON_SCREENSHOTS C:\Users\18305\AppData\Local\Temp\ir-cartoon-smoke-LKZSzM
+
+[退出码护栏] app.quit() 被拦截：本次运行已有 1 条断言失败。app.quit() 会丢弃 process.exitCode（实测退出码 0），把失败变成成功 —— 本仓库统一用 app.exit(code)，已改为 app.exit(1)。
+日志已留档：D:\Code\Illusion-Realm\Illusion-Realm\logs\smoke-cartoon-dialogue-2026-11-04T08-05-38-301Z-62988.log
+工作目录（保留以便排查）：C:\Users\18305\AppData\Local\Temp\ir-cartoon-smoke-LKZSzM

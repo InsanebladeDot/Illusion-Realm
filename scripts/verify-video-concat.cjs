@@ -1,4 +1,9 @@
 /**
+ * jobs：复用媒体任务的参数构建和执行实现。
+ * jobs：剪切、拼接及 GIF 保留同一组输入输出约束。
+ * jobs：命令参数仍按数组传递，目录分类不引入 shell 拼接。
+ */
+/**
  * 视频拼接（concat）验证：
  * - 3 个片段：不同分辨率 + 其中一个无音轨
  * - 每段独立剪切窗口
@@ -18,7 +23,7 @@ const FFPROBE =
   process.env.FFPROBE_PATH ||
   "E:\\Tool\\ffmpeg\\ffmpeg-9.0.1-essentials_build\\bin\\ffprobe.exe";
 
-const { buildConcatArgs } = require("../apps/electron/ffmpeg/jobs.js");
+const { buildConcatArgs } = require("../apps/electron/src/main/modules/ffmpeg/jobs.js");
 
 const results = [];
 function check(name, ok, detail = "") {

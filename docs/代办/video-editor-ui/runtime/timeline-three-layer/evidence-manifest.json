@@ -1,0 +1,69 @@
+{
+  "sourceDirectory": "C:\\Users\\18305\\AppData\\Local\\Temp\\ir-video-live02-tOOYQ3",
+  "kind": "真实Electron capturePage；本地FFmpeg编码文件+生产探测与解码；DOM/CDP自动操作，系统选择返回夹具，不是人工系统操作。",
+  "build": "3cf2ae3a4d018f63b3ec001e90c1e3a20d71b0f2ebf9bfd8b180f80f4fb74010",
+  "run": "2026-11-04T14-40-58-280Z-27072",
+  "liveResult": "160/160",
+  "crop": {
+    "file": "timeline-detail.png",
+    "source": "timeline-three-layer-real-video.png",
+    "box": [
+      640,
+      748,
+      1100,
+      837
+    ]
+  },
+  "screenshots": [
+    {
+      "file": "timeline-three-layer-real-video.png",
+      "sha256": "10c7a6fb8e757bfa5df40a14aeed16495d1e24fdea2501a65ce4db73b724559a",
+      "size": [
+        1600,
+        1000
+      ]
+    },
+    {
+      "file": "selected-clip-filmstrip.png",
+      "sha256": "fe1e7af32e29aac1f7e611b33302297af274ab26e5730dad22166d8ad6347d0d",
+      "size": [
+        1600,
+        1000
+      ]
+    },
+    {
+      "file": "multitrack-trimmed-real-video.png",
+      "sha256": "fcd5709418518076f46b9155aa866eb6e0740458705231b4211c89ee5b75abf9",
+      "size": [
+        1600,
+        1000
+      ]
+    },
+    {
+      "file": "live-03-light-960x720.png",
+      "sha256": "8fce17d06f7a946663da5649f504414a66bfd8489731037c5d10e506f21162bb",
+      "size": [
+        1137,
+        814
+      ]
+    },
+    {
+      "file": "live-03-dark-1600x1000.png",
+      "sha256": "3c632fc96cc4454d34468e4833b5271eaad94bc4e6b82636d97e650321a7ef4d",
+      "size": [
+        1777,
+        1094
+      ]
+    },
+    {
+      "file": "timeline-detail.png",
+      "sha256": "381f87f9bd7141d14eee3dfd64432ad62868daa16d374d14816941457acd473f",
+      "size": [
+        460,
+        89
+      ]
+    }
+  ],
+  "uiResult": "139/139",
+  "uiScreenshotDirectory": "C:/Users/18305/AppData/Local/Temp/ir-video-ui01-IPzTW2"
+}

@@ -1,3 +1,14 @@
+/**
+ * protocol：使用客户端的 app:// 与 localfile:// 协议实现。
+ * index：使用媒体业务域的真实 IPC 注册入口。
+ * result：沿用统一 IPC 结果和参数校验入口。
+ * index：窗口加载迁移后的真实 preload 桥接文件。
+ * protocol：Next 静态资源含绝对 URL，必须保持应用同源加载。
+ * index：视频与 GIF 共用媒体任务能力，不在页面内另起本地进程。
+ * result：注册时先移除同名 handler，返回值仍为 IpcResult。
+ * index：contextIsolation 保持启用，CommonJS 本地依赖仍需要 sandbox 为 false。
+ * protocol：协议定位失败属于资源路径问题，应先于界面样式判断排查。
+ */
 // 按帧导出的真实回归：从 1 FPS 原片经 UI/IPC 导出，验证帧数、时长、音轨与取消。
 const fs = require("node:fs");
 const os = require("node:os");
@@ -5,9 +16,9 @@ const path = require("node:path");
 const assert = require("node:assert/strict");
 const { execFileSync } = require("node:child_process");
 const { app, BrowserWindow, dialog } = require("electron");
-const { registerAppProtocol } = require("../apps/electron/appProtocol");
-const { registerVideoToolIpc } = require("../apps/electron/ffmpeg");
-const { registerHandle } = require("../apps/electron/ipcHandlers");
+const { registerAppProtocol } = require("../apps/electron/src/main/core/protocol");
+const { registerVideoToolIpc } = require("../apps/electron/src/main/modules/ffmpeg/index.js");
+const { registerHandle } = require("../apps/electron/src/main/ipc/result");
 const smoke = require("./lib/smoke-harness").createSmokeHarness({ name: "video-reframe", timeoutMs: 120000 });
 smoke.installWatchdog(app);
 const work = fs.mkdtempSync(path.join(os.tmpdir(), "ir-video-reframe-"));
@@ -97,13 +108,21 @@ async function main() {
     "-f", "lavfi", "-i", "sine=frequency=440:sample_rate=44100:duration=124", "-c:v", "libx264", "-c:a", "aac", "-shortest", source], { windowsHide: true, timeout: 30000 });
   const win = new BrowserWindow({ width: 1600, height: 1000, show: false, webPreferences: {
     contextIsolation: true, nodeIntegration: false, sandbox: false, backgroundThrottling: false,
-    preload: path.resolve(__dirname, "../apps/electron/preload.js") } });
+    preload: path.resolve(__dirname, "../apps/electron/src/preload/index.js") } });
   smoke.attachWebContents(win.webContents); await smoke.hardenWindow(win);
-  await win.loadURL("app://app/tools/video/editor"); const run = smoke.createRun();
+  // 原单片段工具已保留到 legacy，本专项继续验证真实 FFmpeg 处理而非 UI-01 演示。
+  // 只更新路由前提，原导入、处理与输出断言不变，不把功能测试换成静态截图。
+  // 新工作区由独立 UI 冒烟覆盖，不向它发送旧版导入/修剪事件。
+  // 按帧导出与新编辑器的时间轴视口缩放不同，继续留在原功能组件中验证。
+  // 帧数与帧率仍通过实际输出文件探测，不把静态 30fps 文案当作证据。
+  // 本用例仍检查原视频的所有画面帧，没有因路由变化而跳过媒体内容断言。
+  // UI-01 工程样例中的 1920×1080 不应影响本用例的真实输入尺寸。
+  // 原处理按钮需要真实桥接，这条路由使用的仍是旧组件而非同外观占位。
+  await win.loadURL("app://app/tools/video/editor/legacy"); const run = smoke.createRun();
   await waitFor(run, `Array.from(document.querySelectorAll('button')).some(b=>b.textContent.includes('点击添加视频片段')&&!b.disabled)`);
   await run(`document.querySelector('button').focus(); Array.from(document.querySelectorAll('button')).find(b=>b.textContent.includes('点击添加视频片段')).click()`);
   await waitFor(run, `document.querySelector('[data-testid="video-reframe-run"]') && !document.querySelector('[data-testid="video-reframe-run"]').disabled`);
-  assert.equal(await run(`document.querySelector('[aria-label="目标帧率"]').value`), "30");
+  assert.equal(await run(`document.querySelector('[aria-label="目标帧率"]').dataset.simpleSelectValue`), "30");
   await run(`document.querySelector('[data-testid="video-reframe-run"]').click()`);
   await waitFor(run, `Array.from(document.querySelectorAll('span')).some(s=>s.title?.endsWith('one-fps_30fps.mp4'))`);
   verifyVideo(path.join(work, "one-fps_30fps.mp4"), 30, true);
@@ -112,8 +131,12 @@ async function main() {
   await waitFor(run, `!!document.querySelector('[data-video-quick-panel]')`);
   await run(`Array.from(document.querySelectorAll('[role="tab"]')).find(b=>b.textContent==='按帧导出').click()`);
   assert.equal(await run(`document.querySelectorAll('[data-video-reframe-controls]').length`), 2);
-  await run(`(() => { const select=document.querySelector('[data-video-quick-panel] select'); select.value='10'; select.dispatchEvent(new Event('change',{bubbles:true})); })()`);
-  await waitFor(run, `document.querySelector('[aria-label="目标帧率"]').value==='10'`);
+  // 快捷面板与主编辑器选项来自同一公共组件，点击真实菜单验证状态同步。
+  // 选择后读取另一个实例的值，不能只验证刚点过的按钮自己改了文案。
+  await run("document.querySelector('[data-video-quick-panel] [data-simple-select]>button').click()");
+  await waitFor(run, "!!document.querySelector('[data-simple-select-option]')");
+  await run(`document.querySelector('[data-simple-select-option="10"]').click()`);
+  await waitFor(run, `document.querySelector('[aria-label="目标帧率"]').dataset.simpleSelectValue==='10'`);
   smoke.check("Quick tools and main editor reuse the same controls and target FPS state", true);
   win.setSize(520, 800); await delay(300);
   assert.equal(await run(`(() => { const r=document.querySelector('[data-video-quick-panel]').getBoundingClientRect();return r.left>=0&&r.right<=innerWidth; })()`), true);

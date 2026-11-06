@@ -1,0 +1,1575 @@
+{
+  "date": "2026-11-04",
+  "method": "TypeScript printer removeComments=true；普通函数按正常展开后的非空代码行统计，含括号；JSX展示装配免机械30行。",
+  "functions": [
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-controls.tsx",
+      "name": "EditorAction",
+      "start": 56,
+      "end": 62,
+      "lines": 7,
+      "jsx": true
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-controls.tsx",
+      "name": "EditorFloatField",
+      "start": 159,
+      "end": 262,
+      "lines": 52,
+      "jsx": true
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-controls.tsx",
+      "name": "reset",
+      "start": 205,
+      "end": 205,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-controls.tsx",
+      "name": "commit",
+      "start": 206,
+      "end": 229,
+      "lines": 19,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-controls.tsx",
+      "name": "(callback)",
+      "start": 261,
+      "end": 261,
+      "lines": 2,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-controls.tsx",
+      "name": "(callback)",
+      "start": 261,
+      "end": 261,
+      "lines": 2,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-demo-view.tsx",
+      "name": "EditorDemoView",
+      "start": 34,
+      "end": 50,
+      "lines": 9,
+      "jsx": true
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-demo-view.tsx",
+      "name": "(callback)",
+      "start": 45,
+      "end": 47,
+      "lines": 3,
+      "jsx": true
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-panels.tsx",
+      "name": "ProgramPreview",
+      "start": 358,
+      "end": 423,
+      "lines": 25,
+      "jsx": true
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-preview-samples.tsx",
+      "name": "PreviewSample",
+      "start": 67,
+      "end": 103,
+      "lines": 20,
+      "jsx": true
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-preview-samples.tsx",
+      "name": "(callback)",
+      "start": 99,
+      "end": 99,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-samples.tsx",
+      "name": "EditorSamples",
+      "start": 99,
+      "end": 102,
+      "lines": 4,
+      "jsx": true
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-timeline.tsx",
+      "name": "TimelineToolbar",
+      "start": 50,
+      "end": 60,
+      "lines": 10,
+      "jsx": true
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-timeline.tsx",
+      "name": "(callback)",
+      "start": 58,
+      "end": 58,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-timeline.tsx",
+      "name": "(callback)",
+      "start": 58,
+      "end": 58,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-timeline.tsx",
+      "name": "(callback)",
+      "start": 58,
+      "end": 58,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-timeline.tsx",
+      "name": "(callback)",
+      "start": 58,
+      "end": 58,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-timeline.tsx",
+      "name": "TrackHeader",
+      "start": 72,
+      "end": 80,
+      "lines": 9,
+      "jsx": true
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-timeline.tsx",
+      "name": "TimelineClip",
+      "start": 109,
+      "end": 128,
+      "lines": 15,
+      "jsx": true
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-timeline.tsx",
+      "name": "(callback)",
+      "start": 125,
+      "end": 125,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-timeline.tsx",
+      "name": "(callback)",
+      "start": 125,
+      "end": 125,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-timeline.tsx",
+      "name": "(callback)",
+      "start": 125,
+      "end": 125,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-timeline.tsx",
+      "name": "(callback)",
+      "start": 125,
+      "end": 125,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-timeline.tsx",
+      "name": "TrackRow",
+      "start": 146,
+      "end": 152,
+      "lines": 13,
+      "jsx": true
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-timeline.tsx",
+      "name": "(callback)",
+      "start": 147,
+      "end": 147,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-timeline.tsx",
+      "name": "(callback)",
+      "start": 147,
+      "end": 147,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-timeline.tsx",
+      "name": "(callback)",
+      "start": 147,
+      "end": 147,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-timeline.tsx",
+      "name": "(callback)",
+      "start": 147,
+      "end": 147,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-timeline.tsx",
+      "name": "(callback)",
+      "start": 147,
+      "end": 147,
+      "lines": 1,
+      "jsx": true
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-timeline.tsx",
+      "name": "(callback)",
+      "start": 147,
+      "end": 147,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-timeline.tsx",
+      "name": "EditorTimeline",
+      "start": 178,
+      "end": 221,
+      "lines": 23,
+      "jsx": true
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-timeline.tsx",
+      "name": "(callback)",
+      "start": 215,
+      "end": 215,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-workspace.tsx",
+      "name": "EditorWorkspace",
+      "start": 87,
+      "end": 123,
+      "lines": 16,
+      "jsx": true
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-workspace.tsx",
+      "name": "(callback)",
+      "start": 111,
+      "end": 111,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-workspace.tsx",
+      "name": "(callback)",
+      "start": 111,
+      "end": 111,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-workspace.tsx",
+      "name": "(callback)",
+      "start": 116,
+      "end": 116,
+      "lines": 4,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/live-source-preview.tsx",
+      "name": "useSourcePlayer",
+      "start": 193,
+      "end": 222,
+      "lines": 16,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/live-source-preview.tsx",
+      "name": "LiveSourcePreview",
+      "start": 253,
+      "end": 278,
+      "lines": 17,
+      "jsx": true
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/live-source-preview.tsx",
+      "name": "useProjectPlayback",
+      "start": 307,
+      "end": 345,
+      "lines": 21,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/live-source-preview.tsx",
+      "name": "(callback)",
+      "start": 331,
+      "end": 344,
+      "lines": 18,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/live-source-preview.tsx",
+      "name": "report",
+      "start": 341,
+      "end": 341,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/live-source-preview.tsx",
+      "name": "(callback)",
+      "start": 343,
+      "end": 343,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/live-timeline-model.ts",
+      "name": "resolveTimelineCommand",
+      "start": 130,
+      "end": 170,
+      "lines": 18,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/live-timeline-model.ts",
+      "name": "(callback)",
+      "start": 162,
+      "end": 162,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/live-timeline-model.ts",
+      "name": "(callback)",
+      "start": 163,
+      "end": 163,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/live-timeline-model.ts",
+      "name": "(callback)",
+      "start": 164,
+      "end": 164,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/live-timeline-model.ts",
+      "name": "(callback)",
+      "start": 164,
+      "end": 164,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/use-live-timeline.ts",
+      "name": "gestureDraft",
+      "start": 106,
+      "end": 121,
+      "lines": 8,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/use-live-timeline.ts",
+      "name": "commitTimeline",
+      "start": 233,
+      "end": 252,
+      "lines": 12,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/use-live-timeline.ts",
+      "name": "(callback)",
+      "start": 246,
+      "end": 246,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/use-live-timeline.ts",
+      "name": "selectTimeline",
+      "start": 261,
+      "end": 265,
+      "lines": 7,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/use-live-timeline.ts",
+      "name": "(callback)",
+      "start": 262,
+      "end": 262,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/use-live-timeline.ts",
+      "name": "commitTimelineEdit",
+      "start": 278,
+      "end": 304,
+      "lines": 12,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/use-live-timeline.ts",
+      "name": "(callback)",
+      "start": 297,
+      "end": 297,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/use-live-timeline.ts",
+      "name": "(callback)",
+      "start": 301,
+      "end": 301,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/use-live-timeline.ts",
+      "name": "timelineClipKey",
+      "start": 332,
+      "end": 342,
+      "lines": 15,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/use-live-timeline.ts",
+      "name": "useTimelineMenu",
+      "start": 343,
+      "end": 366,
+      "lines": 17,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/use-live-timeline.ts",
+      "name": "open",
+      "start": 358,
+      "end": 361,
+      "lines": 7,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/use-live-timeline.ts",
+      "name": "(callback)",
+      "start": 359,
+      "end": 359,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/use-live-timeline.ts",
+      "name": "keyDown",
+      "start": 363,
+      "end": 363,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/use-live-timeline.ts",
+      "name": "useTimelineProject",
+      "start": 375,
+      "end": 379,
+      "lines": 5,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/use-live-timeline.ts",
+      "name": "startGesture",
+      "start": 408,
+      "end": 423,
+      "lines": 21,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/use-live-timeline.ts",
+      "name": "useLiveTimeline",
+      "start": 581,
+      "end": 613,
+      "lines": 19,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/use-live-timeline.ts",
+      "name": "seek",
+      "start": 588,
+      "end": 588,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/use-live-timeline.ts",
+      "name": "toggleLock",
+      "start": 589,
+      "end": 589,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/use-live-timeline.ts",
+      "name": "(callback)",
+      "start": 589,
+      "end": 589,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/use-live-timeline.ts",
+      "name": "(callback)",
+      "start": 610,
+      "end": 610,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/use-live-timeline.ts",
+      "name": "reportTime",
+      "start": 612,
+      "end": 612,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/use-live-timeline.ts",
+      "name": "(callback)",
+      "start": 612,
+      "end": 612,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/use-live-timeline.ts",
+      "name": "closePreview",
+      "start": 612,
+      "end": 612,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/use-live-timeline.ts",
+      "name": "addAsset",
+      "start": 612,
+      "end": 612,
+      "lines": 2,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/use-live-timeline.ts",
+      "name": "seekTimeline",
+      "start": 635,
+      "end": 652,
+      "lines": 7,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/use-live-timeline.ts",
+      "name": "clipAtTime",
+      "start": 658,
+      "end": 671,
+      "lines": 4,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/use-live-timeline.ts",
+      "name": "contains",
+      "start": 669,
+      "end": 669,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/use-live-timeline.ts",
+      "name": "(callback)",
+      "start": 670,
+      "end": 670,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/video-editor-view.tsx",
+      "name": "VideoEditorView",
+      "start": 52,
+      "end": 135,
+      "lines": 33,
+      "jsx": true
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/video-editor-view.tsx",
+      "name": "(callback)",
+      "start": 65,
+      "end": 65,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/video-editor-view.tsx",
+      "name": "(callback)",
+      "start": 125,
+      "end": 134,
+      "lines": 6,
+      "jsx": true
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/video-editor-view.tsx",
+      "name": "(callback)",
+      "start": 130,
+      "end": 130,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "scripts/smoke-video-live-02.js",
+      "name": "lanePoint",
+      "start": 189,
+      "end": 191,
+      "lines": 3,
+      "jsx": false
+    },
+    {
+      "file": "scripts/smoke-video-live-02.js",
+      "name": "checkMoveAndCancel",
+      "start": 424,
+      "end": 470,
+      "lines": 23,
+      "jsx": false
+    },
+    {
+      "file": "scripts/smoke-video-live-02.js",
+      "name": "checkLongCollision",
+      "start": 530,
+      "end": 619,
+      "lines": 22,
+      "jsx": false
+    },
+    {
+      "file": "scripts/smoke-video-live-02.js",
+      "name": "checkRejectedDrops",
+      "start": 941,
+      "end": 958,
+      "lines": 19,
+      "jsx": false
+    },
+    {
+      "file": "scripts/smoke-video-live-02.js",
+      "name": "(callback)",
+      "start": 945,
+      "end": 945,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "scripts/smoke-video-live-02.js",
+      "name": "(callback)",
+      "start": 945,
+      "end": 945,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "scripts/smoke-video-live-02.js",
+      "name": "checkAutoScrollAndBoundary",
+      "start": 1053,
+      "end": 1079,
+      "lines": 18,
+      "jsx": false
+    },
+    {
+      "file": "scripts/smoke-video-live-02.js",
+      "name": "checkThemesAndCleanup",
+      "start": 1208,
+      "end": 1239,
+      "lines": 20,
+      "jsx": false
+    },
+    {
+      "file": "scripts/smoke-video-live-02.js",
+      "name": "checkFormalFlows",
+      "start": 1456,
+      "end": 1466,
+      "lines": 20,
+      "jsx": false
+    },
+    {
+      "file": "scripts/smoke-video-editor-ui.js",
+      "name": "checkDisabled",
+      "start": 196,
+      "end": 205,
+      "lines": 4,
+      "jsx": false
+    },
+    {
+      "file": "scripts/smoke-video-editor-ui.js",
+      "name": "checkWorkspace",
+      "start": 339,
+      "end": 374,
+      "lines": 13,
+      "jsx": false
+    },
+    {
+      "file": "scripts/smoke-video-editor-ui.js",
+      "name": "checkRequestedWorkspace",
+      "start": 383,
+      "end": 388,
+      "lines": 9,
+      "jsx": false
+    },
+    {
+      "file": "scripts/smoke-video-editor-ui.js",
+      "name": "main",
+      "start": 389,
+      "end": 433,
+      "lines": 27,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-property-model.ts",
+      "name": "propertyDefaults",
+      "start": 93,
+      "end": 95,
+      "lines": 3,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-property-model.ts",
+      "name": "propertyValue",
+      "start": 108,
+      "end": 111,
+      "lines": 4,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-property-model.ts",
+      "name": "(callback)",
+      "start": 109,
+      "end": 109,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-property-model.ts",
+      "name": "(callback)",
+      "start": 110,
+      "end": 110,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-property-model.ts",
+      "name": "inspectorFields",
+      "start": 123,
+      "end": 128,
+      "lines": 7,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-property-model.ts",
+      "name": "(callback)",
+      "start": 126,
+      "end": 126,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-property-model.ts",
+      "name": "(callback)",
+      "start": 126,
+      "end": 126,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-property-model.ts",
+      "name": "(callback)",
+      "start": 127,
+      "end": 127,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-property-model.ts",
+      "name": "(callback)",
+      "start": 127,
+      "end": 127,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-property-model.ts",
+      "name": "propertyGroup",
+      "start": 139,
+      "end": 141,
+      "lines": 3,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-inspector.tsx",
+      "name": "InspectorSection",
+      "start": 60,
+      "end": 93,
+      "lines": 14,
+      "jsx": true
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-inspector.tsx",
+      "name": "reset",
+      "start": 89,
+      "end": 89,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-inspector.tsx",
+      "name": "(callback)",
+      "start": 89,
+      "end": 89,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-inspector.tsx",
+      "name": "(callback)",
+      "start": 89,
+      "end": 89,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-inspector.tsx",
+      "name": "(callback)",
+      "start": 91,
+      "end": 91,
+      "lines": 1,
+      "jsx": true
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-inspector.tsx",
+      "name": "(callback)",
+      "start": 91,
+      "end": 91,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-inspector.tsx",
+      "name": "(callback)",
+      "start": 91,
+      "end": 91,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-inspector.tsx",
+      "name": "ProjectProperties",
+      "start": 98,
+      "end": 109,
+      "lines": 6,
+      "jsx": true
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-inspector.tsx",
+      "name": "ClipInspector",
+      "start": 116,
+      "end": 144,
+      "lines": 12,
+      "jsx": true
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-inspector.tsx",
+      "name": "(callback)",
+      "start": 136,
+      "end": 136,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-inspector.tsx",
+      "name": "(callback)",
+      "start": 140,
+      "end": 140,
+      "lines": 1,
+      "jsx": true
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-inspector.tsx",
+      "name": "(callback)",
+      "start": 140,
+      "end": 140,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-inspector-samples.tsx",
+      "name": "sampleTargets",
+      "start": 27,
+      "end": 44,
+      "lines": 3,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-inspector-samples.tsx",
+      "name": "(callback)",
+      "start": 43,
+      "end": 43,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-inspector-samples.tsx",
+      "name": "InspectorSample",
+      "start": 49,
+      "end": 107,
+      "lines": 25,
+      "jsx": true
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-inspector-samples.tsx",
+      "name": "(callback)",
+      "start": 58,
+      "end": 58,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-inspector-samples.tsx",
+      "name": "commit",
+      "start": 67,
+      "end": 77,
+      "lines": 3,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-inspector-samples.tsx",
+      "name": "(callback)",
+      "start": 76,
+      "end": 76,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-inspector-samples.tsx",
+      "name": "(callback)",
+      "start": 76,
+      "end": 76,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-inspector-samples.tsx",
+      "name": "reset",
+      "start": 78,
+      "end": 93,
+      "lines": 10,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-inspector-samples.tsx",
+      "name": "(callback)",
+      "start": 87,
+      "end": 92,
+      "lines": 8,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-inspector-samples.tsx",
+      "name": "(callback)",
+      "start": 87,
+      "end": 92,
+      "lines": 8,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-inspector-samples.tsx",
+      "name": "(callback)",
+      "start": 97,
+      "end": 97,
+      "lines": 1,
+      "jsx": true
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-inspector-samples.tsx",
+      "name": "(callback)",
+      "start": 97,
+      "end": 97,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-inspector-samples.tsx",
+      "name": "(callback)",
+      "start": 98,
+      "end": 98,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-inspector-samples.tsx",
+      "name": "(callback)",
+      "start": 98,
+      "end": 98,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-inspector-samples.tsx",
+      "name": "(callback)",
+      "start": 98,
+      "end": 98,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-inspector-samples.tsx",
+      "name": "(callback)",
+      "start": 105,
+      "end": 105,
+      "lines": 1,
+      "jsx": true
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-inspector-samples.tsx",
+      "name": "(callback)",
+      "start": 105,
+      "end": 105,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-inspector-samples.tsx",
+      "name": "(callback)",
+      "start": 105,
+      "end": 105,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-inspector-samples.tsx",
+      "name": "(callback)",
+      "start": 105,
+      "end": 105,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-inspector-samples.tsx",
+      "name": "EditorInspectorSamples",
+      "start": 111,
+      "end": 123,
+      "lines": 3,
+      "jsx": true
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-time-ruler.tsx",
+      "name": "rulerTime",
+      "start": 34,
+      "end": 44,
+      "lines": 4,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-time-ruler.tsx",
+      "name": "EditorTimeRuler",
+      "start": 50,
+      "end": 134,
+      "lines": 38,
+      "jsx": true
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-time-ruler.tsx",
+      "name": "(callback)",
+      "start": 61,
+      "end": 61,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-time-ruler.tsx",
+      "name": "pointerDown",
+      "start": 82,
+      "end": 95,
+      "lines": 9,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-time-ruler.tsx",
+      "name": "finish",
+      "start": 96,
+      "end": 106,
+      "lines": 8,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-time-ruler.tsx",
+      "name": "keyDown",
+      "start": 107,
+      "end": 121,
+      "lines": 11,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-time-ruler.tsx",
+      "name": "(callback)",
+      "start": 130,
+      "end": 130,
+      "lines": 2,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-time-ruler.tsx",
+      "name": "(callback)",
+      "start": 131,
+      "end": 131,
+      "lines": 1,
+      "jsx": true
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/use-timeline-viewport.ts",
+      "name": "useTimelineViewport",
+      "start": 23,
+      "end": 97,
+      "lines": 29,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/use-timeline-viewport.ts",
+      "name": "(callback)",
+      "start": 45,
+      "end": 61,
+      "lines": 11,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/use-timeline-viewport.ts",
+      "name": "(callback)",
+      "start": 55,
+      "end": 58,
+      "lines": 4,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/use-timeline-viewport.ts",
+      "name": "(callback)",
+      "start": 60,
+      "end": 60,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/use-timeline-viewport.ts",
+      "name": "zoom",
+      "start": 62,
+      "end": 76,
+      "lines": 6,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/use-timeline-viewport.ts",
+      "name": "restore",
+      "start": 79,
+      "end": 90,
+      "lines": 6,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/use-workspace-layout.ts",
+      "name": "useWorkspacePanels",
+      "start": 39,
+      "end": 65,
+      "lines": 17,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/use-workspace-layout.ts",
+      "name": "close",
+      "start": 43,
+      "end": 43,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/use-workspace-layout.ts",
+      "name": "toggle",
+      "start": 48,
+      "end": 51,
+      "lines": 8,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/use-workspace-layout.ts",
+      "name": "(callback)",
+      "start": 52,
+      "end": 52,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/use-workspace-layout.ts",
+      "name": "usePanelLifecycle",
+      "start": 70,
+      "end": 125,
+      "lines": 23,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/use-workspace-layout.ts",
+      "name": "(callback)",
+      "start": 79,
+      "end": 105,
+      "lines": 15,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/use-workspace-layout.ts",
+      "name": "(callback)",
+      "start": 82,
+      "end": 100,
+      "lines": 8,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/use-workspace-layout.ts",
+      "name": "(callback)",
+      "start": 104,
+      "end": 104,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/use-workspace-layout.ts",
+      "name": "(callback)",
+      "start": 106,
+      "end": 124,
+      "lines": 6,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/use-workspace-layout.ts",
+      "name": "splitLimit",
+      "start": 146,
+      "end": 164,
+      "lines": 4,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/use-workspace-layout.ts",
+      "name": "splitStart",
+      "start": 165,
+      "end": 185,
+      "lines": 9,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/use-workspace-layout.ts",
+      "name": "splitFinish",
+      "start": 188,
+      "end": 204,
+      "lines": 8,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/use-workspace-layout.ts",
+      "name": "splitMove",
+      "start": 205,
+      "end": 222,
+      "lines": 7,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/use-workspace-layout.ts",
+      "name": "splitKey",
+      "start": 225,
+      "end": 249,
+      "lines": 12,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/use-workspace-layout.ts",
+      "name": "useWorkspaceSplit",
+      "start": 250,
+      "end": 295,
+      "lines": 18,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/use-workspace-layout.ts",
+      "name": "(callback)",
+      "start": 274,
+      "end": 288,
+      "lines": 11,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/use-workspace-layout.ts",
+      "name": "(callback)",
+      "start": 277,
+      "end": 285,
+      "lines": 4,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/use-workspace-layout.ts",
+      "name": "(callback)",
+      "start": 284,
+      "end": 284,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/use-workspace-layout.ts",
+      "name": "(callback)",
+      "start": 287,
+      "end": 287,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/use-workspace-layout.ts",
+      "name": "down",
+      "start": 294,
+      "end": 294,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/use-workspace-layout.ts",
+      "name": "finish",
+      "start": 294,
+      "end": 294,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/use-workspace-layout.ts",
+      "name": "key",
+      "start": 294,
+      "end": 294,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/use-workspace-layout.ts",
+      "name": "move",
+      "start": 294,
+      "end": 294,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "scripts/lib/check-video-ui-inspector.js",
+      "name": "scope",
+      "start": 19,
+      "end": 19,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "scripts/lib/check-video-ui-inspector.js",
+      "name": "field",
+      "start": 20,
+      "end": 20,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "scripts/lib/check-video-ui-inspector.js",
+      "name": "edit",
+      "start": 25,
+      "end": 40,
+      "lines": 6,
+      "jsx": false
+    },
+    {
+      "file": "scripts/lib/check-video-ui-inspector.js",
+      "name": "value",
+      "start": 43,
+      "end": 51,
+      "lines": 3,
+      "jsx": false
+    },
+    {
+      "file": "scripts/lib/check-video-ui-inspector.js",
+      "name": "choose",
+      "start": 52,
+      "end": 60,
+      "lines": 4,
+      "jsx": false
+    },
+    {
+      "file": "scripts/lib/check-video-ui-inspector.js",
+      "name": "checkMixed",
+      "start": 65,
+      "end": 85,
+      "lines": 9,
+      "jsx": false
+    },
+    {
+      "file": "scripts/lib/check-video-ui-inspector.js",
+      "name": "checkTypes",
+      "start": 90,
+      "end": 113,
+      "lines": 9,
+      "jsx": false
+    },
+    {
+      "file": "scripts/lib/check-video-ui-inspector.js",
+      "name": "checkCombinations",
+      "start": 118,
+      "end": 165,
+      "lines": 19,
+      "jsx": false
+    },
+    {
+      "file": "scripts/lib/check-video-ui-inspector.js",
+      "name": "checkDrafts",
+      "start": 171,
+      "end": 208,
+      "lines": 14,
+      "jsx": false
+    },
+    {
+      "file": "scripts/lib/check-video-ui-inspector.js",
+      "name": "checkVideoUiInspector",
+      "start": 213,
+      "end": 237,
+      "lines": 12,
+      "jsx": false
+    },
+    {
+      "file": "scripts/lib/check-video-ui-timeline.js",
+      "name": "seek",
+      "start": 19,
+      "end": 39,
+      "lines": 9,
+      "jsx": false
+    },
+    {
+      "file": "scripts/lib/check-video-ui-timeline.js",
+      "name": "checkStartPosition",
+      "start": 45,
+      "end": 72,
+      "lines": 12,
+      "jsx": false
+    },
+    {
+      "file": "scripts/lib/check-video-ui-timeline.js",
+      "name": "checkZoom",
+      "start": 78,
+      "end": 109,
+      "lines": 11,
+      "jsx": false
+    },
+    {
+      "file": "scripts/lib/check-video-ui-timeline.js",
+      "name": "checkLock",
+      "start": 114,
+      "end": 140,
+      "lines": 7,
+      "jsx": false
+    },
+    {
+      "file": "scripts/lib/check-video-ui-timeline.js",
+      "name": "checkVideoUiTimeline",
+      "start": 144,
+      "end": 158,
+      "lines": 6,
+      "jsx": false
+    },
+    {
+      "file": "scripts/lib/check-video-ui-workspace.js",
+      "name": "geometry",
+      "start": 20,
+      "end": 27,
+      "lines": 3,
+      "jsx": false
+    },
+    {
+      "file": "scripts/lib/check-video-ui-workspace.js",
+      "name": "checkSplit",
+      "start": 31,
+      "end": 62,
+      "lines": 12,
+      "jsx": false
+    },
+    {
+      "file": "scripts/lib/check-video-ui-workspace.js",
+      "name": "checkPanels",
+      "start": 68,
+      "end": 109,
+      "lines": 14,
+      "jsx": false
+    },
+    {
+      "file": "scripts/lib/check-video-ui-workspace.js",
+      "name": "checkResponsive",
+      "start": 114,
+      "end": 174,
+      "lines": 21,
+      "jsx": false
+    },
+    {
+      "file": "scripts/lib/check-video-ui-workspace.js",
+      "name": "checkContrast",
+      "start": 179,
+      "end": 221,
+      "lines": 15,
+      "jsx": false
+    },
+    {
+      "file": "scripts/lib/check-video-ui-workspace.js",
+      "name": "(callback)",
+      "start": 220,
+      "end": 220,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "scripts/lib/check-video-ui-workspace.js",
+      "name": "checkReducedMotion",
+      "start": 226,
+      "end": 252,
+      "lines": 14,
+      "jsx": false
+    },
+    {
+      "file": "scripts/lib/check-video-ui-workspace.js",
+      "name": "checkPointerSplit",
+      "start": 256,
+      "end": 278,
+      "lines": 9,
+      "jsx": false
+    },
+    {
+      "file": "scripts/lib/check-video-ui-workspace.js",
+      "name": "send",
+      "start": 275,
+      "end": 275,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "scripts/lib/check-video-ui-workspace.js",
+      "name": "checkVideoUiWorkspace",
+      "start": 282,
+      "end": 299,
+      "lines": 11,
+      "jsx": false
+    }
+  ],
+  "ordinaryOverLimit": []
+}

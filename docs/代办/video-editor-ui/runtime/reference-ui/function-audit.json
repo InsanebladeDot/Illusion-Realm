@@ -1,0 +1,730 @@
+[
+  {
+    "file": "apps/next/src/view/toolBox/Tool/video/editor/clip-basic-tools.tsx",
+    "name": "ClipBasicTools",
+    "line": 11,
+    "formattedLines": 14,
+    "jsxAssembly": true
+  },
+  {
+    "file": "apps/next/src/view/toolBox/Tool/video/editor/clip-basic-tools.tsx",
+    "name": "<callback>",
+    "line": 14,
+    "formattedLines": 1,
+    "jsxAssembly": false
+  },
+  {
+    "file": "apps/next/src/view/toolBox/Tool/video/editor/clip-basic-tools.tsx",
+    "name": "<callback>",
+    "line": 15,
+    "formattedLines": 1,
+    "jsxAssembly": false
+  },
+  {
+    "file": "apps/next/src/view/toolBox/Tool/video/editor/clip-basic-tools.tsx",
+    "name": "<callback>",
+    "line": 16,
+    "formattedLines": 1,
+    "jsxAssembly": false
+  },
+  {
+    "file": "apps/next/src/view/toolBox/Tool/video/editor/clip-basic-tools.tsx",
+    "name": "<callback>",
+    "line": 17,
+    "formattedLines": 1,
+    "jsxAssembly": false
+  },
+  {
+    "file": "apps/next/src/view/toolBox/Tool/video/editor/clip-waveform.tsx",
+    "name": "ClipWaveform",
+    "line": 102,
+    "formattedLines": 14,
+    "jsxAssembly": true
+  },
+  {
+    "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-clip-shell.tsx",
+    "name": "EditorClipShell",
+    "line": 109,
+    "formattedLines": 9,
+    "jsxAssembly": true
+  },
+  {
+    "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-clip-shell.tsx",
+    "name": "<callback>",
+    "line": 114,
+    "formattedLines": 4,
+    "jsxAssembly": false
+  },
+  {
+    "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-controls.tsx",
+    "name": "EditorAction",
+    "line": 81,
+    "formattedLines": 7,
+    "jsxAssembly": true
+  },
+  {
+    "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-timeline.tsx",
+    "name": "TimelineToolbar",
+    "line": 69,
+    "formattedLines": 13,
+    "jsxAssembly": true
+  },
+  {
+    "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-timeline.tsx",
+    "name": "<callback>",
+    "line": 77,
+    "formattedLines": 1,
+    "jsxAssembly": false
+  },
+  {
+    "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-timeline.tsx",
+    "name": "<callback>",
+    "line": 77,
+    "formattedLines": 1,
+    "jsxAssembly": false
+  },
+  {
+    "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-timeline.tsx",
+    "name": "<callback>",
+    "line": 77,
+    "formattedLines": 1,
+    "jsxAssembly": false
+  },
+  {
+    "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-timeline.tsx",
+    "name": "<callback>",
+    "line": 77,
+    "formattedLines": 1,
+    "jsxAssembly": false
+  },
+  {
+    "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-timeline.tsx",
+    "name": "TrackHeader",
+    "line": 99,
+    "formattedLines": 18,
+    "jsxAssembly": true
+  },
+  {
+    "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-timeline.tsx",
+    "name": "TimelineClip",
+    "line": 160,
+    "formattedLines": 21,
+    "jsxAssembly": true
+  },
+  {
+    "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-timeline.tsx",
+    "name": "<callback>",
+    "line": 177,
+    "formattedLines": 1,
+    "jsxAssembly": false
+  },
+  {
+    "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-timeline.tsx",
+    "name": "<callback>",
+    "line": 177,
+    "formattedLines": 1,
+    "jsxAssembly": false
+  },
+  {
+    "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-timeline.tsx",
+    "name": "<callback>",
+    "line": 177,
+    "formattedLines": 1,
+    "jsxAssembly": false
+  },
+  {
+    "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-timeline.tsx",
+    "name": "<callback>",
+    "line": 177,
+    "formattedLines": 1,
+    "jsxAssembly": false
+  },
+  {
+    "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-timeline.tsx",
+    "name": "<callback>",
+    "line": 177,
+    "formattedLines": 1,
+    "jsxAssembly": false
+  },
+  {
+    "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-timeline.tsx",
+    "name": "<callback>",
+    "line": 177,
+    "formattedLines": 1,
+    "jsxAssembly": false
+  },
+  {
+    "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-timeline.tsx",
+    "name": "<callback>",
+    "line": 177,
+    "formattedLines": 1,
+    "jsxAssembly": false
+  },
+  {
+    "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-timeline.tsx",
+    "name": "TrackRow",
+    "line": 243,
+    "formattedLines": 15,
+    "jsxAssembly": true
+  },
+  {
+    "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-timeline.tsx",
+    "name": "<callback>",
+    "line": 244,
+    "formattedLines": 1,
+    "jsxAssembly": false
+  },
+  {
+    "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-timeline.tsx",
+    "name": "<callback>",
+    "line": 244,
+    "formattedLines": 1,
+    "jsxAssembly": false
+  },
+  {
+    "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-timeline.tsx",
+    "name": "<callback>",
+    "line": 244,
+    "formattedLines": 1,
+    "jsxAssembly": false
+  },
+  {
+    "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-timeline.tsx",
+    "name": "<callback>",
+    "line": 244,
+    "formattedLines": 1,
+    "jsxAssembly": false
+  },
+  {
+    "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-timeline.tsx",
+    "name": "<callback>",
+    "line": 244,
+    "formattedLines": 1,
+    "jsxAssembly": false
+  },
+  {
+    "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-timeline.tsx",
+    "name": "<callback>",
+    "line": 244,
+    "formattedLines": 1,
+    "jsxAssembly": false
+  },
+  {
+    "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-timeline.tsx",
+    "name": "<callback>",
+    "line": 244,
+    "formattedLines": 1,
+    "jsxAssembly": false
+  },
+  {
+    "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-timeline.tsx",
+    "name": "EditorTimeline",
+    "line": 289,
+    "formattedLines": 23,
+    "jsxAssembly": true
+  },
+  {
+    "file": "apps/next/src/view/toolBox/Tool/video/editor/live-clip-menu.tsx",
+    "name": "LiveClipMenu",
+    "line": 31,
+    "formattedLines": 24,
+    "jsxAssembly": true
+  },
+  {
+    "file": "apps/next/src/view/toolBox/Tool/video/editor/live-clip-menu.tsx",
+    "name": "<callback>",
+    "line": 37,
+    "formattedLines": 1,
+    "jsxAssembly": false
+  },
+  {
+    "file": "apps/next/src/view/toolBox/Tool/video/editor/live-clip-menu.tsx",
+    "name": "<callback>",
+    "line": 38,
+    "formattedLines": 1,
+    "jsxAssembly": false
+  },
+  {
+    "file": "apps/next/src/view/toolBox/Tool/video/editor/live-clip-menu.tsx",
+    "name": "<callback>",
+    "line": 39,
+    "formattedLines": 1,
+    "jsxAssembly": false
+  },
+  {
+    "file": "apps/next/src/view/toolBox/Tool/video/editor/live-clip-menu.tsx",
+    "name": "<callback>",
+    "line": 40,
+    "formattedLines": 1,
+    "jsxAssembly": false
+  },
+  {
+    "file": "apps/next/src/view/toolBox/Tool/video/editor/live-clip-menu.tsx",
+    "name": "<callback>",
+    "line": 44,
+    "formattedLines": 1,
+    "jsxAssembly": false
+  },
+  {
+    "file": "apps/next/src/view/toolBox/Tool/video/editor/live-clip-menu.tsx",
+    "name": "<callback>",
+    "line": 45,
+    "formattedLines": 1,
+    "jsxAssembly": false
+  },
+  {
+    "file": "apps/next/src/view/toolBox/Tool/video/editor/live-clip-menu.tsx",
+    "name": "<callback>",
+    "line": 47,
+    "formattedLines": 1,
+    "jsxAssembly": false
+  },
+  {
+    "file": "apps/next/src/view/toolBox/Tool/video/editor/media-library-tabs.tsx",
+    "name": "MediaLibraryTabs",
+    "line": 25,
+    "formattedLines": 42,
+    "jsxAssembly": true
+  },
+  {
+    "file": "apps/next/src/view/toolBox/Tool/video/editor/media-library-tabs.tsx",
+    "name": "<callback>",
+    "line": 28,
+    "formattedLines": 5,
+    "jsxAssembly": false
+  },
+  {
+    "file": "apps/next/src/view/toolBox/Tool/video/editor/media-library-tabs.tsx",
+    "name": "<callback>",
+    "line": 32,
+    "formattedLines": 9,
+    "jsxAssembly": false
+  },
+  {
+    "file": "apps/next/src/view/toolBox/Tool/video/editor/media-library-tabs.tsx",
+    "name": "<callback>",
+    "line": 37,
+    "formattedLines": 1,
+    "jsxAssembly": false
+  },
+  {
+    "file": "apps/next/src/view/toolBox/Tool/video/editor/media-library-tabs.tsx",
+    "name": "page",
+    "line": 39,
+    "formattedLines": 4,
+    "jsxAssembly": false
+  },
+  {
+    "file": "apps/next/src/view/toolBox/Tool/video/editor/media-library-tabs.tsx",
+    "name": "key",
+    "line": 43,
+    "formattedLines": 10,
+    "jsxAssembly": false
+  },
+  {
+    "file": "apps/next/src/view/toolBox/Tool/video/editor/media-library-tabs.tsx",
+    "name": "<callback>",
+    "line": 55,
+    "formattedLines": 1,
+    "jsxAssembly": false
+  },
+  {
+    "file": "apps/next/src/view/toolBox/Tool/video/editor/media-library-tabs.tsx",
+    "name": "<callback>",
+    "line": 55,
+    "formattedLines": 1,
+    "jsxAssembly": false
+  },
+  {
+    "file": "apps/next/src/view/toolBox/Tool/video/editor/media-library-tabs.tsx",
+    "name": "<callback>",
+    "line": 58,
+    "formattedLines": 1,
+    "jsxAssembly": false
+  },
+  {
+    "file": "apps/next/src/view/toolBox/Tool/video/editor/media-library-tabs.tsx",
+    "name": "<callback>",
+    "line": 59,
+    "formattedLines": 1,
+    "jsxAssembly": false
+  },
+  {
+    "file": "apps/next/src/view/toolBox/Tool/video/editor/timeline-edit-tools.tsx",
+    "name": "TimelineEditTools",
+    "line": 31,
+    "formattedLines": 27,
+    "jsxAssembly": true
+  },
+  {
+    "file": "apps/next/src/view/toolBox/Tool/video/editor/timeline-edit-tools.tsx",
+    "name": "<callback>",
+    "line": 45,
+    "formattedLines": 1,
+    "jsxAssembly": false
+  },
+  {
+    "file": "apps/next/src/view/toolBox/Tool/video/editor/timeline-edit-tools.tsx",
+    "name": "<callback>",
+    "line": 46,
+    "formattedLines": 1,
+    "jsxAssembly": false
+  },
+  {
+    "file": "apps/next/src/view/toolBox/Tool/video/editor/timeline-edit-tools.tsx",
+    "name": "<callback>",
+    "line": 47,
+    "formattedLines": 1,
+    "jsxAssembly": false
+  },
+  {
+    "file": "apps/next/src/view/toolBox/Tool/video/editor/timeline-settings.tsx",
+    "name": "TimelineSettings",
+    "line": 48,
+    "formattedLines": 27,
+    "jsxAssembly": true
+  },
+  {
+    "file": "apps/next/src/view/toolBox/Tool/video/editor/timeline-settings.tsx",
+    "name": "close",
+    "line": 51,
+    "formattedLines": 1,
+    "jsxAssembly": false
+  },
+  {
+    "file": "apps/next/src/view/toolBox/Tool/video/editor/timeline-settings.tsx",
+    "name": "toggle",
+    "line": 52,
+    "formattedLines": 7,
+    "jsxAssembly": false
+  },
+  {
+    "file": "apps/next/src/view/toolBox/Tool/video/editor/timeline-settings.tsx",
+    "name": "<callback>",
+    "line": 57,
+    "formattedLines": 1,
+    "jsxAssembly": false
+  },
+  {
+    "file": "apps/next/src/view/toolBox/Tool/video/editor/video-editor-view.tsx",
+    "name": "VideoEditorView",
+    "line": 55,
+    "formattedLines": 46,
+    "jsxAssembly": true
+  },
+  {
+    "file": "apps/next/src/view/toolBox/Tool/video/editor/video-editor-view.tsx",
+    "name": "<callback>",
+    "line": 106,
+    "formattedLines": 1,
+    "jsxAssembly": false
+  },
+  {
+    "file": "apps/next/src/view/toolBox/Tool/video/editor/video-filmstrip.tsx",
+    "name": "paint",
+    "line": 178,
+    "formattedLines": 24,
+    "jsxAssembly": false
+  },
+  {
+    "file": "apps/next/src/view/toolBox/Tool/video/editor/video-filmstrip.tsx",
+    "name": "sizeFilmstripWindow",
+    "line": 224,
+    "formattedLines": 11,
+    "jsxAssembly": false
+  },
+  {
+    "file": "apps/next/src/view/toolBox/Tool/video/editor/video-filmstrip.tsx",
+    "name": "VideoFilmstrip",
+    "line": 272,
+    "formattedLines": 40,
+    "jsxAssembly": true
+  },
+  {
+    "file": "apps/next/src/view/toolBox/Tool/video/editor/video-filmstrip.tsx",
+    "name": "<callback>",
+    "line": 274,
+    "formattedLines": 28,
+    "jsxAssembly": false
+  },
+  {
+    "file": "apps/next/src/view/toolBox/Tool/video/editor/video-filmstrip.tsx",
+    "name": "schedule",
+    "line": 280,
+    "formattedLines": 14,
+    "jsxAssembly": false
+  },
+  {
+    "file": "apps/next/src/view/toolBox/Tool/video/editor/video-filmstrip.tsx",
+    "name": "<callback>",
+    "line": 284,
+    "formattedLines": 6,
+    "jsxAssembly": false
+  },
+  {
+    "file": "scripts/lib/check-video-edit-tools.js",
+    "name": "arrange",
+    "line": 21,
+    "formattedLines": 17,
+    "jsxAssembly": false
+  },
+  {
+    "file": "scripts/lib/check-video-edit-tools.js",
+    "name": "checkVideoEditTools",
+    "line": 149,
+    "formattedLines": 10,
+    "jsxAssembly": false
+  },
+  {
+    "file": "scripts/lib/check-video-edit-tools.js",
+    "name": "squareFilmstrip",
+    "line": 161,
+    "formattedLines": 12,
+    "jsxAssembly": false
+  },
+  {
+    "file": "scripts/lib/check-video-edit-tools.js",
+    "name": "referenceControls",
+    "line": 176,
+    "formattedLines": 15,
+    "jsxAssembly": false
+  },
+  {
+    "file": "scripts/lib/check-video-filmstrip.js",
+    "name": "menuChecks",
+    "line": 298,
+    "formattedLines": 23,
+    "jsxAssembly": false
+  },
+  {
+    "file": "scripts/lib/check-video-filmstrip.js",
+    "name": "cascadeChecks",
+    "line": 489,
+    "formattedLines": 13,
+    "jsxAssembly": false
+  },
+  {
+    "file": "scripts/lib/check-video-waveform.js",
+    "name": "layoutChecks",
+    "line": 166,
+    "formattedLines": 13,
+    "jsxAssembly": false
+  },
+  {
+    "file": "scripts/smoke-video-live-02.js",
+    "name": "checkAudioTrackEditing",
+    "line": 813,
+    "formattedLines": 22,
+    "jsxAssembly": false
+  },
+  {
+    "file": "scripts/smoke-video-live-02.js",
+    "name": "checkReferenceAudio",
+    "line": 1608,
+    "formattedLines": 10,
+    "jsxAssembly": false
+  },
+  {
+    "file": "apps/next/src/components/prompt-assistant/assistant-menu.tsx",
+    "name": "AssistantMenu",
+    "line": 17,
+    "formattedLines": 22,
+    "jsxAssembly": true
+  },
+  {
+    "file": "apps/next/src/components/prompt-assistant/assistant-menu.tsx",
+    "name": "<callback>",
+    "line": 36,
+    "formattedLines": 1,
+    "jsxAssembly": false
+  },
+  {
+    "file": "apps/next/src/components/prompt-assistant/assistant-menu.tsx",
+    "name": "<callback>",
+    "line": 36,
+    "formattedLines": 1,
+    "jsxAssembly": false
+  },
+  {
+    "file": "apps/next/src/components/prompt-assistant/assistant-menu.tsx",
+    "name": "<callback>",
+    "line": 36,
+    "formattedLines": 1,
+    "jsxAssembly": false
+  },
+  {
+    "file": "apps/next/src/components/prompt-assistant/use-cascade-position.ts",
+    "name": "placeCascade",
+    "line": 13,
+    "formattedLines": 20,
+    "jsxAssembly": false
+  },
+  {
+    "file": "apps/next/src/components/prompt-assistant/use-cascade-position.ts",
+    "name": "useCascadePosition",
+    "line": 32,
+    "formattedLines": 18,
+    "jsxAssembly": false
+  },
+  {
+    "file": "apps/next/src/components/prompt-assistant/use-cascade-position.ts",
+    "name": "<callback>",
+    "line": 35,
+    "formattedLines": 13,
+    "jsxAssembly": false
+  },
+  {
+    "file": "apps/next/src/components/prompt-assistant/use-cascade-position.ts",
+    "name": "position",
+    "line": 36,
+    "formattedLines": 1,
+    "jsxAssembly": false
+  },
+  {
+    "file": "apps/next/src/components/cascade-menu.tsx",
+    "name": "collectColumns",
+    "line": 50,
+    "formattedLines": 10,
+    "jsxAssembly": false
+  },
+  {
+    "file": "apps/next/src/components/cascade-menu.tsx",
+    "name": "<callback>",
+    "line": 53,
+    "formattedLines": 1,
+    "jsxAssembly": false
+  },
+  {
+    "file": "apps/next/src/components/cascade-menu.tsx",
+    "name": "focusColumn",
+    "line": 63,
+    "formattedLines": 7,
+    "jsxAssembly": false
+  },
+  {
+    "file": "apps/next/src/components/cascade-menu.tsx",
+    "name": "CascadeMenu",
+    "line": 70,
+    "formattedLines": 62,
+    "jsxAssembly": true
+  },
+  {
+    "file": "apps/next/src/components/cascade-menu.tsx",
+    "name": "<callback>",
+    "line": 78,
+    "formattedLines": 22,
+    "jsxAssembly": false
+  },
+  {
+    "file": "apps/next/src/components/cascade-menu.tsx",
+    "name": "outside",
+    "line": 79,
+    "formattedLines": 4,
+    "jsxAssembly": false
+  },
+  {
+    "file": "apps/next/src/components/cascade-menu.tsx",
+    "name": "escape",
+    "line": 82,
+    "formattedLines": 8,
+    "jsxAssembly": false
+  },
+  {
+    "file": "apps/next/src/components/cascade-menu.tsx",
+    "name": "<callback>",
+    "line": 87,
+    "formattedLines": 1,
+    "jsxAssembly": false
+  },
+  {
+    "file": "apps/next/src/components/cascade-menu.tsx",
+    "name": "<callback>",
+    "line": 90,
+    "formattedLines": 5,
+    "jsxAssembly": false
+  },
+  {
+    "file": "apps/next/src/components/cascade-menu.tsx",
+    "name": "key",
+    "line": 99,
+    "formattedLines": 24,
+    "jsxAssembly": false
+  },
+  {
+    "file": "apps/next/src/components/cascade-menu.tsx",
+    "name": "<callback>",
+    "line": 110,
+    "formattedLines": 1,
+    "jsxAssembly": false
+  },
+  {
+    "file": "apps/next/src/components/cascade-menu.tsx",
+    "name": "<callback>",
+    "line": 115,
+    "formattedLines": 1,
+    "jsxAssembly": false
+  },
+  {
+    "file": "apps/next/src/components/cascade-menu.tsx",
+    "name": "<callback>",
+    "line": 115,
+    "formattedLines": 1,
+    "jsxAssembly": false
+  },
+  {
+    "file": "apps/next/src/components/cascade-menu.tsx",
+    "name": "<callback>",
+    "line": 118,
+    "formattedLines": 1,
+    "jsxAssembly": false
+  },
+  {
+    "file": "apps/next/src/components/cascade-menu.tsx",
+    "name": "<callback>",
+    "line": 120,
+    "formattedLines": 5,
+    "jsxAssembly": false
+  },
+  {
+    "file": "apps/next/src/components/cascade-menu.tsx",
+    "name": "<callback>",
+    "line": 121,
+    "formattedLines": 1,
+    "jsxAssembly": false
+  },
+  {
+    "file": "apps/next/src/components/cascade-menu.tsx",
+    "name": "<callback>",
+    "line": 122,
+    "formattedLines": 1,
+    "jsxAssembly": false
+  },
+  {
+    "file": "apps/next/src/components/cascade-menu.tsx",
+    "name": "CascadeRow",
+    "line": 132,
+    "formattedLines": 23,
+    "jsxAssembly": true
+  },
+  {
+    "file": "apps/next/src/components/cascade-menu.tsx",
+    "name": "open",
+    "line": 133,
+    "formattedLines": 1,
+    "jsxAssembly": false
+  },
+  {
+    "file": "apps/next/src/components/cascade-menu.tsx",
+    "name": "<callback>",
+    "line": 138,
+    "formattedLines": 2,
+    "jsxAssembly": false
+  },
+  {
+    "file": "apps/next/src/components/cascade-menu.tsx",
+    "name": "<callback>",
+    "line": 138,
+    "formattedLines": 1,
+    "jsxAssembly": false
+  }
+]

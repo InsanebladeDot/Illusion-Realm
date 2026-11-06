@@ -1,0 +1,11 @@
+$ node scripts/check-smoke-rules.js
+PASS  剥离注释：文件头提到 matchMedia 不算违规
+PASS  剥离块注释：同上
+PASS  真的调用 matchMedia 会被抓到
+PASS  真的调用 requestAnimationFrame 会被抓到
+PASS  注释里的 app.exit( 不算违规
+PASS  真的调用 app.quit( 会被抓到
+PASS  真的调用 app.exit( 会被抓到
+PASS  豁免点名后不再违规
+PASS  豁免未点名的 API 仍被拦（豁免不是免死金牌）
+OK  冒烟约定校验：2 个「不适用」声明仍成立；接入 harness 的套件未直接调用退出函数（对照 9 条）

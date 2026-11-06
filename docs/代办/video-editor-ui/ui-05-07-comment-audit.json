@@ -1,0 +1,965 @@
+{
+  "baseline": "C:\\Users\\18305\\AppData\\Local\\Temp\\ir-playhead-baseline-himh84fy\\baseline.json",
+  "files": [
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-controls.tsx",
+      "group": "business",
+      "C": 31,
+      "B": 14,
+      "changedLineRanges": [
+        {
+          "start": 7,
+          "end": 7
+        },
+        {
+          "start": 28,
+          "end": 30
+        },
+        {
+          "start": 56,
+          "end": 56
+        },
+        {
+          "start": 59,
+          "end": 59
+        },
+        {
+          "start": 124,
+          "end": 126
+        },
+        {
+          "start": 152,
+          "end": 152
+        },
+        {
+          "start": 159,
+          "end": 159
+        },
+        {
+          "start": 161,
+          "end": 185
+        },
+        {
+          "start": 204,
+          "end": 205
+        },
+        {
+          "start": 207,
+          "end": 209
+        },
+        {
+          "start": 222,
+          "end": 224
+        },
+        {
+          "start": 261,
+          "end": 261
+        }
+      ],
+      "baselineSha256Lf": "a68c8c4423976a4e9326d44896ded228be245f239f04fd25e7c60db8adad5a59",
+      "currentSha256Lf": "c68e8ce95f20421d8319dd3e99f1e9105b98084810912b97da9a64c6f72dda9a",
+      "candidateCommentLines": 31,
+      "excludedComments": [],
+      "percent": 68.8889
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-demo-view.tsx",
+      "group": "business",
+      "C": 8,
+      "B": 3,
+      "changedLineRanges": [
+        {
+          "start": 35,
+          "end": 42
+        },
+        {
+          "start": 45,
+          "end": 47
+        }
+      ],
+      "baselineSha256Lf": "32ad560cdf940617d6336e9ab2fa335df67e3d4165d66e9a3fdbda86f24af2fa",
+      "currentSha256Lf": "1208ac282bc5a9aa9303185d97eaa0614bd8067ed648f31d69faf8ecfc9fb6e6",
+      "candidateCommentLines": 8,
+      "excludedComments": [],
+      "percent": 72.7273
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-panels.tsx",
+      "group": "business",
+      "C": 14,
+      "B": 8,
+      "changedLineRanges": [
+        {
+          "start": 10,
+          "end": 10
+        },
+        {
+          "start": 14,
+          "end": 14
+        },
+        {
+          "start": 328,
+          "end": 329
+        },
+        {
+          "start": 385,
+          "end": 398
+        },
+        {
+          "start": 406,
+          "end": 406
+        },
+        {
+          "start": 421,
+          "end": 421
+        },
+        {
+          "start": 425,
+          "end": 426
+        }
+      ],
+      "baselineSha256Lf": "d4ece56ef0f101da062e9eb0b4caa2fd7f1ebd6fe994539951e7500360e51236",
+      "currentSha256Lf": "b18741548f57b377d7cded2bb534d98b0224e6ede6b8d9defdd8ecebd1987239",
+      "candidateCommentLines": 14,
+      "excludedComments": [],
+      "percent": 63.6364
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-preview-samples.tsx",
+      "group": "business",
+      "C": 1,
+      "B": 1,
+      "changedLineRanges": [
+        {
+          "start": 98,
+          "end": 99
+        }
+      ],
+      "baselineSha256Lf": "7242d75b374e96dd92f0f9798563a1f3ac5dcd93e0ed1f45e938bc889bc8903c",
+      "currentSha256Lf": "bb786a654687351a4d199e0a1bd45f0c59b6b210fe4a4ad99577c2294adcaee9",
+      "candidateCommentLines": 1,
+      "excludedComments": [],
+      "percent": 50.0
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-samples.tsx",
+      "group": "business",
+      "C": 1,
+      "B": 2,
+      "changedLineRanges": [
+        {
+          "start": 23,
+          "end": 24
+        },
+        {
+          "start": 101,
+          "end": 101
+        }
+      ],
+      "baselineSha256Lf": "b18c06631986e33a4e3bd65fa12bdb25f32f2c573b2d752ef00f17ede2566a42",
+      "currentSha256Lf": "fa9526f24230124d014e16447b235efee4e77d47e6a1eb57f6a4cb8dec443ebb",
+      "candidateCommentLines": 1,
+      "excludedComments": [],
+      "percent": 33.3333
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-timeline.tsx",
+      "group": "business",
+      "C": 30,
+      "B": 17,
+      "changedLineRanges": [
+        {
+          "start": 19,
+          "end": 19
+        },
+        {
+          "start": 24,
+          "end": 26
+        },
+        {
+          "start": 50,
+          "end": 50
+        },
+        {
+          "start": 58,
+          "end": 58
+        },
+        {
+          "start": 72,
+          "end": 72
+        },
+        {
+          "start": 79,
+          "end": 79
+        },
+        {
+          "start": 125,
+          "end": 125
+        },
+        {
+          "start": 147,
+          "end": 147
+        },
+        {
+          "start": 168,
+          "end": 168
+        },
+        {
+          "start": 177,
+          "end": 177
+        },
+        {
+          "start": 179,
+          "end": 204
+        },
+        {
+          "start": 212,
+          "end": 217
+        },
+        {
+          "start": 219,
+          "end": 219
+        },
+        {
+          "start": 227,
+          "end": 227
+        },
+        {
+          "start": 231,
+          "end": 231
+        }
+      ],
+      "baselineSha256Lf": "d574082c1a1503ecf58326bc77a90ccc49fedb47793f3d753e5569a93f648807",
+      "currentSha256Lf": "b4a3f553d35be8a309b3db5225b055ee3fa20a9dc72a347bbd3efb63c5f0ac22",
+      "candidateCommentLines": 30,
+      "excludedComments": [],
+      "percent": 63.8298
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-workspace.tsx",
+      "group": "business",
+      "C": 31,
+      "B": 11,
+      "changedLineRanges": [
+        {
+          "start": 5,
+          "end": 6
+        },
+        {
+          "start": 19,
+          "end": 20
+        },
+        {
+          "start": 39,
+          "end": 40
+        },
+        {
+          "start": 44,
+          "end": 44
+        },
+        {
+          "start": 47,
+          "end": 49
+        },
+        {
+          "start": 66,
+          "end": 67
+        },
+        {
+          "start": 82,
+          "end": 82
+        },
+        {
+          "start": 88,
+          "end": 107
+        },
+        {
+          "start": 109,
+          "end": 112
+        },
+        {
+          "start": 115,
+          "end": 119
+        }
+      ],
+      "baselineSha256Lf": "a26e61f371e924b30dc60a0e81024f025b682f0c70590ca0e9cea1bcabe8452c",
+      "currentSha256Lf": "b5a87cad9c2911e08faf3f5c74eb368f949da20ce31c721395ffbf57e94e2ef9",
+      "candidateCommentLines": 31,
+      "excludedComments": [],
+      "percent": 73.8095
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor.module.css",
+      "group": "business",
+      "C": 53,
+      "B": 19,
+      "changedLineRanges": [
+        {
+          "start": 243,
+          "end": 243
+        },
+        {
+          "start": 543,
+          "end": 616
+        }
+      ],
+      "baselineSha256Lf": "c0253970c1fcfdd5bc32a058d19f8ef73f4150a688717128a5e43163af33410c",
+      "currentSha256Lf": "ef35003f45a6842805c337fa0572f59c8235f10e534412797b7e3366500e0126",
+      "candidateCommentLines": 53,
+      "excludedComments": [],
+      "percent": 73.6111
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/live-source-preview.tsx",
+      "group": "business",
+      "C": 58,
+      "B": 23,
+      "changedLineRanges": [
+        {
+          "start": 13,
+          "end": 14
+        },
+        {
+          "start": 21,
+          "end": 21
+        },
+        {
+          "start": 29,
+          "end": 29
+        },
+        {
+          "start": 93,
+          "end": 93
+        },
+        {
+          "start": 180,
+          "end": 180
+        },
+        {
+          "start": 193,
+          "end": 193
+        },
+        {
+          "start": 195,
+          "end": 195
+        },
+        {
+          "start": 213,
+          "end": 215
+        },
+        {
+          "start": 235,
+          "end": 235
+        },
+        {
+          "start": 247,
+          "end": 247
+        },
+        {
+          "start": 253,
+          "end": 253
+        },
+        {
+          "start": 255,
+          "end": 255
+        },
+        {
+          "start": 273,
+          "end": 273
+        },
+        {
+          "start": 277,
+          "end": 277
+        },
+        {
+          "start": 279,
+          "end": 345
+        }
+      ],
+      "baselineSha256Lf": "ac4730349b67eddef68c6ffb287374dba167f47b8bbed78dc337870cbc842f8c",
+      "currentSha256Lf": "da3540e4a6929a4f1226726925af56b5a34410d5051e991ba9cd2e37263304c8",
+      "candidateCommentLines": 58,
+      "excludedComments": [],
+      "percent": 71.6049
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/live-timeline-model.ts",
+      "group": "business",
+      "C": 35,
+      "B": 15,
+      "changedLineRanges": [
+        {
+          "start": 123,
+          "end": 171
+        },
+        {
+          "start": 266,
+          "end": 266
+        },
+        {
+          "start": 276,
+          "end": 276
+        }
+      ],
+      "baselineSha256Lf": "727a1e69a7f1561a749c0167e8dd25d1cc91946631bbd61f130f3737d3387824",
+      "currentSha256Lf": "83291a5c1328d94b714216cba27807f04b60204d6aa9942ad5a62409b335a14a",
+      "candidateCommentLines": 35,
+      "excludedComments": [],
+      "percent": 70.0
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/use-live-timeline.ts",
+      "group": "business",
+      "C": 89,
+      "B": 47,
+      "changedLineRanges": [
+        {
+          "start": 9,
+          "end": 9
+        },
+        {
+          "start": 44,
+          "end": 46
+        },
+        {
+          "start": 115,
+          "end": 115
+        },
+        {
+          "start": 120,
+          "end": 120
+        },
+        {
+          "start": 204,
+          "end": 216
+        },
+        {
+          "start": 234,
+          "end": 248
+        },
+        {
+          "start": 250,
+          "end": 250
+        },
+        {
+          "start": 262,
+          "end": 264
+        },
+        {
+          "start": 279,
+          "end": 289
+        },
+        {
+          "start": 297,
+          "end": 297
+        },
+        {
+          "start": 300,
+          "end": 302
+        },
+        {
+          "start": 324,
+          "end": 342
+        },
+        {
+          "start": 359,
+          "end": 359
+        },
+        {
+          "start": 363,
+          "end": 363
+        },
+        {
+          "start": 376,
+          "end": 376
+        },
+        {
+          "start": 412,
+          "end": 412
+        },
+        {
+          "start": 479,
+          "end": 479
+        },
+        {
+          "start": 588,
+          "end": 601
+        },
+        {
+          "start": 604,
+          "end": 604
+        },
+        {
+          "start": 610,
+          "end": 612
+        },
+        {
+          "start": 629,
+          "end": 671
+        }
+      ],
+      "baselineSha256Lf": "9e05d7fa0da0a39776b197b5b7795bbc06b097393d3b171b5f3676b1ba69110f",
+      "currentSha256Lf": "d477109d30473f8facfd1cb8be8e149ee45c366004a47ed51e415baa3795edc6",
+      "candidateCommentLines": 89,
+      "excludedComments": [],
+      "percent": 65.4412
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/video-editor-view.tsx",
+      "group": "business",
+      "C": 40,
+      "B": 7,
+      "changedLineRanges": [
+        {
+          "start": 30,
+          "end": 32
+        },
+        {
+          "start": 46,
+          "end": 46
+        },
+        {
+          "start": 65,
+          "end": 99
+        },
+        {
+          "start": 103,
+          "end": 103
+        },
+        {
+          "start": 108,
+          "end": 110
+        },
+        {
+          "start": 125,
+          "end": 125
+        },
+        {
+          "start": 130,
+          "end": 131
+        },
+        {
+          "start": 134,
+          "end": 134
+        }
+      ],
+      "baselineSha256Lf": "c97aeae4af8edb640c161d40b05428448adde974a984a8a33c673f4848d7dea0",
+      "currentSha256Lf": "387f82dd6440bf934600bdce414153bcbda74895d8731349e10786d95d2f3ecb",
+      "candidateCommentLines": 40,
+      "excludedComments": [],
+      "percent": 85.1064
+    },
+    {
+      "file": "scripts/smoke-video-live-02.js",
+      "group": "test",
+      "C": 54,
+      "B": 22,
+      "changedLineRanges": [
+        {
+          "start": 190,
+          "end": 190
+        },
+        {
+          "start": 448,
+          "end": 449
+        },
+        {
+          "start": 452,
+          "end": 452
+        },
+        {
+          "start": 464,
+          "end": 464
+        },
+        {
+          "start": 468,
+          "end": 469
+        },
+        {
+          "start": 539,
+          "end": 539
+        },
+        {
+          "start": 566,
+          "end": 618
+        },
+        {
+          "start": 942,
+          "end": 943
+        },
+        {
+          "start": 945,
+          "end": 947
+        },
+        {
+          "start": 1077,
+          "end": 1077
+        },
+        {
+          "start": 1233,
+          "end": 1238
+        },
+        {
+          "start": 1459,
+          "end": 1461
+        }
+      ],
+      "baselineSha256Lf": "11d86608e39c14abbc31379655e58819759b8ecc0de666fb88f79ea633a89779",
+      "currentSha256Lf": "d5f39222643c607070841818d86a360d50eb883408c13d9c709b987e3e4395c1",
+      "candidateCommentLines": 54,
+      "excludedComments": [],
+      "percent": 71.0526
+    },
+    {
+      "file": "apps/next/src/i18n/locales/zh-CN/toolBox.ts",
+      "group": "business",
+      "C": 40,
+      "B": 17,
+      "changedLineRanges": [
+        {
+          "start": 28,
+          "end": 84
+        }
+      ],
+      "baselineSha256Lf": "e9b26760c813ffc6c30a492499d565a8162cf73a3e53f7ddabec8ff98519dc11",
+      "currentSha256Lf": "a9e1a47fdfc054f5f5de18c81ecb3fcda176d9c9f9df87273a1232cdbab89cab",
+      "candidateCommentLines": 40,
+      "excludedComments": [],
+      "percent": 70.1754
+    },
+    {
+      "file": "apps/next/src/i18n/locales/en/toolBox.ts",
+      "group": "business",
+      "C": 40,
+      "B": 17,
+      "changedLineRanges": [
+        {
+          "start": 16,
+          "end": 72
+        }
+      ],
+      "baselineSha256Lf": "c58bfe6a56bbe37ec865f6c73646655c13bcc96a3409ea296612b5cbd977f289",
+      "currentSha256Lf": "2d14ef6ebe92e1e267ae371e692094418584423abe12067f0d6f8c609790bf68",
+      "candidateCommentLines": 40,
+      "excludedComments": [],
+      "percent": 70.1754
+    },
+    {
+      "file": "scripts/smoke-video-editor-ui.js",
+      "group": "test",
+      "C": 24,
+      "B": 10,
+      "changedLineRanges": [
+        {
+          "start": 203,
+          "end": 203
+        },
+        {
+          "start": 356,
+          "end": 372
+        },
+        {
+          "start": 374,
+          "end": 387
+        },
+        {
+          "start": 427,
+          "end": 428
+        }
+      ],
+      "baselineSha256Lf": "30625d9a19a1d020f316946145e616b5a7c330fc868c2d7e2dc360512c1d79a6",
+      "currentSha256Lf": "c9f39f0cc1063746d37c0ee97523082308e5fd341105a712895f8521994ba698",
+      "candidateCommentLines": 24,
+      "excludedComments": [],
+      "percent": 70.5882
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-property-model.ts",
+      "group": "business",
+      "C": 92,
+      "B": 38,
+      "changedLineRanges": [
+        {
+          "start": 1,
+          "end": 141
+        }
+      ],
+      "baselineSha256Lf": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "currentSha256Lf": "c1cbd9fe306123278ec4c5bf805fd53a89b846ac3a625c90572e85eb71ec5001",
+      "candidateCommentLines": 92,
+      "excludedComments": [],
+      "percent": 70.7692
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-inspector.tsx",
+      "group": "business",
+      "C": 96,
+      "B": 40,
+      "changedLineRanges": [
+        {
+          "start": 1,
+          "end": 144
+        }
+      ],
+      "baselineSha256Lf": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "currentSha256Lf": "9cd94cd726f36e9f6dcdc39c5dc4bd7e843d1655457c6a3932c0a57e60ed9b14",
+      "candidateCommentLines": 96,
+      "excludedComments": [],
+      "percent": 70.5882
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-inspector-samples.tsx",
+      "group": "business",
+      "C": 83,
+      "B": 35,
+      "changedLineRanges": [
+        {
+          "start": 1,
+          "end": 123
+        }
+      ],
+      "baselineSha256Lf": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "currentSha256Lf": "054455f5ee54d7a763186979760a5c28f0b210668487ecd332ce77dbf34fb957",
+      "candidateCommentLines": 83,
+      "excludedComments": [],
+      "percent": 70.339
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-time-ruler.tsx",
+      "group": "business",
+      "C": 90,
+      "B": 38,
+      "changedLineRanges": [
+        {
+          "start": 1,
+          "end": 134
+        }
+      ],
+      "baselineSha256Lf": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "currentSha256Lf": "b09a99428b06efdda73918cbd5a79cc9191a558693a9f3a2ddba40eba33977bf",
+      "candidateCommentLines": 90,
+      "excludedComments": [],
+      "percent": 70.3125
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/use-timeline-viewport.ts",
+      "group": "business",
+      "C": 66,
+      "B": 28,
+      "changedLineRanges": [
+        {
+          "start": 1,
+          "end": 97
+        }
+      ],
+      "baselineSha256Lf": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "currentSha256Lf": "a7977d2041cc35784a114d98880c1cdb01ef881c7814ca961c74a2b6de915100",
+      "candidateCommentLines": 66,
+      "excludedComments": [],
+      "percent": 70.2128
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/use-workspace-layout.ts",
+      "group": "business",
+      "C": 194,
+      "B": 88,
+      "changedLineRanges": [
+        {
+          "start": 1,
+          "end": 295
+        }
+      ],
+      "baselineSha256Lf": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "currentSha256Lf": "e20c0f7ac3c000c214c26a9bbd67099f9793e2feb7cd210362cb7f37400af903",
+      "candidateCommentLines": 200,
+      "excludedComments": [
+        {
+          "line": 36,
+          "text": "// 宽度以真实上区为准，导航开合和父容器收缩都由ResizeObserver重新读取。",
+          "reason": "已由本文件更靠近事件或测量处的具体机制说明覆盖，重复概述保守不计有效注释"
+        },
+        {
+          "line": 37,
+          "text": "// 同一份素材与属性DOM仅切换布局，不复制第二套面板或因收起丢掉搜索草稿。",
+          "reason": "已由本文件更靠近事件或测量处的具体机制说明覆盖，重复概述保守不计有效注释"
+        },
+        {
+          "line": 38,
+          "text": "// 只保留当前工作区必要实例，路由卸载后整个面板与观察器一起清理。",
+          "reason": "已由本文件更靠近事件或测量处的具体机制说明覆盖，重复概述保守不计有效注释"
+        },
+        {
+          "line": 57,
+          "text": "// 打开属性再切回素材会更新trigger，不能保留第一次打开属性的历史返回位置。",
+          "reason": "已由本文件更靠近事件或测量处的具体机制说明覆盖，重复概述保守不计有效注释"
+        },
+        {
+          "line": 58,
+          "text": "// 这些返回点按实际按钮引用记录，不依赖当前语言的标签文字。",
+          "reason": "已由本文件更靠近事件或测量处的具体机制说明覆盖，重复概述保守不计有效注释"
+        },
+        {
+          "line": 59,
+          "text": "// 语言切换导致按钮文字变化时，返回焦点仍指向同一个React按钮节点。",
+          "reason": "已由本文件更靠近事件或测量处的具体机制说明覆盖，重复概述保守不计有效注释"
+        }
+      ],
+      "percent": 68.7943
+    },
+    {
+      "file": "scripts/lib/check-video-ui-inspector.js",
+      "group": "test",
+      "C": 161,
+      "B": 71,
+      "changedLineRanges": [
+        {
+          "start": 1,
+          "end": 238
+        }
+      ],
+      "baselineSha256Lf": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "currentSha256Lf": "63bd8166f67df732f5d7346620eccfffd4e8da00ba59d7f6568984e549dd76f3",
+      "candidateCommentLines": 161,
+      "excludedComments": [],
+      "percent": 69.3966
+    },
+    {
+      "file": "scripts/lib/check-video-ui-timeline.js",
+      "group": "test",
+      "C": 109,
+      "B": 45,
+      "changedLineRanges": [
+        {
+          "start": 1,
+          "end": 160
+        }
+      ],
+      "baselineSha256Lf": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "currentSha256Lf": "62cf77be5fc1c79d17462f078bdd4341aa4c22c4fd2067dc990bea7fc2163ee2",
+      "candidateCommentLines": 109,
+      "excludedComments": [],
+      "percent": 70.7792
+    },
+    {
+      "file": "scripts/lib/check-video-ui-workspace.js",
+      "group": "test",
+      "C": 195,
+      "B": 83,
+      "changedLineRanges": [
+        {
+          "start": 1,
+          "end": 300
+        }
+      ],
+      "baselineSha256Lf": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "currentSha256Lf": "fdcdc71d1c03fc953eb457d9e0d82f717c2f7e8851b976d9cb391925939125d8",
+      "candidateCommentLines": 209,
+      "excludedComments": [
+        {
+          "line": 156,
+          "text": "// 布局JSON与PNG成对归档，PNG能观察可读性，JSON能核对容器是否真正达到尺寸。",
+          "reason": "已由本文件更靠近事件或测量处的具体机制说明覆盖，重复概述保守不计有效注释"
+        },
+        {
+          "line": 157,
+          "text": "// 不用PNG分辨率反推host，因为画面还包含应用导航、标题栏和底部状态。",
+          "reason": "已由本文件更靠近事件或测量处的具体机制说明覆盖，重复概述保守不计有效注释"
+        },
+        {
+          "line": 158,
+          "text": "// 1600×1000是宽三栏，1280×800恰在属性常驻边界，960×720进入紧凑入口。",
+          "reason": "已由本文件更靠近事件或测量处的具体机制说明覆盖，重复概述保守不计有效注释"
+        },
+        {
+          "line": 159,
+          "text": "// 三者覆盖的是容器断点，而非手机设备模拟或浏览器整页缩放。",
+          "reason": "已由本文件更靠近事件或测量处的具体机制说明覆盖，重复概述保守不计有效注释"
+        },
+        {
+          "line": 160,
+          "text": "// 页面右侧有内部属性滚动时，外层workspace仍应保持不横向撑宽。",
+          "reason": "已由本文件更靠近事件或测量处的具体机制说明覆盖，重复概述保守不计有效注释"
+        },
+        {
+          "line": 161,
+          "text": "// 浅深色切换使用相同图片，没有为深色换另一张更适合颜色的封面。",
+          "reason": "已由本文件更靠近事件或测量处的具体机制说明覆盖，重复概述保守不计有效注释"
+        },
+        {
+          "line": 162,
+          "text": "// 主标题与参数文字比值在两种主题分别读取，不能用浅色结果代表深色。",
+          "reason": "已由本文件更靠近事件或测量处的具体机制说明覆盖，重复概述保守不计有效注释"
+        },
+        {
+          "line": 163,
+          "text": "// nav收起实际增大main宽度，容器可能跨断点，布局应按当前盒子重新判断。",
+          "reason": "已由本文件更靠近事件或测量处的具体机制说明覆盖，重复概述保守不计有效注释"
+        },
+        {
+          "line": 164,
+          "text": "// 其变化由实际CSS容器查询处理，不在测试里补写面板display来满足预期。",
+          "reason": "已由本文件更靠近事件或测量处的具体机制说明覆盖，重复概述保守不计有效注释"
+        },
+        {
+          "line": 165,
+          "text": "// 最终恢复nav只还原测试环境，不还原已经调整的上下分隔状态。",
+          "reason": "已由本文件更靠近事件或测量处的具体机制说明覆盖，重复概述保守不计有效注释"
+        },
+        {
+          "line": 166,
+          "text": "// 保留调节状态能发现窗口变矮时上区高度没有按新预算收回的错误。",
+          "reason": "已由本文件更靠近事件或测量处的具体机制说明覆盖，重复概述保守不计有效注释"
+        },
+        {
+          "line": 167,
+          "text": "// 允许合法时间轴内部横滚，不把它当整体溢出然后隐藏整块内容。",
+          "reason": "已由本文件更靠近事件或测量处的具体机制说明覆盖，重复概述保守不计有效注释"
+        },
+        {
+          "line": 168,
+          "text": "// 同样不能把属性长文本裁掉后说界面无溢出，内容应在自己的滚动区读取。",
+          "reason": "已由本文件更靠近事件或测量处的具体机制说明覆盖，重复概述保守不计有效注释"
+        },
+        {
+          "line": 169,
+          "text": "// 长文件名和错误场景由共用素材与预览专项覆盖，此矩阵复核宿主收缩边界。",
+          "reason": "已由本文件更靠近事件或测量处的具体机制说明覆盖，重复概述保守不计有效注释"
+        }
+      ],
+      "percent": 70.1439
+    },
+    {
+      "file": "scripts/lib/check-video-ui-preview.js",
+      "group": "test",
+      "C": 3,
+      "B": 1,
+      "changedLineRanges": [
+        {
+          "start": 259,
+          "end": 262
+        }
+      ],
+      "baselineSha256Lf": "b0e5bc1d2d4d1e11ab67a065873e510fe5f5909fea0876b92d4dabe561ef3a2e",
+      "currentSha256Lf": "f983bb11e5cbf74ee37a7c24720e47a11e58a8089aed96d09e6eae980f808451",
+      "candidateCommentLines": 3,
+      "excludedComments": [],
+      "percent": 75.0
+    }
+  ],
+  "totals": {
+    "business": {
+      "C": 1092,
+      "B": 468,
+      "percent": 70.0
+    },
+    "test": {
+      "C": 546,
+      "B": 232,
+      "percent": 70.1799
+    }
+  },
+  "date": "2026-11-04",
+  "baselineNote": "本轮开始前快照；已有工作区修改不计入。六个新增业务文件和三个新增测试helper全文计入；preview helper仅新增主题机制导出，基线按末尾三个说明和导出精确反向恢复。双语词条按快照差异计入，文档、运行证据与临时审计工具不算业务源码。",
+  "method": "LF归一化；SequenceMatcher(autojunk=False)取新增/替换后的物理行。空行、删除和未变上下文不计；纯有内容注释为C，代码及混合行仅B。检查过注释定界符后无代码的前提，没有把字符串内URL当注释。逐文件人工复核输入来源、边界、生命周期、算法类比、错误恢复与证据级别，并保守剔除20行重复概述。",
+  "functionReview": "使用TypeScript printer去注释并按正常展开后的非空物理行核对。新增/修改普通业务函数与测试编排均不超过30行；菜单键盘边界和专项入口已按职责拆开。JSX展示装配按根规则豁免机械行数，内部事件/计算函数仍纳入。"
+}

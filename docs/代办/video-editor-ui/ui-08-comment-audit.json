@@ -1,0 +1,265 @@
+{
+  "baseline": "C:\\Users\\18305\\AppData\\Local\\Temp\\ir-ui08-baseline-3k3i2edp\\baseline.json",
+  "files": [
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-panels.tsx",
+      "group": "business",
+      "C": 11,
+      "B": 5,
+      "changedLineRanges": [
+        {
+          "start": 288,
+          "end": 293
+        },
+        {
+          "start": 364,
+          "end": 364
+        },
+        {
+          "start": 406,
+          "end": 413
+        },
+        {
+          "start": 430,
+          "end": 431
+        }
+      ],
+      "baselineSha256Lf": "b18741548f57b377d7cded2bb534d98b0224e6ede6b8d9defdd8ecebd1987239",
+      "currentSha256Lf": "925c988a93c0390387f2b429516f8cc204a7b2d6c1d63afea5054f959856f67d",
+      "candidateCommentLines": 12,
+      "excludedComments": [
+        {
+          "line": 292,
+          "text": "// 这只是同一预览容器的展示差异，不创建第二套播放器或媒体状态。",
+          "reason": "与本文件前方职责说明重复，保守不计入有效注释"
+        }
+      ],
+      "percent": 68.75
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor.module.css",
+      "group": "business",
+      "C": 1,
+      "B": 0,
+      "changedLineRanges": [
+        {
+          "start": 503,
+          "end": 503
+        }
+      ],
+      "baselineSha256Lf": "ef35003f45a6842805c337fa0572f59c8235f10e534412797b7e3366500e0126",
+      "currentSha256Lf": "da4225af13ebf15af2c291884ced46785630b8755f43a9b6e6bcc10daec43aba",
+      "candidateCommentLines": 1,
+      "excludedComments": [],
+      "percent": 100.0
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/live-timeline-model.ts",
+      "group": "business",
+      "C": 14,
+      "B": 7,
+      "changedLineRanges": [
+        {
+          "start": 192,
+          "end": 192
+        },
+        {
+          "start": 206,
+          "end": 206
+        },
+        {
+          "start": 214,
+          "end": 214
+        },
+        {
+          "start": 225,
+          "end": 232
+        },
+        {
+          "start": 248,
+          "end": 248
+        },
+        {
+          "start": 263,
+          "end": 270
+        },
+        {
+          "start": 272,
+          "end": 272
+        }
+      ],
+      "baselineSha256Lf": "83291a5c1328d94b714216cba27807f04b60204d6aa9942ad5a62409b335a14a",
+      "currentSha256Lf": "fa81e55ea54a508ce9ee81bd50e0fbbc10069b694a9a11f54f4653c284d9737a",
+      "candidateCommentLines": 14,
+      "excludedComments": [],
+      "percent": 66.6667
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/use-live-timeline.ts",
+      "group": "business",
+      "C": 11,
+      "B": 1,
+      "changedLineRanges": [
+        {
+          "start": 298,
+          "end": 309
+        }
+      ],
+      "baselineSha256Lf": "d477109d30473f8facfd1cb8be8e149ee45c366004a47ed51e415baa3795edc6",
+      "currentSha256Lf": "eec054a56c4f3298a15f7142e5388c292c52de62b9ba5ca33377408ddf0650a1",
+      "candidateCommentLines": 11,
+      "excludedComments": [],
+      "percent": 91.6667
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/video-editor-view.tsx",
+      "group": "business",
+      "C": 9,
+      "B": 4,
+      "changedLineRanges": [
+        {
+          "start": 16,
+          "end": 16
+        },
+        {
+          "start": 79,
+          "end": 79
+        },
+        {
+          "start": 111,
+          "end": 118
+        },
+        {
+          "start": 128,
+          "end": 129
+        },
+        {
+          "start": 134,
+          "end": 134
+        }
+      ],
+      "baselineSha256Lf": "387f82dd6440bf934600bdce414153bcbda74895d8731349e10786d95d2f3ecb",
+      "currentSha256Lf": "763c9f9b012df63d1d71a3a7f7e678d007caf420cddc2b47e5fb0f3cc35f2c52",
+      "candidateCommentLines": 9,
+      "excludedComments": [],
+      "percent": 69.2308
+    },
+    {
+      "file": "scripts/smoke-video-live-02.js",
+      "group": "test",
+      "C": 32,
+      "B": 15,
+      "changedLineRanges": [
+        {
+          "start": 366,
+          "end": 380
+        },
+        {
+          "start": 670,
+          "end": 677
+        },
+        {
+          "start": 679,
+          "end": 683
+        },
+        {
+          "start": 1136,
+          "end": 1142
+        },
+        {
+          "start": 1491,
+          "end": 1494
+        },
+        {
+          "start": 1497,
+          "end": 1500
+        },
+        {
+          "start": 1502,
+          "end": 1505
+        }
+      ],
+      "baselineSha256Lf": "d5f39222643c607070841818d86a360d50eb883408c13d9c709b987e3e4395c1",
+      "currentSha256Lf": "47672beb21e53a47764079c6f160203e605185512720b3924e5547274bdc76a8",
+      "candidateCommentLines": 32,
+      "excludedComments": [],
+      "percent": 68.0851
+    },
+    {
+      "file": "apps/next/src/i18n/locales/zh-CN/toolBox.ts",
+      "group": "business",
+      "C": 0,
+      "B": 1,
+      "changedLineRanges": [
+        {
+          "start": 105,
+          "end": 105
+        }
+      ],
+      "baselineSha256Lf": "a9e1a47fdfc054f5f5de18c81ecb3fcda176d9c9f9df87273a1232cdbab89cab",
+      "currentSha256Lf": "c810874ce8382c468dcc1fb249de52b8a1f748fb527e1a279944e65162626371",
+      "candidateCommentLines": 0,
+      "excludedComments": [],
+      "percent": 0.0
+    },
+    {
+      "file": "apps/next/src/i18n/locales/en/toolBox.ts",
+      "group": "business",
+      "C": 0,
+      "B": 1,
+      "changedLineRanges": [
+        {
+          "start": 93,
+          "end": 93
+        }
+      ],
+      "baselineSha256Lf": "2d14ef6ebe92e1e267ae371e692094418584423abe12067f0d6f8c609790bf68",
+      "currentSha256Lf": "4bcfeeeca5ca17c84ed967adb0eb0f5e50b2661a7fb17071bd2d0f465b8cc253",
+      "candidateCommentLines": 0,
+      "excludedComments": [],
+      "percent": 0.0
+    },
+    {
+      "file": "scripts/lib/check-video-ui-integration.js",
+      "group": "test",
+      "C": 101,
+      "B": 42,
+      "changedLineRanges": [
+        {
+          "start": 1,
+          "end": 149
+        }
+      ],
+      "baselineSha256Lf": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "currentSha256Lf": "a219feec7b04c4190b6e751801db8b2b495f0aa70e3fbcd6b4a5104ce21c80dd",
+      "candidateCommentLines": 103,
+      "excludedComments": [
+        {
+          "line": 147,
+          "text": "// 三个阶段由原串行流程调用，避免空工程、导入后和入轨后互相污染前置条件。",
+          "reason": "与本文件前方职责说明重复，保守不计入有效注释"
+        },
+        {
+          "line": 148,
+          "text": "// 仅导出测试入口，不增加产品window或preload能力，也不制造另一套运行状态。",
+          "reason": "与本文件前方职责说明重复，保守不计入有效注释"
+        }
+      ],
+      "percent": 70.6294
+    }
+  ],
+  "totals": {
+    "business": {
+      "C": 46,
+      "B": 19,
+      "percent": 70.7692
+    },
+    "test": {
+      "C": 133,
+      "B": 57,
+      "percent": 70.0
+    }
+  },
+  "date": "2026-11-04",
+  "method": "任务开始前工作区快照为基线，LF归一化后SequenceMatcher取新增与替换后的行，新增文件全文；删除、空行和上下文不计。纯有效注释C，代码/混合行B。逐段人工复核真实职责、锁校验、时间与选择归属、资源清理及测试证据边界，剔除3行重复概述。"
+}

@@ -1,0 +1,529 @@
+{
+  "method": "TypeScript AST正常展开并移除注释，检查本轮新增与修改函数；JSX装配豁免。",
+  "existingExceptions": [
+    "registerVideoToolIpc: 既有聚合注册函数185行，本轮仅接通波形注册。",
+    "probeVideo: 既有探测函数34行，本轮仅增加可选取消参数与执行选项。"
+  ],
+  "functions": [
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-clip-shell.tsx",
+      "name": "EditorClipShell",
+      "start": 106,
+      "end": 117,
+      "lines": 9,
+      "jsx": true
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-clip-shell.tsx",
+      "name": "(callback)",
+      "start": 111,
+      "end": 111,
+      "lines": 4,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-clip-shell.tsx",
+      "name": "(callback)",
+      "start": 115,
+      "end": 115,
+      "lines": 1,
+      "jsx": true
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-clip-shell.tsx",
+      "name": "(callback)",
+      "start": 115,
+      "end": 115,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-clip-shell.tsx",
+      "name": "(callback)",
+      "start": 115,
+      "end": 115,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-clip-shell.tsx",
+      "name": "(callback)",
+      "start": 115,
+      "end": 115,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-timeline.tsx",
+      "name": "TimelineClip",
+      "start": 140,
+      "end": 164,
+      "lines": 18,
+      "jsx": true
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-timeline.tsx",
+      "name": "(callback)",
+      "start": 156,
+      "end": 156,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-timeline.tsx",
+      "name": "(callback)",
+      "start": 156,
+      "end": 156,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-timeline.tsx",
+      "name": "(callback)",
+      "start": 156,
+      "end": 156,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-timeline.tsx",
+      "name": "(callback)",
+      "start": 156,
+      "end": 156,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-timeline.tsx",
+      "name": "(callback)",
+      "start": 156,
+      "end": 156,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-timeline.tsx",
+      "name": "(callback)",
+      "start": 156,
+      "end": 156,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-timeline.tsx",
+      "name": "(callback)",
+      "start": 156,
+      "end": 156,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-timeline.tsx",
+      "name": "TrackRow",
+      "start": 221,
+      "end": 227,
+      "lines": 14,
+      "jsx": true
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-timeline.tsx",
+      "name": "EditorTimeline",
+      "start": 267,
+      "end": 310,
+      "lines": 23,
+      "jsx": true
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-timeline.tsx",
+      "name": "(callback)",
+      "start": 307,
+      "end": 307,
+      "lines": 1,
+      "jsx": true
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/video-filmstrip.tsx",
+      "name": "paint",
+      "start": 177,
+      "end": 207,
+      "lines": 23,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/video-filmstrip.tsx",
+      "name": "VideoFilmstrip",
+      "start": 247,
+      "end": 277,
+      "lines": 35,
+      "jsx": true
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/video-filmstrip.tsx",
+      "name": "(callback)",
+      "start": 249,
+      "end": 272,
+      "lines": 27,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/video-filmstrip.tsx",
+      "name": "schedule",
+      "start": 254,
+      "end": 268,
+      "lines": 15,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/video-filmstrip.tsx",
+      "name": "(callback)",
+      "start": 258,
+      "end": 267,
+      "lines": 7,
+      "jsx": false
+    },
+    {
+      "file": "apps/electron/src/main/modules/ffmpeg/index.js",
+      "name": "registerVideoToolIpc",
+      "start": 101,
+      "end": 331,
+      "lines": 185,
+      "jsx": false
+    },
+    {
+      "file": "apps/electron/src/preload/index.js",
+      "name": "videoWaveform",
+      "start": 173,
+      "end": 173,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "packages/shared/src/schemas/media.schema.ts",
+      "name": "(callback)",
+      "start": 101,
+      "end": 101,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "scripts/lib/check-video-filmstrip.js",
+      "name": "checkVideoFilmstrip",
+      "start": 469,
+      "end": 480,
+      "lines": 13,
+      "jsx": false
+    },
+    {
+      "file": "apps/electron/src/main/modules/ffmpeg/probe.js",
+      "name": "probeVideo",
+      "start": 32,
+      "end": 84,
+      "lines": 34,
+      "jsx": false
+    },
+    {
+      "file": "scripts/smoke-video-live-02.js",
+      "name": "lanePoint",
+      "start": 189,
+      "end": 197,
+      "lines": 3,
+      "jsx": false
+    },
+    {
+      "file": "scripts/smoke-video-live-02.js",
+      "name": "checkCreateAndSelect",
+      "start": 369,
+      "end": 411,
+      "lines": 20,
+      "jsx": false
+    },
+    {
+      "file": "apps/electron/src/main/modules/ffmpeg/waveform.js",
+      "name": "validateWaveform",
+      "start": 52,
+      "end": 61,
+      "lines": 14,
+      "jsx": false
+    },
+    {
+      "file": "apps/electron/src/main/modules/ffmpeg/waveform.js",
+      "name": "(callback)",
+      "start": 57,
+      "end": 57,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "apps/electron/src/main/modules/ffmpeg/waveform.js",
+      "name": "(callback)",
+      "start": 58,
+      "end": 58,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "apps/electron/src/main/modules/ffmpeg/waveform.js",
+      "name": "parsePeaks",
+      "start": 85,
+      "end": 92,
+      "lines": 6,
+      "jsx": false
+    },
+    {
+      "file": "apps/electron/src/main/modules/ffmpeg/waveform.js",
+      "name": "(callback)",
+      "start": 89,
+      "end": 89,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "apps/electron/src/main/modules/ffmpeg/waveform.js",
+      "name": "(callback)",
+      "start": 90,
+      "end": 90,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "apps/electron/src/main/modules/ffmpeg/waveform.js",
+      "name": "(callback)",
+      "start": 91,
+      "end": 91,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "apps/electron/src/main/modules/ffmpeg/waveform.js",
+      "name": "readWaveform",
+      "start": 124,
+      "end": 134,
+      "lines": 14,
+      "jsx": false
+    },
+    {
+      "file": "apps/electron/src/main/modules/ffmpeg/waveform.js",
+      "name": "handleWaveform",
+      "start": 169,
+      "end": 184,
+      "lines": 28,
+      "jsx": false
+    },
+    {
+      "file": "apps/electron/src/main/modules/ffmpeg/waveform.js",
+      "name": "(callback)",
+      "start": 173,
+      "end": 173,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "apps/electron/src/main/modules/ffmpeg/waveform.js",
+      "name": "(callback)",
+      "start": 176,
+      "end": 176,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "apps/electron/src/main/modules/ffmpeg/waveform.js",
+      "name": "cancel",
+      "start": 177,
+      "end": 177,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "apps/electron/src/main/modules/ffmpeg/waveform.js",
+      "name": "registerWaveformIpc",
+      "start": 207,
+      "end": 209,
+      "lines": 3,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/source-waveform.ts",
+      "name": "requestWaveform",
+      "start": 52,
+      "end": 57,
+      "lines": 8,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/source-waveform.ts",
+      "name": "cancelTask",
+      "start": 75,
+      "end": 78,
+      "lines": 5,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/source-waveform.ts",
+      "name": "(callback)",
+      "start": 77,
+      "end": 77,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/source-waveform.ts",
+      "name": "acquireTask",
+      "start": 99,
+      "end": 113,
+      "lines": 18,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/source-waveform.ts",
+      "name": "(callback)",
+      "start": 104,
+      "end": 104,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/source-waveform.ts",
+      "name": "(callback)",
+      "start": 104,
+      "end": 104,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/source-waveform.ts",
+      "name": "(callback)",
+      "start": 105,
+      "end": 105,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/source-waveform.ts",
+      "name": "useSourceWaveform",
+      "start": 141,
+      "end": 156,
+      "lines": 26,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/source-waveform.ts",
+      "name": "(callback)",
+      "start": 143,
+      "end": 154,
+      "lines": 22,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/source-waveform.ts",
+      "name": "(callback)",
+      "start": 148,
+      "end": 148,
+      "lines": 2,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/source-waveform.ts",
+      "name": "(callback)",
+      "start": 148,
+      "end": 148,
+      "lines": 2,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/source-waveform.ts",
+      "name": "(callback)",
+      "start": 149,
+      "end": 153,
+      "lines": 12,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/clip-waveform.tsx",
+      "name": "waveformPath",
+      "start": 44,
+      "end": 56,
+      "lines": 14,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/clip-waveform.tsx",
+      "name": "ClipWaveform",
+      "start": 99,
+      "end": 106,
+      "lines": 13,
+      "jsx": true
+    },
+    {
+      "file": "scripts/lib/check-video-waveform.js",
+      "name": "schema",
+      "start": 26,
+      "end": 31,
+      "lines": 6,
+      "jsx": false
+    },
+    {
+      "file": "scripts/lib/check-video-waveform.js",
+      "name": "(callback)",
+      "start": 29,
+      "end": 29,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "scripts/lib/check-video-waveform.js",
+      "name": "contractChecks",
+      "start": 52,
+      "end": 62,
+      "lines": 16,
+      "jsx": false
+    },
+    {
+      "file": "scripts/lib/check-video-waveform.js",
+      "name": "(callback)",
+      "start": 56,
+      "end": 56,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "scripts/lib/check-video-waveform.js",
+      "name": "makeEnvelope",
+      "start": 89,
+      "end": 95,
+      "lines": 7,
+      "jsx": false
+    },
+    {
+      "file": "scripts/lib/check-video-waveform.js",
+      "name": "signalChecks",
+      "start": 122,
+      "end": 134,
+      "lines": 13,
+      "jsx": false
+    },
+    {
+      "file": "scripts/lib/check-video-waveform.js",
+      "name": "(callback)",
+      "start": 126,
+      "end": 126,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "scripts/lib/check-video-waveform.js",
+      "name": "layoutChecks",
+      "start": 166,
+      "end": 177,
+      "lines": 13,
+      "jsx": false
+    },
+    {
+      "file": "scripts/lib/check-video-waveform.js",
+      "name": "checkVideoWaveform",
+      "start": 202,
+      "end": 206,
+      "lines": 5,
+      "jsx": false
+    }
+  ]
+}

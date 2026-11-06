@@ -1,0 +1,29 @@
+$ node scripts/verify-initial-locale-arg.js
+PASS  前缀是命名空间化的（不与 Chromium 开关抢名字）  (--illusion-locale=)
+PASS  单个匹配 → 取其值  (实际="en" 期望="en")
+PASS  夹在其它参数之间也能取到  (实际="en" 期望="en")
+PASS  **多个匹配 → 取最后一个**（argv 可重复，后者覆盖前者）  (实际="en" 期望="en")
+PASS  多个匹配且顺序颠倒时同样取最后一个  (实际="zh-CN" 期望="zh-CN")
+PASS  完全没有该参数 → undefined  (实际=undefined 期望=undefined)
+PASS  空数组 → undefined  (实际=undefined 期望=undefined)
+PASS  非数组（防御）→ undefined  (实际=undefined 期望=undefined)
+PASS  前缀无值（`--illusion-locale=`）→ undefined  (实际=undefined 期望=undefined)
+PASS  前缀无值不覆盖前面的有效值  (实际="en" 期望="en")
+PASS  Chromium 自己的 `--lang=ja` **不得**被误认  (实际=undefined 期望=undefined)
+PASS  相似但不带前缀的 `--locale=en` 不得被误认  (实际=undefined 期望=undefined)
+PASS  前缀作为独立参数（`--illusion-locale en`）不匹配  (实际=undefined 期望=undefined)
+PASS  只匹配前缀本身、不做子串包含  (实际=undefined 期望=undefined)
+PASS  构造出的参数能被自己解析回来  (--illusion-locale=en)
+PASS  构造端使用的前缀与解析端一致
+PASS  文档缺 locale → 不注入（= missing）
+PASS  **settings 整个缺失也兜得住**（老文档形态，这条链必须一路可选）
+PASS  data 为 null（文件不存在/损坏）→ 不注入
+PASS  入参整个为 undefined → 不注入
+PASS  locale 为空串 → 不注入（空值等同没传）
+PASS  locale 为 "en" → 注入 ["--illusion-locale=en"]  (["--illusion-locale=en"])
+PASS  **locale 为非法值 "ja" 也必须原样透传**（不得在 main 侧清洗）  (["--illusion-locale=ja"])
+PASS  顶层 userDataPath 那种形态**不**被当作语言（避免误取别的同名字段）
+PASS  main.js 不引用任何 i18n 标识符（只透传原始值，判决权在渲染层）  (无)
+PASS  对照：代码里出现 resolveLocale 会被抓到
+PASS  对照：**注释里**提到 resolveLocale 不算违规（否则被自己的文档打败）
+OK  注入参数解析：前缀 + 取最后一个匹配 + 不误认他人开关（27 项）

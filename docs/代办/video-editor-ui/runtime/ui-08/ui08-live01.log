@@ -1,0 +1,46 @@
+
+[构建自检] record：内容指纹一致（860 个文件，记录于 2026-11-04T03:06:43.478Z）
+PASS  Formal session starts empty without demo assets or clips
+Native picker confirmed 2 files
+
+PASS  Native multi-select imports two actual videos and covers
+PASS  Metadata reflects distinct dimensions, fps and audio
+PASS  Actual media events advance source time, never create timeline clips
+PASS  Pause is reflected by the native media state
+Native picker cancelled
+
+Native picker confirmed 1 files
+
+PASS  Cancel and duplicate preserve existing media
+Native picker confirmed 2 files
+
+PASS  Mixed invalid and duplicate selection explains rejection without losing media
+Native picker confirmed 1 files
+
+[IPC] video:probe failed (INTERNAL): Command failed: D:\Code\Illusion-Realm\Illusion-Realm\apps\electron\bin\ffmpeg\ffprobe.exe -v error -print_format json -show_format -show_streams C:\Users\18305\AppData\Local\Temp\ir-video-live01-SddIDK\media\broken.mp4
+[mov,mp4,m4a,3gp,3g2,mj2 @ 0000019f4f7949c0] moov atom not found
+C:\Users\18305\AppData\Local\Temp\ir-video-live01-SddIDK\media\broken.mp4: Invalid data found when processing input
+
+PASS  Probe failure preserves successful media and reports a separate failed row
+PASS  Source switch releases old playing media
+PASS  Portrait switch uses actual 24fps source and defaults muted
+PASS  Return removes and releases old source without changing selection
+Native picker confirmed 1 files
+
+PASS  Same name in a different folder has independent identity
+Native picker confirmed 1 files
+
+PASS  Real FFV1 probe succeeds while browser decode failure retains metadata
+PASS  Decoder retry preserves imported metadata and never creates clips
+PASS  Narrow window retains project import access
+Native picker confirmed 1 files
+
+PASS  Filtered import reports hidden assets without silently clearing query
+PASS  Clear filter reveals newly imported real asset
+Native picker confirmed 1 files
+
+PASS  Cancel in-flight marks row cancelled and discards late probe result
+PASS  Return to formal page starts an isolated empty session
+SKIP actual Explorer drag: desktop occupied; no synthetic fallback
+LIVE_MEDIA_ROOT C:\Users\18305\AppData\Local\Temp\ir-video-live01-SddIDK
+video-live-01 SMOKE OK ✓  19/19

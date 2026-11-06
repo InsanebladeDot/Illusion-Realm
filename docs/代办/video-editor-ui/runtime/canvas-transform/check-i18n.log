@@ -1,0 +1,4 @@
+$ pnpm --filter @illusion-realm/next check:i18n
+$ node scripts/check-i18n.mjs
+hardcoded UI strings: 21  (baseline 66)
+已低于基线 45 处 —— 迁移有进展，请把 BASELINE 改成 21 以锁定成果。

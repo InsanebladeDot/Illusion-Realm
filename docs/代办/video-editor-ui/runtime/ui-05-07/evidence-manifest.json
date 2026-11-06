@@ -1,0 +1,201 @@
+{
+  "date": "2026-11-04",
+  "buildFingerprint": "9cef280dbb667f296af679f10e2317985b1913dfeb59e76946f346d31f760888",
+  "documentLinksChecked": 102,
+  "brokenLinks": [],
+  "auditSourceHashesVerified": 26,
+  "evidenceSources": {
+    "editor-ui": "C:/Users/18305/AppData/Local/Temp/ir-video-ui01-iM2MVL",
+    "live-02": "C:/Users/18305/AppData/Local/Temp/ir-video-live02-DgBmln",
+    "live-01": "C:/Users/18305/AppData/Local/Temp/ir-video-live01-e4QjiE",
+    "cartoon": "C:/Users/18305/AppData/Local/Temp/ir-cartoon-smoke-VV4aLj"
+  },
+  "evidenceLevels": [
+    "真实磁盘视频与生产探测/媒体事件",
+    "原生选择框Windows UIAutomation",
+    "Chromium内部输入与公开DOM事件",
+    "纯模型反例",
+    "独立样板数据"
+  ],
+  "manualUnverified": [
+    "Explorer真实拖入",
+    "人工鼠标/键盘完整路径",
+    "系统125%/150%缩放",
+    "多显示器",
+    "前台遮挡",
+    "扬声器试听",
+    "操作录屏"
+  ],
+  "files": [
+    {
+      "name": "build-fingerprint.json",
+      "bytes": 105843,
+      "sha256": "169645ee2903b35cbdf14f417af589df9b6b224970f344cf33614cd63f36c684"
+    },
+    {
+      "name": "build.log",
+      "bytes": 1812,
+      "sha256": "c1d15c092df8882cf8934e8a61ab40fe9390baa57865183af9cacf84fe4fd1e9"
+    },
+    {
+      "name": "cartoon.log",
+      "bytes": 4773,
+      "sha256": "d7dc1c077acebad050b0499030d6ad15c7212d5c8ea2a8eb4dfdd34cccd45d0a"
+    },
+    {
+      "name": "check.log",
+      "bytes": 9428,
+      "sha256": "a840279dc41deb3bc94dc9fdf8cb152f6ed793d2b71ac3f8c7804860c59c9249"
+    },
+    {
+      "name": "editor-ui.log",
+      "bytes": 9336,
+      "sha256": "4e54dc09350301cd4f627a4c6e661be506ddbe0ad06adef199a19a3d63818658"
+    },
+    {
+      "name": "lint.log",
+      "bytes": 12434,
+      "sha256": "c55c92ecbcb655c6125a1a269e06af075089f0ddb19accd36ff5326fcead6f90"
+    },
+    {
+      "name": "live-01-cancelled-dark.png",
+      "bytes": 155276,
+      "sha256": "db57e20e7170451b91b0060443e646586e4bc4ae60ffa0123225d38df24be166"
+    },
+    {
+      "name": "live-01-decode-error-dark.png",
+      "bytes": 155466,
+      "sha256": "0c6368b6ac9e33484fb301e37fbf727000c0365d52aede4738de1deeaab71753"
+    },
+    {
+      "name": "live-01-import-dark.png",
+      "bytes": 217636,
+      "sha256": "421707e625acdd855474b30bb488d40b4483ee0d6841f4f7aa4e2ed38c2742f9"
+    },
+    {
+      "name": "live-01-import-light.png",
+      "bytes": 198499,
+      "sha256": "822fbc44bccaa0d16ee6a14d231de6c3e2d7502483745bded1d7769deea8fe7f"
+    },
+    {
+      "name": "live-01-narrow-dark.png",
+      "bytes": 102891,
+      "sha256": "f82d51a7ba66619ebd12ab3cf9e5caf92b1d930a6cfc6ceeeceaf40135e86c09"
+    },
+    {
+      "name": "live-01-portrait-dark.png",
+      "bytes": 175046,
+      "sha256": "74dc6a0eb5f05aef1ef80fe173d125d8a028407c7f5bb75f837a8cdde9fc6e9f"
+    },
+    {
+      "name": "live-01.log",
+      "bytes": 2286,
+      "sha256": "51dcb3df3f65645c9e7aa97f826d5be421cb836095a2b696cc3fd4f3364d1c68"
+    },
+    {
+      "name": "live-02.log",
+      "bytes": 5927,
+      "sha256": "5064732108488183cb2901b22c085cbe09f49b3ffb3f5321f7395871c97495ba"
+    },
+    {
+      "name": "locale-keys.log",
+      "bytes": 162,
+      "sha256": "f8c3d765cce3787307e0c7593feec26f1cf67535e7f0cef5dd954b7e35e960a3"
+    },
+    {
+      "name": "media-facts.json",
+      "bytes": 894,
+      "sha256": "4c7133e0cde4052ea47a32d429a1d83b1527f1d7857b9c65bd4c3e26cca564af"
+    },
+    {
+      "name": "placement-facts.json",
+      "bytes": 613,
+      "sha256": "da26ee3128c358a94db4139f50b20ce94306a6c5677c71f45f98a33f746bbce8"
+    },
+    {
+      "name": "refs-check.log",
+      "bytes": 130,
+      "sha256": "353fd3e4b77dd80ea3671fa9c9d7e98cf622c5bf28322b50562e4dd32e4be940"
+    },
+    {
+      "name": "script-check.log",
+      "bytes": 598,
+      "sha256": "4372ab04a7ea075af3271823ace7d854e2da12a6fa800b78d303015f41dcea60"
+    },
+    {
+      "name": "typecheck.log",
+      "bytes": 132,
+      "sha256": "03334bacc26bbd7d006f0308c861410c67d94747095b162bf5642eea3dfbb56d"
+    },
+    {
+      "name": "ui-05-inspector.png",
+      "bytes": 137652,
+      "sha256": "01bd15b835c5233376588f8c3fa25cc18cd769ac5ca414b90b274fa06a82948a"
+    },
+    {
+      "name": "ui-06-edge-placement-light.png",
+      "bytes": 219866,
+      "sha256": "eedf4f27d04cb28b2b76580720b5151c2e10d823d00d027dfa71007d5813714f"
+    },
+    {
+      "name": "ui-06-playhead.png",
+      "bytes": 223136,
+      "sha256": "697644d06ae91d9dce4f7125f2ef76957378723eaf823097d79255e2acd182b7"
+    },
+    {
+      "name": "ui-07-compact-inspector.png",
+      "bytes": 401707,
+      "sha256": "5a5167c15b27d5ecb421908bab87d2dcc9a37c8156066ac5c59f50d636b12a1d"
+    },
+    {
+      "name": "ui-07-compact-media.png",
+      "bytes": 426865,
+      "sha256": "bb43e5fa8e54d7c043ddf19883f5e99db7b21e2e047a35be17759ef15fc4801f"
+    },
+    {
+      "name": "ui-07-contrast-dark.json",
+      "bytes": 267,
+      "sha256": "e753a868d162361f1c8f9eb1cf17ba29d69a74a8f1af726cebecb6cd14df4821"
+    },
+    {
+      "name": "ui-07-contrast-light.json",
+      "bytes": 264,
+      "sha256": "ece150c1de8a6097e4cb2e8211ecc59a9a8ca9c676ba556f76170ec05acbc713"
+    },
+    {
+      "name": "ui-07-dark-1280x800.png",
+      "bytes": 511088,
+      "sha256": "b12032e785eb9608b41900b2adfc815e3fe83ad6d9225aa2266d9f4a14312b80"
+    },
+    {
+      "name": "ui-07-dark-1600x1000.png",
+      "bytes": 517391,
+      "sha256": "c787a5a05d2d9b633f6dc3c4d0f4c60d1ce54969861060485e79f2dcb698b5d5"
+    },
+    {
+      "name": "ui-07-dark-960x720.png",
+      "bytes": 429798,
+      "sha256": "a8488a1072b11085b8f72a4cf01c27cfc884d689e8332d4299ffd18a1f5940b1"
+    },
+    {
+      "name": "ui-07-layout.json",
+      "bytes": 647,
+      "sha256": "b1a9bbf12b324736d4aa77dfc23c00cfbe4fe77789bba7c0dff173943561d8ec"
+    },
+    {
+      "name": "ui-07-light-1280x800.png",
+      "bytes": 506806,
+      "sha256": "64f2dc61378cfa2215be735d3bb4274deab05c6fc80dff6710c729ee161961f4"
+    },
+    {
+      "name": "ui-07-light-1600x1000.png",
+      "bytes": 512909,
+      "sha256": "4213a0d16d349fc8a2be24ada3fb94d01df07a7f15b01f5cf7f50a32c31bb618"
+    },
+    {
+      "name": "ui-07-light-960x720.png",
+      "bytes": 426216,
+      "sha256": "ac85e965addb23b7d5efb2f259c995e8a918b13d468ab1713bd9a650348235fe"
+    }
+  ]
+}

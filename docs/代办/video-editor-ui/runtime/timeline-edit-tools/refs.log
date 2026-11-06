@@ -1,0 +1,2 @@
+$ node scripts/check-script-refs.js
+OK  scripts 引用检查：4 个 package.json / 31 处 JS 引用均存在（对照 6 条）

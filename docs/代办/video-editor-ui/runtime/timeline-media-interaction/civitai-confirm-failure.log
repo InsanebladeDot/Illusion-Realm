@@ -1,0 +1,84 @@
+
+[构建自检] record：内容指纹一致（869 个文件，记录于 2026-11-04T08:02:05.495Z）
+PASS  missing or obsolete agreement cannot enable access
+PASS  missing or obsolete agreement cannot enable access
+PASS  missing or obsolete agreement cannot enable access
+PASS  missing or obsolete agreement cannot enable access
+PASS  pagination uses current preference instead of stale nextPage
+PASS  model and preview parsing follow the same preference
+PASS  pagination uses current preference instead of stale nextPage
+PASS  model and preview parsing follow the same preference
+PASS  direct model lookup remains filtered when disabled
+Error occurred in handler for 'window:control': Error: No handler registered for 'window:control'
+    at Session.<anonymous> (node:electron/js2c/browser_init:2:120175)
+    at Session.emit (node:events:514:28)
+Error occurred in handler for 'agent:catalog': Error: No handler registered for 'agent:catalog'
+    at Session.<anonymous> (node:electron/js2c/browser_init:2:120175)
+    at Session.emit (node:events:514:28)
+Error occurred in handler for 'agent:catalog': Error: No handler registered for 'agent:catalog'
+    at Session.<anonymous> (node:electron/js2c/browser_init:2:120175)
+    at Session.emit (node:events:514:28)
+PASS  legacy documents default to NSFW off
+PASS  content access is in model settings
+PASS  accept is disabled until agreement checkbox is checked
+PASS  disabled accept cannot enable access
+PASS  Escape cancels without consent
+PASS  cancelled checkbox draft is not reused
+PASS  consent stores version, timestamp and preference
+Error occurred in handler for 'window:control': Error: No handler registered for 'window:control'
+    at Session.<anonymous> (node:electron/js2c/browser_init:2:120175)
+    at Session.emit (node:events:514:28)
+Error occurred in handler for 'agent:catalog': Error: No handler registered for 'agent:catalog'
+    at Session.<anonymous> (node:electron/js2c/browser_init:2:120175)
+    at Session.emit (node:events:514:28)
+Error occurred in handler for 'agent:catalog': Error: No handler registered for 'agent:catalog'
+    at Session.<anonymous> (node:electron/js2c/browser_init:2:120175)
+    at Session.emit (node:events:514:28)
+PASS  full reload restores approved preference
+Error occurred in handler for 'window:control': Error: No handler registered for 'window:control'
+    at Session.<anonymous> (node:electron/js2c/browser_init:2:120175)
+    at Session.emit (node:events:514:28)
+PASS  catalog makes a new request
+FAIL  enabled search sends nsfw=true and renders permitted fixture previews
+Error occurred in handler for 'window:control': Error: No handler registered for 'window:control'
+    at Session.<anonymous> (node:electron/js2c/browser_init:2:120175)
+    at Session.emit (node:events:514:28)
+Error occurred in handler for 'agent:catalog': Error: No handler registered for 'agent:catalog'
+    at Session.<anonymous> (node:electron/js2c/browser_init:2:120175)
+    at Session.emit (node:events:514:28)
+Error occurred in handler for 'agent:catalog': Error: No handler registered for 'agent:catalog'
+    at Session.<anonymous> (node:electron/js2c/browser_init:2:120175)
+    at Session.emit (node:events:514:28)
+PASS  turning off requires no new agreement
+Error occurred in handler for 'window:control': Error: No handler registered for 'window:control'
+    at Session.<anonymous> (node:electron/js2c/browser_init:2:120175)
+    at Session.emit (node:events:514:28)
+PASS  catalog makes a new request
+PASS  disabled search sends nsfw=false and filters fixture models and previews
+Error occurred in handler for 'window:control': Error: No handler registered for 'window:control'
+    at Session.<anonymous> (node:electron/js2c/browser_init:2:120175)
+    at Session.emit (node:events:514:28)
+Error occurred in handler for 'agent:catalog': Error: No handler registered for 'agent:catalog'
+    at Session.<anonymous> (node:electron/js2c/browser_init:2:120175)
+    at Session.emit (node:events:514:28)
+Error occurred in handler for 'agent:catalog': Error: No handler registered for 'agent:catalog'
+    at Session.<anonymous> (node:electron/js2c/browser_init:2:120175)
+    at Session.emit (node:events:514:28)
+PASS  obsolete agreement requires fresh consent after hydration
+Error occurred in handler for 'window:control': Error: No handler registered for 'window:control'
+    at Session.<anonymous> (node:electron/js2c/browser_init:2:120175)
+    at Session.emit (node:events:514:28)
+Error occurred in handler for 'agent:catalog': Error: No handler registered for 'agent:catalog'
+    at Session.<anonymous> (node:electron/js2c/browser_init:2:120175)
+    at Session.emit (node:events:514:28)
+Error occurred in handler for 'agent:catalog': Error: No handler registered for 'agent:catalog'
+    at Session.<anonymous> (node:electron/js2c/browser_init:2:120175)
+    at Session.emit (node:events:514:28)
+PASS  agreement follows dark theme
+PASS  small window keeps agreement and footer inside viewport
+PASS  no render or hydration errors
+
+[退出码护栏] app.quit() 被拦截：本次运行已有 1 条断言失败。app.quit() 会丢弃 process.exitCode（实测退出码 0），把失败变成成功 —— 本仓库统一用 app.exit(code)，已改为 app.exit(1)。
+CONTENT_SCREENSHOTS C:\Users\18305\AppData\Local\Temp\ir-content-access-SHetOd
+日志已留档：D:\Code\Illusion-Realm\Illusion-Realm\logs\smoke-civitai-content-2026-11-04T08-14-23-018Z-59088.log
+工作目录（保留以便排查）：C:\Users\18305\AppData\Local\Temp\ir-content-access-SHetOd

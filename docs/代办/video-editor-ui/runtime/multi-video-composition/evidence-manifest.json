@@ -1,0 +1,130 @@
+{
+  "date": "2026-11-05 Asia/Shanghai",
+  "sourceRoot": "C:\\Users\\18305\\AppData\\Local\\Temp\\ir-video-live02-3XZKI4",
+  "build": {
+    "summary": "52b9513fbe9f15e2fc8576c547f3432a014881aa0c1499618fa3136c0f8233c0",
+    "recordedAt": "2026-11-04T16:03:34.624Z",
+    "fileCount": 878,
+    "toolchain": {
+      "lockfileHash": "fc11e247489928d254af83e5725331af82143bc71fff92c6a31e5d2dc463cb3a",
+      "versions": {
+        "electron": "^43.1.1",
+        "next": "16.2.10",
+        "react": "19.2.4"
+      }
+    }
+  },
+  "runs": [
+    "2026-11-04T16-12-13-715Z-29784",
+    "2026-11-04T16-10-05-258Z-20188",
+    "2026-11-04T16-11-16-149Z-29460"
+  ],
+  "evidenceBoundary": "真实磁盘编码视频/ffprobe/Chromium视频纹理；CDP与DOM自动操作，选择结果及visibility事件为夹具。无本轮人工桌面操作或录屏；所有成功仅有harness摘要，未虚构成功全量日志。",
+  "files": [
+    {
+      "file": "compose-check.log",
+      "bytes": 9428,
+      "sha256": "3498639135fac8f0095c51a24608e7d5a47871a8115d5a814078866760b207f4"
+    },
+    {
+      "file": "compose-dark-real-video.png",
+      "bytes": 142963,
+      "sha256": "2784716aa6e5f80173370cbcf96fe96f0c7bedcf62d34bae54773ec5b62f8767"
+    },
+    {
+      "file": "compose-hidden-black.png",
+      "bytes": 176206,
+      "sha256": "0136e8b62131ac58d027c3d49ec14e59de2b8aaa5f4a1db8307ac49022d1bb58"
+    },
+    {
+      "file": "compose-light-real-video.png",
+      "bytes": 237832,
+      "sha256": "ca1c8721571e9b686740b7bc6e94cdfb242599c3399441d7d95fba342c54a3f2"
+    },
+    {
+      "file": "compose-lint.log",
+      "bytes": 12434,
+      "sha256": "c55c92ecbcb655c6125a1a269e06af075089f0ddb19accd36ff5326fcead6f90"
+    },
+    {
+      "file": "compose-playback-evidence.json",
+      "bytes": 1024,
+      "sha256": "9692414db4699302a94a7404c807b2d668190584cf41d29e02a3b41b5b1fcbc7"
+    },
+    {
+      "file": "compose-playing-black-gap.png",
+      "bytes": 176521,
+      "sha256": "52bf3dd03ae95315bf488be5c4cb1164dddfbcb54f60b3d566f6166c431c60f3"
+    },
+    {
+      "file": "compose-playing-two-real-videos.png",
+      "bytes": 244146,
+      "sha256": "d8d00e8f1f406914dd5261142d818189d471ca1323cf3ca5bb49443717e292a8"
+    },
+    {
+      "file": "compose-real-decode-failure.png",
+      "bytes": 188922,
+      "sha256": "c8aee1277ee62228f4c6ea73ba9e531b46d1ec1ed193919bb10e44f61136ba5c"
+    },
+    {
+      "file": "compose-real-overlap-transform.png",
+      "bytes": 246722,
+      "sha256": "2ebae5988849449030acfa3e01582cda133a288679b8c1206fb641ffb1bc1787"
+    },
+    {
+      "file": "layout-dark.json",
+      "bytes": 769,
+      "sha256": "170a576e47580855c7d6652d3514a41ffd512af834af84956b0e613dc25763ae"
+    },
+    {
+      "file": "layout-light.json",
+      "bytes": 772,
+      "sha256": "24672c4268adb3244a9a1390bae0efb6fad6ac9d0a8a39f7bcb307d86d687ec8"
+    },
+    {
+      "file": "live-03-dark-1280x800.png",
+      "bytes": 221696,
+      "sha256": "a77c752aaa4035ceb81483d0f3eb2b8e0893c0ee9851ecd12dc0e63868ab4b5b"
+    },
+    {
+      "file": "live-03-dark-1600x1000.png",
+      "bytes": 257198,
+      "sha256": "66bfea950cec304694ec6271983bd62168dda28d174f1c67120ed48a8cde5fe5"
+    },
+    {
+      "file": "live-03-dark-960x720.png",
+      "bytes": 154759,
+      "sha256": "75c97fce6bed482376f892e96f29aed86b329b6ca5e185d444da5db0216949ab"
+    },
+    {
+      "file": "live-03-light-1280x800.png",
+      "bytes": 216471,
+      "sha256": "276faad2d69aa503dce971f35e6519f455f9252004256d79a1d5cda3b0725855"
+    },
+    {
+      "file": "live-03-light-1600x1000.png",
+      "bytes": 252254,
+      "sha256": "5068de135daca5ad6354c69eb06b3ed6932b39d2f2858c4b88e9438f51ead1f2"
+    },
+    {
+      "file": "live-03-light-960x720.png",
+      "bytes": 150688,
+      "sha256": "f639b78c9929185eed20d59f31e5cca9b273425177ea2d9eefba363384116c09"
+    },
+    {
+      "file": "media-facts.json",
+      "bytes": 9207,
+      "sha256": "80bfe33067de62a0dab407ce1532534ba6f97fca1b1b00e47e478f0d5218dd2e"
+    },
+    {
+      "file": "placement-facts.json",
+      "bytes": 613,
+      "sha256": "1c1d85b921c52b935fafb137f355a3b17e2a0df917745ded0f0c2ebf744a83b0"
+    },
+    {
+      "file": "smoke-summary.log",
+      "bytes": 336,
+      "sha256": "db2a8757698a3dc3b2fe44d0ab3098c3c977976ecc4416f7a6d15a2d367527fa"
+    }
+  ]
+}

@@ -1,0 +1,246 @@
+{
+  "date": "2026-11-04",
+  "build": "f1bfe1111e021cd3f6db2a4ca5dadfc97f47a259a75643505babccfe60b43d90",
+  "liveRun": "C:\\Users\\18305\\AppData\\Local\\Temp\\ir-video-live02-KFIW7Y",
+  "evidenceLevels": {
+    "actualMedia": "FFmpeg生成真实短视频，生产FFprobe与Chromium解码；capturePage真实静态导出画面",
+    "automatic": "CDP鼠标/滚轮、DOM键盘/菜单、选择结果夹具和固定纯模型反例分别使用",
+    "manual": "本轮未完成Explorer系统拖入、人工完整键盘、系统缩放、扬声器试听；不以自动事件替代",
+    "recording": "无录屏"
+  },
+  "results": {
+    "live02": "143/143",
+    "ui": "139/139",
+    "live01": "19/19，选择结果夹具，Explorer SKIP",
+    "legacy": "58/58",
+    "gif": "50/50",
+    "comic": "54/54，旧样式断言修正后重跑",
+    "civitai": "允许内容预览断言两次失败，未确认与本轮关联",
+    "check": "未引用词条门禁失败",
+    "meta": "原扫描问题失败"
+  },
+  "files": [
+    {
+      "file": "selected-clip-filmstrip.png",
+      "source": "C:\\Users\\18305\\AppData\\Local\\Temp\\ir-video-live02-KFIW7Y\\selected-clip-filmstrip.png",
+      "sha256": "672448418b1b20f85e0e847243ea8dfc85e4c980a1a656c7f566200bd7747915",
+      "bytes": 218297
+    },
+    {
+      "file": "filmstrip-speed-real-video.png",
+      "source": "C:\\Users\\18305\\AppData\\Local\\Temp\\ir-video-live02-KFIW7Y\\filmstrip-speed-real-video.png",
+      "sha256": "dbb2f6ac6261064f45536ac2fcf09fee1d176caa46897e4588665952336da032",
+      "bytes": 235736
+    },
+    {
+      "file": "multitrack-composite-real-video.png",
+      "source": "C:\\Users\\18305\\AppData\\Local\\Temp\\ir-video-live02-KFIW7Y\\multitrack-composite-real-video.png",
+      "sha256": "b86bd25418c7dcd4633084fb7b2f4f3bb09136c11d9797f2a2f30c1b455ba2dd",
+      "bytes": 246866
+    },
+    {
+      "file": "multitrack-opacity-real-video.png",
+      "source": "C:\\Users\\18305\\AppData\\Local\\Temp\\ir-video-live02-KFIW7Y\\multitrack-opacity-real-video.png",
+      "sha256": "d2c77178a94713a44ef1c1e40fd1dc62bbae333e51289fe5f61138f28c1de10f",
+      "bytes": 253915
+    },
+    {
+      "file": "multitrack-trimmed-real-video.png",
+      "source": "C:\\Users\\18305\\AppData\\Local\\Temp\\ir-video-live02-KFIW7Y\\multitrack-trimmed-real-video.png",
+      "sha256": "23a3064d79b4ca0e3ab2a0db21aee3687fecbb0ac5811495d989badf8fb9c07d",
+      "bytes": 241697
+    },
+    {
+      "file": "canvas-before-real-video.png",
+      "source": "C:\\Users\\18305\\AppData\\Local\\Temp\\ir-video-live02-KFIW7Y\\canvas-before-real-video.png",
+      "sha256": "95ac516ff10fdcd3340cb4a5cd5f8cf920fd1e41756eabebf721b87e1ad15266",
+      "bytes": 213377
+    },
+    {
+      "file": "canvas-after-real-video.png",
+      "source": "C:\\Users\\18305\\AppData\\Local\\Temp\\ir-video-live02-KFIW7Y\\canvas-after-real-video.png",
+      "sha256": "d5967f2bf8a106434f8169b9bcbf12007b1f7c88532643d9b70f11ef3a471a7e",
+      "bytes": 195446
+    },
+    {
+      "file": "live-03-light-1600x1000.png",
+      "source": "C:\\Users\\18305\\AppData\\Local\\Temp\\ir-video-live02-KFIW7Y\\live-03-light-1600x1000.png",
+      "sha256": "d8e36deacfa8096a05355a9d40d0c17706ec4eee792967b1086e69986991b2fd",
+      "bytes": 257624
+    },
+    {
+      "file": "live-03-light-1280x800.png",
+      "source": "C:\\Users\\18305\\AppData\\Local\\Temp\\ir-video-live02-KFIW7Y\\live-03-light-1280x800.png",
+      "sha256": "7c3f16138b31d9c3d58b8e5413239aff58bf70e87976bce7c432a79d6a63f032",
+      "bytes": 218262
+    },
+    {
+      "file": "live-03-light-960x720.png",
+      "source": "C:\\Users\\18305\\AppData\\Local\\Temp\\ir-video-live02-KFIW7Y\\live-03-light-960x720.png",
+      "sha256": "9809af7908005c67099bc1739493570696d44b44e8de0c1d3e5ce9340b23b459",
+      "bytes": 151348
+    },
+    {
+      "file": "live-03-dark-1600x1000.png",
+      "source": "C:\\Users\\18305\\AppData\\Local\\Temp\\ir-video-live02-KFIW7Y\\live-03-dark-1600x1000.png",
+      "sha256": "e0a3c74117b46f0034aeac6db09dd80c2cfd7438f3bffa0a15a8898734d5782b",
+      "bytes": 262754
+    },
+    {
+      "file": "live-03-dark-1280x800.png",
+      "source": "C:\\Users\\18305\\AppData\\Local\\Temp\\ir-video-live02-KFIW7Y\\live-03-dark-1280x800.png",
+      "sha256": "3c9051a216f577c849d4de4238bef1f52fc836d5f8a3e8ba66a9c987b6dab24d",
+      "bytes": 223009
+    },
+    {
+      "file": "live-03-dark-960x720.png",
+      "source": "C:\\Users\\18305\\AppData\\Local\\Temp\\ir-video-live02-KFIW7Y\\live-03-dark-960x720.png",
+      "sha256": "5403822ba0e7e442e9483298bea626702edd2a9055143acba3ed5c71f72e0479",
+      "bytes": 155295
+    },
+    {
+      "file": "placement-facts.json",
+      "source": "C:\\Users\\18305\\AppData\\Local\\Temp\\ir-video-live02-KFIW7Y\\placement-facts.json",
+      "sha256": "99c7235c87e4910beb5f16c3311c6832ed03473d2663303fd3947465dcb201df",
+      "bytes": 613
+    },
+    {
+      "file": "layout-light.json",
+      "source": "C:\\Users\\18305\\AppData\\Local\\Temp\\ir-video-live02-KFIW7Y\\layout-light.json",
+      "sha256": "24672c4268adb3244a9a1390bae0efb6fad6ac9d0a8a39f7bcb307d86d687ec8",
+      "bytes": 772
+    },
+    {
+      "file": "layout-dark.json",
+      "source": "C:\\Users\\18305\\AppData\\Local\\Temp\\ir-video-live02-KFIW7Y\\layout-dark.json",
+      "sha256": "170a576e47580855c7d6652d3514a41ffd512af834af84956b0e613dc25763ae",
+      "bytes": 769
+    },
+    {
+      "file": "live02.log",
+      "source": "C:\\Users\\18305\\AppData\\Local\\Temp\\video-upgrade-live02-evidence.log",
+      "sha256": "c20dce143aabd55e75df23c0acbcb18f9458cd080aeee612fd6f7f411902a939",
+      "bytes": 11095
+    },
+    {
+      "file": "ui.log",
+      "source": "C:\\Users\\18305\\AppData\\Local\\Temp\\video-upgrade-ui-release.log",
+      "sha256": "92967c9f0de9971480fc81881ebe4b61230d85108c4348989f08241df4b8c9cb",
+      "bytes": 9336
+    },
+    {
+      "file": "live01-chooser-fixture.log",
+      "source": "C:\\Users\\18305\\AppData\\Local\\Temp\\video-upgrade-live01-final.log",
+      "sha256": "4829ca159e72adb17a754003032c870c0d27b18e4c404010858ce3eb21b28ada",
+      "bytes": 1982
+    },
+    {
+      "file": "legacy-video.log",
+      "source": "C:\\Users\\18305\\AppData\\Local\\Temp\\video-upgrade-legacy-final.log",
+      "sha256": "a21be68b5a87888be74c95a6fcff8297ba9ac86b777596881f49b548b7f5acd8",
+      "bytes": 5706
+    },
+    {
+      "file": "gif.log",
+      "source": "C:\\Users\\18305\\AppData\\Local\\Temp\\video-upgrade-gif-final.log",
+      "sha256": "b2676d2e947f1538a38ac95331d6dafd15b2aba05a4a4c6827c347eca5332b69",
+      "bytes": 4405
+    },
+    {
+      "file": "comic.log",
+      "source": "C:\\Users\\18305\\AppData\\Local\\Temp\\video-upgrade-comic-release.log",
+      "sha256": "b2eab79b4bdd5c7f1e02c4c9cf49e1e99641c60406e0fdd581b04ee038c2cd6a",
+      "bytes": 4787
+    },
+    {
+      "file": "comic-initial-failure.log",
+      "source": "C:\\Users\\18305\\AppData\\Local\\Temp\\video-upgrade-comic-final.log",
+      "sha256": "577fad639b17682dcc2a0902f62086d54e6db488244961f2aa119150016d70bc",
+      "bytes": 5189
+    },
+    {
+      "file": "civitai-failure.log",
+      "source": "C:\\Users\\18305\\AppData\\Local\\Temp\\video-upgrade-civitai-final.log",
+      "sha256": "6f8dadce4b005395fd019ac56cd746ec6b3fc65575e037b34fdc437e1f78b14c",
+      "bytes": 5620
+    },
+    {
+      "file": "civitai-confirm-failure.log",
+      "source": "C:\\Users\\18305\\AppData\\Local\\Temp\\video-upgrade-civitai-confirm.log",
+      "sha256": "a14a123a221eb159525af66b728ae5f57e3ef65baf0a5204fdad236a488b2cc5",
+      "bytes": 5620
+    },
+    {
+      "file": "typecheck.log",
+      "source": "C:\\Users\\18305\\AppData\\Local\\Temp\\video-upgrade-type-final.log",
+      "sha256": "03334bacc26bbd7d006f0308c861410c67d94747095b162bf5642eea3dfbb56d",
+      "bytes": 132
+    },
+    {
+      "file": "lint.log",
+      "source": "C:\\Users\\18305\\AppData\\Local\\Temp\\video-upgrade-lint-final.log",
+      "sha256": "c55c92ecbcb655c6125a1a269e06af075089f0ddb19accd36ff5326fcead6f90",
+      "bytes": 12434
+    },
+    {
+      "file": "check-failure.log",
+      "source": "C:\\Users\\18305\\AppData\\Local\\Temp\\video-upgrade-check-final.log",
+      "sha256": "8036eead2836b77a0aa021c61f4e5c7d02f4b96fa547fbfd93187e1744a7b767",
+      "bytes": 9428
+    },
+    {
+      "file": "meta-failure.log",
+      "source": "C:\\Users\\18305\\AppData\\Local\\Temp\\video-upgrade-meta.log",
+      "sha256": "40c497e2234a71ee85b4a9c921e2bd67efc3c39f214903f2651b305ef89801ef",
+      "bytes": 4777
+    },
+    {
+      "file": "build.log",
+      "source": "C:\\Users\\18305\\AppData\\Local\\Temp\\video-upgrade-build-final.log",
+      "sha256": "9f5c5a57bd6e84a43a0b1f1e1a40959c2c7eb3aa79adea09887ac6cae81c4b99",
+      "bytes": 1814
+    },
+    {
+      "file": "locale-keys.log",
+      "source": "C:\\Users\\18305\\AppData\\Local\\Temp\\video-upgrade-keys-final.log",
+      "sha256": "f8c3d765cce3787307e0c7593feec26f1cf67535e7f0cef5dd954b7e35e960a3",
+      "bytes": 162
+    },
+    {
+      "file": "i18n.log",
+      "source": "C:\\Users\\18305\\AppData\\Local\\Temp\\video-upgrade-i18n.log",
+      "sha256": "e5d7abf3851e851b3b4b39233c980f0455af42356da461e0459cb8f4c8339a7d",
+      "bytes": 215
+    },
+    {
+      "file": "i18n-en.log",
+      "source": "C:\\Users\\18305\\AppData\\Local\\Temp\\video-upgrade-en.log",
+      "sha256": "21ab3deab5d7bd37064f87f86eb728b9ac2a60afe419ef7e0cf5b0619cfa696f",
+      "bytes": 667
+    },
+    {
+      "file": "smoke-rules.log",
+      "source": "C:\\Users\\18305\\AppData\\Local\\Temp\\video-upgrade-smoke-rules-final.log",
+      "sha256": "4372ab04a7ea075af3271823ace7d854e2da12a6fa800b78d303015f41dcea60",
+      "bytes": 598
+    },
+    {
+      "file": "script-refs.log",
+      "source": "C:\\Users\\18305\\AppData\\Local\\Temp\\video-upgrade-refs-final.log",
+      "sha256": "353fd3e4b77dd80ea3671fa9c9d7e98cf622c5bf28322b50562e4dd32e4be940",
+      "bytes": 130
+    },
+    {
+      "file": "build-fingerprint.json",
+      "source": "apps\\next\\.next\\build-fingerprint.json",
+      "sha256": "3395e93bbefff1330a3c74c6e6c8f9712c7b6cda5f66d556e933064d04b69e30",
+      "bytes": 107108
+    },
+    {
+      "file": "task-baseline.json",
+      "source": "C:\\Users\\18305\\AppData\\Local\\Temp\\ir-multitrack-baseline-1hh76ind\\baseline.json",
+      "sha256": "7d58ea8b1c0e2f7b709c629a7b6a7ab3ea0f06ff3e944dc7cd733433bdbe0935",
+      "bytes": 1286363
+    }
+  ]
+}

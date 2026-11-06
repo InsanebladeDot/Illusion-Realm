@@ -1,0 +1,13 @@
+$ node scripts/verify-output-path-contract.js
+PASS  默认路径 = 软件目录同级的「{目录名} Output」  (D:\Code\Illusion-Realm\Illusion-Realm\fake-app-dir Output)
+PASS  空串 → 回落默认路径  (D:\Code\Illusion-Realm\Illusion-Realm\fake-app-dir Output)
+PASS  纯空白 → 回落默认路径
+PASS  undefined → 回落默认路径
+PASS  null → 回落默认路径
+PASS  负向对照：显式路径原样保留  (D:\custom)
+PASS  显式路径两侧空白被裁掉
+PASS  files.handlers.js 里存在 customOutputPath 校验点（防解析器失配而恒真）  (6 处)
+PASS  所有 customOutputPath 校验都用可选校验器（空 = 默认路径）  (OptionalString / OptionalString / OptionalString / OptionalString / OptionalString / OptionalString)
+PASS  负向对照：解析器能认出 requireString（否则上面那条是恒真）  (String)
+PASS  解析器认得 requireOptionalString
+OK  输出路径契约：用时回落 / 显式不覆盖 / 校验器可选（11 项）

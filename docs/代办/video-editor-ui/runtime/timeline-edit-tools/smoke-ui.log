@@ -1,0 +1,143 @@
+
+[构建自检] record：内容指纹一致（887 个文件，记录于 2026-11-05T04:04:48.924Z）
+PASS  Editor host reaches 1600x1000
+PASS  1600: single shell and no duplicate window controls
+PASS  1600: regions fit the workspace and retain an 8px separator
+PASS  1600: media/property/timeline own their scroll areas
+PASS  All five demo clips use exact project coordinates and real gaps
+PASS  12s playhead starts at 40% of content width and does not intercept clicks
+PASS  1600: expected upper panels are visible
+PASS  Editor host reaches 1280x800
+PASS  1280: single shell and no duplicate window controls
+PASS  1280: regions fit the workspace and retain an 8px separator
+PASS  1280: media/property/timeline own their scroll areas
+PASS  All five demo clips use exact project coordinates and real gaps
+PASS  12s playhead starts at 40% of content width and does not intercept clicks
+PASS  1280: expected upper panels are visible
+PASS  Editor host reaches 960x720
+PASS  960: single shell and no duplicate window controls
+PASS  960: regions fit the workspace and retain an 8px separator
+PASS  960: media/property/timeline own their scroll areas
+PASS  All five demo clips use exact project coordinates and real gaps
+PASS  12s playhead starts at 40% of content width and does not intercept clicks
+PASS  960: expected upper panels are visible
+PASS  Editor host reaches 800x720
+PASS  Narrow timeline genuinely scrolls horizontally
+PASS  All five demo clips use exact project coordinates and real gaps
+PASS  12s playhead starts at 40% of content width and does not intercept clicks
+PASS  Editor host reaches 960x720
+PASS  Unconnected controls are natively disabled and do not execute media operations
+PASS  Existing navigation resizes the same editor instance
+PASS  Editor host reaches 1600x1000
+PASS  Dark theme retains the same workspace and unfiltered preview
+PASS  float draft remains uncorrected while typing
+PASS  Enter commits decimals only in the current instance
+PASS  invalid number retains draft with accessible inline error
+PASS  Escape restores the last committed number and clears error
+PASS  empty draft cannot become a successful zero
+PASS  blur commits using the same precision rule
+PASS  asset selection stays local and long names retain full labels
+PASS  clip shell selects audio independently and keeps B selected
+PASS  clip selection does not overwrite the selected asset
+PASS  asset selection does not overwrite the selected clip
+PASS  locked clip cannot steal selection
+PASS  loading missing error and empty states are explicit
+PASS  unconnected and busy actions remain disabled
+PASS  keyboard collapse keeps B expanded and hides A from tab order
+PASS  expanding restores its own committed draft
+PASS  expanded group fully contains the last numeric field
+PASS  keyboard toggle changes only A and has a visible focus ring
+PASS  visual assets without covers show missing state instead of audio waveform
+PASS  failed cover decoding uses the shared missing placeholder
+PASS  disabled and busy buttons describe their own actual reason
+PASS  narrow samples keep content inside their scroll host
+PASS  sample selection never changes the default project clip
+PASS  Editor host reaches 1280x800
+PASS  Media search is enabled while real import has its own disabled reason
+PASS  Keyboard selects image with visible focus and no invented source duration
+PASS  Case-insensitive filename search intersects audio type
+PASS  Escape clears only search and retains the audio filter
+PASS  No matches differs from an empty library and offers reset
+PASS  Reset restores five items and previously hidden selection
+PASS  Asset selection never changes inspector, program or clip state
+PASS  Editor host reaches 1600x1000
+PASS  Media library loading blocks stale rows and search
+PASS  Media library error blocks stale rows and search
+PASS  Empty media library is searchable and has no false recovery action
+PASS  Media panel instances have independent filters, queries and selection
+PASS  Probing and invalid media are disabled but missing covers remain selectable
+PASS  A missing-cover image can be selected without changing B's audio selection
+PASS  Long filenames ellipsize while retaining their complete title
+PASS  Only media results scroll while media tools stay fixed
+PASS  Theme switch preserves separate media selections
+PASS  Narrow media samples retain internal scroll boundaries without page overflow
+PASS  Editor host reaches 1600x1000
+PASS  Returning from media samples retains the original project clip
+PASS  Preview maps project ratios and 24fps frame tails from parameters
+PASS  Selected video clip maps to its own cover and project time without changing B
+PASS  Selecting a source asset never replaces the selected preview clip
+PASS  Image clip maps cover and project position without changing source selection
+PASS  Audio selection shows a clear no-picture state instead of a stale video
+PASS  Program empty state is explicit and preserves its transport boundary
+PASS  Program loading state is explicit and preserves its transport boundary
+PASS  Program missing state is explicit and preserves its transport boundary
+PASS  Program error state is explicit and preserves its transport boundary
+PASS  Program black state is explicit and preserves its transport boundary
+PASS  Actual cover decoding failure falls back only in its own preview
+PASS  A new valid cover recovers from the previous failed URL
+PASS  Long preview names ellipsize and preserve their full title
+PASS  Source view has a title, return action and local clip time
+PASS  Returning restores program time without changing clip or asset selection
+PASS  All preview processing controls stay disabled with an accurate reason
+PASS  Theme switch preserves preview and source selection in both instances
+PASS  Narrow preview keeps its canvas, long title and transport within the panel
+PASS  Editor host reaches 1600x1000
+PASS  Leaving preview samples restores the default project mapping
+PASS  UI05: invalid draft stays local and does not mark B invalid
+PASS  UI05: Escape restores the confirmed scale
+PASS  UI05: blur commits decimal project coordinates in A only
+PASS  UI05: group reset uses current project center  (960.00)
+PASS  UI05: mixed selection displays a dash instead of the first value
+PASS  UI05: mixed commit updates the first selected target only in A
+PASS  UI05: the other selected target receives the same confirmed value
+PASS  UI05: audio exposes volume and fades, with no visual transform
+PASS  UI05: image exposes its arranged duration, not speed or volume
+PASS  UI05: no selection shows project resolution and fps without stale fields
+PASS  UI05: 0-2 selects only common fields
+PASS  UI05: 0-3 selects only common fields
+PASS  UI05: 2-3 selects only common fields
+PASS  UI05: 0-2-3 selects only common fields
+PASS  UI05: reset clears an invalid draft even when its confirmed default is unchanged
+PASS  UI05: collapsing A leaves B expanded and its fields reachable
+PASS  Editor host reaches 1600x1000
+PASS  UI07: separator keyboard adjusts only the workspace split
+PASS  UI07: separator Home respects both region minimums
+PASS  UI07: separator End respects both region minimums
+PASS  Editor host reaches 960x720
+PASS  UI07: compact media opens only within the upper workspace
+PASS  UI07: compact panels are mutually exclusive with hidden media unfocusable
+PASS  UI07: Escape closes the panel and restores its actual trigger focus
+PASS  Editor host reaches 1600x1000
+PASS  UI07: pointer splitter changes actual upper geometry
+PASS  Editor host reaches 1600x1000
+PASS  UI07: same workspace fits 1600x1000 without hiding overflow
+PASS  Editor host reaches 1280x800
+PASS  UI07: same workspace fits 1280x800 without hiding overflow
+PASS  Editor host reaches 960x720
+PASS  UI07: same workspace fits 960x720 without hiding overflow
+PASS  UI07: light headings and info text meet 4.5 to 1 contrast  ([{"selector":"[data-editor-region=R03] h2","ratio":8.242831295872167},{"selector":"[data-editor-region=R01] strong","ratio":8.242831295872167},{"selector":"[data-editor-region=R10]","ratio":8.242831295872167}])
+PASS  Editor host reaches 1600x1000
+PASS  UI07: same workspace fits 1600x1000 without hiding overflow
+PASS  Editor host reaches 1280x800
+PASS  UI07: same workspace fits 1280x800 without hiding overflow
+PASS  Editor host reaches 960x720
+PASS  UI07: same workspace fits 960x720 without hiding overflow
+PASS  UI07: dark headings and info text meet 4.5 to 1 contrast  ([{"selector":"[data-editor-region=R03] h2","ratio":11.641853111708015},{"selector":"[data-editor-region=R01] strong","ratio":11.641853111708015},{"selector":"[data-editor-region=R10]","ratio":11.641853111708015}])
+PASS  UI07: nav toggle leaves the preview and timeline inside their host
+PASS  UI07: reduced motion removes spinner animation while keeping its text
+PASS  Media UI interactions never import, probe or play real files
+PASS  Legacy tool keeps the ordinary frame and original import UI
+PASS  GIF retains its original scrollable host without editor-only padding override
+PASS  No hydration or renderer errors
+VIDEO_EDITOR_UI_SCREENSHOTS C:\Users\18305\AppData\Local\Temp\ir-video-ui01-rMmHaa
+video-editor-ui SMOKE OK ✓  139/139

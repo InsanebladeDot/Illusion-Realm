@@ -1,0 +1,14 @@
+[
+  {
+    "selector": "[data-editor-region=R03] h2",
+    "ratio": 11.641853111708015
+  },
+  {
+    "selector": "[data-editor-region=R01] strong",
+    "ratio": 11.641853111708015
+  },
+  {
+    "selector": "[data-editor-region=R10]",
+    "ratio": 11.641853111708015
+  }
+]

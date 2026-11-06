@@ -1,0 +1,1187 @@
+{
+  "baseline": "C:\\Users\\18305\\AppData\\Local\\Temp\\ir-compose-baseline-n5gxi_kk\\baseline.json",
+  "method": "任务开始工作区快照；ui-timeline helper仅增加导出seek，用恢复原导出行还原；新增文件计全文，修改文件计新增与替换行。",
+  "files": [
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/clip-canvas.tsx",
+      "group": "business",
+      "C": 25,
+      "B": 5,
+      "changedLineRanges": [
+        {
+          "start": 27,
+          "end": 52
+        },
+        {
+          "start": 132,
+          "end": 132
+        },
+        {
+          "start": 226,
+          "end": 226
+        },
+        {
+          "start": 228,
+          "end": 228
+        },
+        {
+          "start": 230,
+          "end": 230
+        }
+      ],
+      "baselineSha256Lf": "37d40314e890473c9c6dce1ddba76374ea4c9cc29c886efa018240e31ca6d01b",
+      "currentSha256Lf": "5cb5c0116689161fef044802845057664e65afe6cb10000f625c2e27632e33d2",
+      "codeLines": [
+        42,
+        132,
+        226,
+        228,
+        230
+      ],
+      "candidateC": 25,
+      "excluded": []
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-panels.tsx",
+      "group": "business",
+      "C": 6,
+      "B": 1,
+      "changedLineRanges": [
+        {
+          "start": 403,
+          "end": 408
+        },
+        {
+          "start": 410,
+          "end": 410
+        }
+      ],
+      "baselineSha256Lf": "767c52c459d246644b3a43835116f75fef39fb374273e865f3048c6e0ebbea9f",
+      "currentSha256Lf": "8d38ee588e0ef275d757dd3a9d10165df07f5a087faf6d5b4af81fb35ef64cb7",
+      "codeLines": [
+        410
+      ],
+      "candidateC": 6,
+      "excluded": []
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-timeline.tsx",
+      "group": "business",
+      "C": 8,
+      "B": 3,
+      "changedLineRanges": [
+        {
+          "start": 90,
+          "end": 98
+        },
+        {
+          "start": 105,
+          "end": 105
+        },
+        {
+          "start": 230,
+          "end": 230
+        }
+      ],
+      "baselineSha256Lf": "c400abd47740fd554258436a35f98ee8e0427343942036c38d9f89b7e5a0e58e",
+      "currentSha256Lf": "bd0c4cdbd440b3df162fbd6abc6c055f87fc1d5aa876c2396072587d655cc4ff",
+      "codeLines": [
+        98,
+        105,
+        230
+      ],
+      "candidateC": 8,
+      "excluded": []
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor.module.css",
+      "group": "business",
+      "C": 13,
+      "B": 4,
+      "changedLineRanges": [
+        {
+          "start": 187,
+          "end": 187
+        },
+        {
+          "start": 695,
+          "end": 695
+        },
+        {
+          "start": 854,
+          "end": 869
+        }
+      ],
+      "baselineSha256Lf": "6dcd719009026d41e9eb5790e5a6926513d9067296dd3a6285f4ad59d4551089",
+      "currentSha256Lf": "db9af2088ec30b91801f8ff4f9f6e625fbfe962b4a5b36aa6f9259bac3cbc234",
+      "codeLines": [
+        187,
+        695,
+        867,
+        869
+      ],
+      "candidateC": 13,
+      "excluded": []
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/live-source-preview.tsx",
+      "group": "business",
+      "C": 51,
+      "B": 16,
+      "changedLineRanges": [
+        {
+          "start": 3,
+          "end": 8
+        },
+        {
+          "start": 16,
+          "end": 19
+        },
+        {
+          "start": 25,
+          "end": 29
+        },
+        {
+          "start": 40,
+          "end": 55
+        },
+        {
+          "start": 68,
+          "end": 71
+        },
+        {
+          "start": 88,
+          "end": 91
+        },
+        {
+          "start": 106,
+          "end": 113
+        },
+        {
+          "start": 115,
+          "end": 115
+        },
+        {
+          "start": 117,
+          "end": 117
+        },
+        {
+          "start": 122,
+          "end": 122
+        },
+        {
+          "start": 127,
+          "end": 130
+        },
+        {
+          "start": 132,
+          "end": 132
+        },
+        {
+          "start": 135,
+          "end": 139
+        },
+        {
+          "start": 143,
+          "end": 149
+        }
+      ],
+      "baselineSha256Lf": "ed579286842efe0575b7524b56391706b4fc9540aca68d77744237a25ffbf3da",
+      "currentSha256Lf": "c9821775232217d13fd68c30b76655ef489063d7166635c0e339edd05f21d152",
+      "codeLines": [
+        8,
+        55,
+        91,
+        113,
+        115,
+        117,
+        122,
+        127,
+        128,
+        129,
+        130,
+        132,
+        146,
+        147,
+        148,
+        149
+      ],
+      "candidateC": 51,
+      "excluded": []
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/timeline-track-model.ts",
+      "group": "business",
+      "C": 15,
+      "B": 2,
+      "changedLineRanges": [
+        {
+          "start": 152,
+          "end": 168
+        }
+      ],
+      "baselineSha256Lf": "03120de67adaa379439e9b6257c921b4bb0590c2f02f27a7fec74dfc89e454fd",
+      "currentSha256Lf": "ebe5eaf580ed40fe56840cdd6fe47aa3db374d79f9fbbcbc0c288ca0fc5965e0",
+      "codeLines": [
+        167,
+        168
+      ],
+      "candidateC": 15,
+      "excluded": []
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/use-clip-transform.ts",
+      "group": "business",
+      "C": 5,
+      "B": 1,
+      "changedLineRanges": [
+        {
+          "start": 14,
+          "end": 14
+        },
+        {
+          "start": 18,
+          "end": 18
+        },
+        {
+          "start": 23,
+          "end": 23
+        },
+        {
+          "start": 66,
+          "end": 67
+        },
+        {
+          "start": 79,
+          "end": 79
+        }
+      ],
+      "baselineSha256Lf": "37371b5edb657d0e4870052fb65882b4aa2c6c16515058957934dedb625a2b02",
+      "currentSha256Lf": "2281aefeb16a32310223769322a80a34f8bf07dfa9451972fd0f976a608ac8e8",
+      "codeLines": [
+        23
+      ],
+      "candidateC": 5,
+      "excluded": []
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/use-live-timeline.ts",
+      "group": "business",
+      "C": 12,
+      "B": 6,
+      "changedLineRanges": [
+        {
+          "start": 7,
+          "end": 7
+        },
+        {
+          "start": 57,
+          "end": 57
+        },
+        {
+          "start": 247,
+          "end": 257
+        },
+        {
+          "start": 476,
+          "end": 476
+        },
+        {
+          "start": 713,
+          "end": 713
+        },
+        {
+          "start": 733,
+          "end": 733
+        },
+        {
+          "start": 747,
+          "end": 747
+        },
+        {
+          "start": 775,
+          "end": 775
+        }
+      ],
+      "baselineSha256Lf": "e8da33f61b89211f4eb96e86d753a0cda06144243e413c1f8a31a583cdb882fb",
+      "currentSha256Lf": "f702fc5c84c34d0b97993677c6a957827e5e674b41dca05d6b14b3bb8ad22110",
+      "codeLines": [
+        7,
+        57,
+        257,
+        476,
+        747,
+        775
+      ],
+      "candidateC": 12,
+      "excluded": []
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/video-editor-view.tsx",
+      "group": "business",
+      "C": 19,
+      "B": 6,
+      "changedLineRanges": [
+        {
+          "start": 18,
+          "end": 19
+        },
+        {
+          "start": 67,
+          "end": 88
+        },
+        {
+          "start": 126,
+          "end": 127
+        }
+      ],
+      "baselineSha256Lf": "fc5aa7063fbd60b321401b748666af559744e9ece381feed37bbc125b56165ee",
+      "currentSha256Lf": "9f0bd2ec0f8b3f430dbd17d65587ed16e57f41009fc0dd42ddae997ab6809b80",
+      "codeLines": [
+        18,
+        19,
+        86,
+        87,
+        88,
+        126
+      ],
+      "candidateC": 19,
+      "excluded": []
+    },
+    {
+      "file": "apps/next/src/i18n/locales/en/toolBox.ts",
+      "group": "business",
+      "C": 0,
+      "B": 1,
+      "changedLineRanges": [
+        {
+          "start": 16,
+          "end": 16
+        }
+      ],
+      "baselineSha256Lf": "5e907250dc235701a13405964967826a0324952edaa289110d3c5348f491f250",
+      "currentSha256Lf": "6f925ae2b3cbe64ff9e9fad41fa44bf6975f6f96873c1658b1fcbab3dbeb31df",
+      "codeLines": [
+        16
+      ],
+      "candidateC": 0,
+      "excluded": []
+    },
+    {
+      "file": "apps/next/src/i18n/locales/zh-CN/toolBox.ts",
+      "group": "business",
+      "C": 0,
+      "B": 1,
+      "changedLineRanges": [
+        {
+          "start": 28,
+          "end": 28
+        }
+      ],
+      "baselineSha256Lf": "1df56595ff355a3b779d32cb2c03adb707c3b70815d366a995be608de7688897",
+      "currentSha256Lf": "add5e9144670a97c0f76379b16b44ae74dec2148aae22d87f6509f96ceb434ed",
+      "codeLines": [
+        28
+      ],
+      "candidateC": 0,
+      "excluded": []
+    },
+    {
+      "file": "scripts/smoke-video-live-02.js",
+      "group": "test",
+      "C": 68,
+      "B": 20,
+      "changedLineRanges": [
+        {
+          "start": 107,
+          "end": 111
+        },
+        {
+          "start": 114,
+          "end": 114
+        },
+        {
+          "start": 752,
+          "end": 779
+        },
+        {
+          "start": 784,
+          "end": 784
+        },
+        {
+          "start": 786,
+          "end": 786
+        },
+        {
+          "start": 788,
+          "end": 788
+        },
+        {
+          "start": 790,
+          "end": 790
+        },
+        {
+          "start": 888,
+          "end": 890
+        },
+        {
+          "start": 1501,
+          "end": 1545
+        },
+        {
+          "start": 1560,
+          "end": 1560
+        },
+        {
+          "start": 1580,
+          "end": 1580
+        }
+      ],
+      "baselineSha256Lf": "ec46067272d6f5ba680245bbce8844b49cd77513e8b83a33405c742958af833c",
+      "currentSha256Lf": "756de63c235ee743c651178237dca5d3fb766f5dc2c7b56a1ff5a861c18fd40e",
+      "codeLines": [
+        111,
+        114,
+        784,
+        786,
+        788,
+        790,
+        890,
+        1518,
+        1519,
+        1520,
+        1521,
+        1522,
+        1523,
+        1524,
+        1525,
+        1543,
+        1544,
+        1545,
+        1560,
+        1580
+      ],
+      "candidateC": 68,
+      "excluded": []
+    },
+    {
+      "file": "scripts/lib/check-video-multitrack.js",
+      "group": "test",
+      "C": 0,
+      "B": 1,
+      "changedLineRanges": [
+        {
+          "start": 383,
+          "end": 383
+        }
+      ],
+      "baselineSha256Lf": "8c9be92f43734c51844f626cdd8a8a12cf59ed264f7dd7d7c0e35e09924a2988",
+      "currentSha256Lf": "51d3b2e1c4eb2aae469655aaf28ccbf28e9b34d51e5cb2103c22c7af10aacb64",
+      "codeLines": [
+        383
+      ],
+      "candidateC": 0,
+      "excluded": []
+    },
+    {
+      "file": "scripts/lib/check-video-ui-timeline.js",
+      "group": "test",
+      "C": 1,
+      "B": 1,
+      "changedLineRanges": [
+        {
+          "start": 1,
+          "end": 1
+        },
+        {
+          "start": 159,
+          "end": 159
+        }
+      ],
+      "baselineSha256Lf": "4bec96e107344881f129043f18f898c9563d424ca64f51596efd3be4ee6a17ac",
+      "currentSha256Lf": "122d129dc0f7ebe0937569b39811e38e9c34b569794cb34884e070754903cf6b",
+      "codeLines": [
+        159
+      ],
+      "candidateC": 1,
+      "excluded": []
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/program-clock.ts",
+      "group": "business",
+      "C": 173,
+      "B": 69,
+      "changedLineRanges": [
+        {
+          "start": 1,
+          "end": 251
+        }
+      ],
+      "baselineSha256Lf": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "currentSha256Lf": "b70f5b36552fd5717a9931db850305e81ec980c8d437f27c7aabba2a795a474c",
+      "codeLines": [
+        4,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        35,
+        36,
+        37,
+        38,
+        39,
+        40,
+        41,
+        42,
+        43,
+        62,
+        63,
+        64,
+        80,
+        81,
+        82,
+        100,
+        101,
+        102,
+        103,
+        117,
+        118,
+        119,
+        138,
+        139,
+        140,
+        141,
+        142,
+        143,
+        144,
+        145,
+        187,
+        188,
+        189,
+        190,
+        191,
+        192,
+        193,
+        194,
+        195,
+        196,
+        197,
+        198,
+        217,
+        218,
+        219,
+        220,
+        221,
+        222,
+        223,
+        242,
+        243,
+        244,
+        245,
+        246,
+        247,
+        248,
+        249,
+        250,
+        251
+      ],
+      "candidateC": 173,
+      "excluded": []
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/use-program-playback.ts",
+      "group": "business",
+      "C": 166,
+      "B": 87,
+      "changedLineRanges": [
+        {
+          "start": 1,
+          "end": 274
+        }
+      ],
+      "baselineSha256Lf": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "currentSha256Lf": "0b32a7e0532a94b863f3555d323facada8738c33f2d4ec0e44da6c696e9c17a8",
+      "codeLines": [
+        1,
+        6,
+        7,
+        8,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        35,
+        53,
+        54,
+        55,
+        56,
+        57,
+        58,
+        59,
+        60,
+        61,
+        88,
+        89,
+        90,
+        91,
+        92,
+        93,
+        94,
+        95,
+        96,
+        97,
+        98,
+        99,
+        100,
+        101,
+        102,
+        124,
+        125,
+        126,
+        127,
+        128,
+        129,
+        130,
+        131,
+        132,
+        133,
+        155,
+        156,
+        157,
+        158,
+        159,
+        160,
+        161,
+        162,
+        163,
+        177,
+        178,
+        179,
+        180,
+        181,
+        182,
+        195,
+        196,
+        197,
+        236,
+        237,
+        238,
+        239,
+        240,
+        241,
+        242,
+        243,
+        260,
+        261,
+        262,
+        263,
+        264,
+        265,
+        266,
+        267,
+        268,
+        269,
+        270,
+        271,
+        272,
+        273,
+        274
+      ],
+      "candidateC": 177,
+      "excluded": [
+        {
+          "line": 187,
+          "text": "// 活动列表改变意味着新的解码集合，必须隐藏上一集合的ready画面。",
+          "reason": "重复的机制概述、其他段落已有的证据限制或泛化说明；不计有效注释。"
+        },
+        {
+          "line": 189,
+          "text": "// 位置、旋转和透明度不进键，空间调整只改变共享画布投影。",
+          "reason": "重复的机制概述、其他段落已有的证据限制或泛化说明；不计有效注释。"
+        },
+        {
+          "line": 211,
+          "text": "// 控制器采用先核对当前帧、再推进下一节拍的保守顺序。",
+          "reason": "重复的机制概述、其他段落已有的证据限制或泛化说明；不计有效注释。"
+        },
+        {
+          "line": 212,
+          "text": "// 推进后若恰好进入新集合，UI请求键立即失效上一集合快照。",
+          "reason": "重复的机制概述、其他段落已有的证据限制或泛化说明；不计有效注释。"
+        },
+        {
+          "line": 218,
+          "text": "// 跨轨同时活动时对全部节点检查，主层不存在特殊的免等待权。",
+          "reason": "重复的机制概述、其他段落已有的证据限制或泛化说明；不计有效注释。"
+        },
+        {
+          "line": 224,
+          "text": "// 测试可通过登记节点反证是否真的加载，不需要访问Hook私有闭包。",
+          "reason": "重复的机制概述、其他段落已有的证据限制或泛化说明；不计有效注释。"
+        },
+        {
+          "line": 225,
+          "text": "// Hook没有对window挂调试全局变量，正式程序不会暴露修改时钟的测试入口。",
+          "reason": "重复的机制概述、其他段落已有的证据限制或泛化说明；不计有效注释。"
+        },
+        {
+          "line": 226,
+          "text": "// 每次状态publish使用函数形式，避免同时到来的按钮更新被旧状态覆盖。",
+          "reason": "重复的机制概述、其他段落已有的证据限制或泛化说明；不计有效注释。"
+        },
+        {
+          "line": 249,
+          "text": "// 清理捕获安装时的clock对象，不能在卸载时意外引用后来的另一个工作区。",
+          "reason": "重复的机制概述、其他段落已有的证据限制或泛化说明；不计有效注释。"
+        },
+        {
+          "line": 250,
+          "text": "// visibilitychange读取当前document.hidden，不盲信事件携带的旧状态。",
+          "reason": "重复的机制概述、其他段落已有的证据限制或泛化说明；不计有效注释。"
+        },
+        {
+          "line": 251,
+          "text": "// 隐藏时立即暂停媒体，定时器兜底也会在下一次执行时核对隐藏事实。",
+          "reason": "重复的机制概述、其他段落已有的证据限制或泛化说明；不计有效注释。"
+        }
+      ]
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/program-composite-preview.tsx",
+      "group": "business",
+      "C": 131,
+      "B": 56,
+      "changedLineRanges": [
+        {
+          "start": 1,
+          "end": 200
+        }
+      ],
+      "baselineSha256Lf": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "currentSha256Lf": "77e022d0babca88f3fb3df6cca414721e81bf7374408c278a45c3cc057209119",
+      "codeLines": [
+        1,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        16,
+        17,
+        29,
+        40,
+        41,
+        42,
+        43,
+        44,
+        45,
+        55,
+        56,
+        57,
+        58,
+        59,
+        60,
+        83,
+        84,
+        85,
+        86,
+        87,
+        88,
+        89,
+        90,
+        92,
+        93,
+        94,
+        178,
+        179,
+        181,
+        182,
+        183,
+        184,
+        185,
+        186,
+        187,
+        188,
+        189,
+        190,
+        192,
+        194,
+        195,
+        196,
+        197,
+        198,
+        199,
+        200
+      ],
+      "candidateC": 140,
+      "excluded": [
+        {
+          "line": 146,
+          "text": "// 操作元素无真实媒体src，不会因每层多一个ClipCanvas而多占一台解码器。",
+          "reason": "重复的机制概述、其他段落已有的证据限制或泛化说明；不计有效注释。"
+        },
+        {
+          "line": 148,
+          "text": "// 画面层和操作层各有多个定位壳，但只有内容壳内部有视频节点。",
+          "reason": "重复的机制概述、其他段落已有的证据限制或泛化说明；不计有效注释。"
+        },
+        {
+          "line": 149,
+          "text": "// 因此统计DOM壳数量不能拿来推断解码器数量，回归以video节点作证。",
+          "reason": "重复的机制概述、其他段落已有的证据限制或泛化说明；不计有效注释。"
+        },
+        {
+          "line": 153,
+          "text": "// 层序是源帧呈现契约，操作层DOM不能作为未来导出采样内容。",
+          "reason": "重复的机制概述、其他段落已有的证据限制或泛化说明；不计有效注释。"
+        },
+        {
+          "line": 154,
+          "text": "// 现有canvasStyle同时服务单图样板和节目视频，基础适配定义保持一致。",
+          "reason": "重复的机制概述、其他段落已有的证据限制或泛化说明；不计有效注释。"
+        },
+        {
+          "line": 160,
+          "text": "// 被上层遮挡的下层可以在时间线选中后输入X/Y，不需要临时置顶编辑。",
+          "reason": "重复的机制概述、其他段落已有的证据限制或泛化说明；不计有效注释。"
+        },
+        {
+          "line": 162,
+          "text": "// 锁定轨无论是否选中都继续解码，所以画面不会因无法编辑而停住。",
+          "reason": "重复的机制概述、其他段落已有的证据限制或泛化说明；不计有效注释。"
+        },
+        {
+          "line": 173,
+          "text": "// 本轮层类型明确为视频，图片导入与图片实机异常仍在独立待办。",
+          "reason": "重复的机制概述、其他段落已有的证据限制或泛化说明；不计有效注释。"
+        },
+        {
+          "line": 177,
+          "text": "// 减少动态效果不会改变视频内容本身，但公共UI动画继续沿用项目主题约定。",
+          "reason": "重复的机制概述、其他段落已有的证据限制或泛化说明；不计有效注释。"
+        }
+      ]
+    },
+    {
+      "file": "scripts/lib/check-video-composition.js",
+      "group": "test",
+      "C": 289,
+      "B": 131,
+      "changedLineRanges": [
+        {
+          "start": 1,
+          "end": 452
+        }
+      ],
+      "baselineSha256Lf": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "currentSha256Lf": "4a56881fc5f9e547b9d56e9ee1ff9835d5624f43372ce63ce3f7408377b0cd81",
+      "codeLines": [
+        4,
+        5,
+        6,
+        77,
+        102,
+        103,
+        104,
+        105,
+        106,
+        107,
+        108,
+        109,
+        110,
+        111,
+        112,
+        136,
+        137,
+        138,
+        139,
+        140,
+        141,
+        142,
+        143,
+        146,
+        147,
+        148,
+        149,
+        150,
+        151,
+        152,
+        153,
+        154,
+        155,
+        156,
+        157,
+        180,
+        181,
+        182,
+        183,
+        184,
+        185,
+        186,
+        187,
+        188,
+        189,
+        212,
+        213,
+        214,
+        215,
+        216,
+        217,
+        218,
+        219,
+        220,
+        221,
+        222,
+        223,
+        224,
+        225,
+        226,
+        252,
+        253,
+        254,
+        255,
+        256,
+        257,
+        258,
+        259,
+        260,
+        261,
+        262,
+        263,
+        264,
+        265,
+        266,
+        267,
+        268,
+        269,
+        270,
+        271,
+        296,
+        297,
+        298,
+        299,
+        300,
+        301,
+        302,
+        303,
+        304,
+        305,
+        306,
+        307,
+        308,
+        309,
+        310,
+        311,
+        312,
+        326,
+        327,
+        328,
+        329,
+        330,
+        331,
+        354,
+        355,
+        356,
+        357,
+        358,
+        359,
+        360,
+        361,
+        362,
+        363,
+        364,
+        365,
+        366,
+        367,
+        368,
+        384,
+        385,
+        386,
+        387,
+        388,
+        389,
+        446,
+        447,
+        448,
+        449,
+        450,
+        451,
+        452
+      ],
+      "candidateC": 311,
+      "excluded": [
+        {
+          "line": 14,
+          "text": "// 系统选择框返回路径仍由夹具提供，与真正点击原生多选是不同证据。",
+          "reason": "重复的机制概述、其他段落已有的证据限制或泛化说明；不计有效注释。"
+        },
+        {
+          "line": 15,
+          "text": "// 内部拖动由既有CDP流程启动，不声称资源管理器OLE系统拖入。",
+          "reason": "重复的机制概述、其他段落已有的证据限制或泛化说明；不计有效注释。"
+        },
+        {
+          "line": 22,
+          "text": "// 验收矩阵还需要区分“返回值夹具”“自动事件”和“人工实际操作”三个证据层次。",
+          "reason": "重复的机制概述、其他段落已有的证据限制或泛化说明；不计有效注释。"
+        },
+        {
+          "line": 26,
+          "text": "// 此套件没有调用Windows资源管理器，因此系统拖入仍保留待验。",
+          "reason": "重复的机制概述、其他段落已有的证据限制或泛化说明；不计有效注释。"
+        },
+        {
+          "line": 29,
+          "text": "// 原始素材试听入口可用与扬声器试听通过是两件事，文档分别列出。",
+          "reason": "重复的机制概述、其他段落已有的证据限制或泛化说明；不计有效注释。"
+        },
+        {
+          "line": 31,
+          "text": "// 同样，离屏真实纹理也不能被描述为用户前台人工完成的验收。",
+          "reason": "重复的机制概述、其他段落已有的证据限制或泛化说明；不计有效注释。"
+        },
+        {
+          "line": 35,
+          "text": "// 高分辨率多路硬件解码预算未测试，默认五轨并非五路4K性能承诺。",
+          "reason": "重复的机制概述、其他段落已有的证据限制或泛化说明；不计有效注释。"
+        },
+        {
+          "line": 36,
+          "text": "// 上限提升后可能出现等待，性能限制应写到独立实施记录。",
+          "reason": "重复的机制概述、其他段落已有的证据限制或泛化说明；不计有效注释。"
+        },
+        {
+          "line": 54,
+          "text": "// UI08旧人工缺项保留原状态，新自动证据不能倒写成旧人工全部通过。",
+          "reason": "重复的机制概述、其他段落已有的证据限制或泛化说明；不计有效注释。"
+        },
+        {
+          "line": 58,
+          "text": "// 所有断言失败都需要原始日志，不能只交付截取的PASS部分。",
+          "reason": "重复的机制概述、其他段落已有的证据限制或泛化说明；不计有效注释。"
+        },
+        {
+          "line": 62,
+          "text": "// 最终交付应使用未设置专项开关的整轮结果，单独专项只供问题定位。",
+          "reason": "重复的机制概述、其他段落已有的证据限制或泛化说明；不计有效注释。"
+        },
+        {
+          "line": 74,
+          "text": "// 示意说明不属于源码测试结论，最终报告以实际非零/零退出码和断言数量为准。",
+          "reason": "重复的机制概述、其他段落已有的证据限制或泛化说明；不计有效注释。"
+        },
+        {
+          "line": 411,
+          "text": "// Windows原生最小化、遮挡和多显示器切换保留未实测，不与本条自动通过混报。",
+          "reason": "重复的机制概述、其他段落已有的证据限制或泛化说明；不计有效注释。"
+        },
+        {
+          "line": 414,
+          "text": "// 此组没有使用headless预期来跳过真实媒体节点，src释放对象仍是浏览器创建的视频。",
+          "reason": "重复的机制概述、其他段落已有的证据限制或泛化说明；不计有效注释。"
+        },
+        {
+          "line": 416,
+          "text": "// 两条fixture通过不增加原生系统拖入、系统缩放或扬声器试听的验收数量。",
+          "reason": "重复的机制概述、其他段落已有的证据限制或泛化说明；不计有效注释。"
+        },
+        {
+          "line": 420,
+          "text": "// 重建新节点与重用旧节点不同；保留的旧引用应继续无src，不能被偷偷回装。",
+          "reason": "重复的机制概述、其他段落已有的证据限制或泛化说明；不计有效注释。"
+        },
+        {
+          "line": 424,
+          "text": "// 不以currentTime零判断释放，避免把停止但未清源的节点误报为完整清理。",
+          "reason": "重复的机制概述、其他段落已有的证据限制或泛化说明；不计有效注释。"
+        },
+        {
+          "line": 425,
+          "text": "// 同样不以DOM数量零推断音频已停止，原节点paused才提供独立旁证。",
+          "reason": "重复的机制概述、其他段落已有的证据限制或泛化说明；不计有效注释。"
+        },
+        {
+          "line": 428,
+          "text": "// 外层当前offscreen窗口报告visible，实验可以检验通知逻辑但不能把它称为真实遮挡测试。",
+          "reason": "重复的机制概述、其他段落已有的证据限制或泛化说明；不计有效注释。"
+        },
+        {
+          "line": 436,
+          "text": "// 本组不验证所有可访问性焦点路径，完整人工键盘仍保持待验。",
+          "reason": "重复的机制概述、其他段落已有的证据限制或泛化说明；不计有效注释。"
+        },
+        {
+          "line": 439,
+          "text": "// 活动层只有两条，本组不检验默认五路上限满载时的销毁峰值。",
+          "reason": "重复的机制概述、其他段落已有的证据限制或泛化说明；不计有效注释。"
+        },
+        {
+          "line": 445,
+          "text": "// 这些边界不证明导出清理，因为本轮没有创建编码进程或输出文件句柄。",
+          "reason": "重复的机制概述、其他段落已有的证据限制或泛化说明；不计有效注释。"
+        }
+      ]
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/use-program-visibility.ts",
+      "group": "business",
+      "C": 14,
+      "B": 15,
+      "changedLineRanges": [
+        {
+          "start": 1,
+          "end": 32
+        }
+      ],
+      "baselineSha256Lf": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "currentSha256Lf": "4e67c680f00acac92110e4573965e671c481e98ff06a8593a7ba5c141472a52f",
+      "codeLines": [
+        1,
+        7,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        30,
+        31,
+        32
+      ],
+      "candidateC": 14,
+      "excluded": []
+    }
+  ],
+  "totals": {
+    "business": {
+      "C": 638,
+      "B": 273,
+      "excluded": 20,
+      "percent": 70.0329
+    },
+    "test": {
+      "C": 358,
+      "B": 153,
+      "excluded": 22,
+      "percent": 70.0587
+    }
+  },
+  "review": "人工逐段核对职责、时钟与等待边界、取消及状态分离；剔除明确重复概述和证据泛化；混合行只计B，删除/原上下文不计；保留的详细说明补充输入语义与失败恢复，不以注释候选扫描直接当有效率。",
+  "baselineSha256": "3c208cd774b12bd841f1213a3b505439d05cdaac6a519442d677c204ab505a94"
+}

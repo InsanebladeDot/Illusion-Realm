@@ -1,0 +1,770 @@
+{
+  "baseline": "C:\\Users\\18305\\AppData\\Local\\Temp\\ir-timeline-wave-baseline-ywzpk41r\\baseline.json",
+  "method": "任务开始工作区快照；smoke主脚本基线由剔除本轮两处改动精确还原；新增文件计全文，修改文件计新增与替换行。",
+  "files": [
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-clip-shell.tsx",
+      "group": "business",
+      "C": 6,
+      "B": 4,
+      "changedLineRanges": [
+        {
+          "start": 31,
+          "end": 34
+        },
+        {
+          "start": 106,
+          "end": 106
+        },
+        {
+          "start": 111,
+          "end": 115
+        }
+      ],
+      "baselineSha256Lf": "c35dccbe0130757ba62eb44487cd5d738fae3607486deb81ebb61cb46105f045",
+      "currentSha256Lf": "dccb68f70e2fd0982169880df4af19f66d6830d1fcd2d0a31600ec79d7c28a9b",
+      "codeLines": [
+        34,
+        106,
+        111,
+        115
+      ],
+      "candidateC": 6,
+      "excludedCommentLines": [],
+      "percent": 60.0
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-timeline.tsx",
+      "group": "business",
+      "C": 13,
+      "B": 7,
+      "changedLineRanges": [
+        {
+          "start": 7,
+          "end": 8
+        },
+        {
+          "start": 35,
+          "end": 39
+        },
+        {
+          "start": 140,
+          "end": 140
+        },
+        {
+          "start": 153,
+          "end": 153
+        },
+        {
+          "start": 156,
+          "end": 156
+        },
+        {
+          "start": 158,
+          "end": 161
+        },
+        {
+          "start": 192,
+          "end": 192
+        },
+        {
+          "start": 217,
+          "end": 217
+        },
+        {
+          "start": 221,
+          "end": 221
+        },
+        {
+          "start": 288,
+          "end": 288
+        },
+        {
+          "start": 307,
+          "end": 307
+        },
+        {
+          "start": 318,
+          "end": 318
+        }
+      ],
+      "baselineSha256Lf": "480ceaca20de7ad53e2b50a0d1a23e9d6c3be2438cce3dde269d9cb03b893705",
+      "currentSha256Lf": "c400abd47740fd554258436a35f98ee8e0427343942036c38d9f89b7e5a0e58e",
+      "codeLines": [
+        38,
+        39,
+        140,
+        156,
+        161,
+        221,
+        307
+      ],
+      "candidateC": 13,
+      "excludedCommentLines": [],
+      "percent": 65.0
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor.module.css",
+      "group": "business",
+      "C": 33,
+      "B": 12,
+      "changedLineRanges": [
+        {
+          "start": 797,
+          "end": 842
+        }
+      ],
+      "baselineSha256Lf": "e310507e996e624f7f1bd817fc66d48257d236001fb58f56005da99d93f225ed",
+      "currentSha256Lf": "6dcd719009026d41e9eb5790e5a6926513d9067296dd3a6285f4ad59d4551089",
+      "codeLines": [
+        807,
+        808,
+        813,
+        821,
+        822,
+        826,
+        827,
+        831,
+        832,
+        839,
+        840,
+        841
+      ],
+      "candidateC": 33,
+      "excludedCommentLines": [],
+      "percent": 73.33
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/video-filmstrip.tsx",
+      "group": "business",
+      "C": 24,
+      "B": 7,
+      "changedLineRanges": [
+        {
+          "start": 151,
+          "end": 151
+        },
+        {
+          "start": 154,
+          "end": 155
+        },
+        {
+          "start": 182,
+          "end": 198
+        },
+        {
+          "start": 201,
+          "end": 203
+        },
+        {
+          "start": 262,
+          "end": 265
+        },
+        {
+          "start": 273,
+          "end": 276
+        }
+      ],
+      "baselineSha256Lf": "200e440aa46ab9d1578746bef076823ef31a2d5756ce38729db43772ab570d64",
+      "currentSha256Lf": "344890feea5181b744fb111b47c485908a92f8a4c539f8360e641bb6b1126626",
+      "codeLines": [
+        197,
+        198,
+        201,
+        202,
+        203,
+        265,
+        276
+      ],
+      "candidateC": 24,
+      "excludedCommentLines": [],
+      "percent": 77.42
+    },
+    {
+      "file": "apps/electron/src/main/modules/ffmpeg/index.js",
+      "group": "business",
+      "C": 6,
+      "B": 2,
+      "changedLineRanges": [
+        {
+          "start": 16,
+          "end": 19
+        },
+        {
+          "start": 102,
+          "end": 105
+        }
+      ],
+      "baselineSha256Lf": "b76f010748ace8d9307125414b34001f1e866c7fb8cab304e3f633e9bd0f9d8f",
+      "currentSha256Lf": "9e09071d94706c72b2cc8871f69de978d0712856ead38be0ba919f3251b8aeca",
+      "codeLines": [
+        19,
+        105
+      ],
+      "candidateC": 6,
+      "excludedCommentLines": [],
+      "percent": 75.0
+    },
+    {
+      "file": "packages/shared/src/ipc-channels.ts",
+      "group": "business",
+      "C": 3,
+      "B": 1,
+      "changedLineRanges": [
+        {
+          "start": 101,
+          "end": 104
+        }
+      ],
+      "baselineSha256Lf": "af3169a52f132db8c7e4dfee03a218fa0bf08e515182e212dc61e29bd9bc932e",
+      "currentSha256Lf": "45ac0f35e68e4206e4a965219395ca471531819c723a2774dacd989e625b5316",
+      "codeLines": [
+        104
+      ],
+      "candidateC": 3,
+      "excludedCommentLines": [],
+      "percent": 75.0
+    },
+    {
+      "file": "apps/electron/src/common/ipc-channels.js",
+      "group": "business",
+      "C": 3,
+      "B": 1,
+      "changedLineRanges": [
+        {
+          "start": 82,
+          "end": 85
+        }
+      ],
+      "baselineSha256Lf": "fd7f65931e56006b9c93f6c4640ef0337ece7233f605099a9760d465c7db5d1b",
+      "currentSha256Lf": "29c8a9d8e028b348eff47c93d0b6ae59341e9f35d0e9429eb96501fd5e8d5924",
+      "codeLines": [
+        85
+      ],
+      "candidateC": 3,
+      "excludedCommentLines": [],
+      "percent": 75.0
+    },
+    {
+      "file": "apps/electron/src/preload/index.js",
+      "group": "business",
+      "C": 3,
+      "B": 1,
+      "changedLineRanges": [
+        {
+          "start": 170,
+          "end": 173
+        }
+      ],
+      "baselineSha256Lf": "0cc0173dc4b3a3b56a96c506aee47f9387218a162b38111e6974f5869a93328d",
+      "currentSha256Lf": "b15cdbd2e2a70b54799915225833c5048fa8f18a38c64fa541a907a70a840df8",
+      "codeLines": [
+        173
+      ],
+      "candidateC": 3,
+      "excludedCommentLines": [],
+      "percent": 75.0
+    },
+    {
+      "file": "packages/shared/src/types/electron-api.ts",
+      "group": "business",
+      "C": 13,
+      "B": 6,
+      "changedLineRanges": [
+        {
+          "start": 72,
+          "end": 87
+        },
+        {
+          "start": 379,
+          "end": 382
+        }
+      ],
+      "baselineSha256Lf": "f31cb40d30185dcc62988e663700c0d970fb2139a838ebd8097c9d5ac8464a7d",
+      "currentSha256Lf": "64a42c182e482c68842c5598529205907b10cc6e050862bcf6b7f4d171f6ce47",
+      "codeLines": [
+        80,
+        81,
+        85,
+        86,
+        87,
+        382
+      ],
+      "candidateC": 13,
+      "excludedCommentLines": [],
+      "percent": 68.42
+    },
+    {
+      "file": "packages/shared/src/schemas/media.schema.ts",
+      "group": "business",
+      "C": 10,
+      "B": 6,
+      "changedLineRanges": [
+        {
+          "start": 89,
+          "end": 105
+        }
+      ],
+      "baselineSha256Lf": "a29e29ca30fa66fe9245e8c93c8e8ae02021e5bb265fd7190d2df06d849fb873",
+      "currentSha256Lf": "658e7366071e589d0d5cbdd945fb62c56db11b78c6800934d7cee8b182f02bb2",
+      "codeLines": [
+        99,
+        100,
+        101,
+        102,
+        103,
+        104
+      ],
+      "candidateC": 10,
+      "excludedCommentLines": [],
+      "percent": 62.5
+    },
+    {
+      "file": "scripts/lib/check-video-filmstrip.js",
+      "group": "test",
+      "C": 3,
+      "B": 1,
+      "changedLineRanges": [
+        {
+          "start": 476,
+          "end": 479
+        }
+      ],
+      "baselineSha256Lf": "8b3c7dac694d731085f07e9d2b05e3925adf438b5dc41ffdc01d0c622dd1e15f",
+      "currentSha256Lf": "b24cda718acf02c74f1131c0141c6fa9bbdf88ab4e9cf9235ecb2d07332292c7",
+      "codeLines": [
+        479
+      ],
+      "candidateC": 3,
+      "excludedCommentLines": [],
+      "percent": 75.0
+    },
+    {
+      "file": "apps/electron/src/main/modules/ffmpeg/probe.js",
+      "group": "business",
+      "C": 7,
+      "B": 2,
+      "changedLineRanges": [
+        {
+          "start": 29,
+          "end": 29
+        },
+        {
+          "start": 32,
+          "end": 32
+        },
+        {
+          "start": 48,
+          "end": 54
+        }
+      ],
+      "baselineSha256Lf": "c8880897d9ad0646d1c3cfa822c14c3b891901ffbff5d73fd451969b8e978b09",
+      "currentSha256Lf": "5ecff547cb90e96c9009e6ab39058e8741fa567596b3b6741166db8421741bfb",
+      "codeLines": [
+        32,
+        54
+      ],
+      "candidateC": 7,
+      "excludedCommentLines": [],
+      "percent": 77.78
+    },
+    {
+      "file": "apps/next/src/i18n/locales/zh-CN/toolBox.ts",
+      "group": "business",
+      "C": 0,
+      "B": 2,
+      "changedLineRanges": [
+        {
+          "start": 162,
+          "end": 163
+        }
+      ],
+      "baselineSha256Lf": "600519f2401e7749ee60b0709291d96849fea1b0f51cbc3aeaba961cc8687c28",
+      "currentSha256Lf": "1df56595ff355a3b779d32cb2c03adb707c3b70815d366a995be608de7688897",
+      "codeLines": [
+        162,
+        163
+      ],
+      "candidateC": 0,
+      "excludedCommentLines": [],
+      "percent": 0.0
+    },
+    {
+      "file": "apps/next/src/i18n/locales/en/toolBox.ts",
+      "group": "business",
+      "C": 0,
+      "B": 2,
+      "changedLineRanges": [
+        {
+          "start": 150,
+          "end": 151
+        }
+      ],
+      "baselineSha256Lf": "4205da11df50949c0184133e8bcc808b9315e507affa3a3acd3e9841ba486b53",
+      "currentSha256Lf": "5e907250dc235701a13405964967826a0324952edaa289110d3c5348f491f250",
+      "codeLines": [
+        150,
+        151
+      ],
+      "candidateC": 0,
+      "excludedCommentLines": [],
+      "percent": 0.0
+    },
+    {
+      "file": "scripts/smoke-video-live-02.js",
+      "group": "test",
+      "C": 9,
+      "B": 2,
+      "changedLineRanges": [
+        {
+          "start": 190,
+          "end": 196
+        },
+        {
+          "start": 382,
+          "end": 385
+        }
+      ],
+      "baselineSha256Lf": "ddcd99fb77dbaa37f4417f0f610b868159da80ed77089a74a37ff41c7187c18a",
+      "currentSha256Lf": "ec46067272d6f5ba680245bbce8844b49cd77513e8b83a33405c742958af833c",
+      "codeLines": [
+        196,
+        385
+      ],
+      "candidateC": 9,
+      "excludedCommentLines": [],
+      "percent": 81.82
+    },
+    {
+      "file": "apps/electron/src/main/modules/ffmpeg/waveform.js",
+      "group": "business",
+      "C": 142,
+      "B": 52,
+      "changedLineRanges": [
+        {
+          "start": 1,
+          "end": 210
+        }
+      ],
+      "baselineSha256Lf": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "currentSha256Lf": "e7cbd32dc57cd9ebdb2314bc198ddf94d1f36bb99e52b94a2f61de9ca50aac32",
+      "codeLines": [
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        25,
+        26,
+        52,
+        53,
+        54,
+        55,
+        56,
+        57,
+        58,
+        59,
+        60,
+        61,
+        85,
+        89,
+        90,
+        91,
+        92,
+        124,
+        125,
+        126,
+        127,
+        128,
+        129,
+        130,
+        131,
+        132,
+        133,
+        134,
+        169,
+        173,
+        174,
+        175,
+        176,
+        177,
+        178,
+        179,
+        180,
+        181,
+        182,
+        183,
+        184,
+        207,
+        208,
+        209,
+        210
+      ],
+      "candidateC": 147,
+      "excludedCommentLines": [
+        24,
+        51,
+        84,
+        123,
+        168
+      ],
+      "percent": 73.2
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/source-waveform.ts",
+      "group": "business",
+      "C": 100,
+      "B": 55,
+      "changedLineRanges": [
+        {
+          "start": 1,
+          "end": 169
+        }
+      ],
+      "baselineSha256Lf": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "currentSha256Lf": "7bfd6c3d5a1a8e779c204a992f704deaafd68bc24d15b5528884905cd8d52741",
+      "codeLines": [
+        4,
+        5,
+        6,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        52,
+        53,
+        54,
+        55,
+        56,
+        57,
+        75,
+        76,
+        77,
+        78,
+        99,
+        100,
+        101,
+        102,
+        103,
+        104,
+        105,
+        106,
+        107,
+        108,
+        109,
+        110,
+        111,
+        112,
+        113,
+        140,
+        141,
+        142,
+        143,
+        144,
+        145,
+        146,
+        147,
+        148,
+        149,
+        150,
+        151,
+        152,
+        153,
+        154,
+        155,
+        156
+      ],
+      "candidateC": 104,
+      "excludedCommentLines": [
+        13,
+        132,
+        96,
+        48
+      ],
+      "percent": 64.52
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/clip-waveform.tsx",
+      "group": "business",
+      "C": 80,
+      "B": 26,
+      "changedLineRanges": [
+        {
+          "start": 1,
+          "end": 115
+        }
+      ],
+      "baselineSha256Lf": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "currentSha256Lf": "b608b1c205edccb9fdb0e9d345f003acbd71dc53b0eacc605e8101b488ab29de",
+      "codeLines": [
+        1,
+        5,
+        6,
+        7,
+        8,
+        44,
+        45,
+        46,
+        47,
+        48,
+        49,
+        50,
+        51,
+        52,
+        53,
+        54,
+        55,
+        56,
+        99,
+        100,
+        101,
+        102,
+        103,
+        104,
+        105,
+        106
+      ],
+      "candidateC": 83,
+      "excludedCommentLines": [
+        90,
+        96,
+        97
+      ],
+      "percent": 75.47
+    },
+    {
+      "file": "scripts/lib/check-video-waveform.js",
+      "group": "test",
+      "C": 132,
+      "B": 57,
+      "changedLineRanges": [
+        {
+          "start": 1,
+          "end": 207
+        }
+      ],
+      "baselineSha256Lf": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "currentSha256Lf": "e17d396d72d14d3d9e1aa2c19c0f17f30f1de3b103b9d15b1a84014863b1e033",
+      "codeLines": [
+        3,
+        4,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31,
+        52,
+        53,
+        54,
+        55,
+        56,
+        57,
+        58,
+        59,
+        60,
+        61,
+        62,
+        89,
+        90,
+        91,
+        92,
+        93,
+        94,
+        95,
+        122,
+        123,
+        124,
+        125,
+        126,
+        127,
+        128,
+        129,
+        130,
+        131,
+        132,
+        133,
+        134,
+        166,
+        167,
+        168,
+        169,
+        170,
+        171,
+        172,
+        173,
+        174,
+        175,
+        176,
+        177,
+        202,
+        203,
+        204,
+        205,
+        206,
+        207
+      ],
+      "candidateC": 138,
+      "excludedCommentLines": [
+        2,
+        118,
+        201,
+        11,
+        194,
+        195
+      ],
+      "percent": 69.84
+    }
+  ],
+  "totals": {
+    "business": {
+      "C": 443,
+      "B": 186,
+      "percent": 70.43
+    },
+    "test": {
+      "C": 144,
+      "B": 60,
+      "percent": 70.59
+    }
+  },
+  "manualReview": {
+    "method": "逐项检查新增注释准确性；剔除纯类型JSDoc与重复说明，保留机制、单位、失败与资源边界解释。",
+    "excluded": {
+      "apps/electron/src/main/modules/ffmpeg/waveform.js": [
+        24,
+        51,
+        84,
+        123,
+        168
+      ],
+      "apps/next/src/view/toolBox/Tool/video/editor/source-waveform.ts": [
+        13,
+        132,
+        96,
+        48
+      ],
+      "apps/next/src/view/toolBox/Tool/video/editor/clip-waveform.tsx": [
+        90,
+        96,
+        97
+      ],
+      "scripts/lib/check-video-waveform.js": [
+        2,
+        118,
+        201,
+        11,
+        194,
+        195
+      ]
+    }
+  }
+}

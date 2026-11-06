@@ -1,0 +1,760 @@
+{
+  "baseline": "C:\\Users\\18305\\AppData\\Local\\Temp\\ir-canvas-baseline-d96qtem8\\baseline.json",
+  "files": [
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-inspector.tsx",
+      "group": "business",
+      "C": 24,
+      "B": 10,
+      "changedLineRanges": [
+        {
+          "start": 17,
+          "end": 17
+        },
+        {
+          "start": 33,
+          "end": 33
+        },
+        {
+          "start": 61,
+          "end": 61
+        },
+        {
+          "start": 76,
+          "end": 78
+        },
+        {
+          "start": 91,
+          "end": 91
+        },
+        {
+          "start": 93,
+          "end": 94
+        },
+        {
+          "start": 119,
+          "end": 139
+        },
+        {
+          "start": 150,
+          "end": 150
+        },
+        {
+          "start": 155,
+          "end": 156
+        },
+        {
+          "start": 162,
+          "end": 163
+        }
+      ],
+      "baselineSha256Lf": "9cd94cd726f36e9f6dcdc39c5dc4bd7e843d1655457c6a3932c0a57e60ed9b14",
+      "currentSha256Lf": "8ffd589b76f310add18b6177406bf021704034627fd827f6910116de97460c15",
+      "candidateC": 25,
+      "percent": 70.5882
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-panels.tsx",
+      "group": "business",
+      "C": 21,
+      "B": 8,
+      "changedLineRanges": [
+        {
+          "start": 7,
+          "end": 28
+        },
+        {
+          "start": 272,
+          "end": 272
+        },
+        {
+          "start": 311,
+          "end": 311
+        },
+        {
+          "start": 388,
+          "end": 388
+        },
+        {
+          "start": 439,
+          "end": 441
+        },
+        {
+          "start": 458,
+          "end": 458
+        }
+      ],
+      "baselineSha256Lf": "925c988a93c0390387f2b429516f8cc204a7b2d6c1d63afea5054f959856f67d",
+      "currentSha256Lf": "7d6ac10601f4c36d0f60c160f1140b9775ca4623ba4c28b86b3228f16e91576f",
+      "candidateC": 21,
+      "percent": 72.4138
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-property-model.ts",
+      "group": "business",
+      "C": 3,
+      "B": 0,
+      "changedLineRanges": [
+        {
+          "start": 17,
+          "end": 17
+        },
+        {
+          "start": 38,
+          "end": 39
+        }
+      ],
+      "baselineSha256Lf": "c1cbd9fe306123278ec4c5bf805fd53a89b846ac3a625c90572e85eb71ec5001",
+      "currentSha256Lf": "3b9f639cb957c25807f97f12e7b028de2696b9108366bb5e3fe6b0a25f619544",
+      "candidateC": 3,
+      "percent": 100.0
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-time-ruler.tsx",
+      "group": "business",
+      "C": 10,
+      "B": 1,
+      "changedLineRanges": [
+        {
+          "start": 4,
+          "end": 13
+        },
+        {
+          "start": 103,
+          "end": 103
+        }
+      ],
+      "baselineSha256Lf": "b09a99428b06efdda73918cbd5a79cc9191a558693a9f3a2ddba40eba33977bf",
+      "currentSha256Lf": "3ed6819f3594a229e052f782f73dbf254b3f2ce266a24de77cdb78c4f645719d",
+      "candidateC": 10,
+      "percent": 90.9091
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-timeline.tsx",
+      "group": "business",
+      "C": 10,
+      "B": 2,
+      "changedLineRanges": [
+        {
+          "start": 19,
+          "end": 29
+        },
+        {
+          "start": 108,
+          "end": 108
+        }
+      ],
+      "baselineSha256Lf": "b4a3f553d35be8a309b3db5225b055ee3fa20a9dc72a347bbd3efb63c5f0ac22",
+      "currentSha256Lf": "893daa7f13bb5b33955c7176dfbeb8d4f679156c67a000858a83cd465cc3c8d6",
+      "candidateC": 10,
+      "percent": 83.3333
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor.module.css",
+      "group": "business",
+      "C": 24,
+      "B": 8,
+      "changedLineRanges": [
+        {
+          "start": 616,
+          "end": 652
+        }
+      ],
+      "baselineSha256Lf": "da4225af13ebf15af2c291884ced46785630b8755f43a9b6e6bcc10daec43aba",
+      "currentSha256Lf": "5873ce3b56779ee09d0195b2f64f6e2e52d3b8c4394d3230ba4afbd1c4a979aa",
+      "candidateC": 26,
+      "percent": 75.0
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/live-source-preview.tsx",
+      "group": "business",
+      "C": 21,
+      "B": 13,
+      "changedLineRanges": [
+        {
+          "start": 24,
+          "end": 24
+        },
+        {
+          "start": 254,
+          "end": 254
+        },
+        {
+          "start": 273,
+          "end": 275
+        },
+        {
+          "start": 278,
+          "end": 278
+        },
+        {
+          "start": 334,
+          "end": 349
+        },
+        {
+          "start": 357,
+          "end": 357
+        },
+        {
+          "start": 360,
+          "end": 370
+        }
+      ],
+      "baselineSha256Lf": "da3540e4a6929a4f1226726925af56b5a34410d5051e991ba9cd2e37263304c8",
+      "currentSha256Lf": "b05455a3fa54b4e21d366a88f5c282e06b6b92d970b1dbe3004c2458aa60a4a2",
+      "candidateC": 21,
+      "percent": 61.7647
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/live-timeline-model.ts",
+      "group": "business",
+      "C": 20,
+      "B": 2,
+      "changedLineRanges": [
+        {
+          "start": 214,
+          "end": 224
+        },
+        {
+          "start": 284,
+          "end": 294
+        }
+      ],
+      "baselineSha256Lf": "fa81e55ea54a508ce9ee81bd50e0fbbc10069b694a9a11f54f4653c284d9737a",
+      "currentSha256Lf": "d938945bb320f8d6f0472a4370a86cc35dee320f30b05c8c122456bdb585445e",
+      "candidateC": 20,
+      "percent": 90.9091
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/use-live-timeline.ts",
+      "group": "business",
+      "C": 32,
+      "B": 15,
+      "changedLineRanges": [
+        {
+          "start": 7,
+          "end": 8
+        },
+        {
+          "start": 219,
+          "end": 219
+        },
+        {
+          "start": 252,
+          "end": 264
+        },
+        {
+          "start": 400,
+          "end": 400
+        },
+        {
+          "start": 403,
+          "end": 403
+        },
+        {
+          "start": 606,
+          "end": 607
+        },
+        {
+          "start": 637,
+          "end": 663
+        }
+      ],
+      "baselineSha256Lf": "eec054a56c4f3298a15f7142e5388c292c52de62b9ba5ca33377408ddf0650a1",
+      "currentSha256Lf": "eab4d8cc2fd2e32490fc3dd3f1cc2baa23630172ed424d2dbc0984bf788a8c93",
+      "candidateC": 32,
+      "percent": 68.0851
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/video-editor-view.tsx",
+      "group": "business",
+      "C": 22,
+      "B": 5,
+      "changedLineRanges": [
+        {
+          "start": 10,
+          "end": 10
+        },
+        {
+          "start": 57,
+          "end": 57
+        },
+        {
+          "start": 59,
+          "end": 59
+        },
+        {
+          "start": 72,
+          "end": 73
+        },
+        {
+          "start": 99,
+          "end": 118
+        },
+        {
+          "start": 156,
+          "end": 157
+        }
+      ],
+      "baselineSha256Lf": "763c9f9b012df63d1d71a3a7f7e678d007caf420cddc2b47e5fb0f3cc35f2c52",
+      "currentSha256Lf": "5d41635fe3a17b9e3560a8105ebb66dd083ede1bd3ab97279e9fa8ecc800a81e",
+      "candidateC": 22,
+      "percent": 81.4815
+    },
+    {
+      "file": "apps/next/src/i18n/locales/en/toolBox.ts",
+      "group": "business",
+      "C": 0,
+      "B": 2,
+      "changedLineRanges": [
+        {
+          "start": 93,
+          "end": 94
+        }
+      ],
+      "baselineSha256Lf": "4bcfeeeca5ca17c84ed967adb0eb0f5e50b2661a7fb17071bd2d0f465b8cc253",
+      "currentSha256Lf": "917fda3f76079beb7d918e18542d72317072e6ccbf01645f6a7ddbf325d1f5cc",
+      "candidateC": 0,
+      "percent": 0.0
+    },
+    {
+      "file": "apps/next/src/i18n/locales/zh-CN/toolBox.ts",
+      "group": "business",
+      "C": 0,
+      "B": 2,
+      "changedLineRanges": [
+        {
+          "start": 105,
+          "end": 106
+        }
+      ],
+      "baselineSha256Lf": "c810874ce8382c468dcc1fb249de52b8a1f748fb527e1a279944e65162626371",
+      "currentSha256Lf": "f4fbe171f383d4ce108ddd0886fc221312a158b066112d65e1d4b6276c80e4c7",
+      "candidateC": 0,
+      "percent": 0.0
+    },
+    {
+      "file": "scripts/smoke-video-live-02.js",
+      "group": "test",
+      "C": 1,
+      "B": 1,
+      "changedLineRanges": [
+        {
+          "start": 1506,
+          "end": 1507
+        }
+      ],
+      "baselineSha256Lf": "47672beb21e53a47764079c6f160203e605185512720b3924e5547274bdc76a8",
+      "currentSha256Lf": "4caabf281d7893725d5a4e15db1b100770b6fe32b5648548c6d7aa53d0860feb",
+      "candidateC": 1,
+      "percent": 50.0
+    },
+    {
+      "file": "scripts/lib/check-video-ui-integration.js",
+      "group": "test",
+      "C": 10,
+      "B": 1,
+      "changedLineRanges": [
+        {
+          "start": 98,
+          "end": 107
+        },
+        {
+          "start": 149,
+          "end": 149
+        }
+      ],
+      "baselineSha256Lf": "a219feec7b04c4190b6e751801db8b2b495f0aa70e3fbcd6b4a5104ce21c80dd",
+      "currentSha256Lf": "ace18da562704c0d4e2663636beb719095171aeb46439c2c9918790d763293d7",
+      "candidateC": 10,
+      "percent": 90.9091
+    },
+    {
+      "file": "scripts/lib/check-video-canvas.js",
+      "group": "test",
+      "C": 395,
+      "B": 165,
+      "changedLineRanges": [
+        {
+          "start": 1,
+          "end": 607
+        }
+      ],
+      "baselineSha256Lf": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "currentSha256Lf": "8042e992828837028cc3de25d2c5120c4241f3590820421b51d0f178b629312a",
+      "candidateC": 427,
+      "percent": 70.5357
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/clip-transform-model.ts",
+      "group": "business",
+      "C": 98,
+      "B": 28,
+      "changedLineRanges": [
+        {
+          "start": 1,
+          "end": 135
+        }
+      ],
+      "baselineSha256Lf": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "currentSha256Lf": "ce34257083f653cfa15851f3c62a9959edf830b8eb49dfc6f29408c3f93b60e8",
+      "candidateC": 102,
+      "percent": 77.7778
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/clip-canvas.tsx",
+      "group": "business",
+      "C": 113,
+      "B": 70,
+      "changedLineRanges": [
+        {
+          "start": 1,
+          "end": 195
+        }
+      ],
+      "baselineSha256Lf": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "currentSha256Lf": "dbf942c647324e1510650b5f08db74c44ebba0b6582f4609eae8e1482a6969a5",
+      "candidateC": 120,
+      "percent": 61.7486
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/use-clip-transform.ts",
+      "group": "business",
+      "C": 70,
+      "B": 34,
+      "changedLineRanges": [
+        {
+          "start": 1,
+          "end": 111
+        }
+      ],
+      "baselineSha256Lf": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "currentSha256Lf": "f0a16d45693dff84ae939ca8e9a8d1a9511b6d303d1d3f35ffff6b8150776cf2",
+      "candidateC": 74,
+      "percent": 67.3077
+    }
+  ],
+  "totals": {
+    "business": {
+      "C": 468,
+      "B": 200,
+      "percent": 70.0599,
+      "candidateC": 486,
+      "excluded": 18
+    },
+    "test": {
+      "C": 406,
+      "B": 167,
+      "percent": 70.8551,
+      "candidateC": 438,
+      "excluded": 32
+    }
+  },
+  "manualExclusions": {
+    "business": [
+      {
+        "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-inspector.tsx",
+        "line": 122,
+        "text": "// locked在组级别合并权限，不能仅让画布拒绝拖动而数字仍能修改。",
+        "reason": "与同文件或相邻适配层已有边界说明重复，保守不计有效注释"
+      },
+      {
+        "file": "apps/next/src/view/toolBox/Tool/video/editor/clip-transform-model.ts",
+        "line": 10,
+        "text": "// 一个片段一份数值记录；源素材和其他同源安排不共享可修改的对象。",
+        "reason": "与同文件或相邻适配层已有边界说明重复，保守不计有效注释"
+      },
+      {
+        "file": "apps/next/src/view/toolBox/Tool/video/editor/clip-transform-model.ts",
+        "line": 11,
+        "text": "// 没有关键帧、透视、自由变形或输出编码字段，不能借此更改源文件。",
+        "reason": "与同文件或相邻适配层已有边界说明重复，保守不计有效注释"
+      },
+      {
+        "file": "apps/next/src/view/toolBox/Tool/video/editor/clip-transform-model.ts",
+        "line": 71,
+        "text": "// 默认中心随项目定义计算，不能把1920工程的960写死给竖屏项目。",
+        "reason": "与同文件或相邻适配层已有边界说明重复，保守不计有效注释"
+      },
+      {
+        "file": "apps/next/src/view/toolBox/Tool/video/editor/clip-transform-model.ts",
+        "line": 72,
+        "text": "// 每次返回独立对象，重置一个片段不会改变模块级模板或另一个安排。",
+        "reason": "与同文件或相邻适配层已有边界说明重复，保守不计有效注释"
+      },
+      {
+        "file": "apps/next/src/view/toolBox/Tool/video/editor/clip-canvas.tsx",
+        "line": 15,
+        "text": "// 当前只有一个媒体层，没有通过提高选中z-index冒充多轨合成。",
+        "reason": "与同文件或相邻适配层已有边界说明重复，保守不计有效注释"
+      },
+      {
+        "file": "apps/next/src/view/toolBox/Tool/video/editor/clip-canvas.tsx",
+        "line": 43,
+        "text": "// 图片导入尚未接通，静态图片渲染边界与正式真实视频回归分开报告。",
+        "reason": "与同文件或相邻适配层已有边界说明重复，保守不计有效注释"
+      },
+      {
+        "file": "apps/next/src/view/toolBox/Tool/video/editor/clip-canvas.tsx",
+        "line": 71,
+        "text": "// 坐标允许负值和越过项目宽高，画布边界只是最终裁切而非拖动范围限制。",
+        "reason": "与同文件或相邻适配层已有边界说明重复，保守不计有效注释"
+      },
+      {
+        "file": "apps/next/src/view/toolBox/Tool/video/editor/clip-canvas.tsx",
+        "line": 46,
+        "text": "// 选框细线不占布局宽度，不会把百分比坐标挤成另一个实际中心。",
+        "reason": "与同文件或相邻适配层已有边界说明重复，保守不计有效注释"
+      },
+      {
+        "file": "apps/next/src/view/toolBox/Tool/video/editor/clip-canvas.tsx",
+        "line": 95,
+        "text": "// 没有canvas像素绘制或getImageData处理用户视频，避免建立另一套解码和采样流程。",
+        "reason": "与同文件或相邻适配层已有边界说明重复，保守不计有效注释"
+      },
+      {
+        "file": "apps/next/src/view/toolBox/Tool/video/editor/clip-canvas.tsx",
+        "line": 97,
+        "text": "// 这是一层真实单源变换，不是上方视频轨覆盖下方视频轨的合成器。",
+        "reason": "与同文件或相邻适配层已有边界说明重复，保守不计有效注释"
+      },
+      {
+        "file": "apps/next/src/view/toolBox/Tool/video/editor/clip-canvas.tsx",
+        "line": 70,
+        "text": "// 候选位置保留其他三个字段，不在每次move时重新contain或清空透明度。",
+        "reason": "与同文件或相邻适配层已有边界说明重复，保守不计有效注释"
+      },
+      {
+        "file": "apps/next/src/view/toolBox/Tool/video/editor/use-clip-transform.ts",
+        "line": 62,
+        "text": "// 没有选择素材的回调，所以画布点击不能覆盖素材列表当前高亮。",
+        "reason": "与同文件或相邻适配层已有边界说明重复，保守不计有效注释"
+      },
+      {
+        "file": "apps/next/src/view/toolBox/Tool/video/editor/use-clip-transform.ts",
+        "line": 63,
+        "text": "// 没有seek回调，所以画布选择和构图不会把节目书签跳回片段起点。",
+        "reason": "与同文件或相邻适配层已有边界说明重复，保守不计有效注释"
+      },
+      {
+        "file": "apps/next/src/view/toolBox/Tool/video/editor/use-clip-transform.ts",
+        "line": 12,
+        "text": "// 同源两次入轨各有独立clip.id，不能以assetId作为候选草稿归属。",
+        "reason": "与同文件或相邻适配层已有边界说明重复，保守不计有效注释"
+      },
+      {
+        "file": "apps/next/src/view/toolBox/Tool/video/editor/use-clip-transform.ts",
+        "line": 33,
+        "text": "// 真正提交以timeline最新权限为准，候选有效不代表锁定后还有写入权。",
+        "reason": "与同文件或相邻适配层已有边界说明重复，保守不计有效注释"
+      },
+      {
+        "file": "apps/next/src/view/toolBox/Tool/video/editor/editor.module.css",
+        "line": 636,
+        "text": "* 没有对选中对象提高层级，未来轨道叠放必须由合成规则明确决定。",
+        "reason": "与同文件或相邻适配层已有边界说明重复，保守不计有效注释"
+      },
+      {
+        "file": "apps/next/src/view/toolBox/Tool/video/editor/editor.module.css",
+        "line": 633,
+        "text": "* 锁定仍允许查看和选中，禁止的是构图写入，所以不使用pointer-events:none。",
+        "reason": "与同文件或相邻适配层已有边界说明重复，保守不计有效注释"
+      }
+    ],
+    "test": [
+      {
+        "file": "scripts/lib/check-video-canvas.js",
+        "line": 8,
+        "text": "// 这里的键盘与指针属于自动事件，不能写成人工完整操作链或系统拖入验收。",
+        "reason": "与同文件或相邻适配层已有边界说明重复，保守不计有效注释"
+      },
+      {
+        "file": "scripts/lib/check-video-canvas.js",
+        "line": 42,
+        "text": "// 不是用dispatchEvent直接伪造一次成功提交，也不改CSS或片段数组。",
+        "reason": "与同文件或相邻适配层已有边界说明重复，保守不计有效注释"
+      },
+      {
+        "file": "scripts/lib/check-video-canvas.js",
+        "line": 53,
+        "text": "// 测试没有操作用户正在使用的桌面鼠标，不影响用户前台应用。",
+        "reason": "与同文件或相邻适配层已有边界说明重复，保守不计有效注释"
+      },
+      {
+        "file": "scripts/lib/check-video-canvas.js",
+        "line": 57,
+        "text": "// 此助手不包含拖放文件载荷，所以不能证明资源管理器OLE拖入。",
+        "reason": "与同文件或相邻适配层已有边界说明重复，保守不计有效注释"
+      },
+      {
+        "file": "scripts/lib/check-video-canvas.js",
+        "line": 61,
+        "text": "// DPR为1的CDP通过不等于真实125%系统缩放已经验收。",
+        "reason": "与同文件或相邻适配层已有边界说明重复，保守不计有效注释"
+      },
+      {
+        "file": "scripts/lib/check-video-canvas.js",
+        "line": 105,
+        "text": "// 此处没有录屏，不能把连续截图描述成真人操作视频。",
+        "reason": "与同文件或相邻适配层已有边界说明重复，保守不计有效注释"
+      },
+      {
+        "file": "scripts/lib/check-video-canvas.js",
+        "line": 265,
+        "text": "// 测试没有拖动时间线播放头，空间位移与工程时间定位分别验收。",
+        "reason": "与同文件或相邻适配层已有边界说明重复，保守不计有效注释"
+      },
+      {
+        "file": "scripts/lib/check-video-canvas.js",
+        "line": 595,
+        "text": "// 不创建新的IPC通道，不需要绕过preload去读用户文件。",
+        "reason": "与同文件或相邻适配层已有边界说明重复，保守不计有效注释"
+      },
+      {
+        "file": "scripts/lib/check-video-canvas.js",
+        "line": 597,
+        "text": "// 桌面手工项不会因为这组自动通过而从待验变为通过。",
+        "reason": "与同文件或相邻适配层已有边界说明重复，保守不计有效注释"
+      },
+      {
+        "file": "scripts/lib/check-video-canvas.js",
+        "line": 599,
+        "text": "// 没有多源同屏用例，因此不会报告多轨不透明度合成已经完成。",
+        "reason": "与同文件或相邻适配层已有边界说明重复，保守不计有效注释"
+      },
+      {
+        "file": "scripts/lib/check-video-canvas.js",
+        "line": 513,
+        "text": "// 纯模型通过不能证明媒体解码，所以报告中与真实视频用例分开计证据。",
+        "reason": "与同文件或相邻适配层已有边界说明重复，保守不计有效注释"
+      },
+      {
+        "file": "scripts/lib/check-video-canvas.js",
+        "line": 594,
+        "text": "// 本专项不自行改变原生主题设置，避免影响用户应用或其他测试窗口。",
+        "reason": "与同文件或相邻适配层已有边界说明重复，保守不计有效注释"
+      },
+      {
+        "file": "scripts/lib/check-video-canvas.js",
+        "line": 232,
+        "text": "// 用户应用没有被测试代码关掉或重启，自动截图来自独立冒烟窗口。",
+        "reason": "与同文件或相邻适配层已有边界说明重复，保守不计有效注释"
+      },
+      {
+        "file": "scripts/lib/check-video-canvas.js",
+        "line": 418,
+        "text": "// 也没有改变系统显示缩放，窗口尺寸测试不能记成125%或150%已验。",
+        "reason": "与同文件或相邻适配层已有边界说明重复，保守不计有效注释"
+      },
+      {
+        "file": "scripts/lib/check-video-canvas.js",
+        "line": 420,
+        "text": "// 真实图片尚无导入入口，不能把这个竖屏视频用例写成图片导入成功。",
+        "reason": "与同文件或相邻适配层已有边界说明重复，保守不计有效注释"
+      },
+      {
+        "file": "scripts/lib/check-video-canvas.js",
+        "line": 207,
+        "text": "// 当前样本是常规H264，不宣称全部编码器都可解码。",
+        "reason": "与同文件或相邻适配层已有边界说明重复，保守不计有效注释"
+      },
+      {
+        "file": "scripts/lib/check-video-canvas.js",
+        "line": 187,
+        "text": "// 测试不修改源文件分辨率，缩放只属于节目显示尺寸。",
+        "reason": "与同文件或相邻适配层已有边界说明重复，保守不计有效注释"
+      },
+      {
+        "file": "scripts/lib/check-video-canvas.js",
+        "line": 550,
+        "text": "// 本组没有覆盖工程持久化版本，因为保存和导出仍明确未接通。",
+        "reason": "与同文件或相邻适配层已有边界说明重复，保守不计有效注释"
+      },
+      {
+        "file": "scripts/lib/check-video-canvas.js",
+        "line": 332,
+        "text": "// 没有引入测试专用复制回调，生产模型才是行为来源。",
+        "reason": "与同文件或相邻适配层已有边界说明重复，保守不计有效注释"
+      },
+      {
+        "file": "scripts/lib/check-video-canvas.js",
+        "line": 334,
+        "text": "// 两者结合能发现“暂时显示正确但底层共享对象”的实现错误。",
+        "reason": "与同文件或相邻适配层已有边界说明重复，保守不计有效注释"
+      },
+      {
+        "file": "scripts/lib/check-video-canvas.js",
+        "line": 335,
+        "text": "// 失败时不自动重载页面，因为重载可能掩盖实例串值。",
+        "reason": "与同文件或相邻适配层已有边界说明重复，保守不计有效注释"
+      },
+      {
+        "file": "scripts/lib/check-video-canvas.js",
+        "line": 367,
+        "text": "// 本组不覆盖轨道可见或solo按钮，它们仍是未接通能力。",
+        "reason": "与同文件或相邻适配层已有边界说明重复，保守不计有效注释"
+      },
+      {
+        "file": "scripts/lib/check-video-canvas.js",
+        "line": 384,
+        "text": "// 本组没有修改track id，源轨锁和目标轨锁仍由原时间线命令分别处理。",
+        "reason": "与同文件或相邻适配层已有边界说明重复，保守不计有效注释"
+      },
+      {
+        "file": "scripts/lib/check-video-canvas.js",
+        "line": 190,
+        "text": "// 此处的自动Enter事件覆盖控件契约，不是人工键盘路径证明。",
+        "reason": "与同文件或相邻适配层已有边界说明重复，保守不计有效注释"
+      },
+      {
+        "file": "scripts/lib/check-video-canvas.js",
+        "line": 461,
+        "text": "// 没有使用定时器增加currentTime，媒体时间设置只用于显式反例。",
+        "reason": "与同文件或相邻适配层已有边界说明重复，保守不计有效注释"
+      },
+      {
+        "file": "scripts/lib/check-video-canvas.js",
+        "line": 206,
+        "text": "// 本用例未检查颜色管理精度，不给播放器色域或HDR能力做结论。",
+        "reason": "与同文件或相邻适配层已有边界说明重复，保守不计有效注释"
+      },
+      {
+        "file": "scripts/lib/check-video-canvas.js",
+        "line": 563,
+        "text": "// 图片和视频都可消费同一适配函数，但解码生命周期不能因此合并。",
+        "reason": "与同文件或相邻适配层已有边界说明重复，保守不计有效注释"
+      },
+      {
+        "file": "scripts/lib/check-video-canvas.js",
+        "line": 515,
+        "text": "// 模型测试本身不创建窗口，仍在同一个串行Electron套件内运行。",
+        "reason": "与同文件或相邻适配层已有边界说明重复，保守不计有效注释"
+      },
+      {
+        "file": "scripts/lib/check-video-canvas.js",
+        "line": 511,
+        "text": "// 这里没有mock updateClipTransform返回值，函数必须真的执行。",
+        "reason": "与同文件或相邻适配层已有边界说明重复，保守不计有效注释"
+      },
+      {
+        "file": "scripts/lib/check-video-canvas.js",
+        "line": 514,
+        "text": "// 转译器来自项目已有TypeScript依赖，不额外安装测试框架。",
+        "reason": "与同文件或相邻适配层已有边界说明重复，保守不计有效注释"
+      },
+      {
+        "file": "scripts/lib/check-video-canvas.js",
+        "line": 264,
+        "text": "// 没有验证触屏双指缩放，生产也没有开放自由变形手柄。",
+        "reason": "与同文件或相邻适配层已有边界说明重复，保守不计有效注释"
+      },
+      {
+        "file": "scripts/lib/check-video-canvas.js",
+        "line": 304,
+        "text": "// 这里仍属于CDP自动指针，不能描述为用户真人拖动验收。",
+        "reason": "与同文件或相邻适配层已有边界说明重复，保守不计有效注释"
+      }
+    ]
+  },
+  "method": "任务开始前工作区快照逐行差异；新增全文，修改仅新增替换；纯注释C，代码与混合行B；人工检查原因/契约/实际行为，重复概述按列表剔除；不以HEAD整仓差异冒充增量。"
+}

@@ -1,0 +1,234 @@
+
+[构建自检] record：内容指纹一致（888 个文件，记录于 2026-11-05T05:38:05.836Z）
+LIVE02_STEP load formal page
+LIVE02_STEP renderer ready
+PASS  UI08: empty formal canvas is black without placeholder or media
+PASS  Two real videos keep their own dimensions, fps and audio metadata
+PASS  UI08: unmatched search shows zero rows without creating clips
+PASS  UI08: exact search returns only the real portrait filename
+PASS  UI08: audio filter does not relabel imported videos
+PASS  UI08: asset viewing keeps the inspector and timeline unselected
+PASS  UI08: return to empty program releases source and restores plain black
+PASS  UI08: internal hover keeps the same media and upper preview
+PASS  Native asset drags create independent instances of one source
+PASS  Clip selection maps preview and inspector without changing asset highlight
+PASS  UI08: formal detach into two locked targets refuses without a partial edit
+PASS  UI08: locked source rejects keyboard and context-menu bypass
+PASS  UI08: formal project excludes demo names and keeps unavailable effects/export disabled
+PASS  Canvas model: still-image transform supports negative rotation and zero opacity independently
+PASS  Canvas model: invalid, unsupported, locked and audio writes are rejected atomically
+PASS  Canvas model: 100 percent contain uses project pixels for every source size
+(node:32272) DeprecationWarning: getBitmap() is deprecated, use toBitmap() instead.
+(Use `electron --trace-deprecation ...` to show where the warning was created)
+PASS  Canvas fields transform the same real video with project-pixel values
+PASS  Actual decoded video pixels move inside a black project crop
+PASS  Dark theme preserves transformed decoded video and project values
+PASS  Invalid canvas field stays local and leaves confirmed geometry intact
+PASS  Scaled rotated canvas drag keeps grab offset and synchronizes X/Y
+PASS  Canvas release commits one instance and survives switching selection
+PASS  Escape discards canvas draft without changing committed composition
+PASS  Viewing another program frame keeps the inspector selection independent
+PASS  Clicking an unselected picture selects and completes the same canvas gesture
+PASS  Duplicating a clip preserves its complete transform
+PASS  Editing copied transform leaves the original instance independent
+PASS  Locked track blocks canvas, transform fields and group reset
+PASS  Formal transform reset restores project center and fit baseline
+PASS  Asset source viewing keeps original geometry and excludes canvas editing
+PASS  Portrait video uses full-height contain baseline without stretching
+PASS  Narrow viewport preserves project-pixel composition and real video
+PASS  Playhead drag is monotonic and paused stale media events cannot pull it backward
+PASS  UI06: ruler bookmark maps to source offset before playback
+PASS  UI06: actual media progress advances the project playhead
+PASS  UI06: zoom changes viewport pixels without changing timeline seconds
+PASS  UI06: fit all uses the actual viewport with no horizontal overflow
+PASS  UI06: a locked V1 blocks clip interaction without disabling import
+PASS  UI06: unlocking restores existing instances with unchanged time
+PASS  Move hover shows valid position without mutating committed clips
+LIVE03_PLACEMENT_FACTS {"after":[{"id":"274feaef-95d5-4982-8548-8edc411c2fee","start":4,"end":7.266666666666667,"selected":true},{"id":"ae9a100c-3848-409a-888c-17eb558486a4","start":8,"end":11.266666666666667,"selected":false}],"gapFrames":22}
+PASS  4s / 8s actual DOM intervals retain 98 frames and a 22-frame gap
+PASS  Six-second fixture moved to 4 overlaps the unchanged 8-second obstacle
+PASS  Pure placement fixture at frame 0: adjacency, overlap or invalid start
+PASS  Pure placement fixture at frame 60: adjacency, overlap or invalid start
+PASS  Pure placement fixture at frame 61: adjacency, overlap or invalid start
+PASS  Pure placement fixture at frame 120: adjacency, overlap or invalid start
+PASS  Pure placement fixture at frame 419: adjacency, overlap or invalid start
+PASS  Pure placement fixture at frame 420: adjacency, overlap or invalid start
+PASS  Pure placement fixture at frame -1: adjacency, overlap or invalid start
+PASS  Placement candidates leave both original six-second instances untouched
+PASS  UI08 model: locked A1 routes intact audio to A2
+PASS  UI08 model: both targets locked refuses atomically
+PASS  UI08 model: source lock blocks every edit
+PASS  Audio fixture keeps timing and falls back from occupied A1 to A2
+PASS  Both audio tracks occupied rejects detach without muting V1
+PASS  Silent-source fixture cannot detach an audio stream
+PASS  Nearest legal full gap for 4s
+PASS  Nearest legal full gap for -1s
+PASS  Nearest legal full gap for 9s
+PASS  Nearest legal full gap for 100s
+PASS  Move preserves grab offset and leaves the same-source instance unchanged
+PASS  Collision preview resolves to a valid edge without mutating the original
+PASS  Escape removes the outline and restores the entire original placement
+PASS  Keyboard one-frame movement uses project fps
+PASS  Keyboard collision resolves to the nearest full gap with no overlap
+PASS  Keyboard-accessible append creates a new instance at the actual project end
+PASS  Collision drop keeps every full interval without moving obstacles
+PASS  Audio lane gives an explicit invalid target
+PASS  Video drop into A1 creates no audio or video clip
+PASS  Forged payload rejected: session
+PASS  Forged payload rejected: id
+PASS  Scrolled asset drop retains the exact engineering time
+PASS  Scrolled move preserves its offset and expands project duration
+PASS  Moving the last clip earlier shrinks actual project duration
+PASS  Hovering the edge performs bounded horizontal scrolling
+PASS  Cancel stops automatic scrolling and never commits a candidate
+PASS  Negative start resolves to zero while preserving the complete duration
+PASS  Navigation width change cancels the frozen gesture without mutating clips
+PASS  UI08: file hover never mounts a workspace import overlay
+PASS  External file dropped over V1 only imports a real asset
+PASS  Cancel and duplicate keep imported assets and timeline intact
+[IPC] video:probe failed (INTERNAL): Command failed: D:\Code\Illusion-Realm\Illusion-Realm\apps\electron\bin\ffmpeg\ffprobe.exe -v error -print_format json -show_format -show_streams C:\Users\18305\AppData\Local\Temp\ir-video-live02-TGO66g\broken.mp4
+[mov,mp4,m4a,3gp,3g2,mj2 @ 000002225f853040] moov atom not found
+C:\Users\18305\AppData\Local\Temp\ir-video-live02-TGO66g\broken.mp4: Invalid data found when processing input
+
+PASS  Probe failure preserves all existing clips and real metadata
+PASS  light live host 1600x1000 retains layout and clips
+PASS  light live host 1280x800 retains layout and clips
+PASS  light live host 960x720 retains layout and clips
+PASS  Dark theme is applied by the real appearance menu
+PASS  dark live host 1600x1000 retains layout and clips
+PASS  dark live host 1280x800 retains layout and clips
+PASS  dark live host 960x720 retains layout and clips
+PASS  Narrow editor retains reachable project import and timeline scrolling
+PASS  Returning to program releases the real source player
+PASS  Real source playback does not move the project playhead
+PASS  Pause still reports the real media state
+PASS  AAC detaches to an independent A1 instance without replacing the visual programme
+PASS  Detached programme remains explicitly muted without a second audio player
+PASS  Already detached video cannot create a duplicate audio stream
+PASS  REFERENCE unselected audio uses compact navy body without selection circles
+PASS  REFERENCE audio selection stays one pixel and does not expose visual editing tools
+PASS  REFERENCE audio envelope grows upwards from a bottom baseline
+PASS  Audio keyboard movement keeps its own track and one-frame precision
+PASS  Audio drag shows invalid placement when hovering over a video track
+PASS  Cross-track audio drop never changes the committed arrangement
+PASS  Audio duplicate appends with its own ID on A1
+PASS  Focused Delete removes only the duplicated audio instance
+PASS  Keyboard menu closes and restores the original clip focus
+PASS  Duplicated detached video stays on V1 and remains muted
+PASS  Deleting a video duplicate preserves the original video and independent audio
+PASS  Trim source/neighbor boundaries preserve source clock and input immutability
+PASS  Trim keeps one project frame and respects lock/cancel contract
+PASS  Right trim restores the final source slot at fractional speed and stops at its maximum
+PASS  Left trim advances inside the original source without rounding a stationary in-point
+PASS  Left extension recovers source zero without changing the fixed right boundary
+PASS  Track limits default to five each, candidate is grouped without mutating confirmed tracks
+PASS  Composition priority follows track order, never clip insertion order
+PASS  Inspector hold-and-scrub up increases confirmed project X
+PASS  Escape cancels number scrub and keeps the confirmed value
+PASS  Inspector input uses a single thin surrounding focus line
+PASS  Real edge drag changes in-point by half a second and preserves out-point
+PASS  Trimmed source preview seeks to the actual source in-point
+PASS  Escape edge cancellation preserves the full confirmed arrangement
+PASS  Dragging down creates V2 and preserves source duration
+PASS  Upper V1 and lower V2 render two real decoded sources in fixed layer order
+PASS  Selecting the lower layer changes inspector only, never raises visual priority
+PASS  Both real video layers advance and pause from the common program clock
+PASS  Track settings expose the real default video/audio limits
+PASS  Track limit cannot delete existing layers through an invalid smaller value
+PASS  Lowered limit suppresses new-video-track candidate
+PASS  Increasing limit exposes V3 below the video group
+PASS  Cancelling new-track gesture consumes no track or slot
+PASS  Independent audio can move to another same-type track without changing its interval
+PASS  Clip rate changes duration while retaining source interval and immutable input
+PASS  Slowdown collision and locked rate edits reject without shortening the source
+PASS  Trim at 2x maps project seconds to real source seconds
+PASS  Wide editor gives the player more width than the capped asset panel
+PASS  Compact card keeps contained first-frame image, upper-right duration and lower-left name
+PASS  Selected asset has only a thin cyan cover frame and decorative side marks
+PASS  Compact assets keep the same fixed size across panel widths
+PASS  Real inspector speed shortens the selected instance only
+PASS  Shared preset selector applies rate to the same real preview
+PASS  Preview rate multiplies actual playbackRate without editing project duration
+PASS  Custom rate input remains visibly editable in the compact transport
+PASS  Repeated frame steps use real seek and retain exact project-frame increments
+PASS  Text input scroll does not dismiss the shared context menu
+PASS  Mirror menu transforms decoded content rather than changing source metadata
+PASS  Menu rotation updates the same decoded canvas transform
+PASS  REFERENCE child menu opens beside the unchanged root column
+PASS  REFERENCE ArrowRight focuses the first child command
+PASS  REFERENCE ArrowLeft closes child and returns to its parent
+PASS  The five implemented basic edits are available on the selected video
+PASS  Ctrl-wheel increases timeline density without changing any clip interval
+PASS  Selected clip uses fine frame and directional edge cursors
+PASS  Asset cover retains the actual source first frame after playback and editing  ([0.8084490740740741,9.774305555555555])
+PASS  Waveform schema and main validator agree on strict valid and invalid requests
+PASS  Waveform parser distinguishes silence from decoded linear amplitude
+PASS  Missing audio statistics cannot pass as a silent waveform
+PASS  Real AAC silence, quiet and loud windows produce distinct bounded source peaks  ([0,0.019745475652475357,0.39506208367215634])
+PASS  Waveform IPC rejects network source before media access
+PASS  A real silent-track video has no fabricated waveform
+PASS  Cancelling a real waveform request ends its probe/decode lifecycle
+PASS  Real video clip has name/timecode above frames and decoded waveform below
+PASS  Filmstrip and real audio envelope share the exact trimmed source interval
+PASS  COMPOSE model: explicit track order and half-open boundaries
+PASS  COMPOSE model: hidden excludes layers while audio never paints
+PASS  COMPOSE model: source mapping and no skipped short boundaries
+COMPOSE_CLEAR [{"id":"ae9a100c-3848-409a-888c-17eb558486a4","start":8,"end":9.633333333333333,"selected":true},{"id":"f76c8539-6ced-4640-9155-9075a5f487fa","start":11.266666666666667,"end":14.533333333333333,"selected":false},{"id":"28053397-a155-4b93-bb9f-b40eeee12719","start":18,"end":21.266666666666666,"selected":false},{"id":"ec951c7c-98c0-4b0e-985b-5395a2ee54cb","start":0,"end":3.2666666666666666,"selected":false},{"id":"274feaef-95d5-4982-8548-8edc411c2fee","start":0,"end":2.7666666666666666,"selected":false},{"id":"72a3f4a9-975f-48c3-abb3-26e246409553","start":4.8,"end":8.066666666666666,"selected":false}]
+COMPOSE_DELETE ae9a100c-3848-409a-888c-17eb558486a4
+COMPOSE_DELETE f76c8539-6ced-4640-9155-9075a5f487fa
+COMPOSE_DELETE 28053397-a155-4b93-bb9f-b40eeee12719
+COMPOSE_DELETE ec951c7c-98c0-4b0e-985b-5395a2ee54cb
+COMPOSE_DELETE 274feaef-95d5-4982-8548-8edc411c2fee
+COMPOSE_DELETE 72a3f4a9-975f-48c3-abb3-26e246409553
+COMPOSE_CLEAR_DONE
+PASS  COMPOSE: two video tracks permit cross-track overlap without shortening
+PASS  COMPOSE: landscape/portrait decoded together with independent transforms and forced mute
+PASS  COMPOSE: choosing lower keeps upper first and preserves layer transforms
+PASS  COMPOSE: canvas hits the upper editable transformed picture
+PASS  COMPOSE: locked upper stays visible while hit passes to lower
+PASS  COMPOSE: hiding upper reveals real lower source
+PASS  COMPOSE: all hidden is silent black with no visual decoders
+PASS  COMPOSE: latest seek wins with per-clip source offsets
+PASS  COMPOSE: unified clock drives two actually advancing muted videos
+PASS  COMPOSE: continuous playback crosses starts, ends and black gap without selection
+PASS  COMPOSE: exact final end excludes last picture
+PASS  COMPOSE: source viewing releases every programme decoder and preserves audition
+PASS  COMPOSE: light retains both independent real layers
+PASS  COMPOSE: dark retains both independent real layers
+PASS  COMPOSE fixture: visibility notification releases real media resources
+PASS  COMPOSE fixture: visible restoration decodes current bookmark without autoplay
+PASS  COMPOSE: real unsupported codec fails visibly and retains successful metadata
+PASS  COMPOSE: retry is bounded and removing a bad clip restores real composition
+PASS  REFERENCE visual basic tools are absent without a selected clip
+PASS  EDIT clipboard: paste makes an independent same-source entity at the playhead
+PASS  EDIT Delete removes only the selected pasted entity
+PASS  EDIT Ctrl+Z restores the exact pasted entity
+PASS  EDIT Ctrl+Shift+Z redoes deletion
+PASS  EDIT Ctrl+X removes the original entity
+PASS  EDIT cut then paste creates a new independent identity
+PASS  EDIT text input does not trigger project Delete
+PASS  EDIT keyframes interpolate actual video position at the midpoint
+PASS  EDIT timeline marks and hollow off-keyframe property diamond agree
+PASS  EDIT playing actual video evaluates animated properties continuously
+PASS  EDIT reverse maps actual decoded source frames backwards
+PASS  EDIT continuous reverse advances decoded source frames backwards
+PASS  EDIT mirror affects actual video content
+PASS  EDIT rotate affects actual video content
+PASS  EDIT freeze inserts a separate three-second entity without losing surrounding video
+PASS  EDIT inserted freeze displays the same real source frame across project time
+PASS  EDIT crop commits to real video content and closes the draft overlay
+PASS  EDIT Escape discards crop draft
+PASS  EDIT locked track disables basic editing tools and keyframes
+PASS  EDIT library exposes the twelve compact reference categories
+PASS  REFERENCE timeline controls use bare icons
+PASS  REFERENCE categories keep compact fixed spacing
+PASS  REFERENCE narrow library exposes a right overflow arrow
+PASS  REFERENCE overflow arrow reveals right categories and preserves selected media
+PASS  EDIT zoom expands clip time width while filmstrip cells stay 40px high
+PASS  EDIT filmstrip decoding buffer is bounded by the actual scroll viewport
+PASS  Cancelling unsaved navigation preserves the live project
+PASS  Confirmed navigation releases the source player
+PASS  Returning creates an empty independent project without stale clips
+PASS  No renderer or hydration errors in the live timeline flow
+LIVE02_MEDIA_ROOT C:\Users\18305\AppData\Local\Temp\ir-video-live02-TGO66g
+video-live-02 SMOKE OK ✓  213/213

@@ -1,5 +1,8 @@
 "use client";
 
+// 下拉选项沿用原业务值，菜单外观、滚动与键盘操作统一复用采样器组件。
+import { SimpleSelect } from "@/components/SimpleSelect";
+
 /** 界面：「重新按帧导出视频」。主区与快捷功能复用相同控件，只通过参数执行任务。 */
 import { useTranslation } from "@/i18n";
 
@@ -18,11 +21,14 @@ export function VideoReframeControls(props: VideoReframeControlsProps) {
   return <div className="space-y-3" data-video-reframe-controls>
     <label className="flex items-center justify-between gap-3 text-sm font-medium text-foreground">
       {t("toolBox.video.reframe.fps")}
-      <select aria-label={t("toolBox.video.reframe.fps")} value={props.fps} disabled={props.disabled}
-        onChange={(event) => props.onFpsChange(Number(event.target.value))}
-        className="h-9 rounded-lg border border-border bg-background px-3 text-foreground outline-none focus:border-primary disabled:opacity-40">
-        {FRAME_RATES.map((fps) => <option key={fps} value={fps}>{fps} FPS</option>)}
-      </select>
+      <SimpleSelect
+ ariaLabel={t("toolBox.video.reframe.fps")}
+ value={String(props.fps)}
+ disabled={props.disabled}
+ onChange={(value) => props.onFpsChange(Number(value))}
+ className="min-w-0" portal
+ options={[...FRAME_RATES.map((fps) => ({ value: String(fps), label: [fps, " FPS"].join('') }))]}
+ />
     </label>
     <p className="text-xs leading-relaxed text-muted-foreground">{t("toolBox.video.reframe.hint")}</p>
     <button type="button" disabled={props.disabled && !props.running} onClick={props.running ? props.onCancel : props.onRun}

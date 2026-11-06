@@ -1,0 +1,90 @@
+
+[构建自检] record：内容指纹一致（869 个文件，记录于 2026-11-04T07:53:41.846Z）
+(electron) 'console-message' arguments are deprecated and will be removed. Please use Event<WebContentsConsoleMessageEventParams> object instead.
+Error occurred in handler for 'theme:setThemeSource': Error: No handler registered for 'theme:setThemeSource'
+    at Session.<anonymous> (node:electron/js2c/browser_init:2:120175)
+    at Session.emit (node:events:514:28)
+Error occurred in handler for 'theme:setThemeSource': Error: No handler registered for 'theme:setThemeSource'
+    at Session.<anonymous> (node:electron/js2c/browser_init:2:120175)
+    at Session.emit (node:events:514:28)
+Error occurred in handler for 'theme:setThemeSource': Error: No handler registered for 'theme:setThemeSource'
+    at Session.<anonymous> (node:electron/js2c/browser_init:2:120175)
+    at Session.emit (node:events:514:28)
+Error occurred in handler for 'models:downloadList': Error: No handler registered for 'models:downloadList'
+    at Session.<anonymous> (node:electron/js2c/browser_init:2:120175)
+    at Session.emit (node:events:514:28)
+Error occurred in handler for 'account:me': Error: No handler registered for 'account:me'
+    at Session.<anonymous> (node:electron/js2c/browser_init:2:120175)
+    at Session.emit (node:events:514:28)
+Error occurred in handler for 'changelog:read': Error: No handler registered for 'changelog:read'
+    at Session.<anonymous> (node:electron/js2c/browser_init:2:120175)
+    at Session.emit (node:events:514:28)
+PASS  preload 已注入 window.electronAPI
+PASS  视频剪辑页渲染完成
+PASS  空态显示导入区
+PASS  两个片段进入卡片列表  (handles=2)
+PASS  导入区切换为「已添加 2 个片段」
+PASS  卡片显示两段文件名
+PASS  导出区提示按列表顺序拼接
+PASS  多片段时隐藏无损剪切选项
+PASS  时间轴存在起点/终点 | 标记
+PASS  预览为 4 秒的片段 A  (4.00s)
+PASS  预览未使用原生播放条
+PASS  快速连续拖动时 seek 能逐个完成（画面持续刷新）  (completed=9 times=[0,0.35,0.7,1.05,1.4,1.75,2.1,2.45,2.8])
+PASS  拖动过程中画面到达多个不同位置（非只跳最后一帧）  (distinct=9 times=[0,0.35,0.7,1.05,1.4,1.75,2.1,2.45,2.8])
+PASS  预览位置随拖动单调推进到终点  ([0,0.35,0.7,1.05,1.4,1.75,2.1,2.45,2.8])
+PASS  松手后停在起点标记对应位置（约 2.8 秒）  (2.800s)
+PASS  拖动结束后起点可复位到 0  (00:00.004)
+PASS  时间轴可测量（存在真实布局）  (963.25x80)
+PASS  已派发拖动中的 pointermove
+PASS  拖动 ] 后终点约等于 40% 时长  (00:01.600)
+PASS  拖动时视频画面同步跳到对应帧  (currentTime=1.600 终点=00:01.600)
+PASS  片段 A 选区时长为 0 → 终点  (00:01.596)
+PASS  点击卡片切换到片段 B
+PASS  片段 B 时长为 3 秒（独立状态）  (3.00s)
+PASS  片段 B 默认终点为自身时长  (00:03.000)
+PASS  走带 1 秒后「设为起点」生效  (00:01.000)
+PASS  片段 B 选区时长为 2 秒  (00:02.000)
+PASS  导出区标题为「输出文件夹」
+PASS  按钮为「选择文件夹」（而非保存文件）
+PASS  提示未选文件夹时会弹出保存对话框
+PASS  输出选择使用文件夹对话框（非保存文件）  (["openDirectory","createDirectory"])
+PASS  界面显示已选择的输出文件夹
+PASS  自动生成的文件名出现在输入框（clip-a_x2.mp4）  (clip-a_x2.mp4)
+PASS  拼接导出在界面报告完成
+PASS  导出文件落在所选文件夹中  (C:\Users\18305\AppData\Local\Temp\video-editor-smoke-deX9Dq\out\clip-a_x2.mp4)
+PASS  输出文件已生成
+PASS  输出时长 = 两段选区之和  (3.600s vs 3.596s)
+PASS  输出分辨率对齐首段 320x240  (320x240)
+PASS  输出保留音轨
+PASS  文件名为自动生成  (clip-a_x2.mp4)
+PASS  已选文件夹后按钮为「更换文件夹」
+PASS  提供可编辑的文件名输入框
+PASS  说明同名文件不会覆盖
+PASS  输入框保留原始输入（不打断输入）  (拼接成品)
+PASS  提示实际导出文件名（自动补 .mp4）
+PASS  自定义文件名导出成功  (拼接成品.mp4, clip-a_x2.mp4)
+PASS  「恢复自动命名」还原为参数化文件名  (clip-a_x2.mp4)
+PASS  输出选择使用文件夹对话框（非保存文件）  (["openDirectory","createDirectory"])
+PASS  可以再次选择输出文件夹  (calls=2)
+PASS  导出完成后不再显示转圈图标（bug 回归）  (spinning=false)
+PASS  导出完成后回到可再次处理状态
+PASS  初始顺序为 A 在前  (1 clip-a.mp4 区间 1 裁剪 00:00.004 → 00:01.600（00:01.596） · 320×)
+PASS  拖拽后 B 排到最前（顺序即拼接顺序）  (1 clip-b.mp4 区间 1 裁剪 00:01.000 → 00:03.000（00:02.000） · 640×)
+PASS  界面同步到新首段尺寸 640×360
+PASS  按新顺序重新导出完成
+PASS  新首段生成新文件名（clip-b_x2.mp4）  (clip-b_x2.mp4)
+PASS  历史导出文件均未被覆盖  (clip-b_x2.mp4, 拼接成品.mp4, clip-a_x2.mp4)
+PASS  重新拼接后尺寸对齐新首段 640x360  (640x360)
+PASS  重新拼接后时长仍为两段选区之和  (3.600s)
+--- 渲染进程 console 错误 ---
+  %cElectron Security Warning (Insecure Content-Security-Policy) font-weight: bold; This renderer process has either no Content Security
+  Policy set or a policy with "unsafe-eval" enabled. This exposes users of
+  this app to unnecessary security risks.
+
+For more information and help, consult
+https://electronjs.org/docs/tutorial/security.
+This warning will not show up
+once the app is packaged.
+VIDEO EDITOR SMOKE OK ✓
+video-editor SMOKE OK ✓  58/58

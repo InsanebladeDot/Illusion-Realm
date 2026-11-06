@@ -1,0 +1,7 @@
+$ pnpm --filter @illusion-realm/next check:i18n:en
+$ node scripts/check-i18n-en.mjs
+OK  en 未翻译 771 / 2854（基线 842 + 新增叶子额度 1711，已下降）
+(node:29784) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Code/Illusion-Realm/Illusion-Realm/apps/next/src/i18n/locales/zh-CN/dialogue.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\D:\Code\Illusion-Realm\Illusion-Realm\apps\next\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)

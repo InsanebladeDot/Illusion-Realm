@@ -1,0 +1,15 @@
+
+[构建自检] record：内容指纹一致（863 个文件，记录于 2026-11-04T05:15:36.675Z）
+Error occurred in handler for 'account:me': Error: No handler registered for 'account:me'
+    at Session.<anonymous> (node:electron/js2c/browser_init:2:120175)
+    at Session.emit (node:events:514:28)
+PASS  One imported video has three independent ranges and an explicit merge action
+PASS  Switching ranges keeps every boundary and seeks the same video to the selected start
+PASS  Range bodies support direct click and same-gesture selection/drag; neighbouring ranges stop movement without shortening
+PASS  Five transport controls are centered inside the preview and flush with its bottom on wide and narrow screens
+PASS  Dragging the selected range moves both boundaries on one timeline without overlap
+PASS  Merged export preserves range content/order, audio and total duration (ranges_x3.mp4)
+PASS  Dragging range cards changes the merge order without losing their boundaries
+PASS  Merged export preserves range content/order, audio and total duration (ranges_x3 (2).mp4)
+PASS  Deleting selected ranges activates the next range; a single range restores precise single export
+video-ranges SMOKE OK ✓  9/9

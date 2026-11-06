@@ -1,0 +1,20 @@
+{
+  "buildFingerprint": "d65136b5cd5c100b43a5553ed02cfa87afa990d3ba6c6c4fb40b124ab820c6ef",
+  "sourceRoot": "C:/Users/18305/AppData/Local/Temp/ir-video-live02-MeNZiq",
+  "run": "2026-11-04T12:38:53.568Z | video-live-02 | OK | 151/151 | exit=0 | occlude=no | 2026-11-04T12-38-07-226Z-9548",
+  "screenshots": [
+    {
+      "file": "before-trim-real-video.png",
+      "bytes": 219408,
+      "sha256": "fcb15cf6d2c0ddd74ff4d827e9ee2d2170a2f5b0ffa37a5af6f426c6a600c691",
+      "stage": "本轮自动回归的真实媒体，before为早期工程快照，并非同一修剪动作前一瞬间。"
+    },
+    {
+      "file": "trimmed-real-video.png",
+      "bytes": 243583,
+      "sha256": "28c65bb0537f709d5d750125c466eddf70ebfadb28772609a9923dbeffa522fe",
+      "stage": "实际左修剪后的源定位画面，CDP自动操作。"
+    }
+  ],
+  "evidenceBoundary": "真实解码/CDP自动操作与新增纯模型精度反例分开；未进行人工系统拖入、完整键盘、缩放或扬声器试听。"
+}

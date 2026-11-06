@@ -1,0 +1,70 @@
+{
+  "method": "TypeScript AST移除注释后正常打印；只核对与增量相交的函数，JSX装配豁免。字符串中的浏览器表达式由原回归执行。",
+  "maxOrdinaryLines": 17,
+  "functions": [
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-panels.tsx",
+      "name": "MediaItem",
+      "start": 104,
+      "end": 143,
+      "lines": 20,
+      "jsx": true
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-panels.tsx",
+      "name": "(callback)",
+      "start": 136,
+      "end": 136,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "scripts/lib/check-video-filmstrip.js",
+      "name": "rateChecks",
+      "start": 143,
+      "end": 164,
+      "lines": 17,
+      "jsx": false
+    },
+    {
+      "file": "scripts/lib/check-video-filmstrip.js",
+      "name": "layoutChecks",
+      "start": 385,
+      "end": 397,
+      "lines": 13,
+      "jsx": false
+    },
+    {
+      "file": "scripts/lib/check-video-filmstrip.js",
+      "name": "(callback)",
+      "start": 386,
+      "end": 386,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "scripts/lib/check-video-filmstrip.js",
+      "name": "pixelError",
+      "start": 429,
+      "end": 436,
+      "lines": 10,
+      "jsx": false
+    },
+    {
+      "file": "scripts/lib/check-video-filmstrip.js",
+      "name": "firstFrameChecks",
+      "start": 453,
+      "end": 467,
+      "lines": 15,
+      "jsx": false
+    },
+    {
+      "file": "scripts/lib/check-video-filmstrip.js",
+      "name": "checkVideoFilmstrip",
+      "start": 469,
+      "end": 476,
+      "lines": 12,
+      "jsx": false
+    }
+  ]
+}

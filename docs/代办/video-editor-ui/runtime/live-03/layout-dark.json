@@ -1,0 +1,41 @@
+[
+  {
+    "width": 1600.25,
+    "height": 1000,
+    "overflow": false,
+    "footerFits": true,
+    "importEnabled": true,
+    "mediaVisible": true,
+    "inspectorVisible": true,
+    "clips": 4,
+    "dpr": 1,
+    "theme": "dark",
+    "headerClear": true
+  },
+  {
+    "width": 1280.25,
+    "height": 800,
+    "overflow": false,
+    "footerFits": true,
+    "importEnabled": true,
+    "mediaVisible": true,
+    "inspectorVisible": true,
+    "clips": 4,
+    "dpr": 1,
+    "theme": "dark",
+    "headerClear": true
+  },
+  {
+    "width": 960.25,
+    "height": 720,
+    "overflow": false,
+    "footerFits": true,
+    "importEnabled": true,
+    "mediaVisible": false,
+    "inspectorVisible": false,
+    "clips": 4,
+    "dpr": 1,
+    "theme": "dark",
+    "headerClear": true
+  }
+]

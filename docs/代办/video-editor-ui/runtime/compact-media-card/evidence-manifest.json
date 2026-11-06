@@ -1,0 +1,41 @@
+{
+  "date": "2026-11-04",
+  "buildFingerprint": "d6aefc2f4e1700144c1d354ffa85a04a4ceeedfe78e94064cc3f1cf48ee58e0d",
+  "realVideoSourceRoot": "C:/Users/18305/AppData/Local/Temp/ir-video-live02-ShmgHl",
+  "uiSourceRoot": "C:/Users/18305/AppData/Local/Temp/ir-video-ui01-1mrmoW",
+  "evidence": "真实Electron静态导出、真实媒体探测与解码；系统选择结果夹具及DOM/CDP自动操作，不是人工资源管理器拖入。",
+  "runs": [
+    "2026-11-04T12:21:12.655Z | video-live-02 | FAILED | 136/136 | exit=1 | occlude=no | 2026-11-04T12-20-10-957Z-33828",
+    "2026-11-04T12:22:58.442Z | video-live-02 | OK | 148/148 | exit=0 | occlude=no | 2026-11-04T12-22-13-596Z-33032",
+    "2026-11-04T12:23:59.043Z | video-editor-ui | OK | 139/139 | exit=0 | occlude=no | 2026-11-04T12-23-17-418Z-3056"
+  ],
+  "firstFrameAverageChannelError": {
+    "source0Seconds": 0.8084490740740741,
+    "source1Second": 9.774305555555555
+  },
+  "screenshots": [
+    {
+      "file": "dark-real-video.png",
+      "bytes": 210317,
+      "sha256": "488bbfad5efe0ef2029edb8328924468b36412867899efeb49b23213cac73da9"
+    },
+    {
+      "file": "light-real-video.png",
+      "bytes": 251249,
+      "sha256": "c8e5a2517338bb091fa715988b9f098b4b7f55dc168ab3e34a537ae9eae8307c"
+    },
+    {
+      "file": "narrow-real-video.png",
+      "bytes": 155295,
+      "sha256": "5403822ba0e7e442e9483298bea626702edd2a9055143acba3ed5c71f72e0479"
+    }
+  ],
+  "manualUnverified": [
+    "Explorer OLE拖入",
+    "完整人工键盘路径",
+    "系统125%/150%缩放",
+    "多显示器",
+    "扬声器试听",
+    "操作录屏"
+  ]
+}

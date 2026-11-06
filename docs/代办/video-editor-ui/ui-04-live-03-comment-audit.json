@@ -1,0 +1,783 @@
+{
+  "date": "2026-11-04",
+  "baseline": "C:\\Users\\18305\\AppData\\Local\\Temp\\ir-live03-3fd9a4c68aa946b78251c4388185de6a\\baseline.json",
+  "baselineNote": "编辑器与LIVE脚本取本轮开始快照；共享菜单调用方在迁移之前补入快照；双语toolBox词条按本轮新增9键精确反向扣除恢复基线；没有把原工作区修改全部计入。新增组件全文计入。",
+  "method": "LF归一化后SequenceMatcher(autojunk=False)，新增/替换后的物理行；纯注释C，混合行只B；删除与未变上下文不计。人工核对生命周期、业务目标、整数帧、I/O界限与测试证据边界，16行重复解释保守剔除。",
+  "files": [
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-clip-shell.tsx",
+      "group": "business",
+      "C": 11,
+      "B": 4,
+      "candidateCommentLines": 11,
+      "excludedComments": [],
+      "changedLineRanges": [
+        {
+          "start": 7,
+          "end": 7
+        },
+        {
+          "start": 38,
+          "end": 46
+        },
+        {
+          "start": 70,
+          "end": 74
+        }
+      ],
+      "baselineSha256Lf": "d370f3e92f4da2509489f32c0c2322cf7fc7bdd9f48ddebe27c0e58e00d27f8c",
+      "currentSha256Lf": "8124a44b8fe0d4ede5a06a5fc44be9a5685df41b15eaeb72a57e855eca39cc4c"
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-panels.tsx",
+      "group": "business",
+      "C": 13,
+      "B": 5,
+      "candidateCommentLines": 13,
+      "excludedComments": [],
+      "changedLineRanges": [
+        {
+          "start": 254,
+          "end": 258
+        },
+        {
+          "start": 288,
+          "end": 297
+        },
+        {
+          "start": 356,
+          "end": 356
+        },
+        {
+          "start": 396,
+          "end": 397
+        }
+      ],
+      "baselineSha256Lf": "52cc9a4061e7a0a630c7207863604e73a7a6bfa1fc25951e9ccdc07917b82369",
+      "currentSha256Lf": "d4ece56ef0f101da062e9eb0b4caa2fd7f1ebd6fe994539951e7500360e51236"
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-timeline.tsx",
+      "group": "business",
+      "C": 19,
+      "B": 5,
+      "candidateCommentLines": 19,
+      "excludedComments": [],
+      "changedLineRanges": [
+        {
+          "start": 7,
+          "end": 19
+        },
+        {
+          "start": 92,
+          "end": 95
+        },
+        {
+          "start": 104,
+          "end": 104
+        },
+        {
+          "start": 119,
+          "end": 124
+        }
+      ],
+      "baselineSha256Lf": "66c9decd3f24799feb8bf413105b4b94d32d99d78a853b4550ccfb7ca4e502fe",
+      "currentSha256Lf": "d574082c1a1503ecf58326bc77a90ccc49fedb47793f3d753e5569a93f648807"
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor.module.css",
+      "group": "business",
+      "C": 7,
+      "B": 3,
+      "candidateCommentLines": 7,
+      "excludedComments": [],
+      "changedLineRanges": [
+        {
+          "start": 150,
+          "end": 153
+        },
+        {
+          "start": 310,
+          "end": 313
+        },
+        {
+          "start": 326,
+          "end": 327
+        }
+      ],
+      "baselineSha256Lf": "59626d2d70944e0c1b6defec7d87bb4691f48bc7481e651133ebef07f0fa55db",
+      "currentSha256Lf": "c0253970c1fcfdd5bc32a058d19f8ef73f4150a688717128a5e43163af33410c"
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/live-source-preview.tsx",
+      "group": "business",
+      "C": 48,
+      "B": 12,
+      "candidateCommentLines": 48,
+      "excludedComments": [],
+      "changedLineRanges": [
+        {
+          "start": 4,
+          "end": 14
+        },
+        {
+          "start": 62,
+          "end": 65
+        },
+        {
+          "start": 97,
+          "end": 100
+        },
+        {
+          "start": 129,
+          "end": 129
+        },
+        {
+          "start": 168,
+          "end": 168
+        },
+        {
+          "start": 194,
+          "end": 207
+        },
+        {
+          "start": 214,
+          "end": 214
+        },
+        {
+          "start": 247,
+          "end": 250
+        },
+        {
+          "start": 252,
+          "end": 268
+        },
+        {
+          "start": 271,
+          "end": 272
+        },
+        {
+          "start": 274,
+          "end": 274
+        }
+      ],
+      "baselineSha256Lf": "9143acea0d1d068de29ab962fd83fccd81c806d4ae896a60cfdfd88ddf46eeb7",
+      "currentSha256Lf": "ac4730349b67eddef68c6ffb287374dba167f47b8bbed78dc337870cbc842f8c"
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/live-timeline-model.ts",
+      "group": "business",
+      "C": 69,
+      "B": 23,
+      "candidateCommentLines": 69,
+      "excludedComments": [],
+      "changedLineRanges": [
+        {
+          "start": 22,
+          "end": 24
+        },
+        {
+          "start": 118,
+          "end": 118
+        },
+        {
+          "start": 121,
+          "end": 212
+        }
+      ],
+      "baselineSha256Lf": "005fe11b99497ac196c72ad6702e04e0bf0cc5a955a82a5f4af1aa9bb8f90af6",
+      "currentSha256Lf": "727a1e69a7f1561a749c0167e8dd25d1cc91946631bbd61f130f3737d3387824"
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/use-live-timeline.ts",
+      "group": "business",
+      "C": 80,
+      "B": 39,
+      "candidateCommentLines": 80,
+      "excludedComments": [],
+      "changedLineRanges": [
+        {
+          "start": 3,
+          "end": 3
+        },
+        {
+          "start": 6,
+          "end": 6
+        },
+        {
+          "start": 9,
+          "end": 12
+        },
+        {
+          "start": 53,
+          "end": 55
+        },
+        {
+          "start": 77,
+          "end": 79
+        },
+        {
+          "start": 84,
+          "end": 84
+        },
+        {
+          "start": 95,
+          "end": 96
+        },
+        {
+          "start": 104,
+          "end": 109
+        },
+        {
+          "start": 114,
+          "end": 117
+        },
+        {
+          "start": 172,
+          "end": 175
+        },
+        {
+          "start": 236,
+          "end": 308
+        },
+        {
+          "start": 357,
+          "end": 361
+        },
+        {
+          "start": 374,
+          "end": 374
+        },
+        {
+          "start": 384,
+          "end": 384
+        },
+        {
+          "start": 391,
+          "end": 391
+        },
+        {
+          "start": 403,
+          "end": 404
+        },
+        {
+          "start": 422,
+          "end": 422
+        },
+        {
+          "start": 525,
+          "end": 528
+        },
+        {
+          "start": 532,
+          "end": 532
+        },
+        {
+          "start": 534,
+          "end": 534
+        },
+        {
+          "start": 536,
+          "end": 536
+        }
+      ],
+      "baselineSha256Lf": "260163e2e899bec4301c1d107229acfac9166134517d13e55cea1cbf806f3bd6",
+      "currentSha256Lf": "9e05d7fa0da0a39776b197b5b7795bbc06b097393d3b171b5f3676b1ba69110f"
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/video-editor-view.tsx",
+      "group": "business",
+      "C": 19,
+      "B": 6,
+      "candidateCommentLines": 19,
+      "excludedComments": [],
+      "changedLineRanges": [
+        {
+          "start": 16,
+          "end": 18
+        },
+        {
+          "start": 62,
+          "end": 66
+        },
+        {
+          "start": 70,
+          "end": 83
+        },
+        {
+          "start": 100,
+          "end": 100
+        },
+        {
+          "start": 102,
+          "end": 103
+        }
+      ],
+      "baselineSha256Lf": "0275f97585fce18ad3884d203c3c2309c453812665524fea6651bf4146eb0a83",
+      "currentSha256Lf": "c97aeae4af8edb640c161d40b05428448adde974a984a8a33c673f4848d7dea0"
+    },
+    {
+      "file": "scripts/smoke-video-live-02.js",
+      "group": "test",
+      "C": 313,
+      "B": 123,
+      "candidateCommentLines": 321,
+      "excludedComments": [
+        {
+          "line": 1206,
+          "text": "// 每个主题保存一份独立JSON，六张截图可据theme和width准确对应数据行。",
+          "reason": "与本文件或共用组件更具体的机制说明重复，保守不计有效注释"
+        },
+        {
+          "line": 1207,
+          "text": "// 容器目标与窗口尺寸分开记录，AppShell占用不能被误算成编辑器区域。",
+          "reason": "与本文件或共用组件更具体的机制说明重复，保守不计有效注释"
+        },
+        {
+          "line": 1210,
+          "text": "// 保留clips计数是为了检测响应式切换错误地重建了空工程。",
+          "reason": "与本文件或共用组件更具体的机制说明重复，保守不计有效注释"
+        },
+        {
+          "line": 1212,
+          "text": "// footerFits证明信息条在工作区底部，而不是依赖绝对定位飘到应用状态栏外。",
+          "reason": "与本文件或共用组件更具体的机制说明重复，保守不计有效注释"
+        },
+        {
+          "line": 1214,
+          "text": "// 两遍补偿只为了导航形态稳定，不是不断重试直到某个业务断言碰巧成功。",
+          "reason": "与本文件或共用组件更具体的机制说明重复，保守不计有效注释"
+        },
+        {
+          "line": 1217,
+          "text": "// 当前DPR为1的六尺寸组合不能推导系统125%缩放也通过。",
+          "reason": "与本文件或共用组件更具体的机制说明重复，保守不计有效注释"
+        },
+        {
+          "line": 1218,
+          "text": "// 主题信号来自产品原生主题流程，测试没有覆盖一个独立dark CSS类。",
+          "reason": "与本文件或共用组件更具体的机制说明重复，保守不计有效注释"
+        },
+        {
+          "line": 1219,
+          "text": "// 结束后恢复窗口尺寸，音轨菜单截图不继承960窄窗的隐藏侧栏。",
+          "reason": "与本文件或共用组件更具体的机制说明重复，保守不计有效注释"
+        }
+      ],
+      "changedLineRanges": [
+        {
+          "start": 17,
+          "end": 17
+        },
+        {
+          "start": 123,
+          "end": 137
+        },
+        {
+          "start": 432,
+          "end": 432
+        },
+        {
+          "start": 470,
+          "end": 805
+        },
+        {
+          "start": 1174,
+          "end": 1174
+        },
+        {
+          "start": 1179,
+          "end": 1259
+        },
+        {
+          "start": 1366,
+          "end": 1366
+        },
+        {
+          "start": 1372,
+          "end": 1372
+        },
+        {
+          "start": 1389,
+          "end": 1403
+        }
+      ],
+      "baselineSha256Lf": "9ea1fa36c144e5ed4a912df8068a89ccad3aab4ec0fdd04e3fa04c3c8df4592a",
+      "currentSha256Lf": "11d86608e39c14abbc31379655e58819759b8ecc0de666fb88f79ea633a89779"
+    },
+    {
+      "file": "apps/next/src/i18n/locales/zh-CN/toolBox.ts",
+      "group": "business",
+      "C": 5,
+      "B": 9,
+      "candidateCommentLines": 5,
+      "excludedComments": [],
+      "changedLineRanges": [
+        {
+          "start": 51,
+          "end": 64
+        }
+      ],
+      "baselineSha256Lf": "54507891b71581fe1ebdb2c086a643925c6c9c10743c44e86ef5819115ad8348",
+      "currentSha256Lf": "e9b26760c813ffc6c30a492499d565a8162cf73a3e53f7ddabec8ff98519dc11"
+    },
+    {
+      "file": "apps/next/src/i18n/locales/en/toolBox.ts",
+      "group": "business",
+      "C": 5,
+      "B": 9,
+      "candidateCommentLines": 5,
+      "excludedComments": [],
+      "changedLineRanges": [
+        {
+          "start": 39,
+          "end": 52
+        }
+      ],
+      "baselineSha256Lf": "b44229cced375d18186a5c48cacb95889ad200900a108f1374a9aa28312896ed",
+      "currentSha256Lf": "c58bfe6a56bbe37ec865f6c73646655c13bcc96a3409ea296612b5cbd977f289"
+    },
+    {
+      "file": "apps/next/src/components/context-menu-shell.tsx",
+      "group": "business",
+      "C": 23,
+      "B": 3,
+      "candidateCommentLines": 23,
+      "excludedComments": [],
+      "changedLineRanges": [
+        {
+          "start": 6,
+          "end": 6
+        },
+        {
+          "start": 14,
+          "end": 37
+        },
+        {
+          "start": 58,
+          "end": 58
+        }
+      ],
+      "baselineSha256Lf": "855dc8b767fe5662c4575cb33ad72cafff0d83e433f1cc5b9676f88f747d94e8",
+      "currentSha256Lf": "a2065b610f60e1366a0b3b2d220fab45f2fcb0afd82aeadd735f97c1256156fe"
+    },
+    {
+      "file": "apps/next/src/view/create/GeneratedImageContextMenu.tsx",
+      "group": "business",
+      "C": 21,
+      "B": 14,
+      "candidateCommentLines": 21,
+      "excludedComments": [],
+      "changedLineRanges": [
+        {
+          "start": 3,
+          "end": 5
+        },
+        {
+          "start": 7,
+          "end": 7
+        },
+        {
+          "start": 11,
+          "end": 25
+        },
+        {
+          "start": 27,
+          "end": 34
+        },
+        {
+          "start": 36,
+          "end": 43
+        }
+      ],
+      "baselineSha256Lf": "570b3117263b5f050d957a995bc69a7cd2f23edee3a4573174e8077e9b51ddfc",
+      "currentSha256Lf": "e9c4a7c361d02fb53d0710e75076d3edf01305129fb45d184f3fa273cf570b06"
+    },
+    {
+      "file": "apps/next/src/view/create/HistoryFolderContextMenu.tsx",
+      "group": "business",
+      "C": 19,
+      "B": 16,
+      "candidateCommentLines": 19,
+      "excludedComments": [],
+      "changedLineRanges": [
+        {
+          "start": 3,
+          "end": 8
+        },
+        {
+          "start": 11,
+          "end": 22
+        },
+        {
+          "start": 24,
+          "end": 32
+        },
+        {
+          "start": 34,
+          "end": 41
+        }
+      ],
+      "baselineSha256Lf": "6bab3d493bcf5d215a6711e045863542e172483db326f8c25426734e50b0e463",
+      "currentSha256Lf": "757def1508427f629adc63b9bdda40f977552b82927cb177c208e2d4eb237a07"
+    },
+    {
+      "file": "apps/next/src/components/videoEdit/video-clip-context-menu.tsx",
+      "group": "business",
+      "C": 27,
+      "B": 13,
+      "candidateCommentLines": 27,
+      "excludedComments": [],
+      "changedLineRanges": [
+        {
+          "start": 4,
+          "end": 5
+        },
+        {
+          "start": 54,
+          "end": 79
+        },
+        {
+          "start": 85,
+          "end": 94
+        },
+        {
+          "start": 100,
+          "end": 100
+        },
+        {
+          "start": 104,
+          "end": 104
+        }
+      ],
+      "baselineSha256Lf": "9276fc11bab7ead45411486a96ada96a5af587e176ceef39b7f49830779deb29",
+      "currentSha256Lf": "754b63a9078a650e3afc045f7930dedce0dac99b8012afbaee9d276395f45a5a"
+    },
+    {
+      "file": "apps/next/src/components/create-edit/mask-selection-actions.tsx",
+      "group": "business",
+      "C": 20,
+      "B": 3,
+      "candidateCommentLines": 20,
+      "excludedComments": [],
+      "changedLineRanges": [
+        {
+          "start": 5,
+          "end": 5
+        },
+        {
+          "start": 27,
+          "end": 46
+        },
+        {
+          "start": 48,
+          "end": 48
+        },
+        {
+          "start": 50,
+          "end": 50
+        }
+      ],
+      "baselineSha256Lf": "78e95fed25c2845319198d871c4078bac6b1eb48fcfa67cf327d3ab94d332441",
+      "currentSha256Lf": "c9bce0b6d9f3b5eafa56f533d843a4e60255d13c757f5b47a3778cbc3e6bcb52"
+    },
+    {
+      "file": "apps/next/src/components/create-edit/mask-canvas-interactions.tsx",
+      "group": "business",
+      "C": 6,
+      "B": 2,
+      "candidateCommentLines": 6,
+      "excludedComments": [],
+      "changedLineRanges": [
+        {
+          "start": 8,
+          "end": 14
+        },
+        {
+          "start": 57,
+          "end": 57
+        }
+      ],
+      "baselineSha256Lf": "ba02dc8e4118a0654bbcbcbd62d186aa65ea71131950fca2d14d952c38cf8abb",
+      "currentSha256Lf": "9597e454f155d6467cbade8d299c1c508bdcec2fdb94545bb03ff6d24a28fc54"
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/comic/comic-image-menu.tsx",
+      "group": "business",
+      "C": 33,
+      "B": 10,
+      "candidateCommentLines": 33,
+      "excludedComments": [],
+      "changedLineRanges": [
+        {
+          "start": 4,
+          "end": 4
+        },
+        {
+          "start": 9,
+          "end": 17
+        },
+        {
+          "start": 23,
+          "end": 29
+        },
+        {
+          "start": 38,
+          "end": 44
+        },
+        {
+          "start": 47,
+          "end": 48
+        },
+        {
+          "start": 52,
+          "end": 61
+        },
+        {
+          "start": 69,
+          "end": 70
+        },
+        {
+          "start": 72,
+          "end": 75
+        },
+        {
+          "start": 78,
+          "end": 78
+        }
+      ],
+      "baselineSha256Lf": "e201afef12d7dc1514d9861be693b8b89df8350828ce278775eef92b28bdb9d5",
+      "currentSha256Lf": "41c977cd06353e28e4407842efe5606ed8b31964b39627f8d72356a9205c8190"
+    },
+    {
+      "file": "scripts/smoke-create-layout.js",
+      "group": "test",
+      "C": 78,
+      "B": 44,
+      "candidateCommentLines": 78,
+      "excludedComments": [],
+      "changedLineRanges": [
+        {
+          "start": 787,
+          "end": 827
+        },
+        {
+          "start": 851,
+          "end": 851
+        },
+        {
+          "start": 917,
+          "end": 997
+        },
+        {
+          "start": 1060,
+          "end": 1062
+        }
+      ],
+      "baselineSha256Lf": "6baddc85abe29e8973fe5473ce26df42b20c50131c918dd8272b2bfb8b3df9ba",
+      "currentSha256Lf": "bd74588c97c273de6d65ea8ac274de1704e8ca9b8b5ed5e0899b9f0df18731d4"
+    },
+    {
+      "file": "scripts/smoke-video-clip-effects.js",
+      "group": "test",
+      "C": 8,
+      "B": 1,
+      "candidateCommentLines": 8,
+      "excludedComments": [],
+      "changedLineRanges": [
+        {
+          "start": 220,
+          "end": 228
+        }
+      ],
+      "baselineSha256Lf": "db0bde225686a1d8688edb0638a6fe30ec2f5f7cbaecafa483361313b8999c59",
+      "currentSha256Lf": "8059f530515d1c81f0de1cd2c574a5c1efbe321900cae9b58f7e7eb7237fd103"
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/live-clip-menu.tsx",
+      "group": "business",
+      "C": 42,
+      "B": 26,
+      "candidateCommentLines": 50,
+      "excludedComments": [
+        {
+          "line": 8,
+          "text": "// 保留菜单容器复用而分别注入业务，避免强行把两种工程契约混在一起。",
+          "reason": "与本文件或共用组件更具体的机制说明重复，保守不计有效注释"
+        },
+        {
+          "line": 40,
+          "text": "// 不另写一套hover、焦点或主题样式，六类右键入口共享同一个菜单行规范。",
+          "reason": "与本文件或共用组件更具体的机制说明重复，保守不计有效注释"
+        },
+        {
+          "line": 44,
+          "text": "// 浅深主题使用公共容器变量，不新增浮层专属颜色或全局状态。",
+          "reason": "与本文件或共用组件更具体的机制说明重复，保守不计有效注释"
+        },
+        {
+          "line": 46,
+          "text": "// 此处没有媒体元素、异步请求或计时器，关闭不会留下后台导出任务。",
+          "reason": "与本文件或共用组件更具体的机制说明重复，保守不计有效注释"
+        },
+        {
+          "line": 56,
+          "text": "// 复制和删除的按钮仍使用原生button，Enter/Space由浏览器触发相同回调。",
+          "reason": "与本文件或共用组件更具体的机制说明重复，保守不计有效注释"
+        },
+        {
+          "line": 58,
+          "text": "// 菜单里的说明文字不带tabIndex，不会夹在每个操作之间形成无意义焦点站点。",
+          "reason": "与本文件或共用组件更具体的机制说明重复，保守不计有效注释"
+        },
+        {
+          "line": 60,
+          "text": "// 图标与文字同时显示，音频动作与删除动作不只靠颜色区分。",
+          "reason": "与本文件或共用组件更具体的机制说明重复，保守不计有效注释"
+        },
+        {
+          "line": 65,
+          "text": "// 旧版区间菜单仍拥有原来的速度与效果规则，这里只共享稳定的外壳机制。",
+          "reason": "与本文件或共用组件更具体的机制说明重复，保守不计有效注释"
+        }
+      ],
+      "changedLineRanges": [
+        {
+          "start": 1,
+          "end": 79
+        }
+      ],
+      "baselineSha256Lf": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "currentSha256Lf": "0e0b08546610427bda105e967b37e0ddf77c28273bd3d214619b92b1efcbab08"
+    },
+    {
+      "file": "apps/next/src/components/context-menu-item.tsx",
+      "group": "business",
+      "C": 58,
+      "B": 19,
+      "candidateCommentLines": 58,
+      "excludedComments": [],
+      "changedLineRanges": [
+        {
+          "start": 1,
+          "end": 82
+        }
+      ],
+      "baselineSha256Lf": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "currentSha256Lf": "297bdb288dde412bd21657d9a8d10b320fd68db56c0caa3130e13328ab52d5a5"
+    }
+  ],
+  "totals": {
+    "business": {
+      "C": 525,
+      "B": 221,
+      "percent": 70.3753
+    },
+    "test": {
+      "C": 399,
+      "B": 168,
+      "percent": 70.3704
+    }
+  },
+  "functionReview": "新增普通业务和测试辅助函数均按TypeScript printer正常展开核对≤30行；JSX装配按职责豁免。原smoke-create-layout中的checkFileInteractions/main仍为既有长编排函数，本轮仅换入共享测试调用，未全局重构其历史场景。"
+}

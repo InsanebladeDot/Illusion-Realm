@@ -1,0 +1,392 @@
+{
+  "date": "2026-11-04",
+  "buildFingerprint": "263eb096c2af7cfb384cf1c50b0ae9f2c94b46bf2e4da353eb35345dc1f4f850",
+  "roots": {
+    "live02": "C:\\Users\\18305\\AppData\\Local\\Temp\\ir-video-live02-VAb62K",
+    "live01": "C:\\Users\\18305\\AppData\\Local\\Temp\\ir-video-live01-SddIDK",
+    "ui": "C:\\Users\\18305\\AppData\\Local\\Temp\\ir-video-ui01-nXlhMN"
+  },
+  "levels": {
+    "live02": "真实FFmpeg编码磁盘文件/生产探测与媒体事件；CDP内部鼠标/文件事件及DOM键盘；chooser返回路径夹具",
+    "live01": "真实Windows原生系统选择框UIAutomation多选/取消；无chooser结果替换；Explorer人工拖入SKIP",
+    "ui": "独立演示工程与A/B样板，主题/容器/焦点自动验证；非正式多轨合成输出"
+  },
+  "manual": "Explorer人工拖入、完整人工键盘、系统125%/150%缩放、扬声器试听、操作录屏未验证",
+  "files": [
+    {
+      "name": "layout-dark.json",
+      "sha256": "170a576e47580855c7d6652d3514a41ffd512af834af84956b0e613dc25763ae",
+      "bytes": 769
+    },
+    {
+      "name": "layout-light.json",
+      "sha256": "24672c4268adb3244a9a1390bae0efb6fad6ac9d0a8a39f7bcb307d86d687ec8",
+      "bytes": 772
+    },
+    {
+      "name": "live-01-cancelled-dark.png",
+      "sha256": "fcf8ea342ed1d804239ed0a0aef308bba7b53c005595f20d6aebeb4ad2b0b77e",
+      "bytes": 155274
+    },
+    {
+      "name": "live-01-decode-error-dark.png",
+      "sha256": "7fd8d62474686bfb8d4b46c043197e72d83e5bbc6098070226785a4b6d23e6bc",
+      "bytes": 155464
+    },
+    {
+      "name": "live-01-import-dark.png",
+      "sha256": "fd6b0acfd4ebfd18a212778d97e78bc471daea2c86c4b6b1028cd09e685b30bc",
+      "bytes": 211001
+    },
+    {
+      "name": "live-01-import-light.png",
+      "sha256": "ca4b0dfd6c673ca11b894108a263d82c36b29777575152f0cefccaf597a5a6c8",
+      "bytes": 196958
+    },
+    {
+      "name": "live-01-narrow-dark.png",
+      "sha256": "f82d51a7ba66619ebd12ab3cf9e5caf92b1d930a6cfc6ceeeceaf40135e86c09",
+      "bytes": 102891
+    },
+    {
+      "name": "live-01-portrait-dark.png",
+      "sha256": "74dc6a0eb5f05aef1ef80fe173d125d8a028407c7f5bb75f837a8cdde9fc6e9f",
+      "bytes": 175046
+    },
+    {
+      "name": "live-02-after-move-light.png",
+      "sha256": "ceaed3e80f9d9be4b299897feec862a978ba2c4e747582303f9152712a8a2ec5",
+      "bytes": 219458
+    },
+    {
+      "name": "live-02-before-move-light.png",
+      "sha256": "c9ed8acda2cc46a75880bf80551e10bb52d214da46a698dcad34a9a7f4f07bc6",
+      "bytes": 219299
+    },
+    {
+      "name": "live-02-drag-feedback-light.png",
+      "sha256": "7258d60faa13635aeef2513951c46f7e01dfce9b05f40cd9ad72008302768a00",
+      "bytes": 224351
+    },
+    {
+      "name": "live-02-final-dark.png",
+      "sha256": "4df60ca75cab6131f7ec9ff22ac2e1eda1b67ab2088fd77795045bd50a40f135",
+      "bytes": 240614
+    },
+    {
+      "name": "live-02-narrow-dark.png",
+      "sha256": "6c8ff69f80a0c94a3a6ea85c8127b6cb41fef40c23096704879c589b89df6447",
+      "bytes": 133016
+    },
+    {
+      "name": "live-02-scrolled-light.png",
+      "sha256": "7b7232e569d81b850cc0a34b0033de6ad67e34b583c630718c030bf7f75f1b51",
+      "bytes": 164593
+    },
+    {
+      "name": "live-03-audio-detached.png",
+      "sha256": "8d16b0752b089d184a48bc75bbfb6cca45430a276e7e2d2f591019641e2f5673",
+      "bytes": 170432
+    },
+    {
+      "name": "live-03-clip-menu.png",
+      "sha256": "a9d77cfe9e7969c79a4b1bcab22cf15f58476c812f97014a6ac97d0c37b134c1",
+      "bytes": 175600
+    },
+    {
+      "name": "live-03-dark-1280x800.png",
+      "sha256": "46b5bc0f343e8ca035855c7eb2c1a5ede96f0702b39d0ffdd9a3269af3fb92d0",
+      "bytes": 212517
+    },
+    {
+      "name": "live-03-dark-1600x1000.png",
+      "sha256": "3dcc06a6689018e601088c8b25ff5d045df944aa9315a80887352ae7ef96e8b9",
+      "bytes": 263362
+    },
+    {
+      "name": "live-03-dark-960x720.png",
+      "sha256": "4c72b63626521212c6dd3dd7ee39a7835359248ed27a15f79de7092f5b1fb26a",
+      "bytes": 149268
+    },
+    {
+      "name": "live-03-light-1280x800.png",
+      "sha256": "dda7121e992d6f9a92a11823d3dd1c2402c1650ce8f509714fea72222bf6af54",
+      "bytes": 207362
+    },
+    {
+      "name": "live-03-light-1600x1000.png",
+      "sha256": "fae49f264ec762c7e2fa99e306ce24f9ea318140811a5cae8dbbd30b59ef2add",
+      "bytes": 257854
+    },
+    {
+      "name": "live-03-light-960x720.png",
+      "sha256": "568a130fecd56453b22003c1448d9e23c322be787974b9da98cc78ec7c62e89a",
+      "bytes": 145643
+    },
+    {
+      "name": "media-facts.json",
+      "sha256": "ceaf0fa76a3db74029ba5d1dcf88c2c38796cb85ccf48b980883f0b305b762bd",
+      "bytes": 6489
+    },
+    {
+      "name": "placement-facts.json",
+      "sha256": "57fa47d839c575a6406f0baa5b887d4374292ed8b00c627a60adf5e8fc7810bc",
+      "bytes": 613
+    },
+    {
+      "name": "ui-01-dark-1600.png",
+      "sha256": "94ab2faee39a3ba337eeff55d02e56b767d8efe49d6170d5e70897bedcd2b12f",
+      "bytes": 846775
+    },
+    {
+      "name": "ui-01-light-1280.png",
+      "sha256": "0d42e101870d91af9544acd3d7bf26759d98869bdbd729053ff78b1dafff6c1a",
+      "bytes": 581298
+    },
+    {
+      "name": "ui-01-light-1600.png",
+      "sha256": "06a99eceb89a63b116f19fd6a531efd558cbe73e87f4ba71c7ebd6951c4b3ed7",
+      "bytes": 841832
+    },
+    {
+      "name": "ui-01-light-960.png",
+      "sha256": "224576167113be41580910891ba5aee99fdbe5d7b9ecc78e467f44d521fb12a1",
+      "bytes": 411537
+    },
+    {
+      "name": "ui-02-samples-dark.png",
+      "sha256": "9faf02b47d5de5bb5a7c0780340dc102cfbddc745d4bfdcf5285e5cb69bc7035",
+      "bytes": 166693
+    },
+    {
+      "name": "ui-02-samples-light.png",
+      "sha256": "f7d525d9711f5914c32c32be14211db36c8618475c2c13dbd611d65562978317",
+      "bytes": 161860
+    },
+    {
+      "name": "ui-02-samples-narrow.png",
+      "sha256": "1d42044b251bab9bda726a11223184eaa364a8bd012d1cfdb1eb0de8906d1387",
+      "bytes": 125388
+    },
+    {
+      "name": "ui-03-media-dark.png",
+      "sha256": "94ab2faee39a3ba337eeff55d02e56b767d8efe49d6170d5e70897bedcd2b12f",
+      "bytes": 846775
+    },
+    {
+      "name": "ui-03-media-error.png",
+      "sha256": "b39b466671206ee0e9c142a48fbb36a51638e8ddafb6e49370905c8c0c5ca7d9",
+      "bytes": 184863
+    },
+    {
+      "name": "ui-03-media-light.png",
+      "sha256": "08960a2f6d7539c77c98a34982db2bb9a44903c5cce4a751fbfe92bf55d857cc",
+      "bytes": 842372
+    },
+    {
+      "name": "ui-03-media-samples-dark.png",
+      "sha256": "ae5f85d5283bae60abea8310ca8a969e33b1542dcc9db5f3fa0823a9bb4e5ec1",
+      "bytes": 193163
+    },
+    {
+      "name": "ui-03-media-samples-light.png",
+      "sha256": "4757c2faf10ab625abe7c142624c96710bc4486659df8cea2f507c767192b718",
+      "bytes": 188116
+    },
+    {
+      "name": "ui-03-media-samples-narrow.png",
+      "sha256": "e0a4edbdda34004351c24d80e8ae0b0b8211efd281a619278b335a7c8d6e24e8",
+      "bytes": 84242
+    },
+    {
+      "name": "ui-04-default-dark.png",
+      "sha256": "94ab2faee39a3ba337eeff55d02e56b767d8efe49d6170d5e70897bedcd2b12f",
+      "bytes": 846775
+    },
+    {
+      "name": "ui-04-default-light.png",
+      "sha256": "06a99eceb89a63b116f19fd6a531efd558cbe73e87f4ba71c7ebd6951c4b3ed7",
+      "bytes": 841832
+    },
+    {
+      "name": "ui-04-preview-error-dark.png",
+      "sha256": "dc1f776c7ba14c8966e94eed0afc1cdc19d846df10a225d1444bba0807394b13",
+      "bytes": 180041
+    },
+    {
+      "name": "ui-04-preview-samples-dark.png",
+      "sha256": "b1851f4c9962cbf80c15e7fb18116e4394eadbda24c72dc6fbbb265d759232d3",
+      "bytes": 403787
+    },
+    {
+      "name": "ui-04-preview-samples-light.png",
+      "sha256": "937878b8b59fb7cf040b17275165df136bd2dfebf21f9baefd6fda04b4c4b87b",
+      "bytes": 398172
+    },
+    {
+      "name": "ui-04-preview-samples-narrow.png",
+      "sha256": "b8ef3967c11a5779f61b95b1affb7f5a020178242b20b5db4730944e7c0e85c8",
+      "bytes": 297872
+    },
+    {
+      "name": "ui-05-inspector.png",
+      "sha256": "01bd15b835c5233376588f8c3fa25cc18cd769ac5ca414b90b274fa06a82948a",
+      "bytes": 137652
+    },
+    {
+      "name": "ui-06-edge-placement-light.png",
+      "sha256": "fb43605712eff19f688fff2fb48f8fc43655ed0ebee9eb02453e9514aaa46aa8",
+      "bytes": 219860
+    },
+    {
+      "name": "ui-06-playhead.png",
+      "sha256": "8be7724257d92ab08613fdae0dbb162fe79892eb75cbb2d53bc89126b28554ea",
+      "bytes": 222934
+    },
+    {
+      "name": "ui-07-compact-inspector.png",
+      "sha256": "5a5167c15b27d5ecb421908bab87d2dcc9a37c8156066ac5c59f50d636b12a1d",
+      "bytes": 401707
+    },
+    {
+      "name": "ui-07-compact-media.png",
+      "sha256": "bb43e5fa8e54d7c043ddf19883f5e99db7b21e2e047a35be17759ef15fc4801f",
+      "bytes": 426865
+    },
+    {
+      "name": "ui-07-contrast-dark.json",
+      "sha256": "e753a868d162361f1c8f9eb1cf17ba29d69a74a8f1af726cebecb6cd14df4821",
+      "bytes": 267
+    },
+    {
+      "name": "ui-07-contrast-light.json",
+      "sha256": "ece150c1de8a6097e4cb2e8211ecc59a9a8ca9c676ba556f76170ec05acbc713",
+      "bytes": 264
+    },
+    {
+      "name": "ui-07-dark-1280x800.png",
+      "sha256": "b12032e785eb9608b41900b2adfc815e3fe83ad6d9225aa2266d9f4a14312b80",
+      "bytes": 511088
+    },
+    {
+      "name": "ui-07-dark-1600x1000.png",
+      "sha256": "c787a5a05d2d9b633f6dc3c4d0f4c60d1ce54969861060485e79f2dcb698b5d5",
+      "bytes": 517391
+    },
+    {
+      "name": "ui-07-dark-960x720.png",
+      "sha256": "a8488a1072b11085b8f72a4cf01c27cfc884d689e8332d4299ffd18a1f5940b1",
+      "bytes": 429798
+    },
+    {
+      "name": "ui-07-layout.json",
+      "sha256": "b1a9bbf12b324736d4aa77dfc23c00cfbe4fe77789bba7c0dff173943561d8ec",
+      "bytes": 647
+    },
+    {
+      "name": "ui-07-light-1280x800.png",
+      "sha256": "64f2dc61378cfa2215be735d3bb4274deab05c6fc80dff6710c729ee161961f4",
+      "bytes": 506806
+    },
+    {
+      "name": "ui-07-light-1600x1000.png",
+      "sha256": "4213a0d16d349fc8a2be24ada3fb94d01df07a7f15b01f5cf7f50a32c31bb618",
+      "bytes": 512909
+    },
+    {
+      "name": "ui-07-light-960x720.png",
+      "sha256": "ac85e965addb23b7d5efb2f259c995e8a918b13d468ab1713bd9a650348235fe",
+      "bytes": 426216
+    },
+    {
+      "name": "ui-08-empty-black.png",
+      "sha256": "ffc8f3e2a64a5c9c3e67f01559602aeb87a82aa8dbed5288166b148e157031bf",
+      "bytes": 125393
+    },
+    {
+      "name": "ui-08-file-hover.png",
+      "sha256": "30b5722d391668e713e4e26b62dfc261488da26de43aaea7916b814c0b525851",
+      "bytes": 170016
+    },
+    {
+      "name": "ui-08-integrated-real-project.png",
+      "sha256": "41efc43259dc383f13b8a7b500c4856f8ee412582f42d1af42080883fa34a9f0",
+      "bytes": 219051
+    },
+    {
+      "name": "ui-08-internal-hover.png",
+      "sha256": "29cf0e91933c3a2042c5a73af1babf19e74b9664ba36637225a3fdf9e1cc282f",
+      "bytes": 206294
+    },
+    {
+      "name": "ui08-build.log",
+      "sha256": "71c2f4cce68b1e7c8b7d2bf98529b06b1bb6ae1c5e041fe37bb2b68d833007e7",
+      "bytes": 1813
+    },
+    {
+      "name": "ui08-cartoon.log",
+      "sha256": "13582fd526f446b40c78a74054135725b175a5c601be049f7df3317a85b1437b",
+      "bytes": 4773
+    },
+    {
+      "name": "ui08-check.log",
+      "sha256": "570b7acac608ad106490ff843055b2fa0b83617c72b841f0017a6edd261cdf11",
+      "bytes": 9428
+    },
+    {
+      "name": "ui08-editor-ui.log",
+      "sha256": "57cec05880429344a1232891d08acfeeeb8ebe10b15e1c9cb6ddc7d761537ad5",
+      "bytes": 9336
+    },
+    {
+      "name": "ui08-en.log",
+      "sha256": "a4aa3e9d4c4ba4b8e60717cf1162038f2676e471f921809f76cc782d9ae3a87b",
+      "bytes": 667
+    },
+    {
+      "name": "ui08-gif.log",
+      "sha256": "28bee9c05547a461e474361ec62dceaa1a675ab85c2fe6b56ea09f4b6705439a",
+      "bytes": 4405
+    },
+    {
+      "name": "ui08-i18n.log",
+      "sha256": "e5d7abf3851e851b3b4b39233c980f0455af42356da461e0459cb8f4c8339a7d",
+      "bytes": 215
+    },
+    {
+      "name": "ui08-keys.log",
+      "sha256": "f8c3d765cce3787307e0c7593feec26f1cf67535e7f0cef5dd954b7e35e960a3",
+      "bytes": 162
+    },
+    {
+      "name": "ui08-lint.log",
+      "sha256": "c55c92ecbcb655c6125a1a269e06af075089f0ddb19accd36ff5326fcead6f90",
+      "bytes": 12434
+    },
+    {
+      "name": "ui08-live01.log",
+      "sha256": "e609885980229dc177ce89308449058c87f71d7b6918ba44a198bba3e5773e46",
+      "bytes": 2286
+    },
+    {
+      "name": "ui08-live02.log",
+      "sha256": "3731cbd1d65850a19c5b4abe36f19ecef7b2a43216aa12a56d3c255c7c8ebace",
+      "bytes": 6866
+    },
+    {
+      "name": "ui08-meta.log",
+      "sha256": "40c497e2234a71ee85b4a9c921e2bd67efc3c39f214903f2651b305ef89801ef",
+      "bytes": 4777
+    },
+    {
+      "name": "ui08-ranges.log",
+      "sha256": "ba36912a4e4c976616d44c5007806d9643b6d499e7af6b7b05159b28f31c922c",
+      "bytes": 1224
+    },
+    {
+      "name": "ui08-typecheck.log",
+      "sha256": "03334bacc26bbd7d006f0308c861410c67d94747095b162bf5642eea3dfbb56d",
+      "bytes": 132
+    }
+  ]
+}

@@ -1,0 +1,100 @@
+
+[构建自检] record：内容指纹一致（860 个文件，记录于 2026-11-04T03:06:43.478Z）
+LIVE02_STEP load formal page
+LIVE02_STEP renderer ready
+PASS  UI08: empty formal canvas is black without placeholder or media
+PASS  Two real videos keep their own dimensions, fps and audio metadata
+PASS  UI08: unmatched search shows zero rows without creating clips
+PASS  UI08: exact search returns only the real portrait filename
+PASS  UI08: audio filter does not relabel imported videos
+PASS  UI08: asset viewing keeps the inspector and timeline unselected
+PASS  UI08: return to empty program releases source and restores plain black
+PASS  UI08: internal hover keeps the same media and upper preview
+PASS  Native asset drags create independent instances of one source
+PASS  Clip selection maps preview and inspector without changing asset highlight
+PASS  UI08: formal detach into two locked targets refuses without a partial edit
+PASS  UI08: locked source rejects keyboard and context-menu bypass
+PASS  UI08: formal project excludes demo names and keeps effects/export disabled
+PASS  UI06: ruler bookmark maps to source offset before playback
+PASS  UI06: actual media progress advances the project playhead
+PASS  UI06: zoom changes viewport pixels without changing timeline seconds
+PASS  UI06: fit all uses the actual viewport with no horizontal overflow
+PASS  UI06: a locked V1 blocks clip interaction without disabling import
+PASS  UI06: unlocking restores existing instances with unchanged time
+PASS  Move hover shows valid position without mutating committed clips
+LIVE03_PLACEMENT_FACTS {"after":[{"id":"5176d436-27df-41f4-9882-0a280e088277","start":4,"end":7.266666666666667,"selected":true},{"id":"a5f18417-dd1d-4e2d-b94d-330d69ea7a49","start":8,"end":11.266666666666667,"selected":false}],"gapFrames":22}
+PASS  4s / 8s actual DOM intervals retain 98 frames and a 22-frame gap
+PASS  Six-second fixture moved to 4 overlaps the unchanged 8-second obstacle
+PASS  Pure placement fixture at frame 0: adjacency, overlap or invalid start
+PASS  Pure placement fixture at frame 60: adjacency, overlap or invalid start
+PASS  Pure placement fixture at frame 61: adjacency, overlap or invalid start
+PASS  Pure placement fixture at frame 120: adjacency, overlap or invalid start
+PASS  Pure placement fixture at frame 419: adjacency, overlap or invalid start
+PASS  Pure placement fixture at frame 420: adjacency, overlap or invalid start
+PASS  Pure placement fixture at frame -1: adjacency, overlap or invalid start
+PASS  Placement candidates leave both original six-second instances untouched
+PASS  UI08 model: locked A1 routes intact audio to A2
+PASS  UI08 model: both targets locked refuses atomically
+PASS  UI08 model: source lock blocks every edit
+PASS  Audio fixture keeps timing and falls back from occupied A1 to A2
+PASS  Both audio tracks occupied rejects detach without muting V1
+PASS  Silent-source fixture cannot detach an audio stream
+PASS  Nearest legal full gap for 4s
+PASS  Nearest legal full gap for -1s
+PASS  Nearest legal full gap for 9s
+PASS  Nearest legal full gap for 100s
+PASS  Move preserves grab offset and leaves the same-source instance unchanged
+PASS  Collision preview resolves to a valid edge without mutating the original
+PASS  Escape removes the outline and restores the entire original placement
+PASS  Keyboard one-frame movement uses project fps
+PASS  Keyboard collision resolves to the nearest full gap with no overlap
+PASS  Keyboard-accessible append creates a new instance at the actual project end
+PASS  Collision drop keeps every full interval without moving obstacles
+PASS  Audio lane gives an explicit invalid target
+PASS  Video drop into A1 creates no audio or video clip
+PASS  Forged payload rejected: session
+PASS  Forged payload rejected: id
+PASS  Scrolled asset drop retains the exact engineering time
+PASS  Scrolled move preserves its offset and expands project duration
+PASS  Moving the last clip earlier shrinks actual project duration
+PASS  Hovering the edge performs bounded horizontal scrolling
+PASS  Cancel stops automatic scrolling and never commits a candidate
+PASS  Negative start resolves to zero while preserving the complete duration
+PASS  Navigation width change cancels the frozen gesture without mutating clips
+PASS  UI08: file hover never mounts a workspace import overlay
+PASS  External file dropped over V1 only imports a real asset
+PASS  Cancel and duplicate keep imported assets and timeline intact
+[IPC] video:probe failed (INTERNAL): Command failed: D:\Code\Illusion-Realm\Illusion-Realm\apps\electron\bin\ffmpeg\ffprobe.exe -v error -print_format json -show_format -show_streams C:\Users\18305\AppData\Local\Temp\ir-video-live02-VAb62K\broken.mp4
+[mov,mp4,m4a,3gp,3g2,mj2 @ 000001d220e82540] moov atom not found
+C:\Users\18305\AppData\Local\Temp\ir-video-live02-VAb62K\broken.mp4: Invalid data found when processing input
+
+PASS  Probe failure preserves all existing clips and real metadata
+PASS  light live host 1600x1000 retains layout and clips
+PASS  light live host 1280x800 retains layout and clips
+PASS  light live host 960x720 retains layout and clips
+PASS  Dark theme is applied by the real appearance menu
+PASS  dark live host 1600x1000 retains layout and clips
+PASS  dark live host 1280x800 retains layout and clips
+PASS  dark live host 960x720 retains layout and clips
+PASS  Narrow editor retains reachable project import and timeline scrolling
+PASS  Returning to program releases the real source player
+PASS  Real source playback does not move the project playhead
+PASS  Pause still reports the real media state
+PASS  Real AAC stream detaches to an independent A1 instance with unchanged timing
+PASS  Detached audio uses real media progress and pause
+PASS  Detached video stays muted and switching releases the audio source
+PASS  Already detached video cannot create a duplicate audio stream
+PASS  Audio keyboard movement keeps its own track and one-frame precision
+PASS  Audio drag outline stays locked to A1 when hovering over V1
+PASS  Cross-track audio drop never changes the committed arrangement
+PASS  Audio duplicate appends with its own ID on A1
+PASS  Focused Delete removes only the duplicated audio instance
+PASS  Keyboard menu closes and restores the original clip focus
+PASS  Duplicated detached video stays on V1 and remains muted
+PASS  Deleting a video duplicate preserves the original video and independent audio
+PASS  Cancelling unsaved navigation preserves the live project
+PASS  Confirmed navigation releases the source player
+PASS  Returning creates an empty independent project without stale clips
+PASS  No renderer or hydration errors in the live timeline flow
+LIVE02_MEDIA_ROOT C:\Users\18305\AppData\Local\Temp\ir-video-live02-VAb62K
+video-live-02 SMOKE OK ✓  89/89

@@ -1,0 +1,773 @@
+{
+  "method": "TypeScript printer去注释后正常展开；JSX装配豁免，内部普通处理单独计数",
+  "functions": [
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-inspector.tsx",
+      "name": "InspectorSection",
+      "start": 61,
+      "end": 96,
+      "lines": 18,
+      "jsx": true
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-inspector.tsx",
+      "name": "canEdit",
+      "start": 77,
+      "end": 77,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-inspector.tsx",
+      "name": "(callback)",
+      "start": 78,
+      "end": 78,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-inspector.tsx",
+      "name": "(callback)",
+      "start": 94,
+      "end": 94,
+      "lines": 1,
+      "jsx": true
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-inspector.tsx",
+      "name": "(callback)",
+      "start": 94,
+      "end": 94,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-inspector.tsx",
+      "name": "(callback)",
+      "start": 94,
+      "end": 94,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-inspector.tsx",
+      "name": "ClipInspector",
+      "start": 139,
+      "end": 167,
+      "lines": 12,
+      "jsx": true
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-inspector.tsx",
+      "name": "(callback)",
+      "start": 163,
+      "end": 163,
+      "lines": 1,
+      "jsx": true
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-inspector.tsx",
+      "name": "(callback)",
+      "start": 163,
+      "end": 163,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-panels.tsx",
+      "name": "ProgramPreview",
+      "start": 388,
+      "end": 464,
+      "lines": 28,
+      "jsx": true
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-panels.tsx",
+      "name": "(callback)",
+      "start": 440,
+      "end": 440,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-time-ruler.tsx",
+      "name": "EditorTimeRuler",
+      "start": 60,
+      "end": 144,
+      "lines": 38,
+      "jsx": true
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-time-ruler.tsx",
+      "name": "pointerDown",
+      "start": 92,
+      "end": 105,
+      "lines": 9,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/live-source-preview.tsx",
+      "name": "LiveSourcePreview",
+      "start": 254,
+      "end": 282,
+      "lines": 20,
+      "jsx": true
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/live-source-preview.tsx",
+      "name": "useProjectPlayback",
+      "start": 311,
+      "end": 372,
+      "lines": 27,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/live-source-preview.tsx",
+      "name": "(callback)",
+      "start": 350,
+      "end": 371,
+      "lines": 24,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/live-source-preview.tsx",
+      "name": "report",
+      "start": 363,
+      "end": 363,
+      "lines": 2,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/live-source-preview.tsx",
+      "name": "play",
+      "start": 364,
+      "end": 364,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/live-source-preview.tsx",
+      "name": "stop",
+      "start": 367,
+      "end": 367,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/live-source-preview.tsx",
+      "name": "(callback)",
+      "start": 370,
+      "end": 370,
+      "lines": 2,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/live-timeline-model.ts",
+      "name": "detachAudio",
+      "start": 206,
+      "end": 244,
+      "lines": 9,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/live-timeline-model.ts",
+      "name": "(callback)",
+      "start": 224,
+      "end": 224,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/live-timeline-model.ts",
+      "name": "(callback)",
+      "start": 224,
+      "end": 224,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/live-timeline-model.ts",
+      "name": "(callback)",
+      "start": 224,
+      "end": 224,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/live-timeline-model.ts",
+      "name": "applyTimelineEdit",
+      "start": 258,
+      "end": 297,
+      "lines": 16,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/use-live-timeline.ts",
+      "name": "commitTimeline",
+      "start": 235,
+      "end": 266,
+      "lines": 13,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/use-live-timeline.ts",
+      "name": "(callback)",
+      "start": 263,
+      "end": 263,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/use-live-timeline.ts",
+      "name": "useTimelineProject",
+      "start": 400,
+      "end": 404,
+      "lines": 5,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/use-live-timeline.ts",
+      "name": "useLiveTimeline",
+      "start": 606,
+      "end": 664,
+      "lines": 26,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/use-live-timeline.ts",
+      "name": "transform",
+      "start": 658,
+      "end": 661,
+      "lines": 5,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/use-live-timeline.ts",
+      "name": "selectCanvas",
+      "start": 662,
+      "end": 662,
+      "lines": 2,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/use-live-timeline.ts",
+      "name": "(callback)",
+      "start": 662,
+      "end": 662,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/use-live-timeline.ts",
+      "name": "reportTime",
+      "start": 663,
+      "end": 663,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/use-live-timeline.ts",
+      "name": "(callback)",
+      "start": 663,
+      "end": 663,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/use-live-timeline.ts",
+      "name": "closePreview",
+      "start": 663,
+      "end": 663,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/use-live-timeline.ts",
+      "name": "addAsset",
+      "start": 663,
+      "end": 663,
+      "lines": 2,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/video-editor-view.tsx",
+      "name": "VideoEditorView",
+      "start": 52,
+      "end": 161,
+      "lines": 28,
+      "jsx": true
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/video-editor-view.tsx",
+      "name": "(callback)",
+      "start": 151,
+      "end": 160,
+      "lines": 6,
+      "jsx": true
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/video-editor-view.tsx",
+      "name": "(callback)",
+      "start": 156,
+      "end": 156,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "scripts/smoke-video-live-02.js",
+      "name": "checkFormalFlows",
+      "start": 1490,
+      "end": 1514,
+      "lines": 24,
+      "jsx": false
+    },
+    {
+      "file": "scripts/lib/check-video-ui-integration.js",
+      "name": "checkIntegrationLocks",
+      "start": 108,
+      "end": 151,
+      "lines": 18,
+      "jsx": false
+    },
+    {
+      "file": "scripts/lib/check-video-canvas.js",
+      "name": "canvasValue",
+      "start": 9,
+      "end": 9,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "scripts/lib/check-video-canvas.js",
+      "name": "inputExpression",
+      "start": 10,
+      "end": 10,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "scripts/lib/check-video-canvas.js",
+      "name": "edit",
+      "start": 33,
+      "end": 39,
+      "lines": 7,
+      "jsx": false
+    },
+    {
+      "file": "scripts/lib/check-video-canvas.js",
+      "name": "mouse",
+      "start": 62,
+      "end": 65,
+      "lines": 4,
+      "jsx": false
+    },
+    {
+      "file": "scripts/lib/check-video-canvas.js",
+      "name": "startMove",
+      "start": 84,
+      "end": 91,
+      "lines": 8,
+      "jsx": false
+    },
+    {
+      "file": "scripts/lib/check-video-canvas.js",
+      "name": "shot",
+      "start": 109,
+      "end": 111,
+      "lines": 3,
+      "jsx": false
+    },
+    {
+      "file": "scripts/lib/check-video-canvas.js",
+      "name": "picturePixels",
+      "start": 133,
+      "end": 139,
+      "lines": 9,
+      "jsx": false
+    },
+    {
+      "file": "scripts/lib/check-video-canvas.js",
+      "name": "setTheme",
+      "start": 156,
+      "end": 163,
+      "lines": 8,
+      "jsx": false
+    },
+    {
+      "file": "scripts/lib/check-video-canvas.js",
+      "name": "checkFields",
+      "start": 191,
+      "end": 240,
+      "lines": 24,
+      "jsx": false
+    },
+    {
+      "file": "scripts/lib/check-video-canvas.js",
+      "name": "checkDrag",
+      "start": 268,
+      "end": 313,
+      "lines": 23,
+      "jsx": false
+    },
+    {
+      "file": "scripts/lib/check-video-canvas.js",
+      "name": "checkCopy",
+      "start": 336,
+      "end": 346,
+      "lines": 13,
+      "jsx": false
+    },
+    {
+      "file": "scripts/lib/check-video-canvas.js",
+      "name": "(callback)",
+      "start": 337,
+      "end": 337,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "scripts/lib/check-video-canvas.js",
+      "name": "(callback)",
+      "start": 339,
+      "end": 339,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "scripts/lib/check-video-canvas.js",
+      "name": "checkLockAndReset",
+      "start": 371,
+      "end": 394,
+      "lines": 10,
+      "jsx": false
+    },
+    {
+      "file": "scripts/lib/check-video-canvas.js",
+      "name": "checkPortraitAndSource",
+      "start": 422,
+      "end": 439,
+      "lines": 22,
+      "jsx": false
+    },
+    {
+      "file": "scripts/lib/check-video-canvas.js",
+      "name": "(callback)",
+      "start": 425,
+      "end": 425,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "scripts/lib/check-video-canvas.js",
+      "name": "(callback)",
+      "start": 427,
+      "end": 427,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "scripts/lib/check-video-canvas.js",
+      "name": "checkPlayhead",
+      "start": 464,
+      "end": 492,
+      "lines": 15,
+      "jsx": false
+    },
+    {
+      "file": "scripts/lib/check-video-canvas.js",
+      "name": "(callback)",
+      "start": 490,
+      "end": 490,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "scripts/lib/check-video-canvas.js",
+      "name": "loadTransformModel",
+      "start": 517,
+      "end": 528,
+      "lines": 13,
+      "jsx": false
+    },
+    {
+      "file": "scripts/lib/check-video-canvas.js",
+      "name": "load",
+      "start": 520,
+      "end": 526,
+      "lines": 8,
+      "jsx": false
+    },
+    {
+      "file": "scripts/lib/check-video-canvas.js",
+      "name": "(callback)",
+      "start": 524,
+      "end": 524,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "scripts/lib/check-video-canvas.js",
+      "name": "checkTransformModel",
+      "start": 553,
+      "end": 578,
+      "lines": 11,
+      "jsx": false
+    },
+    {
+      "file": "scripts/lib/check-video-canvas.js",
+      "name": "(callback)",
+      "start": 560,
+      "end": 560,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "scripts/lib/check-video-canvas.js",
+      "name": "checkVideoCanvas",
+      "start": 600,
+      "end": 606,
+      "lines": 10,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/clip-transform-model.ts",
+      "name": "fittedSize",
+      "start": 65,
+      "end": 69,
+      "lines": 5,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/clip-transform-model.ts",
+      "name": "defaultTransform",
+      "start": 83,
+      "end": 85,
+      "lines": 3,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/clip-transform-model.ts",
+      "name": "updateClipTransform",
+      "start": 118,
+      "end": 130,
+      "lines": 16,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/clip-transform-model.ts",
+      "name": "(callback)",
+      "start": 119,
+      "end": 119,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/clip-transform-model.ts",
+      "name": "(callback)",
+      "start": 119,
+      "end": 119,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/clip-transform-model.ts",
+      "name": "(callback)",
+      "start": 125,
+      "end": 125,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/clip-transform-model.ts",
+      "name": "(callback)",
+      "start": 129,
+      "end": 129,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/clip-transform-model.ts",
+      "name": "isTransformKey",
+      "start": 135,
+      "end": 135,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/clip-canvas.tsx",
+      "name": "canvasStyle",
+      "start": 50,
+      "end": 53,
+      "lines": 4,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/clip-canvas.tsx",
+      "name": "gestureValue",
+      "start": 75,
+      "end": 78,
+      "lines": 4,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/clip-canvas.tsx",
+      "name": "round",
+      "start": 76,
+      "end": 76,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/clip-canvas.tsx",
+      "name": "ClipCanvas",
+      "start": 99,
+      "end": 195,
+      "lines": 69,
+      "jsx": true
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/clip-canvas.tsx",
+      "name": "cancel",
+      "start": 109,
+      "end": 115,
+      "lines": 9,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/clip-canvas.tsx",
+      "name": "(callback)",
+      "start": 124,
+      "end": 134,
+      "lines": 17,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/clip-canvas.tsx",
+      "name": "(callback)",
+      "start": 128,
+      "end": 128,
+      "lines": 2,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/clip-canvas.tsx",
+      "name": "key",
+      "start": 129,
+      "end": 129,
+      "lines": 5,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/clip-canvas.tsx",
+      "name": "(callback)",
+      "start": 131,
+      "end": 131,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/clip-canvas.tsx",
+      "name": "(callback)",
+      "start": 138,
+      "end": 142,
+      "lines": 4,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/clip-canvas.tsx",
+      "name": "down",
+      "start": 153,
+      "end": 160,
+      "lines": 12,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/clip-canvas.tsx",
+      "name": "move",
+      "start": 167,
+      "end": 172,
+      "lines": 7,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/clip-canvas.tsx",
+      "name": "up",
+      "start": 180,
+      "end": 188,
+      "lines": 12,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/use-clip-transform.ts",
+      "name": "useClipTransform",
+      "start": 70,
+      "end": 111,
+      "lines": 26,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/use-clip-transform.ts",
+      "name": "locked",
+      "start": 72,
+      "end": 72,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/use-clip-transform.ts",
+      "name": "value",
+      "start": 73,
+      "end": 73,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/use-clip-transform.ts",
+      "name": "commitField",
+      "start": 81,
+      "end": 85,
+      "lines": 6,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/use-clip-transform.ts",
+      "name": "reset",
+      "start": 93,
+      "end": 100,
+      "lines": 11,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/use-clip-transform.ts",
+      "name": "canvas",
+      "start": 107,
+      "end": 109,
+      "lines": 3,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/use-clip-transform.ts",
+      "name": "select",
+      "start": 108,
+      "end": 108,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/use-clip-transform.ts",
+      "name": "preview",
+      "start": 108,
+      "end": 108,
+      "lines": 1,
+      "jsx": false
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/use-clip-transform.ts",
+      "name": "commit",
+      "start": 108,
+      "end": 108,
+      "lines": 1,
+      "jsx": false
+    }
+  ]
+}

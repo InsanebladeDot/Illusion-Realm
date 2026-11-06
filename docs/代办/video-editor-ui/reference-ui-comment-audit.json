@@ -1,0 +1,974 @@
+{
+  "baseline": "C:\\Users\\18305\\AppData\\Local\\Temp\\ir-reference-ui-baseline-lhn35fn_\\baseline.json",
+  "method": "本轮首次编辑前工作区快照，公共菜单另补首次编辑前快照；新增文件全文，修改文件新增与替换行。仅候选上限，混合行计代码。",
+  "files": [
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/clip-basic-tools.tsx",
+      "group": "business",
+      "C": 0,
+      "B": 5,
+      "changedLineRanges": [
+        {
+          "start": 14,
+          "end": 18
+        }
+      ],
+      "baselineSha256Lf": "4adafc006703777cb98da5bdb07ad9e83f3c95284819a2ee1e2ddee93c95aa60",
+      "currentSha256Lf": "0c04b2017fb380ae50d216e3c3ddf2a1302f0a1a4cfdcd1b9619c07a83d5ca3f",
+      "codeLines": [
+        14,
+        15,
+        16,
+        17,
+        18
+      ]
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/clip-waveform.tsx",
+      "group": "business",
+      "C": 1,
+      "B": 1,
+      "changedLineRanges": [
+        {
+          "start": 73,
+          "end": 73
+        },
+        {
+          "start": 107,
+          "end": 107
+        }
+      ],
+      "baselineSha256Lf": "dfe8beed8663406534a7971f201f0c0da52e326f426e72acb71a096c5f7005a7",
+      "currentSha256Lf": "51cb972713cd10390eacd9055ab76f7ec1a0b1e515dec0bc53d6024ee505448d",
+      "codeLines": [
+        107
+      ]
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-clip-shell.tsx",
+      "group": "business",
+      "C": 2,
+      "B": 3,
+      "changedLineRanges": [
+        {
+          "start": 35,
+          "end": 37
+        },
+        {
+          "start": 109,
+          "end": 109
+        },
+        {
+          "start": 114,
+          "end": 114
+        }
+      ],
+      "baselineSha256Lf": "83a7c93506c1054c9579bd56c82f0eac521b843383fdac38e1c966d5a326cad7",
+      "currentSha256Lf": "e3c02fa444cf216b45579171598d1be07c04226f49e91d36c119c8dfd28362dc",
+      "codeLines": [
+        37,
+        109,
+        114
+      ]
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-controls.tsx",
+      "group": "business",
+      "C": 4,
+      "B": 5,
+      "changedLineRanges": [
+        {
+          "start": 27,
+          "end": 29
+        },
+        {
+          "start": 31,
+          "end": 33
+        },
+        {
+          "start": 81,
+          "end": 81
+        },
+        {
+          "start": 84,
+          "end": 85
+        }
+      ],
+      "baselineSha256Lf": "b2b74bdddb724a76252ceba6f1b43a3c82add8317527760b4951c6106215ce2c",
+      "currentSha256Lf": "bc9cafe152f8c786ed1f1f947864a600190fb4c1d6acd91b265f5a1c3c4476ca",
+      "codeLines": [
+        29,
+        33,
+        81,
+        84,
+        85
+      ]
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-timeline.tsx",
+      "group": "business",
+      "C": 2,
+      "B": 16,
+      "changedLineRanges": [
+        {
+          "start": 31,
+          "end": 31
+        },
+        {
+          "start": 69,
+          "end": 69
+        },
+        {
+          "start": 76,
+          "end": 77
+        },
+        {
+          "start": 105,
+          "end": 115
+        },
+        {
+          "start": 177,
+          "end": 177
+        },
+        {
+          "start": 244,
+          "end": 244
+        },
+        {
+          "start": 327,
+          "end": 327
+        }
+      ],
+      "baselineSha256Lf": "672f7bd7f60f76dca168fc211f2e29c223b5e073112b2a92e7cc6c10a603b4e9",
+      "currentSha256Lf": "7bf269a3b193edf28f27945fc6752a10cf7d2d17f1652ca4721965b69536e0c7",
+      "codeLines": [
+        31,
+        69,
+        76,
+        77,
+        105,
+        106,
+        109,
+        110,
+        111,
+        112,
+        113,
+        114,
+        115,
+        177,
+        244,
+        327
+      ]
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor.module.css",
+      "group": "business",
+      "C": 15,
+      "B": 36,
+      "changedLineRanges": [
+        {
+          "start": 237,
+          "end": 237
+        },
+        {
+          "start": 252,
+          "end": 252
+        },
+        {
+          "start": 273,
+          "end": 276
+        },
+        {
+          "start": 380,
+          "end": 380
+        },
+        {
+          "start": 694,
+          "end": 701
+        },
+        {
+          "start": 703,
+          "end": 703
+        },
+        {
+          "start": 745,
+          "end": 745
+        },
+        {
+          "start": 811,
+          "end": 817
+        },
+        {
+          "start": 835,
+          "end": 836
+        },
+        {
+          "start": 841,
+          "end": 845
+        },
+        {
+          "start": 896,
+          "end": 908
+        },
+        {
+          "start": 935,
+          "end": 942
+        }
+      ],
+      "baselineSha256Lf": "a0e86965f07ead55cee9d27fa093c805c680ba1dcb701ed77393da4c7d541d82",
+      "currentSha256Lf": "4c303b7c3b22e54a9124b8dadb8738a26062c2311b880c6a06d155c7ce50d78c",
+      "codeLines": [
+        237,
+        252,
+        275,
+        276,
+        380,
+        694,
+        697,
+        698,
+        699,
+        700,
+        701,
+        703,
+        745,
+        815,
+        816,
+        817,
+        835,
+        836,
+        841,
+        842,
+        843,
+        845,
+        899,
+        900,
+        901,
+        902,
+        903,
+        904,
+        905,
+        906,
+        907,
+        908,
+        939,
+        940,
+        941,
+        942
+      ]
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/live-clip-menu.tsx",
+      "group": "business",
+      "C": 10,
+      "B": 22,
+      "changedLineRanges": [
+        {
+          "start": 3,
+          "end": 8
+        },
+        {
+          "start": 14,
+          "end": 15
+        },
+        {
+          "start": 27,
+          "end": 30
+        },
+        {
+          "start": 32,
+          "end": 32
+        },
+        {
+          "start": 34,
+          "end": 34
+        },
+        {
+          "start": 36,
+          "end": 53
+        }
+      ],
+      "baselineSha256Lf": "2a0fb9d38b6244fff5b197d84f5b768428ec2b8df1abc6779b926d300aa2fdec",
+      "currentSha256Lf": "1cbc6796a350039347a48328353bb8e5f02bc036d702cad5049f2b394731daeb",
+      "codeLines": [
+        6,
+        7,
+        8,
+        32,
+        34,
+        36,
+        37,
+        38,
+        39,
+        40,
+        41,
+        42,
+        43,
+        44,
+        45,
+        46,
+        47,
+        48,
+        49,
+        51,
+        52,
+        53
+      ]
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/media-library-tabs.tsx",
+      "group": "business",
+      "C": 11,
+      "B": 35,
+      "changedLineRanges": [
+        {
+          "start": 3,
+          "end": 6
+        },
+        {
+          "start": 10,
+          "end": 12
+        },
+        {
+          "start": 14,
+          "end": 17
+        },
+        {
+          "start": 19,
+          "end": 19
+        },
+        {
+          "start": 21,
+          "end": 24
+        },
+        {
+          "start": 26,
+          "end": 43
+        },
+        {
+          "start": 49,
+          "end": 60
+        }
+      ],
+      "baselineSha256Lf": "29eb032d5756d22ff38479e6a82ba28f65eda0d5713ce234f690720e160f8667",
+      "currentSha256Lf": "17ff0a709b41d1f58de252c72152706a38ac488fc12d68b803e1fcb9a0695e92",
+      "codeLines": [
+        5,
+        6,
+        14,
+        15,
+        16,
+        17,
+        19,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35,
+        36,
+        37,
+        38,
+        39,
+        40,
+        41,
+        42,
+        43,
+        49,
+        50,
+        51,
+        52,
+        54,
+        55,
+        56,
+        58,
+        59,
+        60
+      ]
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/timeline-edit-tools.tsx",
+      "group": "business",
+      "C": 0,
+      "B": 7,
+      "changedLineRanges": [
+        {
+          "start": 40,
+          "end": 40
+        },
+        {
+          "start": 42,
+          "end": 43
+        },
+        {
+          "start": 45,
+          "end": 48
+        }
+      ],
+      "baselineSha256Lf": "79e251e7fd1f2f8a89857ba5a5313ab6788830d2b666369917c87f089be2b225",
+      "currentSha256Lf": "11e4a725f7edf88f8819095c460aa9787b5dd89d8972b593b51a8136aa066ef7",
+      "codeLines": [
+        40,
+        42,
+        43,
+        45,
+        46,
+        47,
+        48
+      ]
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/timeline-settings.tsx",
+      "group": "business",
+      "C": 1,
+      "B": 15,
+      "changedLineRanges": [
+        {
+          "start": 4,
+          "end": 6
+        },
+        {
+          "start": 34,
+          "end": 34
+        },
+        {
+          "start": 49,
+          "end": 59
+        },
+        {
+          "start": 64,
+          "end": 64
+        }
+      ],
+      "baselineSha256Lf": "13f7ca066e71137cbdb8a48bf01de0583795f77a4da03b9dc7e98a336a24231f",
+      "currentSha256Lf": "f53f77088f5ffc1923d5296b6d5c5657206289684c3c7592bf6918c5e27dff3a",
+      "codeLines": [
+        4,
+        5,
+        6,
+        49,
+        50,
+        51,
+        52,
+        53,
+        54,
+        55,
+        56,
+        57,
+        58,
+        59,
+        64
+      ]
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/video-editor-view.tsx",
+      "group": "business",
+      "C": 2,
+      "B": 1,
+      "changedLineRanges": [
+        {
+          "start": 104,
+          "end": 106
+        }
+      ],
+      "baselineSha256Lf": "a77448729c8af0f671d21acc10db37769b25e49734b88c704a82db44f0068d5e",
+      "currentSha256Lf": "54d1ad4b5a38790213e0be5d8fa9f0c92bac6ed84a9d7a532d4a634a61115abf",
+      "codeLines": [
+        106
+      ]
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/video-filmstrip.tsx",
+      "group": "business",
+      "C": 7,
+      "B": 6,
+      "changedLineRanges": [
+        {
+          "start": 155,
+          "end": 155
+        },
+        {
+          "start": 188,
+          "end": 189
+        },
+        {
+          "start": 195,
+          "end": 195
+        },
+        {
+          "start": 198,
+          "end": 199
+        },
+        {
+          "start": 212,
+          "end": 212
+        },
+        {
+          "start": 223,
+          "end": 223
+        },
+        {
+          "start": 226,
+          "end": 227
+        },
+        {
+          "start": 230,
+          "end": 230
+        },
+        {
+          "start": 288,
+          "end": 288
+        },
+        {
+          "start": 303,
+          "end": 303
+        }
+      ],
+      "baselineSha256Lf": "2621ae6e182a1339d2c441d5494502a40aaf8b2928f0812aff48415821ae0de7",
+      "currentSha256Lf": "9f1a722d5a22a85fd072420566e4d8487496629e132531deebc29030e359c470",
+      "codeLines": [
+        198,
+        199,
+        226,
+        227,
+        230,
+        303
+      ]
+    },
+    {
+      "file": "scripts/lib/check-video-edit-tools.js",
+      "group": "test",
+      "C": 5,
+      "B": 18,
+      "changedLineRanges": [
+        {
+          "start": 27,
+          "end": 27
+        },
+        {
+          "start": 148,
+          "end": 148
+        },
+        {
+          "start": 152,
+          "end": 153
+        },
+        {
+          "start": 159,
+          "end": 159
+        },
+        {
+          "start": 169,
+          "end": 170
+        },
+        {
+          "start": 172,
+          "end": 188
+        }
+      ],
+      "baselineSha256Lf": "ab1bc5ce7450743c5404c6494a827a1839f24521690c430a7553636f0654f626",
+      "currentSha256Lf": "fdc12c6abbc1eb6875502a2783182c5e137029b08e35f718b0a3d06bc1c29b67",
+      "codeLines": [
+        27,
+        152,
+        153,
+        169,
+        170,
+        176,
+        177,
+        178,
+        179,
+        180,
+        181,
+        182,
+        183,
+        184,
+        185,
+        186,
+        187,
+        188
+      ]
+    },
+    {
+      "file": "scripts/lib/check-video-filmstrip.js",
+      "group": "test",
+      "C": 4,
+      "B": 16,
+      "changedLineRanges": [
+        {
+          "start": 297,
+          "end": 297
+        },
+        {
+          "start": 306,
+          "end": 306
+        },
+        {
+          "start": 313,
+          "end": 313
+        },
+        {
+          "start": 318,
+          "end": 318
+        },
+        {
+          "start": 321,
+          "end": 321
+        },
+        {
+          "start": 485,
+          "end": 500
+        }
+      ],
+      "baselineSha256Lf": "4f1d4eb3efe1880b389b68a0024aed8136ae03b9ea2b7a2d310d10d05d5127e7",
+      "currentSha256Lf": "2ec221c66b8eea7122d3ec34041217f4e236c5da6819969dab5340a951071252",
+      "codeLines": [
+        306,
+        313,
+        318,
+        321,
+        489,
+        490,
+        491,
+        492,
+        493,
+        494,
+        495,
+        496,
+        497,
+        498,
+        499,
+        500
+      ]
+    },
+    {
+      "file": "scripts/lib/check-video-waveform.js",
+      "group": "test",
+      "C": 0,
+      "B": 1,
+      "changedLineRanges": [
+        {
+          "start": 168,
+          "end": 168
+        }
+      ],
+      "baselineSha256Lf": "c4ca879a8f21cb18a3a3479335e07746d7b1740524a209c9d03671c62d213039",
+      "currentSha256Lf": "e17d396d72d14d3d9e1aa2c19c0f17f30f1de3b103b9d15b1a84014863b1e033",
+      "codeLines": [
+        168
+      ]
+    },
+    {
+      "file": "scripts/smoke-video-live-02.js",
+      "group": "test",
+      "C": 4,
+      "B": 9,
+      "changedLineRanges": [
+        {
+          "start": 814,
+          "end": 814
+        },
+        {
+          "start": 1603,
+          "end": 1615
+        }
+      ],
+      "baselineSha256Lf": "5087e366dcb17d8708c4eee140c0dc576752a2cbdcbd2065fd3e7e0fc70c06b5",
+      "currentSha256Lf": "a4ab94950aee5c60f5d4dad87fd669f69034935340678aab05bd73de396d3754",
+      "codeLines": [
+        814,
+        1608,
+        1609,
+        1610,
+        1611,
+        1612,
+        1613,
+        1614,
+        1615
+      ]
+    },
+    {
+      "file": "apps/next/src/i18n/locales/zh-CN/toolBox.ts",
+      "group": "business",
+      "C": 0,
+      "B": 8,
+      "changedLineRanges": [
+        {
+          "start": 50,
+          "end": 57
+        }
+      ],
+      "baselineSha256Lf": "7c26ad89caa3709039ff07e5fc07a16b5f6ec03307c27403da4ebd98e8e4a04f",
+      "currentSha256Lf": "7b3ca5c3ef2596393666f0ee7de2d145dfb8334d01ce0037804686028ac2805b",
+      "codeLines": [
+        50,
+        51,
+        52,
+        53,
+        54,
+        55,
+        56,
+        57
+      ]
+    },
+    {
+      "file": "apps/next/src/i18n/locales/en/toolBox.ts",
+      "group": "business",
+      "C": 0,
+      "B": 8,
+      "changedLineRanges": [
+        {
+          "start": 38,
+          "end": 45
+        }
+      ],
+      "baselineSha256Lf": "12c980deba437f8b4029c509fa85565b73bc005cd77f70bf21307693b8bd9b0e",
+      "currentSha256Lf": "a90c6285557c0fabc19722363b14ad7f7279075832d24b6de9b2c41758bb1d56",
+      "codeLines": [
+        38,
+        39,
+        40,
+        41,
+        42,
+        43,
+        44,
+        45
+      ]
+    },
+    {
+      "file": "apps/next/src/components/prompt-assistant/assistant-menu.tsx",
+      "group": "business",
+      "C": 3,
+      "B": 6,
+      "changedLineRanges": [
+        {
+          "start": 3,
+          "end": 3
+        },
+        {
+          "start": 8,
+          "end": 10
+        },
+        {
+          "start": 18,
+          "end": 18
+        },
+        {
+          "start": 21,
+          "end": 21
+        },
+        {
+          "start": 36,
+          "end": 36
+        },
+        {
+          "start": 48,
+          "end": 49
+        }
+      ],
+      "baselineSha256Lf": "7c14c85c2c3eb2ab59f22b8e069b4267f9287b6caa660122b1fa263214ce4e25",
+      "currentSha256Lf": "891e2fb3ce9ea8d6d2040f6044d629699bc9b63109bad288cc3902b67b02c7eb",
+      "codeLines": [
+        3,
+        10,
+        18,
+        21,
+        36,
+        49
+      ]
+    },
+    {
+      "file": "apps/next/src/components/prompt-assistant/use-cascade-position.ts",
+      "group": "business",
+      "C": 11,
+      "B": 19,
+      "changedLineRanges": [
+        {
+          "start": 3,
+          "end": 5
+        },
+        {
+          "start": 7,
+          "end": 32
+        },
+        {
+          "start": 36,
+          "end": 36
+        },
+        {
+          "start": 41,
+          "end": 41
+        }
+      ],
+      "baselineSha256Lf": "e355b78eab31c7661d5f944e5260b2f86ea582afe80b04736b0255ace7ff1b85",
+      "currentSha256Lf": "cbf5888ae7836d21e7b4d0ded2f54dd51895d92ad547ce4eed71dea86dffd0a7",
+      "codeLines": [
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        32,
+        36,
+        41
+      ]
+    },
+    {
+      "file": "apps/next/src/components/cascade-menu.tsx",
+      "group": "business",
+      "C": 25,
+      "B": 115,
+      "changedLineRanges": [
+        {
+          "start": 1,
+          "end": 147
+        }
+      ],
+      "baselineSha256Lf": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "currentSha256Lf": "06717da1cc36ff2dc5fc88af702d38967163b760fd0a862431837a3310c3c21a",
+      "codeLines": [
+        1,
+        6,
+        7,
+        8,
+        9,
+        10,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        36,
+        37,
+        38,
+        39,
+        40,
+        41,
+        42,
+        43,
+        44,
+        45,
+        50,
+        51,
+        52,
+        53,
+        54,
+        55,
+        56,
+        57,
+        58,
+        63,
+        64,
+        65,
+        66,
+        67,
+        68,
+        70,
+        71,
+        72,
+        73,
+        74,
+        75,
+        76,
+        77,
+        78,
+        79,
+        80,
+        81,
+        82,
+        83,
+        84,
+        85,
+        86,
+        87,
+        88,
+        89,
+        90,
+        91,
+        92,
+        93,
+        94,
+        95,
+        99,
+        100,
+        101,
+        102,
+        103,
+        104,
+        105,
+        106,
+        107,
+        108,
+        109,
+        110,
+        111,
+        112,
+        113,
+        114,
+        115,
+        116,
+        117,
+        118,
+        120,
+        121,
+        122,
+        123,
+        124,
+        125,
+        126,
+        132,
+        133,
+        134,
+        135,
+        136,
+        137,
+        138,
+        139,
+        140,
+        141,
+        142,
+        143,
+        144,
+        145,
+        146,
+        147
+      ]
+    }
+  ],
+  "totals": {
+    "business": {
+      "C": 94,
+      "B": 308,
+      "percent": 23.3831
+    },
+    "test": {
+      "C": 13,
+      "B": 44,
+      "percent": 22.807
+    }
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "before": [
+    {
+      "id": "274feaef-95d5-4982-8548-8edc411c2fee",
+      "start": 0,
+      "end": 3.2666666666666666,
+      "selected": false
+    },
+    {
+      "id": "ae9a100c-3848-409a-888c-17eb558486a4",
+      "start": 8,
+      "end": 11.266666666666667,
+      "selected": true
+    }
+  ],
+  "after": [
+    {
+      "id": "274feaef-95d5-4982-8548-8edc411c2fee",
+      "start": 4,
+      "end": 7.266666666666667,
+      "selected": true
+    },
+    {
+      "id": "ae9a100c-3848-409a-888c-17eb558486a4",
+      "start": 8,
+      "end": 11.266666666666667,
+      "selected": false
+    }
+  ],
+  "gapFrames": 22
+}

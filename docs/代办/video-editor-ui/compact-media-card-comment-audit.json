@@ -1,0 +1,291 @@
+{
+  "baseline": "C:\\Users\\18305\\AppData\\Local\\Temp\\ir-compact-media-baseline-pkcpm5be\\baseline.json",
+  "method": "任务前工作区快照；SequenceMatcher逐行取新增/替换，纯注释计C，非空代码/混合行计B。人工核对含义并删除12行重复说明，未将删除行或原工作区改动计入。",
+  "files": [
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor-panels.tsx",
+      "group": "business",
+      "C": 15,
+      "B": 3,
+      "changedLineRanges": [
+        {
+          "start": 45,
+          "end": 48
+        },
+        {
+          "start": 72,
+          "end": 72
+        },
+        {
+          "start": 129,
+          "end": 141
+        }
+      ],
+      "commentLines": [
+        45,
+        46,
+        47,
+        72,
+        129,
+        130,
+        131,
+        132,
+        133,
+        134,
+        135,
+        137,
+        138,
+        139,
+        140
+      ],
+      "codeLines": [
+        48,
+        136,
+        141
+      ],
+      "baselineSha256Lf": "4eeafb0c5c4af68dfe647c8a7364da1b5cc5155179e341477d778d0eb4cb1d0c",
+      "currentSha256Lf": "767c52c459d246644b3a43835116f75fef39fb374273e865f3048c6e0ebbea9f",
+      "percent": 83.33
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor.module.css",
+      "group": "business",
+      "C": 41,
+      "B": 13,
+      "changedLineRanges": [
+        {
+          "start": 87,
+          "end": 94
+        },
+        {
+          "start": 341,
+          "end": 344
+        },
+        {
+          "start": 751,
+          "end": 792
+        }
+      ],
+      "commentLines": [
+        87,
+        88,
+        89,
+        90,
+        91,
+        92,
+        93,
+        341,
+        342,
+        343,
+        751,
+        752,
+        753,
+        754,
+        755,
+        757,
+        758,
+        759,
+        760,
+        762,
+        763,
+        764,
+        766,
+        767,
+        768,
+        769,
+        771,
+        772,
+        773,
+        775,
+        776,
+        777,
+        778,
+        782,
+        783,
+        784,
+        785,
+        787,
+        788,
+        789,
+        790
+      ],
+      "codeLines": [
+        94,
+        344,
+        756,
+        761,
+        765,
+        770,
+        774,
+        779,
+        780,
+        781,
+        786,
+        791,
+        792
+      ],
+      "baselineSha256Lf": "9ea3ccfb006f2cbaa5be1f97f44833a4e23dc449eb33abfc73edb5a96ce67ec2",
+      "currentSha256Lf": "e310507e996e624f7f1bd817fc66d48257d236001fb58f56005da99d93f225ed",
+      "percent": 75.93
+    },
+    {
+      "file": "scripts/lib/check-video-filmstrip.js",
+      "group": "test",
+      "C": 74,
+      "B": 30,
+      "changedLineRanges": [
+        {
+          "start": 159,
+          "end": 162
+        },
+        {
+          "start": 359,
+          "end": 384
+        },
+        {
+          "start": 386,
+          "end": 386
+        },
+        {
+          "start": 388,
+          "end": 390
+        },
+        {
+          "start": 394,
+          "end": 394
+        },
+        {
+          "start": 397,
+          "end": 466
+        },
+        {
+          "start": 475,
+          "end": 475
+        }
+      ],
+      "commentLines": [
+        159,
+        160,
+        161,
+        359,
+        360,
+        361,
+        362,
+        363,
+        364,
+        365,
+        366,
+        367,
+        368,
+        369,
+        370,
+        371,
+        372,
+        373,
+        374,
+        375,
+        376,
+        377,
+        378,
+        379,
+        380,
+        381,
+        382,
+        383,
+        384,
+        399,
+        400,
+        401,
+        402,
+        403,
+        404,
+        405,
+        406,
+        407,
+        408,
+        409,
+        410,
+        411,
+        412,
+        413,
+        414,
+        415,
+        416,
+        417,
+        418,
+        419,
+        420,
+        421,
+        422,
+        423,
+        424,
+        425,
+        426,
+        427,
+        428,
+        438,
+        439,
+        440,
+        441,
+        442,
+        443,
+        444,
+        445,
+        446,
+        447,
+        448,
+        449,
+        450,
+        451,
+        452
+      ],
+      "codeLines": [
+        162,
+        386,
+        388,
+        389,
+        390,
+        394,
+        397,
+        429,
+        430,
+        431,
+        432,
+        433,
+        434,
+        435,
+        436,
+        453,
+        454,
+        455,
+        456,
+        457,
+        458,
+        459,
+        460,
+        461,
+        462,
+        463,
+        464,
+        465,
+        466,
+        475
+      ],
+      "baselineSha256Lf": "93322b3cc457d59101ecd9182be20d4145d6e16aeb8a93673126216b2d5d0efc",
+      "currentSha256Lf": "8b3c7dac694d731085f07e9d2b05e3925adf438b5dc41ffdc01d0c622dd1e15f",
+      "percent": 71.15
+    }
+  ],
+  "summary": {
+    "business": {
+      "C": 56,
+      "B": 16,
+      "percent": 77.78
+    },
+    "test": {
+      "C": 74,
+      "B": 30,
+      "percent": 71.15
+    }
+  }
+}

@@ -1,0 +1,153 @@
+$ pnpm typecheck && pnpm verify && pnpm check:gates && pnpm check:outputpath && pnpm check:foldercount && pnpm check:locale && pnpm check:smoke && pnpm check:refs && pnpm check:initlocale && pnpm check:i18n && pnpm check:i18n:en && pnpm check:locale-keys && pnpm check:meta
+$ pnpm --filter @illusion-realm/next typecheck && pnpm --filter @illusion-realm/electron exec tsc -p tsconfig.json
+$ tsc --noEmit
+$ electron scripts/verify-electron-modules.js
+
+PASS  主进程 require 的第三方模块都在 dependencies 里（打包后不会缺模块）  (82 个文件检查通过)
+PASS  主进程 ipcChannels.js 与 shared/ipc-channels.ts 通道表一致  (83 个通道两端一致)
+PASS  主进程 agent/defaults.js 与 shared/data/agent.ts 默认配置一致  (4 个字段一致（deepseek-ai/DeepSeek-V4-Flash）)
+PASS  主进程可达模块都被 electron-builder.yml 的 files 白名单覆盖  (84 个模块全覆盖（白名单 src/**/* assets/icon.png package.json node_modules/@illusion-realm/**/*）)
+PASS  appProtocol 可加载
+PASS  appProtocol.registerAppProtocol
+PASS  comfyProxy 可加载
+PASS  comfyProxy.generateWithComfy
+PASS  comfyProxy.uploadImageToComfy
+PASS  comfyProxy.listComfyModels
+PASS  下载候选：规整条目第一个即为原样参数  ({"filename":"Anima_00001_.png","subfolder":"","type":"output"})
+PASS  下载候选：覆盖 output / temp / input 三种 type  (output, temp, input)
+PASS  下载候选：filename 内带子目录时会拆出 subfolder  ([{"filename":"sub\\dir\\Anima_00001_.png","subfolder":"","type":"output"},{"filename":"Anima_00001_.png","subfolder":"sub/dir","type":"output"},{"filename":"sub\\dir\\Anima_00001_.png","subfolder":"","type":"temp"}])
+PASS  下载候选：subfolder 反斜杠会被换成正斜杠，且原 type 优先  ([{"filename":"Anima_00001_.png","subfolder":"SDXL\\styles","type":"temp"},{"filename":"Anima_00001_.png","subfolder":"SDXL/styles","type":"temp"},{"filename":"Anima_00001_.png","subfolder":"SDXL\\styles","type":"output"}])
+PASS  历史输出解析保留 type（SaveImage=output / PreviewImage=temp）  (SDXL_00001_.png:output, SDXL_00002_.png:temp)
+PASS  temp 类型的文件下载候选第一项就是 type=temp  ({"filename":"SDXL_00002_.png","subfolder":"sub","type":"temp"})
+PASS  generatedImages 可加载
+PASS  generatedImages.listGeneratedImages
+PASS  generatedImages.listOutputFolders
+PASS  generatedImages.createHistoryFolder
+PASS  generatedImages.resolveExistingGeneratedImagePath
+PASS  generatedImages.saveImageToFile
+PASS  generatedImages.renameGeneratedImage
+PASS  generatedImages.moveImagesToFolder
+PASS  generatedImages.previewDeleteHistoryFolder
+PASS  generatedImages.deleteHistoryFolder
+PASS  generatedImages.deleteGeneratedImages
+PASS  generatedImages.legacySidecarPathForImage
+PASS  generatedImages.isImageFile
+PASS  generatedImages 不再导出 readGenerationMeta
+PASS  modelScanner.scanModelsInDirectory
+PASS  userData.readUserData
+PASS  userData.writeUserData
+PASS  userData.getDefaultUserDataPath
+PASS  outputPaths.getDefaultOutputPath
+PASS  outputPaths.resolveOutputPath
+PASS  outputPaths.ensureDirectory
+PASS  outputPaths.ensureUniqueFilePath
+PASS  不存在的文件名保持不变
+PASS  同名文件自动追加 (2)  (导出 (2).mp4)
+PASS  再次冲突追加 (3)  (导出 (3).mp4)
+PASS  ffmpeg.registerVideoToolIpc
+PASS  locate.resolveTools
+PASS  jobs.buildEditArgs
+PASS  jobs.buildGifArgs
+PASS  jobs.startEditJob
+PASS  未知任务类型提示主进程过旧（而非缺少输入路径）  (未知的导出类型「gif-v2」：主进程可能不是最新版本，请完全退出应用后重新启动（仅刷新页面不会重载主进程）)
+PASS  probe.probeVideo
+PASS  animadex.registerAnimadexIpc
+PASS  animadex.searchCharacters
+PASS  animadex.ANIMADEX_BASE_URL 指向 animadex API  (https://animadex.net)
+PASS  animadex 不依赖 axios（只用内置 fetch）
+PASS  animadex.normalizeCharacter 过滤非法字段并归一化  ({"slug":"x","name":"Hatsune Miku","copyright":"","copyrightName":"Vocaloid","trigger":"hatsune miku","tags":["1girl"],"count":1234,"url":"","thumbUrl":"https://a/b.webp","imageUrl":"https://a/c.webp","hasImage":true,"loras":[{"name":"L","url":"u","thumb":"t"}],"rating":{"up":5,"down":1},"favCount":9})
+PASS  registerComfyHandlers() registers generation and cancellation
+PASS  registerModelDownloadHandlers() 调用不抛错
+PASS  registerPromptAssistantHandlers() registers without throwing
+PASS  registerCivitaiHandlers() 调用不抛错
+PASS  registerAgentHandlers() 调用不抛错
+PASS  registerVideoToolIpc() 调用不抛错
+PASS  registerAnimadexIpc() 调用不抛错
+PASS  comfy:generate 已注册 handler
+PASS  comfy:cancel 已注册 handler
+PASS  comfy:uploadImage 已注册 handler
+PASS  comfy:listModels 已注册 handler
+PASS  models:downloadTarget 已注册 handler
+PASS  models:downloadStart 已注册 handler
+PASS  models:downloadCancel 已注册 handler
+PASS  models:downloadRetry 已注册 handler
+PASS  models:downloadRemove 已注册 handler
+PASS  models:downloadList 已注册 handler
+PASS  models:changeLogo 已注册 handler
+PASS  models:categoryTarget 已注册 handler
+PASS  models:moveCategory 已注册 handler
+PASS  models:batch 已注册 handler
+PASS  civitai:keyStatus 已注册 handler
+PASS  civitai:keySet 已注册 handler
+PASS  civitai:keyClear 已注册 handler
+PASS  prompt:transform 已注册 handler
+PASS  prompt:secretStatus 已注册 handler
+PASS  prompt:secretSet 已注册 handler
+PASS  prompt:secretClear 已注册 handler
+PASS  video:ffmpegStatus 已注册 handler
+PASS  video:selectFfmpeg 已注册 handler
+PASS  video:pickVideo 已注册 handler
+PASS  video:pickOutputFolder 已注册 handler
+PASS  video:probe 已注册 handler
+PASS  video:run 已注册 handler
+PASS  video:cancel 已注册 handler
+PASS  view3d:pickModel 已注册 handler
+PASS  view3d:readModelFile 已注册 handler
+PASS  animadex:search 已注册 handler
+PASS  agent:run 已注册 handler
+PASS  agent:cancel 已注册 handler
+PASS  agent:hostResult 已注册 handler
+PASS  agent:secretStatus 已注册 handler
+PASS  agent:secretSet 已注册 handler
+PASS  agent:secretClear 已注册 handler
+PASS  agent:catalog 已注册 handler
+PASS  密钥：没写过 = 未配置
+PASS  密钥：写入后状态是已配置（source=stored）  ({"configured":true,"source":"stored","protection":"safeStorage","tail":"abcd"})
+PASS  密钥：状态里只有尾 4 位，没有原值  ({"configured":true,"source":"stored","protection":"safeStorage","tail":"abcd"})
+PASS  密钥：主进程侧能读回原文
+PASS  密钥：加密落盘（或有 plain 标记的明文兜底）  (protection=safeStorage)
+PASS  密钥：环境变量优先于存储（.env 是开发测试路径）
+PASS  密钥：runner 组装 payload 时注入的是这份密钥
+PASS  密钥：payload 里同时带着宿主工具声明（两者互不覆盖）
+PASS  密钥：清除后回到未配置且文件已删
+PASS  密钥：落盘形态与 safeStorage 可用性一致
+PASS  密钥：断言跑在 app ready 之后
+PASS  下载：type 正确时一次取回（不再误用 output → 404）  (-/temp)
+PASS  下载：类型报错时自动回退到 temp 取回  (-/output → -/temp)
+PASS  下载：subfolder 反斜杠 / 类型都异常时仍能取回  (SDXL\styles/output → SDXL/styles/output → SDXL\styles/temp)
+PASS  下载：彻底失败时错误信息带 404 与完整 URL  (ComfyUI 文件下载失败 (404)：http://127.0.0.1:55521/view?filename=missing.png&subfolder=no-such-dir&type=input · Not found)
+ALL PASS ✓
+$ pnpm --filter @illusion-realm/next check:gates
+$ node scripts/self-test-gates.mjs
+== check-i18n：扫描核心 ==
+PASS  扫描器抓到 JSX 文本里的中文（正向）  (1)
+PASS  扫描器不数中文注释（负向）  (0)
+PASS  扫描器不数纯 ASCII（负向）
+PASS  扫描器抓到 throw new Error 里的中文（历史漏检形态）
+PASS  扫描器抓到解构参数默认值里的中文
+
+== verify-i18n-values：逐字比对判据 ==
+PASS  容忍空白差异（正向）
+PASS  容忍 ${x} 与 {x} 的写法差异（正向）
+PASS  不容忍标点差异（负向）
+PASS  不容忍全角/半角差异（负向）
+PASS  中文片段抽取只取连续中文（正负对照）  (已选|个角色)
+
+== find-unused-keys：词条收集器 ==
+PASS  收集器取到全部嵌套叶子并带命名空间前缀（正向）  (demo.nested.deeper.tip,demo.nested.leaf,demo.title)
+PASS  收集器排除非字符串叶子（负向）  (demo.nested.deeper.tip,demo.nested.leaf,demo.title)
+PASS  坏源码不会静默产出伪 key（负向）
+PASS  真实词条表被解析到（数量级自检，防解析全空）  (叶子 2499 个)
+FAIL  未引用数为 0（当前基线状态）  (auth.verifySuccess、common.localeNameSelf、create.generationTasks.active)
+
+== 自检本身的可信度 ==
+PASS  判定逻辑能区分相等与不等（防恒真断言）
+PASS  自检项数量达到预期  (16 项)
+
+门禁自检失败 1 项：
+  - 未引用数为 0（当前基线状态）
+D:\Code\Illusion-Realm\Illusion-Realm\apps\next:
+[ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL] @illusion-realm/next@0.1.0 check:gates: `node scripts/self-test-gates.mjs`
+Exit status 1
+[ELIFECYCLE] Command failed with exit code 1.
+[ELIFECYCLE] Command failed with exit code 1.

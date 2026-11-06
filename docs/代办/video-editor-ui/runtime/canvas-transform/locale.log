@@ -1,0 +1,3 @@
+$ pnpm --filter @illusion-realm/next mirror-locale --check
+$ node scripts/mirror-locale.mjs "--check"
+OK  en 与 zh-CN 键完全一致（18 个命名空间）
