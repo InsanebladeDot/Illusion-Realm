@@ -1,3 +1,15 @@
+/**
+ * user-data：从 storage 取得主进程 JSON 文档读写能力。
+ * model-category-manager：模型分类变更由 models 域统一协调。
+ * model-download-validation：下载与分类操作继续使用主进程的参数校验。
+ * scanner：使用本地模型扫描器发现目录里的实际模型文件。
+ * user-data：只迁移实现位置，版本合并与默认值仍由渲染侧负责。
+ * model-category-manager：分类操作需要同时保持磁盘文件和扫描结果一致。
+ * model-download-validation：路径、模型类型和业务参数的接受范围不随目录命名变化。
+ * scanner：分类目录和文件名来自扫描结果，不以界面上的显示名称代替路径。
+ * user-data：读文档时的路径解析继续委托统一根目录，不能改成模块旁的文件。
+ * model-category-manager：调用方继续使用同一模块，不能复制一份只更新页面的分类逻辑。
+ */
 /** Native filesystem regression: moving complete model folders, preserving series, refusing cross-root/links/overwrites. */
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
@@ -7,10 +19,10 @@ const { app, shell } = require("electron");
 const root = fs.mkdtempSync(path.join(os.tmpdir(), "ir-category-test-"));
 const models = path.join(root, "models");
 let paths = { searchPath: models, lorasPath: "", checkpointPath: "", diffusionModelsPath: "" };
-require("../apps/electron/userData").readUserData = () => ({ data: { settings: { paths } } });
-const { categoryTarget, moveCategory, operateModels } = require("../apps/electron/services/model-category-manager");
-const { validateCategoryMove, validateModelBatch } = require("../apps/electron/services/model-download-validation");
-const { scanModelsInDirectory } = require("../apps/electron/modelScanner");
+require("../apps/electron/src/main/storage/user-data").readUserData = () => ({ data: { settings: { paths } } });
+const { categoryTarget, moveCategory, operateModels } = require("../apps/electron/src/main/modules/models/model-category-manager");
+const { validateCategoryMove, validateModelBatch } = require("../apps/electron/src/main/modules/models/downloads/model-download-validation");
+const { scanModelsInDirectory } = require("../apps/electron/src/main/modules/models/scanner");
 const smoke = require("./lib/smoke-harness").createSmokeHarness({ name: "model-categories", timeoutMs: 30000 });
 smoke.installWatchdog(app);
 function fixture(relative) {

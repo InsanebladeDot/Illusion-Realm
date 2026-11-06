@@ -7,6 +7,11 @@ import { useTranslation } from "@/i18n";
 import { civitaiDescription, civitaiDownload, type CivitaiFile, type CivitaiModel, type CivitaiVersion } from "@/utils/civitai";
 import { CivitaiPreview } from "./civitai-preview";
 import { ModelDownloadForm } from "./model-download-form";
+// 在线仅适配版本数据；阅读高度、标签拆分与复制都使用本地同一组件。
+// 预览和下载仍保留在线版本自己的状态，不合并不同来源的业务流程。
+// 说明来自原有纯文字净化器，公共阅读器不负责解析远端 HTML。
+import { ModelDescription } from "./model-description";
+import { ModelTriggerWords } from "./model-trigger-words";
 
 function DetailSection({ title, open = false, children }: { title: string; open?: boolean; children: ReactNode }) {
   return <details open={open || undefined} className="group rounded-lg border border-border bg-background">
@@ -36,8 +41,14 @@ function VersionContent({ model, version, source, previewIndex, onPreviewChange,
     {/* 界面：可折叠内容独立滚动；预览默认展开 */}
     <div data-civitai-detail-scroll className="min-h-0 flex-1 space-y-3 overflow-y-auto p-3">
       {version && <DetailSection title={t("toolBox.civitai.preview")} open><CivitaiPreview key={version.id} images={version.images} title={model.name} index={previewIndex} onIndexChange={onPreviewChange} /></DetailSection>}
-      {!!version?.trainedWords.length && <DetailSection title={t("toolBox.civitai.words")}><div className="flex flex-wrap gap-1">{version.trainedWords.map((word, index) => <span key={index} className="break-all rounded border border-border px-2 py-1 text-[11px]">{word}</span>)}</div></DetailSection>}
-      <DetailSection title={t("toolBox.civitai.about")}><p className="whitespace-pre-wrap break-words text-xs leading-relaxed text-muted-foreground">{description}</p></DetailSection>
+      {/* 在线触发词：标题与复制入口由公共组件维护，避免摘要中嵌套按钮。 */}
+      {/* 保留版本自己的词组；拆分只影响显示，不篡改下载时保存的来源 JSON。 */}
+      {!!version?.trainedWords.length && <div className="rounded-lg border border-border bg-background p-3"><ModelTriggerWords words={version.trainedWords} /></div>}
+      {/* 触发词默认可见，复制按钮不放进 summary，防止复制时误收起整个分组。 */}
+      {/* 在线模型说明：原生分组展开后测量真实高度，窄栏也按实际行数截断。 */}
+      {/* 以内容为键确保换到短说明后不会遗留上一版本的滚动与展开状态。 */}
+      {/* 文件信息和下载底栏不受内部滚动影响，仍由原有详情布局管理。 */}
+      <DetailSection title={t("toolBox.civitai.about")}><ModelDescription key={description} text={description} /></DetailSection>
       <DetailSection title={t("toolBox.civitai.fileInfo")}>{file ? <div className="space-y-2 text-xs text-muted-foreground"><p className="break-all">{file.name}</p><p>{(file.sizeKB / 1024).toFixed(1)} MB · {file.format}</p>{file.sha256 && <p className="break-all font-mono text-[10px]">SHA256 · {file.sha256}</p>}</div> : <p className="text-xs text-muted-foreground">{t("toolBox.civitai.noFiles")}</p>}</DetailSection>
     </div>
     {/* 界面：底部固定下载与官网入口，明确当前文件 */}

@@ -1,0 +1,310 @@
+/* 文件说明：为本地与在线模型库提供唯一的三栏几何和卡片视觉。 */
+/* 关键机制：容器查询按中心列宽排列模型；CSS Grid 根据详情显隐分配真实空间。 */
+/* 各面板自己控制内部滚动，避免把目录长短传播到应用外壳。 */
+/* 模块名沿用本地入口历史路径，在线入口也显式导入同一份样式。 */
+/* 不在此文件写来源接口、扫描条件或卡片选中业务。 */
+/* 断点必须与 ModelLibraryWorkspace 的宽屏媒体查询保持一致。 */
+/* 任何图片比例调整都同时影响本地与在线，之后两个真实入口都需要截图核对。 */
+/* 窄屏与关闭态都将详情轨道归零，保持轨道数量不变才能平滑过渡。 */
+/* 选择边框使用 color-mix 淡染主题色，保留一像素几何且不追加发光层。 */
+/* 搜索焦点只改边框颜色，不加 outline，避免输入聚焦后出现粗大的双圈。 */
+/* 面板轮廓与分类分隔线仍由主题 border 变量决定。 */
+/* 本地与在线模型库共用三个独立面板，不在页面上叠加第四条管理栏。 */
+/* 外层高度来自 ToolPageFrame 的真实父盒；不根据全局导航常量重新计算。 */
+/* 每列都允许缩小，长文件名不能挤走右侧详情或生成横向页面滚动条。 */
+/* 保持五轨而非删列：左栏、左间隔、中心、右间隔、详情。 */
+/* 两段间隔独立占轨，右栏关闭时能把自己的 8px 也交还给中心，而非残留空缝。 */
+/* 只在本宿主定义尺寸，不把应用 nav 的宽度重复扣一次。 */
+/* 显隐只改变数值；不同数量的 grid 列无法形成这次所需的连续伸缩。 */
+/* 过渡时长和曲线来自组件引用的公共 nav 配置，本模块不复制另一组动画数值。 */
+/* sidebar-open-width 保留原展开宽度，收起时内容按该宽度裁切而不重新换行。 */
+.workspace { --library-sidebar-open-width: 205px; --library-sidebar-width: var(--library-sidebar-open-width); --library-sidebar-gap: 8px; --library-details-width: 310px; --library-details-gap: 8px; display: grid; grid-template-columns: var(--library-sidebar-width) var(--library-sidebar-gap) minmax(0, 1fr) var(--library-details-gap) var(--library-details-width); gap: 0; height: 100%; min-height: 0; min-width: 0; padding: 4px; overflow: hidden; }
+/* 两条间隔相当于三格书架的隔板，哪边面板关闭就把哪边隔板一起归零。 */
+/* gap:0 是刻意的：保留 grid-gap 会在零宽轨道两侧留下额外空缝。 */
+/* 中心 minmax(0,1fr) 允许缩小，超长模型名称不能反向撑宽动画的剩余列。 */
+/* 左右两侧都是确定像素轨道，插值时中心列接收每一帧的剩余空间。 */
+/* 显式轨道排列始终一致，不在点击时切换 display:grid 与 display:flex。 */
+/* 预渲染默认展开，客户端水合不读取本地存储制造首帧宽度不一致。 */
+/* 收起把整个分类列和间隔归零，唯一恢复入口位于中间底栏，不残留窄轨道。 */
+/* 数据属性仅属于模型库，不响应或改动 AppShell 的 data-sidebar-expanded。 */
+/* 变量选择器比普通断点优先，窄窗口也必须尊重手动收起。 */
+.workspace[data-model-sidebar-expanded="false"] { --library-sidebar-width: 0px; --library-sidebar-gap: 0px; }
+/* 详情和它左侧间隔同时归零，中间区在浏览器布局阶段持续获得空间。 */
+/* 关闭态仍保留空外框供轨道插值，正文由 React 按原规则卸载。 */
+/* visibility 只隐藏零轨外框，不能用 display:none 删除参与动画的布局项。 */
+.workspace[data-details-visible="false"] { --library-details-width: 0px; --library-details-gap: 0px; }
+.workspace[data-details-visible="false"] .details, .workspace[data-model-sidebar-expanded="false"] .sidebar { visibility: hidden; pointer-events: none; }
+/* 显式列位置避免空轨道被当成内容列；三个面板的 DOM 顺序仍与视觉一致。 */
+/* 面板各自的滚动归属保持不变，过渡不会把列表迁移到另一份实例。 */
+.sidebar { grid-column: 1; }
+.catalog { grid-column: 3; }
+.details { grid-column: 5; }
+/* 三张大卡片共用同一表面和边框，深色主题直接从语义变量获得配色。 */
+/* 浅蓝内容表面与全局 main 保持一致，避免中间出现与确认图不同的纯白大块。 */
+/* 边界使用很淡的线；不通过重阴影或发光强调普通面板。 */
+.sidebar, .catalog, .details { display: flex; flex-direction: column; min-width: 0; min-height: 0; overflow: hidden; border: 1px solid var(--border); border-radius: 10px; background: var(--workspace-surface, var(--background)); }
+/* 左栏的库切换属于现有真实入口，保留在线访问而不把它混入模型卡片网格。 */
+/* 切换控件在上方固定，目录树独立滚动，底部扫描入口不随目录长度消失。 */
+/* 紧凑横向布局让切换与参考图的分类宽度匹配，不放大成一个页面大标题。 */
+/* 分类开合按钮只在中心底栏存在，面板完全隐藏后仍可操作同一颗按钮。 */
+/* 双箭头的方向由 React 当前展开状态决定，不靠 CSS 伪元素偷偷叠第二颗箭头。 */
+/* 细边框使用主题 border，深浅主题都只表达普通工具操作，不制造选中发光。 */
+.sidebarToggle { display: grid; width: 28px; height: 24px; flex-shrink: 0; place-items: center; border: 1px solid var(--border); border-radius: 5px; color: var(--muted-foreground); }
+/* 鼠标悬停略染语义背景，焦点轮廓继续复用整个模型库的公共可访问样式。 */
+/* 按钮位于 footer 最左边，右侧数量文本使用剩余空间右对齐。 */
+/* 收起面板时不卸载底栏，所以按钮焦点保持稳定，不必再找新的恢复入口。 */
+.sidebarToggle:hover { background: var(--muted); color: var(--foreground); }
+/* 内容用展开宽度保持排版，外层 sidebar 的 overflow:hidden 完成横向裁切。 */
+/* 它保留 flex 高度边界，让中部目录滚动和底部扫描操作维持原有归属。 */
+/* 两像素扣除左右边框，展开结束后不会出现由宽度差产生的横向滚动。 */
+.sidebarContent { display: flex; min-height: 0; flex: 1; width: calc(var(--library-sidebar-open-width) - 2px); flex-direction: column; }
+.librarySwitch { padding: 10px 10px 0; flex-shrink: 0; }
+/* 配置与扫描继续调用现有业务，视觉上只占左栏底部的一行。 */
+/* 边线把工具与目录分开，实际滚动只发生在两者之间的导航区域。 */
+/* 扫描中禁用按钮但不隐藏文字，用户可以理解当前发生的操作。 */
+.scanActions { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; border-top: 1px solid var(--border); padding: 12px; font-size: 10px; }
+/* 图标和文字共享点击区，不在图标外另放一个不可聚焦的触发层。 */
+/* 配置链接与重扫按钮保持原生语义，Tab 顺序与视觉顺序一致。 */
+/* disabled 样式放在公共状态规则中，扫描与写操作反馈保持统一。 */
+.scanActions button, .back { display: inline-flex; align-items: center; justify-content: center; gap: 5px; }
+/* 中间标题和搜索行共用同一固定头部，不让大量卡片把入口卷出屏幕。 */
+/* 留白按确认图保持紧凑，不再叠加普通 ToolPageFrame 的外层返回栏。 */
+/* 下边框仅属于面板内部，不能跨到全局 nav 和 head 下方形成一条长线。 */
+.catalogHeader { padding: 14px 16px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+/* 名称、路径与返回工作台排在一行，空余宽度优先分给当前目录。 */
+/* 返回按钮不随文件名缩小，路径则允许在不影响模型网格的情况下省略。 */
+/* 标题容器的 min-width 是长目录可截断的前提，而不是裁切整个页面。 */
+.catalogTitle { display: flex; min-width: 0; align-items: center; gap: 8px; margin-bottom: 18px; font-size: 12px; }
+/* 当前目录是该面板唯一主标题，不把模型名误用成页面标题。 */
+/* 最长显示范围给面包屑留出空间；完整名称仍由 JSX 的 title 提供。 */
+/* 标题字号比卡片略大，保持参考图中清楚的层级而非超大营销文案。 */
+.catalogTitle h1 { flex-shrink: 0; max-width: 35%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; font-weight: 650; }
+/* 面包屑对应真实目录段，点击段只修改本地浏览位置。 */
+/* 目录可以无限深入，路径栏因此必须截断而不能一直撑宽中心面板。 */
+/* 图标不承担路径信息，文本本身仍能表达完整的当前层级。 */
+.catalogTitle nav { display: flex; min-width: 0; flex: 1; align-items: center; gap: 3px; overflow: hidden; color: var(--muted-foreground); font-size: 10px; white-space: nowrap; }
+/* 每段允许缩小，避免单个极长名称把后面的返回入口挤出可视范围。 */
+/* 省略只作用于视觉文本，组件保留 title 作为完整路径提示。 */
+.catalogTitle nav span { display: inline-flex; min-width: 0; align-items: center; }
+/* 面包屑按钮不画成卡片，复用页面既有文字色和悬停状态。 */
+/* 文本截断不能改变传给 onClick 的完整相对目录。 */
+.catalogTitle nav button { overflow: hidden; text-overflow: ellipsis; }
+/* 右侧返回入口回到已有工具工作台，不清空磁盘或生成任务。 */
+/* 固定文字宽度防止路径太长时只剩一个无法理解的返回箭头。 */
+.back { margin-left: auto; flex-shrink: 0; font-size: 10px; color: var(--muted-foreground); }
+/* 搜索组合占满余宽，批量入口保持自然文字宽度，二者在第一行。 */
+/* 不再按整个窗口宽度强行换两行，宽度来自中心面板真实分配。 */
+/* 排序是搜索右端独立按钮，不能放到 label 内导致点击后又聚焦输入框。 */
+.filters { display: flex; align-items: center; gap: 8px; min-width: 0; }
+/* 单个边框包裹搜索与排序，内部仅留一条细分隔线。 */
+/* 子项都允许缩小，长关键词不把批量按钮挤到面板外。 */
+/* 使用主题背景，浅色与深色都不会出现系统默认白色输入块。 */
+/* 搜索输入 label 只拥有输入本身，排序按钮是同级节点而非嵌套控件。 */
+/* 这样点击排序不会因为 label 默认行为又把焦点送回输入。 */
+/* flex:1 将剩余空间给搜索组，右边补全入口保持可辨识的文字宽度。 */
+/* 输入聚焦时描边包住整个组合，而菜单仍通过 Portal 独立浮出。 */
+.searchGroup { display: flex; align-items: center; flex: 1; min-width: 0; border: 1px solid var(--border); border-radius: 7px; background: color-mix(in srgb, var(--muted) 60%, transparent); }
+/* 图标只提示搜索用途，完整输入标签仍通过 aria-label 提供。 */
+/* 输入框和排序保留两个独立 Tab 停靠点，不把整块变成一个伪按钮。 */
+.filters label { display: flex; flex: 1; min-width: 0; align-items: center; gap: 6px; padding: 7px 10px; color: var(--muted-foreground); }
+/* 内容只过滤已有索引，输入时不扫描文件或触发在线匹配。 */
+/* 聚焦轮廓交给外层 focus-within，去掉输入默认框不会丢失反馈。 */
+.filters input { width: 100%; min-width: 0; outline: none; background: transparent; font-size: 11px; color: var(--foreground); }
+/* 搜索右侧批量入口复用已有按钮，仅统一命中高度与间距。 */
+/* 固定其缩小策略，不能在窄窗口把文字挤成单字竖排。 */
+/* 实际禁用由组件传 disabled，外观不会假装请求已经执行。 */
+.filters > button { display: flex; flex-shrink: 0; align-items: center; justify-content: center; gap: 6px; min-height: 34px; padding: 7px 10px; border: 1px solid var(--border); border-radius: 7px; font-size: 11px; }
+/* 第二行左边管理、右边视图，布局不会随着当前详情文字长短改变。 */
+/* 辅助选择信息在左侧内换行，不会把三个密度按钮挤到下一行。 */
+/* 工具栏属于固定页头，网格滚动时上下两行都留在原位。 */
+/* align-items 从顶部对齐，进入多选后左侧辅助行增长不拖动右侧视图。 */
+/* 不使用固定屏幕坐标，面板缩放或导航展开时由同一流式布局重新分配。 */
+/* 上边距只分隔两组实际操作，不在整个 main 下方添加额外空白行。 */
+/* 工具栏高度随辅助内容自然增长，网格 flex 区相应缩短而非覆盖卡片。 */
+.actionRow { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; margin-top: 10px; min-width: 0; }
+/* 视图密度是一组互斥选择，aria-pressed 与真正的排列状态一致。 */
+/* 三个图标用相同点击宽度，选中切换不会挤动工具栏其他输入。 */
+.viewModes { display: flex; flex-shrink: 0; align-items: center; gap: 4px; margin-left: auto; }
+/* 未选中保持浅表面，选中再用强调色，不给整条工具栏铺实心蓝色。 */
+/* 按钮统一保留 32px 命中区，图标可以紧凑但交互区域不会缩成几像素。 */
+.viewModes button { display: grid; place-items: center; width: 32px; height: 32px; border: 1px solid var(--border); border-radius: 7px; color: var(--muted-foreground); }
+/* 选中边框不加宽，避免点击视图切换时产生一像素几何跳动。 */
+/* 深浅主题沿用 primary，不另设只适配浅色的青色发光。 */
+.viewModes button[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent-text); border-color: var(--primary); }
+/* 网格本身滚动，上面的标题和下面的计数都留在中心面板内。 */
+/* 容器查询依据的是中心列实际宽度，导航开合后卡片列数随可用空间变化。 */
+/* 不用视口减去固定导航宽度，避免出现用户之前指出的多余空白。 */
+.catalogScroll { min-height: 0; flex: 1; overflow: auto; padding: 16px; container-type: inline-size; }
+/* 默认卡片以原图比例为目标，列数由中心实际宽度自动计算。 */
+/* 缺图、长名和已有选中态继续复用同一张 LocalModelCard。 */
+/* 按中心实际可用宽度放入更多轨道，关闭侧栏或详情后不再锁死四列。 */
+/* auto-fill 保留空轨道，只有两个模型时也不会把两张图片拉成半屏巨卡。 */
+/* 160px 是普通卡片最小宽度，空间足够自然增加到五、六、七、八列及更多。 */
+/* 不用窗口宽度判断列数，应用导航开合与模型库左右面板都参与实际可用宽度。 */
+/* min(100%,160px) 允许极窄面板降到一列，不因最小卡宽制造横向溢出。 */
+.modelGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 160px), 1fr)); gap: 14px; align-items: start; }
+/* 卡片表面比大面板略亮，仍由语义背景提供，不写死成只能浅色的白色。 */
+/* 细边框保持模型之间可辨识，悬停和选中不会改变卡片占用的宽高。 */
+/* 圆角裁切只用于图片，不截断卡片的键盘聚焦轮廓。 */
+.modelCard { position: relative; min-width: 0; overflow: hidden; border: 1px solid var(--border); border-radius: 8px; background: var(--background); }
+/* 明确选中当前详情对应的模型，多选时则以实际 checkbox 集合为准。 */
+/* 只染淡原有的一像素边框，不叠内阴影，避免出现双层光圈。 */
+.selectedCard { border-color: color-mix(in srgb, var(--primary) 35%, var(--border)); }
+/* 整张卡片承担阅读或多选，独立复选框位于它的外面，避免交互嵌套。 */
+/* 透明底色继续显示统一卡片表面，整个封面区域都可点击。 */
+/* 普通卡片封面是详情或多选入口，手形光标与实际动作保持一致。 */
+/* 两个来源均调用 Card 的选择回调，详情图片单独提供放大入口。 */
+/* 列表和网格共用手形光标，不再保留卡片放大镜分支的闲置样式。 */
+.cardImagePreview { position: absolute; inset: 0; display: block; width: 100%; height: 100%; overflow: hidden; cursor: pointer; }
+.cardImagePreview img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+/* 封面改为方形，移除底部格式行后将相同高度更多留给图片。 */
+/* 资源读取由封面插槽负责；这个区域只负责稳定占位防止加载跳动。 */
+/* 缺封面时文件名占位也保留相同比例，不因图片失败改变整行卡片高度。 */
+.cardCover { position: relative; aspect-ratio: 7 / 9; overflow: hidden; background: var(--muted); }
+/* 本地只显示文件名；在线可带作者统计，不再单放重复详情动作。 */
+/* 不伪造索引尚未提供的下载量、文件日期或体积来填满参考图的装饰信息。 */
+/* 内边距仅围绕实际内容，不为已删除的路径、格式和详情文字预留空行。 */
+/* 图片完整铺满，底部信息在高透明深色叠层上阅读，不另占卡片高度。 */
+/* 渐变从透明过渡到 58% 黑色，保留图片细节并确保白字清楚。 */
+.cardOverlay { position: absolute; inset: auto 0 0; z-index: 1; display: block; width: 100%; min-width: 0; padding: 38px 9px 9px; background: linear-gradient(to bottom, transparent, rgb(0 0 0 / 58%)); text-align: left; }
+.cardGridContent > p { overflow: hidden; color: white; font-size: 12px; font-weight: 700; line-height: 1.25; text-overflow: ellipsis; white-space: nowrap; }
+.cardGridContent > small { display: block; overflow: hidden; margin-top: 4px; color: rgb(255 255 255 / 78%); font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
+/* 列表只更换同一张卡片的布局，不复制封面实例或绑定第二套点击处理。 */
+/* 缩略图固定 100px 方形，宽屏仍保持紧凑；网格的自适应列数不影响列表高度。 */
+/* 两行资料占据剩余宽度，minmax(0,1fr) 让长名称可以省略而不是撑破中心区。 */
+/* 小图使用 contain 保留完整图片，余白由现有主题背景承担。 */
+/* 列表不再把系列角标盖在小图上，分类已经完整进入第二行。 */
+/* 外层卡片的一像素边框不计入缩略图尺寸，不用固定整行高度裁切文字。 */
+/* 父网格保持列数供网格视图使用，列表条目跨满全部轨道。 */
+/* 100px 选择在用户给定的两个尺寸内，不随侧栏展开变成巨型竖图。 */
+.cardListContent { display: none; }
+.modelGrid[data-view="list"] > .modelCard { grid-column: 1 / -1; }
+.modelGrid[data-view="list"] .cardCover { display: grid; grid-template-columns: 100px minmax(0,1fr); aspect-ratio: auto; }
+.modelGrid[data-view="list"] .cardImagePreview { position: relative; width: 100px; height: 100px; }
+.modelGrid[data-view="list"] .cardImagePreview img { object-fit: contain !important; }
+.modelGrid[data-view="list"] .cardCover > div { display: none; }
+/* 信息区纵向居中，让两行文字在图像左右留白均衡，不受图片固有比例影响。 */
+/* 只有正文使用主题前景色，不能沿用网格叠层的白字导致浅色下无法阅读。 */
+/* 名称和属性分别省略，鼠标悬停可查看完整值，卡片点击仍打开第三栏。 */
+/* 两个来源的 listAttributes 都由各自适配器提供，CSS 不推断业务字段。 */
+/* display:none 同时隐藏网格内容及其辅助阅读信息，不产生重复标题。 */
+/* 第二行保留固定行高，未补全元数据时也不会造成相邻行高低不齐。 */
+/* padding 仅属于文字按钮，不叠到图片上把 100px 的视觉尺寸缩成更小。 */
+/* 两行在同一按钮内，点击属性区仍会选择模型而不是出现无效空白区域。 */
+/* gap 为标题与属性提供呼吸空间，不能靠增加整行固定高度解决文字拥挤。 */
+/* title 属性由组件提供，CSS 不用伪元素复制名称，避免辅助阅读出现两份内容。 */
+/* 不设背景图片，因此缺图状态仍由原来的 ResourceCoverImage 或 CivitaiImage 负责。 */
+/* 大图和小图模式都保持同一个外层边框，切换时选中状态无需重新计算。 */
+/* 网格信息容器嵌套增加一层后，标题规则同步改到 cardGridContent 避免白字失效。 */
+/* 信息容器无需自己的滚动条，中心 catalogScroll 统一滚动所有列表行。 */
+/* 单个条目的圆角裁切沿用 modelCard，不额外添加仅适用于一个来源的样式。 */
+/* 属性文字使用主题的弱前景色，系统主题变化无需等待一次资料重读。 */
+.modelGrid[data-view="list"] .cardOverlay { position: relative; display: flex; align-items: center; min-width: 0; padding: 12px 16px; background: transparent; color: var(--foreground); }
+.modelGrid[data-view="list"] .cardGridContent { display: none; }
+.modelGrid[data-view="list"] .cardListContent { display: flex; min-width: 0; width: 100%; flex-direction: column; gap: 7px; }
+.cardListContent > p { overflow: hidden; font-size: 14px; font-weight: 700; line-height: 20px; text-overflow: ellipsis; white-space: nowrap; }
+.cardListContent > small { min-height: 18px; overflow: hidden; color: var(--muted-foreground); font-size: 12px; line-height: 18px; text-overflow: ellipsis; white-space: nowrap; }
+/* 网格资料层按作者、模型名和统计纵向排列，全部留在原透明渐变区域内。 */
+/* min-width 配合 overflow 才能省略长标题，不能靠文字自己把卡片撑开。 */
+/* 白字与暗色渐变搭配，不继承浅色主题的深蓝正文色覆盖图片。 */
+.modelCardOverlayContent { display: flex; min-width: 0; flex-direction: column; gap: 4px; color: white; }
+/* 作者只占自己的行，长作者名单行截断，不把模型名推成竖排。 */
+/* 完整作者仍由卡片 subtitle/title 提供，省略不改变来源资料。 */
+.modelCardOverlayContent > p { overflow: hidden; color: rgb(255 255 255 / 78%); font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
+/* 模型名是网格文字的主要层级，字重与本地标题一致。 */
+/* 单行省略避免长模型说明侵入封面顶部的分类胶囊。 */
+.modelCardOverlayContent > h3 { min-width: 0; overflow: hidden; font-size: 12px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+/* 统计横排且仅在自身宽度内裁切，窄卡不会因多个计数出现页面横滚。 */
+/* 这里不格式化数值，单位和缺失字段仍由在线适配器处理。 */
+.modelCardStats { display: flex; flex: 0 0 auto; gap: 8px; overflow: hidden; color: rgb(255 255 255 / 78%); font-size: 10px; }
+.modelCardStats > span { display: inline-flex; align-items: center; gap: 3px; }
+/* 超长文件名在卡片中省略，完整值仍用于辅助名称、详情和实际操作。 */
+/* 字号贴近参考图的紧凑模型标题，不把带后缀的长名强行折成数行。 */
+/* 路径和扩展名是实际索引数据，截断仅影响外观，不用于生成工具传参。 */
+/* small 仅在在线适配器提供统计时出现，本地卡片没有这一行。 */
+/* 中间面板底部只显示真实文件数量，不放不能工作的演示分页。 */
+/* 模型卡片可以持续滚动，计数随过滤条件改变而不会随滚动消失。 */
+.catalogFooter { flex-shrink: 0; border-top: 1px solid var(--border); padding: 12px 16px; font-size: 11px; color: var(--muted-foreground);  display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+/* 详情标题固定在第三面板顶部，关闭只解除模型选择而非关闭整个模型库。 */
+/* 对齐参考图的紧凑标题，不在详情顶部再加第二层页面大标题。 */
+.details > header { display: flex; flex-shrink: 0; align-items: center; justify-content: space-between; padding: 14px 16px; font-size: 13px; font-weight: 600; }
+/* 空详情也能关闭并释放第三列；是否选过模型不能限制关闭入口。 */
+/* 普通状态使用静音文字色，不把关闭入口画成危险删除按钮。 */
+.details > header button { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 6px; color: var(--muted-foreground); }
+/* 详情里的长说明、来源和分类设置只在这一区域滚动。 */
+/* min-height:0 让长介绍限制在详情面板内，而不是撑出主区。 */
+.detailsScroll { min-height: 0; flex: 1; overflow: auto; }
+/* 详情与弹窗共用相同的内容组件和间距，不复制资料读取状态。 */
+/* 每块之间统一留白，原图、名称、来源和真实操作保持稳定顺序。 */
+.detailsBody { padding: 6px 16px 16px; display: flex; flex-direction: column; gap: 12px; }
+/* 管理区位于中心第二行左边，移除原详情底部的边框和固定高度。 */
+/* 局部选择信息可增长，不能将整个详情栏变成管理工具的滚动宿主。 */
+/* min-width 保证多选数量较长时仍由自身换行而不撑宽面板。 */
+/* 这里不设 overflow:auto，避免一个只有两个按钮的小区形成嵌套滚动条。 */
+/* 选择数量、全选、清空和退出仍属于它，不再与详情文件名共享布局。 */
+/* 原目录写入规则由 hook 与主进程负责，换位置并不会放宽权限。 */
+/* 没有任何目录可写时也保留入口位置，禁用状态能够解释操作边界。 */
+.management { min-width: 0; flex: 1; }
+/* 移动、删除共用已有流程，这里只并排组织两个入口。 */
+/* 批量补全和详情不再混入此组，视觉位置对应用户确认的新工具栏。 */
+.managementGrid { display: flex; flex-wrap: wrap; gap: 8px; }
+/* 管理按钮与右边密度保持同一命中高度，不因图标不同而上下错位。 */
+/* 细边框使用主题色，删除仅由文字颜色与确认弹窗表达风险。 */
+/* 按钮可随译文变宽，不使用固定百分比把长词截掉。 */
+.managementGrid > button { display: flex; min-height: 32px; align-items: center; justify-content: center; gap: 6px; padding: 6px 9px; border: 1px solid var(--border); border-radius: 7px; font-size: 11px; }
+/* 删除仅使用危险色文字，危险确认和回收站行为继续属于既有业务对话框。 */
+/* 两种主题都清晰但不艳红，不能靠粗边框夸大普通管理动作。 */
+.danger { color: #d84966; }
+/* 多选辅助操作与写操作分离，只有用户明确进入多选后才出现。 */
+/* 选择数量是当前范围的真实状态，不引用详情中单个模型的版本数。 */
+.selection { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 10px; font-size: 10px; }
+/* 数量独占一行，清空、全选和退出不会被长状态文本挤出可视范围。 */
+/* 只改变排布，不改变 selection hook 对文件身份和操作范围的约束。 */
+.selection p { width: 100%; color: var(--muted-foreground); }
+/* 公共交互反馈局限在此模块，不给全局所有 button 注入新主题样式。 */
+/* 悬停只作用于可用按钮，避免禁用项看起来仍然可以执行磁盘操作。 */
+/* 背景混合不会覆盖实心补全按钮的文字色和真实 disabled 状态。 */
+.workspace button:not(:disabled):hover, .back:hover, .scanActions a:hover { filter: brightness(.97); }
+/* 鼠标悬停之外保留明显焦点环，键盘用户能定位输入与每个管理动作。 */
+/* 输入聚焦由外层描边表达，按钮和链接则由原生 focus-visible 触发。 */
+.workspace button:focus-visible, .workspace a:focus-visible { outline: 1px solid color-mix(in srgb, var(--primary) 55%, var(--border)); outline-offset: 2px; }
+/* 搜索组只染淡现有边框，聚焦不叠额外外圈或增加实际尺寸。 */
+.searchGroup:focus-within { border-color: color-mix(in srgb, var(--primary) 40%, var(--border)); }
+/* 折叠继承创建页同一高度动画；减少动态效果时只在本库局部禁用。 */
+@media (prefers-reduced-motion: reduce) { .navigationSection [data-collapsible-panel] { transition: none !important; } }
+/* 所有禁用态统一降低视觉权重；事件是否可执行仍由 disabled 属性决定。 */
+/* 不能只靠 opacity 假装禁用，所以对应 JSX 必须继续传递真实 disabled。 */
+.workspace button:disabled { opacity: .45; cursor: not-allowed; }
+/* 稀疏大卡片仍使用同一数据和组件，只减少列数以提供更大封面。 */
+/* 列表形态也不显示文件夹，仍是一条一条的真实模型文件。 */
+.modelGrid[data-view="large"] { grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr)); }
+/* 列表让每个模型占一行，适合需要阅读较长文件名的场景。 */
+/* 两侧详情和目录结构不随密度切换重新挂载，现有选择因此保留。 */
+
+/* 横向条目中封面固定一个合理宽度，文字使用剩余区域。 */
+/* 仍然只有一个主按钮，不引入视觉相似但行为不同的列表实现。 */
+/* 单列模式仍用完整图片卡片，区别仅在父网格列数，不压缩图片成侧边缩略图。 */
+/* 普通与大图均由 auto-fill 适应中心宽度，删除只支持两到四列的旧容器覆盖。 */
+/* list 继承相同轨道而让整行跨列，不再把父网格改成单轨后另算固定小图。 */
+/* 详情弹窗断点与组件查询一致，窄屏不保留空的第三列或管理面板。 */
+/* 两行管理始终在中心页头，因此隐藏第三列不会丢失移动或删除入口。 */
+/* 左右两列都由工作区分配高度，不用绝对定位侵占全局导航。 */
+/* 隐藏的是纯阅读详情列，移动删除不能跟随这条媒体规则一起消失。 */
+/* 详情弹窗从同一 selected 文件创建，关闭后不会留一个看不见的管理底栏。 */
+/* catalog 始终是唯一模型网格，媒体切换不会另挂一份模型索引。 */
+/* 外层仍继承宿主可用高度，导航和全局状态条的空间不在本模块重复扣减。 */
+/* 两个响应式宽度只负责展开态，零宽收起值始终由状态选择器维护。 */
+/* 极窄模式左间隔缩为 4px，收起时也不能重新套用桌面的 8px。 */
+/* 原卡片容器查询仍按中心真实宽度计算列数，动画不会新增另一份断点表。 */
+/* 详情没有显示时正文不挂载，媒体查询只处理空外框，不隐藏仍活跃的请求。 */
+/* 窄屏正文仍由原资源弹窗承载，宽屏空外框不额外保留 8px 间隔。 */
+/* 断点只改变量，手动收起左栏与关闭右栏能够同时成立。 */
+/* display:none 仅适用于本来就改用弹窗的详情断点，不参与宽屏 X 关闭动画。 */
+@media (max-width: 1279px) { .workspace { --library-sidebar-open-width: 180px; --library-details-width: 0px; --library-details-gap: 0px; } .details { display: none; } }
+/* 中等窗口优先保留标题与返回入口，完整路径在 head 和侧栏仍可核对。 */
+/* 这里只省略视觉路径，不改变真实目录和搜索范围。 */
+@media (max-width: 1450px) { .catalogTitle nav { display: none; } }
+/* 极窄窗口缩短侧栏并压缩控件间距，不让搜索框产生横向滚动。 */
+/* 移动和删除允许在左侧内换行，视图三个命中区仍始终在右边。 */
+/* 三面板的业务归属保持不变，详情采用原资源弹窗而非叠盖全局 nav。 */
+@media (max-width: 650px) { .workspace { --library-sidebar-open-width: 135px; --library-sidebar-gap: 4px; grid-template-columns: var(--library-sidebar-width) var(--library-sidebar-gap) minmax(0, 1fr) 0px 0px; padding: 2px; } .catalogHeader, .catalogScroll { padding: 10px; } .catalogTitle { flex-wrap: wrap; gap: 6px; } .catalogTitle h1 { max-width: calc(100% - 30px); } .back { margin-left: 0; } .modelGrid { gap: 8px; } .filters { flex-wrap: wrap; } .searchGroup { flex-basis: 100%; } .managementGrid { gap: 4px; } .managementGrid > button { padding-inline: 6px; } }

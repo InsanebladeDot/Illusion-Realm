@@ -1,8 +1,14 @@
+/**
+ * model-download-transfer：调用下载传输实现处理响应与文件流。
+ * model-download-network：复用下载专用会话和网络传输约束。
+ * model-download-transfer：传输代码继续复用专用网络会话，不另起未经限制的下载入口。
+ * model-download-network：下载连接策略属于主进程，页面不自行读取 Cookie 或认证头。
+ */
 /** Read-only download diagnosis: compare Chromium redirects with Node and probe public responses without credentials. */
 const http = require("node:http");
 const { app, net } = require("electron");
-const { fetchDownload } = require("../apps/electron/services/model-download-transfer");
-const { getDownloadSession } = require("../apps/electron/services/model-download-network");
+const { fetchDownload } = require("../apps/electron/src/main/modules/models/downloads/model-download-transfer");
+const { getDownloadSession } = require("../apps/electron/src/main/modules/models/downloads/model-download-network");
 const timer = setTimeout(() => app.exit(124), 60000);
 
 async function probe(label, fetcher, url) {

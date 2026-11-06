@@ -1,5 +1,5 @@
 /**
- * 模型文件的识别与展示辅助（真正的目录扫描在主进程 `apps/electron/modelScanner.js`）。
+ * 模型文件的识别与展示辅助（真正的目录扫描在主进程 `apps/electron/src/main/modules/models/scanner.js`）。
  *
  * 怎么做：扩展名白名单、展示名清洗、图标候选优先级 —— 全是纯函数。
  */
@@ -10,6 +10,10 @@ export const MODEL_FILE_EXTENSIONS = [
   ".ckpt",
   ".pt",
   ".pth",
+  // 与主进程 MODEL_EXTENSIONS 一致：单文件量化模型同样属于可展示资源。
+  // 这里只识别文件格式，不凭扩展名推断它能作为 UNet 使用。
+  // 目录角色仍由扫描路径和各功能选择器独立判定。
+  ".gguf",
 ] as const;
 
 export const MODEL_ICON_NAMES = [

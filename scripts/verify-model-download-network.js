@@ -1,8 +1,12 @@
+/**
+ * model-download-network：复用下载专用会话和网络传输约束。
+ * model-download-network：下载连接策略属于主进程，页面不自行读取 Cookie 或认证头。
+ */
 /** Exercise real Chromium HTTP redirects/streams; fixture-only DNS routes and validators never touch production sessions. */
 const assert = require("node:assert/strict");
 const http = require("node:http");
 const { app, session } = require("electron");
-const { createDownloadTransport, allowedUrl } = require("../apps/electron/services/model-download-network");
+const { createDownloadTransport, allowedUrl } = require("../apps/electron/src/main/modules/models/downloads/model-download-network");
 const smoke = require("./lib/smoke-harness").createSmokeHarness({ name: "model-download-network", timeoutMs: 45000 });
 smoke.installWatchdog(app);
 const hosts = ["civitai.red", "civitai.com", "b2.civitai.com"];

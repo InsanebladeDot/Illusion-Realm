@@ -1,10 +1,25 @@
+/**
+ * ipc-channels：主进程和 preload 消费同一份 CommonJS 通道常量。
+ * result：沿用统一 IPC 结果和参数校验入口。
+ * window-chrome：复用同一份窗口装饰配置与启动参数。
+ * protocol：使用客户端的 app:// 与 localfile:// 协议实现。
+ * window.handlers：窗口和主题 IPC 隶属 core 的系统交互边界。
+ * index：窗口加载迁移后的真实 preload 桥接文件。
+ * ipc-channels：通道值必须与 shared 的类型表一致，路径调整不能重命名通道。
+ * result：注册时先移除同名 handler，返回值仍为 IpcResult。
+ * window-chrome：窗口样式和传给 preload 的标记必须配套，不能各自猜测当前装饰模式。
+ * protocol：Next 静态资源含绝对 URL，必须保持应用同源加载。
+ * window.handlers：handler 仍通过统一结果封装注册，不因移动改变参数和错误码。
+ * index：contextIsolation 保持启用，CommonJS 本地依赖仍需要 sandbox 为 false。
+ * ipc-channels：避免新旧通道混用造成 invoke 找不到 handler。
+ */
 /** 内容访问回归：隔离用户文档和网络，用纯色占位图验证协议门槛、持久化、分页与预览过滤。 */
 const fs = require("node:fs"), os = require("node:os"), path = require("node:path"), vm = require("node:vm");
 const { app, BrowserWindow, protocol, nativeImage } = require("electron");
 const ts = require("../apps/next/node_modules/typescript");
-const { IPC_CHANNELS: C } = require("../apps/electron/ipcChannels");
-const { registerHandle } = require("../apps/electron/ipcHandlers");
-const { windowChromeOptions, windowChromeArguments } = require("../apps/electron/window-chrome");
+const { IPC_CHANNELS: C } = require("../apps/electron/src/common/ipc-channels");
+const { registerHandle } = require("../apps/electron/src/main/ipc/result");
+const { windowChromeOptions, windowChromeArguments } = require("../apps/electron/src/main/core/windows/window-chrome");
 const smoke = require("./lib/smoke-harness").createSmokeHarness({ name: "civitai-content", timeoutMs: 90000 });
 const directory = fs.mkdtempSync(path.join(os.tmpdir(), "ir-content-access-"));
 let document = require("./lib/guest-session-fixture").withGuestSession({ version: 1, settings: { paths: {}, theme: "light", locale: "zh-CN" } });
@@ -12,8 +27,8 @@ const requests = [], errors = [];
 const cover = nativeImage.createFromBitmap(Buffer.from([42, 100, 200, 255]), { width: 1, height: 1 }).toPNG();
 app.disableHardwareAcceleration(); app.setPath("userData", path.join(directory, "browser"));
 smoke.setWorkDir(directory); smoke.installWatchdog(app);
-require("../apps/electron/appProtocol").registerAppProtocol();
-require("../apps/electron/ipc-handlers/window.handlers").registerThemeHandlers();
+require("../apps/electron/src/main/core/protocol").registerAppProtocol();
+require("../apps/electron/src/main/core/windows/window.handlers").registerThemeHandlers();
 registerHandle(C.USER_DATA_READ, () => ({ data: document, filePath: "", isNew: false }));
 registerHandle(C.USER_DATA_WRITE, (_event, next) => { document = next; });
 registerHandle(C.USER_DATA_GET_DEFAULT_PATH, () => "");
@@ -104,7 +119,7 @@ async function verifyUi(win) {
 async function main() {
   await app.whenReady(); smoke.assertBuildFresh({ app }); await verifyContract();
   protocol.handle("https", api);
-  const win = new BrowserWindow({ ...windowChromeOptions(), width: 1350, height: 900, show: false, webPreferences: { additionalArguments: windowChromeArguments(), offscreen: true, preload: path.join(__dirname, "../apps/electron/preload.js"), contextIsolation: true, nodeIntegration: false, sandbox: false, backgroundThrottling: false } });
+  const win = new BrowserWindow({ ...windowChromeOptions(), width: 1350, height: 900, show: false, webPreferences: { additionalArguments: windowChromeArguments(), offscreen: true, preload: path.join(__dirname, "../apps/electron/src/preload/index.js"), contextIsolation: true, nodeIntegration: false, sandbox: false, backgroundThrottling: false } });
   smoke.attachWebContents(win.webContents); const occlusion = await smoke.hardenWindow(win);
   win.webContents.on("console-message", event => { if (event.level === "error") errors.push(event.message); });
   try { await verifyUi(win); smoke.check("no render or hydration errors", !errors.some(message => /while rendering|hydration|Minified React error/.test(message))); }

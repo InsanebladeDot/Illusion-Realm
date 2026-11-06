@@ -1,0 +1,131 @@
+{
+  "baseline": "C:\\Users\\18305\\AppData\\Local\\Temp\\ir-model-layout-baseline",
+  "rows": [
+    {
+      "file": "apps/next/src/hooks/use-app-main-inset.ts",
+      "C": 34,
+      "B": 9,
+      "ratio": 79.07,
+      "kind": "business"
+    },
+    {
+      "file": "apps/next/src/hooks/use-agent-model-dialog.ts",
+      "C": 2,
+      "B": 3,
+      "ratio": 40,
+      "kind": "business"
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/civitai/model-library-labels.ts",
+      "C": 8,
+      "B": 2,
+      "ratio": 80,
+      "kind": "business"
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/civitai/local-model-metadata-details.tsx",
+      "C": 5,
+      "B": 2,
+      "ratio": 71.43,
+      "kind": "business"
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/civitai/local-model-library.tsx",
+      "C": 109,
+      "B": 50,
+      "ratio": 68.55,
+      "kind": "business"
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/civitai/local-model-library.module.css",
+      "C": 122,
+      "B": 50,
+      "ratio": 70.93,
+      "kind": "business"
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/civitai/model-folder-navigation.tsx",
+      "C": 13,
+      "B": 5,
+      "ratio": 72.22,
+      "kind": "business"
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/civitai/local-model-recovery-batch.tsx",
+      "C": 35,
+      "B": 13,
+      "ratio": 72.92,
+      "kind": "business"
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/civitai/civitai-page.tsx",
+      "C": 2,
+      "B": 1,
+      "ratio": 66.67,
+      "kind": "business"
+    },
+    {
+      "file": "apps/next/src/components/window-titlebar.tsx",
+      "C": 24,
+      "B": 10,
+      "ratio": 70.59,
+      "kind": "business"
+    },
+    {
+      "file": "apps/next/src/stores/use-model-library-location-store.ts",
+      "C": 20,
+      "B": 8,
+      "ratio": 71.43,
+      "kind": "business"
+    },
+    {
+      "file": "apps/next/src/app/tools/models/civitai/page.tsx",
+      "C": 3,
+      "B": 1,
+      "ratio": 75,
+      "kind": "business"
+    },
+    {
+      "file": "apps/next/src/app/workspace-shell.css",
+      "C": 4,
+      "B": 1,
+      "ratio": 80,
+      "kind": "business"
+    },
+    {
+      "file": "apps/next/src/i18n/locales/zh-CN/toolBox.ts",
+      "C": 1,
+      "B": 2,
+      "ratio": 33.33,
+      "kind": "business"
+    },
+    {
+      "file": "apps/next/src/i18n/locales/en/toolBox.ts",
+      "C": 1,
+      "B": 2,
+      "ratio": 33.33,
+      "kind": "business"
+    },
+    {
+      "file": "scripts/smoke-local-model-metadata.js",
+      "C": 197,
+      "B": 84,
+      "ratio": 70.11,
+      "kind": "test"
+    }
+  ],
+  "totals": {
+    "business": {
+      "C": 383,
+      "B": 159,
+      "ratio": 70.66420664206642,
+      "need": -12
+    },
+    "test": {
+      "C": 197,
+      "B": 84,
+      "ratio": 70.1067615658363,
+      "need": -1
+    }
+  }
+}

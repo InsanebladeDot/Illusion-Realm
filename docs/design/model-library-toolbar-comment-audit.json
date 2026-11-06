@@ -1,0 +1,96 @@
+{
+  "baseline": "C:\\Users\\18305\\AppData\\Local\\Temp\\ir-model-toolbar-baseline",
+  "rows": [
+    {
+      "file": "apps/next/src/view/toolBox/Tool/civitai/local-model-library.tsx",
+      "C": 54,
+      "B": 25,
+      "ratio": 68.35,
+      "kind": "business"
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/civitai/local-model-library.module.css",
+      "C": 50,
+      "B": 13,
+      "ratio": 79.37,
+      "kind": "business"
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/civitai/local-model-sort.tsx",
+      "C": 129,
+      "B": 55,
+      "ratio": 70.11,
+      "kind": "business"
+    },
+    {
+      "file": "apps/next/src/hooks/use-local-model-recovery.ts",
+      "C": 9,
+      "B": 1,
+      "ratio": 90,
+      "kind": "business"
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/civitai/local-model-metadata-details.tsx",
+      "C": 7,
+      "B": 2,
+      "ratio": 77.78,
+      "kind": "business"
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/civitai/local-model-recovery-batch.tsx",
+      "C": 13,
+      "B": 0,
+      "ratio": 100,
+      "kind": "business"
+    },
+    {
+      "file": "apps/electron/src/main/modules/models/scanner.js",
+      "C": 28,
+      "B": 7,
+      "ratio": 80,
+      "kind": "business"
+    },
+    {
+      "file": "packages/shared/src/types/localModel.ts",
+      "C": 9,
+      "B": 2,
+      "ratio": 81.82,
+      "kind": "business"
+    },
+    {
+      "file": "apps/next/src/i18n/locales/zh-CN/toolBox.ts",
+      "C": 6,
+      "B": 14,
+      "ratio": 30,
+      "kind": "business"
+    },
+    {
+      "file": "apps/next/src/i18n/locales/en/toolBox.ts",
+      "C": 6,
+      "B": 14,
+      "ratio": 30,
+      "kind": "business"
+    },
+    {
+      "file": "scripts/smoke-local-model-metadata.js",
+      "C": 127,
+      "B": 54,
+      "ratio": 70.17,
+      "kind": "test"
+    }
+  ],
+  "totals": {
+    "business": {
+      "C": 311,
+      "B": 133,
+      "ratio": 70.04504504504504,
+      "need": 0
+    },
+    "test": {
+      "C": 127,
+      "B": 54,
+      "ratio": 70.1657458563536,
+      "need": -1
+    }
+  }
+}

@@ -1,3 +1,15 @@
+/**
+ * secret：Civitai 凭据由其业务域的密钥模块提供。
+ * model-download-transfer：调用下载传输实现处理响应与文件流。
+ * ipc-channels：主进程和 preload 消费同一份 CommonJS 通道常量。
+ * civitai.handlers：Civitai 密钥相关 IPC 与密钥实现放在同一业务域。
+ * secret：模型下载授权与 Agent 服务商密钥是两个独立边界。
+ * model-download-transfer：传输代码继续复用专用网络会话，不另起未经限制的下载入口。
+ * ipc-channels：通道值必须与 shared 的类型表一致，路径调整不能重命名通道。
+ * civitai.handlers：输入校验和状态摘要仍由主进程封装，页面不直接访问凭据文件。
+ * secret：公开状态只能返回配置摘要，不能把原始凭据传到页面。
+ * model-download-transfer：错误应沿原任务状态返回，迁移不能把失败传输显示为完成。
+ */
 /** Verify isolated credential storage, masked IPC and per-hop download authorization without contacting Civitai. */
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
@@ -9,9 +21,9 @@ const smoke = createSmokeHarness({ name: "civitai-authorization", timeoutMs: 300
 smoke.installWatchdog(app);
 const root = fs.mkdtempSync(path.join(os.tmpdir(), "ir-civitai-auth-"));
 process.env.ILLUSION_CIVITAI_SECRET_DIR = root;
-const secret = require("../apps/electron/civitai-secret");
-const { fetchDownload } = require("../apps/electron/services/model-download-transfer");
-const { IPC_CHANNELS: C } = require("../apps/electron/ipcChannels");
+const secret = require("../apps/electron/src/main/modules/civitai/secret");
+const { fetchDownload } = require("../apps/electron/src/main/modules/models/downloads/model-download-transfer");
+const { IPC_CHANNELS: C } = require("../apps/electron/src/common/ipc-channels");
 const fixtureKey = "test-credential-only-1234";
 
 function verifyStorage() {
@@ -55,7 +67,7 @@ async function verifyIpc() {
   const handlers = new Map();
   const originalHandle = ipcMain.handle;
   ipcMain.handle = (channel, handler) => { handlers.set(channel, handler); };
-  try { require("../apps/electron/ipc-handlers/civitai.handlers").registerCivitaiHandlers(); }
+  try { require("../apps/electron/src/main/modules/civitai/civitai.handlers").registerCivitaiHandlers(); }
   finally { ipcMain.handle = originalHandle; }
   for (const args of [[], [""], [fixtureKey, "extra"], ["a\nb"]]) {
     const result = await handlers.get(C.CIVITAI_KEY_SET)({}, ...args);
