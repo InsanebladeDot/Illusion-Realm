@@ -16,7 +16,7 @@ const http = require("http");
 const os = require("os");
 const path = require("path");
 const { app, BrowserWindow } = require("electron");
-const { registerAllIpcHandlers } = require("../apps/electron/ipc-handlers");
+const { registerAllIpcHandlers } = require("../apps/electron/src/main/ipc/register.js");
 
 /**
  * 密钥那几条断言要真的写文件，因此**先把它重定向到临时目录**：
@@ -26,7 +26,7 @@ const { registerAllIpcHandlers } = require("../apps/electron/ipc-handlers");
 const workDir = fs.mkdtempSync(path.join(os.tmpdir(), "ipc-result-smoke-"));
 process.env.ILLUSION_AGENT_SECRET_DIR = path.join(workDir, "secret");
 
-const PRELOAD_PATH = path.join(__dirname, "..", "apps", "electron", "preload.js");
+const PRELOAD_PATH = path.join(__dirname, "../apps/electron/src/preload/index.js");
 const PROBE_HTML = `<!doctype html><html><head><meta charset="utf-8"><title>ipc-probe</title></head><body></body></html>`;
 
 /** preload 只在 http(s)/file 等常规页面执行，因此起一个最小 http 服务承载探测页 */

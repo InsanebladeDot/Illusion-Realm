@@ -4,6 +4,24 @@
  * 主进程启动即崩（表现为所有 IPC 都 "No handler registered"）。
  *
  * 运行：npx electron scripts/verify-electron-modules.js
+ * 目录分类后的门禁同时关注运行时依赖、协议、通道与打包覆盖。
+ * 从 src 审计运行源码，避免构建工具合法使用 devDependencies 被误报。
+ * 从 package.json 读取客户端入口，不把历史 main.js 位置当作规范。
+ * preload 是独立加载的第二入口，不能只依赖主入口的 require 可达图。
+ * 解析相对 require 时同时尝试 JS、JSON 和目录 index，遵循现有 CommonJS 用法。
+ * provider 快照属于 JSON 运行资源，同样要被 files 白名单覆盖。
+ * src 的递归白名单允许增加业务子目录，但不意味着依赖一定完整。
+ * 因而还需逐边验证模块是否存在，不能仅对目录名做包含判断。
+ * 协议模块加载成功只证明其依赖可用，实际静态页面另由启动冒烟验证。
+ * ComfyUI 的下载回退使用本机假服务，不会连接用户的生成服务器。
+ * generated-images 的导出检查用于保持文件管理的调用契约。
+ * models 的扫描入口检查不要求测试机器安装真实生成模型。
+ * storage 的路径检查仍验证同名避让，目录重组不允许改变导出行为。
+ * ffmpeg 的参数构建检查与工具可执行性检查分开，缺工具不等于构建器错误。
+ * animadex 的加载检查不发送角色搜索请求，不依赖上游站点在线。
+ * 各域注册后以同名 handler 拒绝重复注册的行为确认通道真实存在。
+ * Agent 凭据测试只在临时目录操作，保持真实用户配置不变。
+ * 所有断言继续参与最终退出码，目录迁移不将失败改成跳过。
  */
 const results = [];
 function check(name, ok, detail = "") {
@@ -50,7 +68,10 @@ function auditMainProcessRequires() {
       else if (entry.name.endsWith(".js")) files.push(full);
     }
   };
-  walk(electronDir);
+  // 仅审计随客户端分发的运行源码，避免递归进入 release 和依赖树。
+  // installer 是独立应用，构建脚本可以使用 devDependencies，不能混入运行时白名单。
+  // preload/common 也在 src 内，仍需受到相同的依赖约束。
+  walk(path.join(electronDir, "src"));
 
   const offenders = [];
   for (const file of files) {
@@ -95,7 +116,7 @@ function auditChannelConstants() {
   };
 
   const mainChannels = readConstants(
-    path.join(__dirname, "..", "apps", "electron", "ipcChannels.js"),
+    path.join(__dirname, "../apps/electron/src/common/ipc-channels.js"),
     /^\s{2}([A-Z0-9_]+):\s*"([^"]+)"/gm
   );
   const sharedChannels = readConstants(
@@ -130,7 +151,7 @@ auditChannelConstants();
  * Agent 默认配置两端一致。
  *
  * 与通道表同一套理由：主进程是手写 CommonJS、运行期解析不到 @illusion-realm/shared，
- * 所以 `apps/electron/agent/defaults.js` 只能保留同值副本 —— 副本漂移的症状是
+ * 所以 `apps/electron/src/main/modules/agent/defaults.js` 只能保留同值副本 —— 副本漂移的症状是
  * 「界面上写 8 步、实际跑了 12 步」这类没人会联想到的偏差，必须机检。
  */
 function auditAgentDefaults() {
@@ -138,7 +159,7 @@ function auditAgentDefaults() {
   const path = require("node:path");
 
   const mainDefaults = require(
-    path.join(__dirname, "..", "apps", "electron", "agent", "defaults.js")
+    path.join(__dirname, "../apps/electron/src/main/modules/agent/defaults.js")
   ).AGENT_DEFAULTS;
   const sharedSource = fs.readFileSync(
     path.join(__dirname, "..", "packages", "shared", "src", "data", "agent.ts"),
@@ -174,7 +195,7 @@ function auditAgentDefaults() {
 auditAgentDefaults();
 
 /**
- * Agent 密钥的存储契约（`apps/electron/agent/secret.js`）。
+ * Agent 密钥的存储契约（`apps/electron/src/main/modules/agent/secret.js`）。
  *
  * 为什么值得单独断言：这里的每一条都对应一个**只有打包 / 换机器才暴露**的坑 ——
  *   · 密钥只能进主进程：状态摘要里不许出现原值（泄露一次就是永久泄露）；
@@ -188,7 +209,7 @@ function auditAgentSecret() {
   const os = require("node:os");
   const path = require("node:path");
   const secret = require(
-    path.join(__dirname, "..", "apps", "electron", "agent", "secret.js")
+    path.join(__dirname, "../apps/electron/src/main/modules/agent/secret.js")
   );
 
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "agent-secret-test-"));
@@ -240,7 +261,7 @@ function auditAgentSecret() {
     );
     // 顺带钉住 runner 确实走的是这个模块，而不是自己再去读一遍环境变量
     const runner = require(
-      path.join(__dirname, "..", "apps", "electron", "agent", "runner.js")
+      path.join(__dirname, "../apps/electron/src/main/modules/agent/runner.js")
     );
     const payload = JSON.parse(runner.buildPayloadLine({ question: "hi" }));
     check(
@@ -351,8 +372,11 @@ function auditBuilderFileCoverage() {
     return null;
   };
 
-  // 从入口出发做可达性遍历：main.js 是 package.json 的入口，preload 由窗口加载
-  const entries = ["main.js", "preload.js"].map((name) => path.join(electronDir, name));
+  // 主入口从 package.json 读取，入口迁移后不允许门禁继续检查废弃位置。
+  // preload 由 BrowserWindow 的绝对路径加载，是 require 图之外的另一个根。
+  // 二者都必须进入遍历，否则打包时遗漏桥接层不会被模块图发现。
+  const packageMain = JSON.parse(fs.readFileSync(path.join(electronDir, "package.json"), "utf8")).main;
+  const entries = [packageMain, "src/preload/index.js"].map((name) => path.join(electronDir, name));
   const visited = new Set();
   const queue = [...entries];
   const unreachable = [];
@@ -405,7 +429,7 @@ function loadModule(label, modulePath) {
 }
 
 // ---- appProtocol ----
-const appProtocol = loadModule("appProtocol", "../apps/electron/appProtocol");
+const appProtocol = loadModule("appProtocol", "../apps/electron/src/main/core/protocol");
 if (appProtocol) {
   check("appProtocol 可加载", true);
   check(
@@ -415,7 +439,7 @@ if (appProtocol) {
 }
 
 // ---- comfyProxy ----
-const comfyProxy = loadModule("comfyProxy", "../apps/electron/comfyProxy");
+const comfyProxy = loadModule("comfyProxy", "../apps/electron/src/main/modules/comfy/proxy");
 if (comfyProxy) {
   check("comfyProxy 可加载", true);
   for (const name of ["generateWithComfy", "uploadImageToComfy", "listComfyModels"]) {
@@ -474,7 +498,7 @@ if (comfyProxy) {
 }
 
 // ---- generatedImages ----
-const generatedImages = loadModule("generatedImages", "../apps/electron/generatedImages");
+const generatedImages = loadModule("generatedImages", "../apps/electron/src/main/modules/images/generated-images");
 if (generatedImages) {
   check("generatedImages 可加载", true);
   for (const name of [
@@ -499,7 +523,7 @@ if (generatedImages) {
 }
 
 // ---- modelScanner ----
-const modelScanner = loadModule("modelScanner", "../apps/electron/modelScanner");
+const modelScanner = loadModule("modelScanner", "../apps/electron/src/main/modules/models/scanner");
 if (modelScanner) {
   check(
     "modelScanner.scanModelsInDirectory",
@@ -508,7 +532,7 @@ if (modelScanner) {
 }
 
 // ---- userData ----
-const userData = loadModule("userData", "../apps/electron/userData");
+const userData = loadModule("userData", "../apps/electron/src/main/storage/user-data");
 if (userData) {
   for (const name of ["readUserData", "writeUserData", "getDefaultUserDataPath"]) {
     check(`userData.${name}`, typeof userData[name] === "function");
@@ -516,7 +540,7 @@ if (userData) {
 }
 
 // ---- outputPaths ----
-const outputPaths = loadModule("outputPaths", "../apps/electron/outputPaths");
+const outputPaths = loadModule("outputPaths", "../apps/electron/src/main/storage/output-paths");
 if (outputPaths) {
   for (const name of ["getDefaultOutputPath", "resolveOutputPath", "ensureDirectory", "ensureUniqueFilePath"]) {
     check(`outputPaths.${name}`, typeof outputPaths[name] === "function");
@@ -541,7 +565,7 @@ if (outputPaths?.ensureUniqueFilePath) {
 }
 
 // ---- ffmpeg 模块 ----
-const ffmpegIpc = loadModule("ffmpeg/index", "../apps/electron/ffmpeg");
+const ffmpegIpc = loadModule("ffmpeg/index", "../apps/electron/src/main/modules/ffmpeg/index.js");
 if (ffmpegIpc) {
   check(
     "ffmpeg.registerVideoToolIpc",
@@ -549,12 +573,12 @@ if (ffmpegIpc) {
   );
 }
 
-const locate = loadModule("ffmpeg/locate", "../apps/electron/ffmpeg/locate");
+const locate = loadModule("ffmpeg/locate", "../apps/electron/src/main/modules/ffmpeg/locate");
 if (locate) {
   check("locate.resolveTools", typeof locate.resolveTools === "function");
 }
 
-const jobs = loadModule("ffmpeg/jobs", "../apps/electron/ffmpeg/jobs");
+const jobs = loadModule("ffmpeg/jobs", "../apps/electron/src/main/modules/ffmpeg/jobs");
 if (jobs) {
   check("jobs.buildEditArgs", typeof jobs.buildEditArgs === "function");
   check("jobs.buildGifArgs", typeof jobs.buildGifArgs === "function");
@@ -578,13 +602,13 @@ if (jobs) {
   );
 }
 
-const probe = loadModule("ffmpeg/probe", "../apps/electron/ffmpeg/probe");
+const probe = loadModule("ffmpeg/probe", "../apps/electron/src/main/modules/ffmpeg/probe");
 if (probe) {
   check("probe.probeVideo", typeof probe.probeVideo === "function");
 }
 
 // ---- 角色库（animadex）主进程模块 ----
-const animadex = loadModule("animadex", "../apps/electron/animadex");
+const animadex = loadModule("animadex", "../apps/electron/src/main/modules/animadex/index");
 if (animadex) {
   check("animadex.registerAnimadexIpc", typeof animadex.registerAnimadexIpc === "function");
   check("animadex.searchCharacters", typeof animadex.searchCharacters === "function");
@@ -596,7 +620,7 @@ if (animadex) {
   check(
     "animadex 不依赖 axios（只用内置 fetch）",
     !require("node:fs")
-      .readFileSync(require("node:path").join(__dirname, "..", "apps", "electron", "animadex.js"), "utf8")
+      .readFileSync(require("node:path").join(__dirname, "../apps/electron/src/main/modules/animadex/index.js"), "utf8")
       .includes('require("axios")')
   );
 
@@ -630,14 +654,14 @@ if (animadex) {
 
 // ---- 真正注册 IPC，并验证 handler 存在 ----
 const { ipcMain } = require("electron");
-const { registerComfyHandlers } = require("../apps/electron/ipc-handlers/comfy.handlers");
+const { registerComfyHandlers } = require("../apps/electron/src/main/modules/comfy/comfy.handlers");
 try { registerComfyHandlers(); check("registerComfyHandlers() registers generation and cancellation", true); }
 catch (error) { check("registerComfyHandlers() registers generation and cancellation", false, error.message); }
-const { registerModelDownloadHandlers } = require("../apps/electron/ipc-handlers/model-download.handlers");
+const { registerModelDownloadHandlers } = require("../apps/electron/src/main/modules/models/downloads/model-download.handlers");
 try { registerModelDownloadHandlers(); check("registerModelDownloadHandlers() 调用不抛错", true); }
 catch (error) { check("registerModelDownloadHandlers() 调用不抛错", false, error.message); }
-const { registerCivitaiHandlers } = require("../apps/electron/ipc-handlers/civitai.handlers");
-const { registerPromptAssistantHandlers } = require("../apps/electron/ipc-handlers/prompt-assistant.handlers");
+const { registerCivitaiHandlers } = require("../apps/electron/src/main/modules/civitai/civitai.handlers");
+const { registerPromptAssistantHandlers } = require("../apps/electron/src/main/modules/prompt-assistant/prompt-assistant.handlers");
 try { registerPromptAssistantHandlers(); check("registerPromptAssistantHandlers() registers without throwing", true); }
 catch (error) { check("registerPromptAssistantHandlers() registers without throwing", false, error.message); }
 try { registerCivitaiHandlers(); check("registerCivitaiHandlers() 调用不抛错", true); }
@@ -649,7 +673,7 @@ catch (error) { check("registerCivitaiHandlers() 调用不抛错", false, error.
  * 没注册的通道表现为渲染进程 `invoke` **永远挂着**（不报错、不超时），最难查。
  */
 {
-  const { registerAgentHandlers } = require("../apps/electron/ipc-handlers/agent.handlers.js");
+  const { registerAgentHandlers } = require("../apps/electron/src/main/modules/agent/agent.handlers.js");
   try {
     registerAgentHandlers();
     check("registerAgentHandlers() 调用不抛错", true);
@@ -700,6 +724,10 @@ if (animadex?.registerAnimadexIpc) {
     "agent:secretStatus",
     "agent:secretSet",
     "agent:secretClear",
+    // Agent 目录为新增只读 handler，注册验证不调用远端站点。
+    // 与实际 renderer 使用的 preload 通道同名，遗漏注册应当让 verify 失败。
+    // 密钥隔离和价格排序由专项契约测试验证，不在此冒充真实推理。
+    "agent:catalog",
   ];
 
   for (const channel of channels) {

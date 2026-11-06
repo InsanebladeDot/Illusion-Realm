@@ -19,9 +19,9 @@ const path = require("path");
 const { spawnSync } = require("child_process");
 const { createSmokeHarness } = require("./lib/smoke-harness");
 const { app, BrowserWindow, dialog, ipcMain: realIpcMain } = require("electron");
-const { registerAppProtocol } = require("../apps/electron/appProtocol");
-const { registerVideoToolIpc } = require("../apps/electron/ffmpeg");
-const { resolveTools } = require("../apps/electron/ffmpeg/locate");
+const { registerAppProtocol } = require("../apps/electron/src/main/core/protocol");
+const { registerVideoToolIpc } = require("../apps/electron/src/main/modules/ffmpeg/index.js");
+const { resolveTools } = require("../apps/electron/src/main/modules/ffmpeg/locate");
 
 /**
  * 本脚本注册的 IPC stub 统一包装成真实的 IpcResult 形状
@@ -188,7 +188,7 @@ app.whenReady().then(async () => {
       nodeIntegration: false,
       // 与真实应用 main.js 一致：preload 是手写 CommonJS，需 Node 环境才能 require 本地模块
       sandbox: false,
-      preload: path.join(__dirname, "..", "apps", "electron", "preload.js"),
+      preload: path.join(__dirname, "../apps/electron/src/preload/index.js"),
     },
   });
 

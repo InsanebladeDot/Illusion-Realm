@@ -19,7 +19,7 @@
  * smoke-rules-allow: getComputedStyle（仅静态样式断言，不涉及过渡中间态）
  */
 const { app, BrowserWindow } = require("electron");
-const { registerAppProtocol } = require("../apps/electron/appProtocol");
+const { registerAppProtocol } = require("../apps/electron/src/main/core/protocol");
 
 registerAppProtocol();
 

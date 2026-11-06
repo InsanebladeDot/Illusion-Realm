@@ -20,7 +20,7 @@ const FFPROBE =
   process.env.FFPROBE_PATH ||
   path.resolve(__dirname, "../apps/electron/bin/ffmpeg/ffprobe.exe");
 
-const { buildEditArgs } = require("../apps/electron/ffmpeg/jobs.js");
+const { buildEditArgs } = require("../apps/electron/src/main/modules/ffmpeg/jobs.js");
 
 const results = [];
 function check(name, ok, detail = "") {

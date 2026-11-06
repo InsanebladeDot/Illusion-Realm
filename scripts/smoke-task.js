@@ -9,7 +9,7 @@
  * 构建新鲜度）在此没有落点。若将来它开始断言渲染时序或媒体查询，重新评估并接入。
  */
 const { app, BrowserWindow } = require("electron");
-const { registerAppProtocol } = require("../apps/electron/appProtocol");
+const { registerAppProtocol } = require("../apps/electron/src/main/core/protocol");
 
 registerAppProtocol();
 

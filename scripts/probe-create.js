@@ -1,5 +1,10 @@
+/**
+ * protocol：使用客户端的 app:// 与 localfile:// 协议实现。
+ * protocol：Next 静态资源含绝对 URL，必须保持应用同源加载。
+ * protocol：协议定位失败属于资源路径问题，应先于界面样式判断排查。
+ */
 const { app, BrowserWindow } = require("electron");
-const { registerAppProtocol } = require("../apps/electron/appProtocol");
+const { registerAppProtocol } = require("../apps/electron/src/main/core/protocol");
 registerAppProtocol();
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 app.whenReady().then(async () => {

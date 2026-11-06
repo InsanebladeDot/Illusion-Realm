@@ -1,3 +1,17 @@
+/**
+ * account-client：账户网络适配仍在主进程执行。
+ * result：沿用统一 IPC 结果和参数校验入口。
+ * ipc-channels：主进程和 preload 消费同一份 CommonJS 通道常量。
+ * request：收藏与云端图片请求复用账户域的认证能力。
+ * account-client：刷新令牌和身份切换竞态由同一账户模块处理。
+ * result：注册时先移除同名 handler，返回值仍为 IpcResult。
+ * ipc-channels：通道值必须与 shared 的类型表一致，路径调整不能重命名通道。
+ * request：云端文件请求只能通过已列明的操作映射，不能开放任意账户接口。
+ * account-client：调用方接收业务结果而非访问令牌，迁移不改变认证边界。
+ * result：业务错误不跨进程抛出，目录迁移不能改变失败形状。
+ * ipc-channels：避免新旧通道混用造成 invoke 找不到 handler。
+ * request：账户会话仍是单一来源，避免副本在切换用户后继续使用旧身份。
+ */
 /** 云端图片契约回归：只用内存会话和模拟 HTTP，不读取真实凭据，不上传任何云端文件。 */
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
@@ -24,12 +38,12 @@ function fixture() {
   let session = { ...fixtureSession }, network = async () => new Response("{}", { status: 500 });
   const calls = [];
   const store = { readSession: () => session, writeSession: value => { session = value; }, clearSession: () => { session = null; } };
-  const client = load("apps/electron/account-client.js", { "./account-session": store, crypto }, { fetch: async (url, options) => { calls.push({ url, options }); return network(url, options); } });
+  const client = load("apps/electron/src/main/modules/account/account-client.js", { "./account-session": store, crypto }, { fetch: async (url, options) => { calls.push({ url, options }); return network(url, options); } });
   const handles = new Map();
-  const ipc = load("apps/electron/ipcHandlers.js", { electron: { ipcMain: { removeHandler: key => handles.delete(key), handle: (key, fn) => handles.set(key, fn) } } });
-  const { IPC_CHANNELS: channels } = require("../apps/electron/ipcChannels");
-  const library = load("apps/electron/cloud-library-request.js", { "./account-client": client, "./account-session": store });
-  load("apps/electron/ipc-handlers/cloud-images.handlers.js", { "../ipcChannels": { IPC_CHANNELS: channels }, "../ipcHandlers": ipc, "../account-client": client, "../account-session": store, "../cloud-library-request": library }).registerCloudImageHandlers();
+  const ipc = load("apps/electron/src/main/ipc/result.js", { electron: { ipcMain: { removeHandler: key => handles.delete(key), handle: (key, fn) => handles.set(key, fn) } } });
+  const { IPC_CHANNELS: channels } = require("../apps/electron/src/common/ipc-channels");
+  const library = load("apps/electron/src/main/modules/cloud-library/request.js", { "../account/account-client": client, "../account/account-session": store });
+  load("apps/electron/src/main/modules/cloud-library/cloud-images.handlers.js", { "../../../common/ipc-channels": { IPC_CHANNELS: channels }, "../../ipc/result": ipc, "../account/account-client": client, "../account/account-session": store, "./request": library }).registerCloudImageHandlers();
   return { calls, client, store, channels, setNetwork: fn => { network = fn; }, invoke: (key, ...args) => handles.get(key)({}, ...args) };
 }
 function json(data, status = 200, headers = {}) { return new Response(JSON.stringify({ success: status === 200, code: status === 200 ? "OK" : "UNAUTHENTICATED", data }), { status, headers }); }
@@ -71,9 +85,22 @@ async function verifyMultipart() {
 }
 async function verifyReadsAndCooldown() {
   const f = fixture(); f.store.clearSession();
+  // 游客即便读取 public 资源，也必须在主进程内返回 401，不能发送匿名 HTTP。
+  // 大 ID 仍通过参数校验，证明拒绝原因来自账户权限而不是 ID 格式。
+  // 调用计数必须为零，不能把后端实际返回 401 冒充成本地拦截。
+  // 正向恢复正式账户的对照紧随其后，避免把所有读取都禁用也能通过。
+  const denied = await f.invoke(f.channels.CLOUD_IMAGE_GET, "18446744073709551615");
+  check("guest public lookup is denied before HTTP", () => { assert.equal(denied.data.status, 401); assert.equal(f.calls.length, 0); });
+  // 恢复正式账户后继续测试原有退避头、字符串 ID 与游标编码契约。
+  // 不删除旧用例，以免收紧游客权限时误伤已登录用户的公开图库读取。
+  // 此会话仅在内存中保存，测试不会读取或写入真实账户凭据。
+  f.store.writeSession({ ...fixtureSession });
   f.setNetwork(async () => json(null, 503, { "Retry-After": "12", "X-Request-Id": "fixture-request" }));
   const result = await f.invoke(f.channels.CLOUD_IMAGE_GET, "18446744073709551615");
-  check("anonymous public lookup preserves large string ID and Retry-After", () => { assert.equal(result.data.retryAfter, "12"); assert.equal(result.data.requestId, "fixture-request"); assert.equal(f.calls[0].options.headers.Authorization, undefined); assert(f.calls[0].url.endsWith("18446744073709551615")); });
+  // 返回 503 时保留服务器的重试提示，不能被新的权限检查统一吞成 401。
+  // 请求必须携带正式账户的 access token，不能重新回退为匿名 public 请求。
+  // 原始大 ID 作为字符串进入 URL，不允许被浮点数转换截断。
+  check("signed-in public lookup preserves large string ID and Retry-After", () => { assert.equal(result.data.retryAfter, "12"); assert.equal(result.data.requestId, "fixture-request"); assert.equal(f.calls[0].options.headers.Authorization, "Bearer fixture-access"); assert(f.calls[0].url.endsWith("18446744073709551615")); });
   await f.invoke(f.channels.CLOUD_COLLECTION_ITEMS, { id: "8", cursor: "8:2:-4:9&size=100" });
   check("collection pagination encodes cursor and keeps fixed page size", () => { const query = new URL(f.calls.at(-1).url).searchParams; assert.equal(query.get("size"), "24"); assert.equal(query.get("cursor"), "8:2:-4:9&size=100"); });
   const invalid = await f.invoke(f.channels.CLOUD_IMAGE_GET, "../account/me");

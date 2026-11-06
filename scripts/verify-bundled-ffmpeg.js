@@ -1,3 +1,11 @@
+/**
+ * jobs：复用媒体任务的参数构建和执行实现。
+ * probe：通过实际 FFprobe 封装读取媒体信息。
+ * locate：复用媒体工具定位器寻找 FFmpeg 与 FFprobe。
+ * jobs：剪切、拼接及 GIF 保留同一组输入输出约束。
+ * probe：时长和流信息用于校验输出，不能以界面进度代替成品验证。
+ * locate：打包态优先使用分发资源，不能依赖开发机上碰巧存在的目录。
+ */
 /** Force the production locator to see only bundled files, then exercise real video/GIF jobs and release guard failures. */
 const fs = require("node:fs");
 const os = require("node:os");
@@ -8,12 +16,12 @@ const { createRequire } = require("node:module");
 const { execFileSync } = require("node:child_process");
 const { app } = require("electron");
 const { validateBundle } = require("../apps/electron/scripts/check-ffmpeg-bundle.cjs");
-const { startEditJob } = require("../apps/electron/ffmpeg/jobs");
-const { probeVideo } = require("../apps/electron/ffmpeg/probe");
+const { startEditJob } = require("../apps/electron/src/main/modules/ffmpeg/jobs");
+const { probeVideo } = require("../apps/electron/src/main/modules/ffmpeg/probe");
 const smoke = require("./lib/smoke-harness").createSmokeHarness({ name: "bundled-ffmpeg", timeoutMs: 60000 });
 smoke.installWatchdog(app);
 const work = fs.mkdtempSync(path.join(os.tmpdir(), "ir-bundled-ffmpeg-"));
-const locatorPath = path.resolve(__dirname, "../apps/electron/ffmpeg/locate.js");
+const locatorPath = path.resolve(__dirname, "../apps/electron/src/main/modules/ffmpeg/locate.js");
 const bundle = path.resolve(__dirname, "../apps/electron/bin/ffmpeg");
 const resources = process.argv[2] ? path.resolve(process.argv[2]) : null;
 function isolatedLocator(packaged, resourceRoot, visibleBundle, locatorFile = locatorPath) {

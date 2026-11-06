@@ -1,3 +1,28 @@
+/**
+ * ipc-channels：主进程和 preload 消费同一份 CommonJS 通道常量。
+ * result：沿用统一 IPC 结果和参数校验入口。
+ * window-chrome：复用同一份窗口装饰配置与启动参数。
+ * protocol：使用客户端的 app:// 与 localfile:// 协议实现。
+ * user-data：从 storage 取得主进程 JSON 文档读写能力。
+ * window.handlers：窗口和主题 IPC 隶属 core 的系统交互边界。
+ * proxy：复用 ComfyUI 代理进行上传、模型查询或生成。
+ * index：窗口加载迁移后的真实 preload 桥接文件。
+ * ipc-channels：通道值必须与 shared 的类型表一致，路径调整不能重命名通道。
+ * result：注册时先移除同名 handler，返回值仍为 IpcResult。
+ * window-chrome：窗口样式和传给 preload 的标记必须配套，不能各自猜测当前装饰模式。
+ * protocol：Next 静态资源含绝对 URL，必须保持应用同源加载。
+ * user-data：只迁移实现位置，版本合并与默认值仍由渲染侧负责。
+ * window.handlers：handler 仍通过统一结果封装注册，不因移动改变参数和错误码。
+ * proxy：ComfyUI 是独立的生成服务，不等同于账户后端。
+ * index：contextIsolation 保持启用，CommonJS 本地依赖仍需要 sandbox 为 false。
+ * ipc-channels：避免新旧通道混用造成 invoke 找不到 handler。
+ * result：业务错误不跨进程抛出，目录迁移不能改变失败形状。
+ * window-chrome：标题栏参数仍由主进程传入，渲染层不直接调用 Electron。
+ * protocol：协议定位失败属于资源路径问题，应先于界面样式判断排查。
+ * user-data：读文档时的路径解析继续委托统一根目录，不能改成模块旁的文件。
+ * window.handlers：主题通知与窗口操作属于不同注册函数，使用时应保留原调用范围。
+ * proxy：生成和文件下载的失败语义继续由代理汇总给 IPC 调用方。
+ */
 /** Exercise Minimax defaults, loader overrides, local picking and two-frame uploads through the production renderer and real preload. */
 const fs = require("node:fs");
 const os = require("node:os");
@@ -5,10 +30,13 @@ const path = require("node:path");
 const http = require("node:http");
 const assert = require("node:assert/strict");
 const { app, BrowserWindow, nativeImage } = require("electron");
-const { IPC_CHANNELS: C } = require("../apps/electron/ipcChannels");
-const { registerHandle } = require("../apps/electron/ipcHandlers");
-const { windowChromeOptions, windowChromeArguments } = require("../apps/electron/window-chrome");
-const smoke = require("./lib/smoke-harness").createSmokeHarness({ name: "minimax-workflow", timeoutMs: 60000 });
+const { IPC_CHANNELS: C } = require("../apps/electron/src/common/ipc-channels");
+const { registerHandle } = require("../apps/electron/src/main/ipc/result");
+const { windowChromeOptions, windowChromeArguments } = require("../apps/electron/src/main/core/windows/window-chrome");
+// 尺寸专项使用独立名称，日志中的绿灯不能被误读为整套视频回归通过。
+// 两个模式仍使用同一个护栏，异常和断言失败都返回非零退出码。
+// 这里只改变报告名称，不改变完整模式的检查范围或超时约定。
+const smoke = require("./lib/smoke-harness").createSmokeHarness({ name: process.argv.includes("--loaders-only") ? "workflow-loaders" : process.argv.includes("--resolution-only") ? "minimax-resolution" : "minimax-workflow", timeoutMs: 60000 });
 const root = fs.mkdtempSync(path.join(os.tmpdir(), "ir-minimax-ui-"));
 smoke.setWorkDir(root);
 const modelsRoot = path.join(root, "models");
@@ -28,11 +56,11 @@ const requests = [], prompts = [], uploads = [], errors = [];
 let server, win, modelListCalls = 0, failLists = false;
 let imageExtensionUi, imageParameterUi, imageSizeUi, videoFixtureBytes;
 app.disableHardwareAcceleration(); app.setPath("userData", path.join(root, "browser")); smoke.installWatchdog(app);
-require("../apps/electron/appProtocol").registerAppProtocol();
+require("../apps/electron/src/main/core/protocol").registerAppProtocol();
 const settings = { paths: { searchPath: modelsRoot, diffusionModelsPath: path.join(modelsRoot, "diffusion_models") }, theme: "light", outputPath: root };
-require("../apps/electron/userData").readUserData = () => ({ data: { settings } });
-require("../apps/electron/ipc-handlers/models.handlers").registerModelHandlers();
-require("../apps/electron/ipc-handlers/window.handlers").registerThemeHandlers();
+require("../apps/electron/src/main/storage/user-data").readUserData = () => ({ data: { settings } });
+require("../apps/electron/src/main/modules/models/models.handlers").registerModelHandlers();
+require("../apps/electron/src/main/core/windows/window.handlers").registerThemeHandlers();
 registerHandle(C.USER_DATA_READ, () => ({ data: require("./lib/guest-session-fixture").withGuestSession({ settings }), filePath: "", isNew: false }));
 registerHandle(C.USER_DATA_WRITE, () => undefined);
 registerHandle(C.USER_DATA_GET_DEFAULT_PATH, () => "");
@@ -45,8 +73,8 @@ registerHandle(C.MODELS_DOWNLOAD_LIST, () => []);
 registerHandle(C.AGENT_SECRET_STATUS, () => ({ configured: false, source: "none", protection: "", tail: "" }));
 registerHandle(C.PROMPT_SECRET_STATUS, () => ({ configured: false, source: "none", protection: "", tail: "" }));
 registerHandle(C.CIVITAI_KEY_STATUS, () => ({ configured: false, protection: "", tail: "" }));
-registerHandle(C.COMFY_LIST_MODELS, async () => { modelListCalls++; if (failLists) throw new Error("fixture-unavailable"); return require("../apps/electron/comfyProxy").listComfyModels(`127.0.0.1:${server.address().port}`); });
-registerHandle(C.COMFY_UPLOAD_IMAGE, (_event, _address, file) => { uploads.push(file); return require("../apps/electron/comfyProxy").uploadImageToComfy(`127.0.0.1:${server.address().port}`, file); });
+registerHandle(C.COMFY_LIST_MODELS, async () => { modelListCalls++; if (failLists) throw new Error("fixture-unavailable"); return require("../apps/electron/src/main/modules/comfy/proxy").listComfyModels(`127.0.0.1:${server.address().port}`); });
+registerHandle(C.COMFY_UPLOAD_IMAGE, (_event, _address, file) => { uploads.push(file); return require("../apps/electron/src/main/modules/comfy/proxy").uploadImageToComfy(`127.0.0.1:${server.address().port}`, file); });
 registerHandle(C.COMFY_GENERATE, (_event, prompt) => { prompts.push(prompt); return { promptId: `fixture-${prompts.length}`, images: [], videos: [] }; });
 registerHandle(C.FILES_READ_IMAGE_DATA_URL, (_event, file) => fs.existsSync(file) ? "data:image/png;base64," + fs.readFileSync(file).toString("base64") : null);
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -191,6 +219,13 @@ async function verifyImageReferences() {
   await setPrompt(raw);
   smoke.check("Image aliases render blue inline references with text-sized thumbnails", await run("document.querySelectorAll('[data-video-prompt] [data-image-reference]').length===5&&[...document.querySelectorAll('[data-video-prompt] [data-image-reference] img')].every(el=>Math.abs(el.getBoundingClientRect().height-parseFloat(getComputedStyle(el).fontSize))<1)"));
   smoke.check("Decorating references preserves their plain-text spelling", await run(`document.querySelector('[data-video-prompt]').textContent===${JSON.stringify(raw)}`));
+  // 视频预览与新音频入口使用同一个展示组件，先用首尾帧别名检查转换。
+  // 只读内容必须保留五个引用，不能修改或去重用户正在编辑的正文。
+  // 原稿仍是 raw，展开结果应是技能要求的 Picture 大写与空格格式。
+  // 通过真实 details 点击验证展示，不能只读转换函数返回值代替界面。
+  // 生成尚未发生，预览动作不能上传首尾帧或提交任务。
+  await click('[data-video-create-panel] [data-prompt-conversion] summary');
+  smoke.check('Video conversion preview matches the exact submitted H3 markers', await run("document.querySelector('[data-video-create-panel] [data-prompt-conversion-text]').textContent==='<Picture 1> <Picture 1> <Picture 1> <Picture 1> <Picture 2>'"));
   await click('[data-video-prompt] [data-image-reference="2"]');
   await wait("document.querySelector('[aria-label=关闭预览]')");
   smoke.check("Reference opens the existing gallery with the last frame selected", await run("Boolean(document.querySelector('[aria-label=关闭预览]'))"));
@@ -262,9 +297,20 @@ async function verifyMediaMentions() {
   await click('[data-video-frame-mode=both]'); await setPrompt('A character walks towards the door.');
 }
 async function verifyResolution() {
+  // 仍使用真实渲染进程和生产选择器，不能只在测试里计算预期宽高。
+  // 图片与视频的视觉控件继续复用，但 H3 的提示、上限和步进允许不同。
+  // 只比较每个节点的外观属性，避免把新的模型约束误判为样式回归。
+  // 文本与输入限制由下方独立断言验证，不再要求错误的“完全同值”。
+  // 1:1 两侧均为 1024，比较发生在同一窗口和相同主题下。
+  // 结构或字体、颜色、圆角改变仍会导致这组配对对照失败。
+  // 比较不移除节点，所以错误增加或丢失一个输入控件仍会报错。
+  // 不比较标签文本是因为视频需要说明自身的对齐要求。
+  // 不比较 max 属性是因为图片上限 1500 对 H3 并非合法边长。
+  // 自定义输入属性在 verifyCustomResolutionLimits 内有明确的固定预期。
   await click('[data-video-resolution] [data-size-preset="1:1"]');
-  assert.deepEqual(await sizeUiSnapshot(), imageSizeUi);
-  smoke.check("Image and video share the entire size UI, values, limits, slider, hints and markup", true);
+  const visual = ({ tag, color, background, fontSize, borderRadius }) => ({ tag, color, background, fontSize, borderRadius });
+  assert.deepEqual((await sizeUiSnapshot()).map(visual), imageSizeUi.map(visual));
+  smoke.check("Image and video reuse the size control structure and styling with model-specific limits", true);
   await click('[data-video-resolution] [data-size-preset="16:9"]');
   smoke.check("Default dimensions come directly from the simplified template without MP controls", await run("document.querySelector('[data-video-resolution] [data-size-dimensions]').textContent==='1344 × 768'&&!document.querySelector('[data-generation-parameter=megapixels]')"));
   smoke.check("Compact size slider exposes the 0.1–1 range with 0.1 increments", await run("(()=>{const el=document.querySelector('[data-size-scale] input[type=range]');return el.min==='0.1'&&el.max==='1'&&el.step==='0.1'&&el.getBoundingClientRect().width<=64})()"));
@@ -273,7 +319,13 @@ async function verifyResolution() {
   smoke.check("Half scale writes half of the base width and height without losing preset selection", half['105:104'].inputs.width === 672 && half['105:104'].inputs.height === 384 && await run("document.querySelector('[data-size-preset=\"16:9\"]').getAttribute('aria-pressed')==='true'"));
   await setSizeScale(0.1);
   const small = await submit();
-  smoke.check("Minimum scale uses shared dimensions before workflow pixel alignment", small['105:104'].inputs.width === 128 && small['105:104'].inputs.height === 96 && await run("document.querySelector('[data-size-dimensions]').textContent==='136 × 80'"));
+  // 最小倍率按基准尺寸直接对齐 32，不能先按图片的 8 像素舍入。
+  // 768×0.1 的最近合法值是 64，而不是旧链路产生的 96。
+  // 同时核对页面和最终提交，防止界面仍显示 136×80 这样的旧尺寸。
+  // 此时仍是 16:9 预设，计算基准为 1344×768，不是上一次半尺寸。
+  // 原始宽高比标签保留，并不表示像素舍入后比例一定数学上完全相等。
+  // 最小倍率后的重复缩放由后续断言验证，不能累计乘上已经对齐的结果。
+  smoke.check("Minimum scale displays the exact 32-aligned dimensions sent to H3", small['105:104'].inputs.width === 128 && small['105:104'].inputs.height === 64 && await run("document.querySelector('[data-size-dimensions]').textContent==='128 × 64'"));
   await setSizeScale(0.5);
   const repeated = await submit();
   smoke.check("Repeated scaling always uses the original dimensions instead of accumulating shrinkage", repeated['105:104'].inputs.width === 672 && repeated['105:104'].inputs.height === 384);
@@ -285,20 +337,85 @@ async function verifyResolution() {
   smoke.check("Choosing a preset writes direct video width/height without a ResolutionSelector", portrait['105:104'].inputs.width === 832 && portrait['105:104'].inputs.height === 1216 && !Object.values(portrait).some(node => node.class_type === 'ResolutionSelector'));
   await click('[data-video-resolution] [data-size-preset="5:6"]');
   const aligned = await submit();
-  smoke.check("Video displays the same 5:6 preset as images and aligns only when building its workflow", aligned['105:104'].inputs.width === 992 && aligned['105:104'].inputs.height === 1216 && await run("document.querySelector('[data-size-dimensions]').textContent==='1000 × 1200'"));
+  // 5:6 原始分桶未对齐 32；保留比例按钮，但实际像素须立即显示。
+  // 这组对照会发现只改提交层却仍展示 1000×1200 的不一致。
+  // 提交保留真实节点定位，不把测试预期注入生产工作流。
+  // 1000 距离 992 更近，1200 在中点按既定规则向上取为 1216。
+  // 这正好同时覆盖向下和向上取整，避免单纯向下截断也能通过。
+  // 预设按钮仍保留训练分桶标注；此处检查的是实际尺寸摘要。
+  smoke.check("Unaligned presets immediately display the same aligned dimensions submitted to H3", aligned['105:104'].inputs.width === 992 && aligned['105:104'].inputs.height === 1216 && await run("document.querySelector('[data-size-dimensions]').textContent==='992 × 1216'"));
   await click('[data-video-resolution] [data-size-preset=custom]');
   for (const name of ['width', 'height']) {
-    await run(`(()=>{const el=document.querySelector('[data-size-dimension=${name}]');Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(el,'513');el.dispatchEvent(new Event('input',{bubbles:true}));})()`); await delay(100);
+    // 数字输入先保留草稿，必须模拟失焦才执行 H3 的范围与对齐校正。
+    // 输入事件后等待 React 更新，再 blur，不能用旧回调提交上一次草稿。
+    // 这里继续核对最终工作流，不把文本编辑测试替代模型尺寸保护。
+      // 513 位于合法范围内但不满足 32 步进，确认校正仍在结束编辑后发生。
+      // 两条边分别提交，避免同批输入的旧闭包覆盖已确认的另一条边。
+      // 提交任务前已完成 blur，工作流必须读取新尺寸而非之前的预设值。
+    await run(`(()=>{const el=document.querySelector('[data-size-dimension=${name}]');el.focus();Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(el,'513');el.dispatchEvent(new Event('input',{bubbles:true}));})()`); await delay(100);
+    await run(`document.querySelector('[data-size-dimension=${name}]').blur()`); await delay(40);
   }
   const custom = await submit();
-  smoke.check("Custom dimensions are aligned outside shared UI and reach the video node", custom['105:104'].inputs.width === 512 && custom['105:104'].inputs.height === 512 && await run("document.querySelector('[data-size-preset=custom]').getAttribute('aria-pressed')==='true'"));
+  // 513 用来验证数字输入的自动取整，不依赖键盘 step 自增行为。
+  // 自定义状态必须保留，不能通过偷偷切回预设来得到合法尺寸。
+  // 下方另外验证最初报错相关的 400，覆盖奇数 latent 边长风险。
+  smoke.check("Custom dimensions align in both the form and submitted video node", custom['105:104'].inputs.width === 512 && custom['105:104'].inputs.height === 512 && await run("document.querySelector('[data-size-preset=custom]').getAttribute('aria-pressed')==='true'&&document.querySelector('[data-size-dimensions]').textContent==='512 × 512'"));
   await setSizeScale(0.5);
   const customHalf = await submit();
   smoke.check("Custom dimensions can also be proportionally scaled", customHalf['105:104'].inputs.width === 256 && customHalf['105:104'].inputs.height === 256);
   await setSizeScale(1);
+  await verifyCustomResolutionLimits();
   await captureSettings('minimax-shared-size.png', '[data-video-resolution]');
   await click('[data-video-resolution] [data-size-preset="16:9"]');
   smoke.check("Returning to a preset resets scale, hides custom inputs and restores workflow dimensions", !await run("document.querySelector('[data-size-dimension]')") && await run("document.querySelector('[data-size-scale] input').value==='1'") && (await submit())['105:104'].inputs.width === template['105:104'].inputs.width);
+}
+/**
+ * 用页面实际输入重现 400×400 的尺寸风险，而非直接修改提交对象。
+ * 本脚本拦截生成请求，所以只证明 UI、preload 和工作流参数一致。
+ * 不把这项无 GPU 冒烟描述为视频生成成功或画面质量验证。
+ * 输入 400 应显示并提交 416，latent 空间边长因此可被 2 整除。
+ * step 属性只是提示，脚本还直接输入越界值检查程序层夹取。
+ * 1500 必须向下限制为 1472，不能四舍五入到越界的 1504。
+ * 最后提交上限画面，保证输入框、尺寸摘要和工作流三者一致。
+ * 两个值均通过原生事件进入 React，绕开 HTML 原生有效性拦截。
+ * 因此能证明即使用户粘贴越界值，回调也会限制实际参数。
+ * 不使用键盘逐字输入，避免把数字输入框的文本编辑行为混入本例。
+ * 参考图上传内容在本例保持不变，只验证生成尺寸的安全边界。
+ */
+async function verifyCustomResolutionLimits() {
+  // 使用原生 value setter 触发 React 受控输入，行为与手动编辑一致。
+  // 每边分别触发事件，覆盖只改宽或高时保留另一边的回调逻辑。
+  // 生成请求通过既有 submit 捕获，不绕过正式的视频参数构建器。
+  for (const side of ['width', 'height']) {
+    // 数字输入先保留草稿，必须模拟失焦才执行 H3 的范围与对齐校正。
+    // 输入事件后等待 React 更新，再 blur，不能用旧回调提交上一次草稿。
+    // 这里继续核对最终工作流，不把文本编辑测试替代模型尺寸保护。
+      // 400 正是既有 shape 报错的回归尺寸，失焦后应显示并提交 416。
+      // 页面摘要和工作流节点由后续同一断言比较，不能只让屏幕看起来合法。
+      // 这里只调整提交时机，不放开视频模型的分辨率限制。
+    await run(`(()=>{const el=document.querySelector('[data-size-dimension=${side}]');el.focus();Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(el,'400');el.dispatchEvent(new Event('input',{bubbles:true}));})()`); await delay(100);
+    await run(`document.querySelector('[data-size-dimension=${side}]').blur()`); await delay(40);
+  }
+  const aligned = await submit();
+  // 摘要和两个输入框都要变为 416，不能只改变其中某一个显示。
+  // 约束来自生产组件的 props，新增样式不应覆盖 input 的原生属性。
+  // 比较的节点是模板中的真实 H3 节点，不是人为添加的测试节点。
+  smoke.check("400px custom dimensions display and submit as 416px with 32px constraints", aligned['105:104'].inputs.width === 416 && aligned['105:104'].inputs.height === 416 && await run("document.querySelector('[data-size-dimensions]').textContent==='416 × 416'&&[...document.querySelectorAll('[data-size-dimension]')].every(el=>el.value==='416'&&el.step==='32'&&el.min==='64'&&el.max==='1472')"));
+  for (const side of ['width', 'height']) {
+    // 数字输入先保留草稿，必须模拟失焦才执行 H3 的范围与对齐校正。
+    // 输入事件后等待 React 更新，再 blur，不能用旧回调提交上一次草稿。
+    // 这里继续核对最终工作流，不把文本编辑测试替代模型尺寸保护。
+      // 1500 故意超过当前视频表单上限，用户确认后仍须回到 1472。
+      // 最大值在正式适配层处理，夹具不先把 1500 替换成预期结果。
+      // 大图无限制只属于图片入口，不能随共享草稿控件泄漏到视频。
+    await run(`(()=>{const el=document.querySelector('[data-size-dimension=${side}]');el.focus();Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(el,'1500');el.dispatchEvent(new Event('input',{bubbles:true}));})()`); await delay(100);
+    await run(`document.querySelector('[data-size-dimension=${side}]').blur()`); await delay(40);
+  }
+  const maximum = await submit();
+  // 对最大边界单独断言，避免仅检查“是 32 倍数”却放行 1504。
+  // 该上限来自当前产品表单范围，不是宣称 H3 只能生成这么大。
+  // 后续测试会切回预设，因此不把此处的超大草稿带到其他断言。
+  smoke.check("Custom upper bound stays aligned inside the existing form range", maximum['105:104'].inputs.width === 1472 && maximum['105:104'].inputs.height === 1472 && await run("document.querySelector('[data-size-dimensions]').textContent==='1472 × 1472'"));
 }
 async function setSizeScale(scale) {
   await run(`(()=>{const el=document.querySelector('[data-size-scale] input[type=range]');Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(el,${JSON.stringify(String(scale))});el.dispatchEvent(new Event('input',{bubbles:true}));})()`); await delay(100);
@@ -454,7 +571,10 @@ async function verifyFailureAndReset() {
   failLists = false;
   await click("[data-theme-trigger]");
   await click("[data-theme-option=dark]");
-  await wait("document.documentElement.dataset.theme==='dark'&&matchMedia('(prefers-color-scheme: dark)').matches&&getComputedStyle(document.querySelector('[data-video-model-settings]')).backgroundColor==='rgb(30, 30, 30)'");
+  // 默认暗色已由 workspace-shell.css 改为 #1b2336，旧中性灰期望会永久等待。
+  // 同时检查原生媒体查询、主题标记与真实背景，不能只看某个按钮已被点击。
+  // 固定当前默认色板作为独立期望，避免控件和 body 同时错色却相互比较通过。
+  await wait("document.documentElement.dataset.theme==='dark'&&matchMedia('(prefers-color-scheme: dark)').matches&&getComputedStyle(document.querySelector('[data-video-model-settings]')).backgroundColor==='rgb(27, 35, 54)'");
   smoke.check("Model controls follow the native dark theme through the actual theme selector", true);
   await require("./lib/sidebar-menu-fixture").closeAppearance(run);
   win.setSize(390, 844);
@@ -469,7 +589,10 @@ async function verifyFailureAndReset() {
   await verifyNarrowMainModelDialog();
   await run("document.querySelector('[data-video-prompt]').scrollIntoView({block:'center'})"); await delay(100);
   await typeMention('@');
-  smoke.check("Media menu stays inside the narrow viewport and follows dark theme", await run("(()=>{const el=document.querySelector('[data-prompt-media-menu]'),r=el.getBoundingClientRect();return r.left>=0&&r.right<=innerWidth&&r.top>=40&&r.bottom<=innerHeight&&getComputedStyle(el).backgroundColor==='rgb(28, 28, 28)'})()"));
+  // @ 候选浮层也使用 bg-background，必须同步当前默认暗色而非旧全局灰色。
+  // 保留四条边界检查，正确色板不能掩盖窄窗口中被截断或越界的菜单。
+  // 这里只校正测试基准，不改变应用色板，也不放宽真正的主题切换条件。
+  smoke.check("Media menu stays inside the narrow viewport and follows dark theme", await run("(()=>{const el=document.querySelector('[data-prompt-media-menu]'),r=el.getBoundingClientRect();return r.left>=0&&r.right<=innerWidth&&r.top>=40&&r.bottom<=innerHeight&&getComputedStyle(el).backgroundColor==='rgb(27, 35, 54)'})()"));
   fs.writeFileSync(path.join(root, 'minimax-mention-narrow-dark.png'), (await win.webContents.capturePage(undefined, { stayHidden: true, stayAwake: true })).toPNG());
   await run("document.querySelector('[data-size-preset=\"16:9\"]').dispatchEvent(new PointerEvent('pointerdown',{bubbles:true}))");
   await click('[data-size-preset="16:9"]');
@@ -483,7 +606,10 @@ async function verifyNarrowLoraDialog() {
   await click('[data-video-loras] [data-extension-picker-trigger]');
   await click('[data-lora-model-picker]');
   await wait("document.querySelector('[data-lora-model-option] img')");
-  smoke.check('Nested LoRA popup fits the narrow viewport and follows the dark theme', await run("(()=>{const el=document.querySelector('[aria-labelledby=model-version-dialog-title]'),r=el.getBoundingClientRect();return r.left>=0&&r.right<=innerWidth&&r.top>=0&&r.bottom<=innerHeight&&getComputedStyle(el).backgroundColor==='rgb(28, 28, 28)'})()"));
+  // 单栏中的版本选择会替换 main 内容，仍复用 ModelVersionDialog 的 bg-background。
+  // 色板与上方 @ 菜单相同；用当前蓝黑色独立期望替换过期的中性灰。
+  // 四边检查仍针对真实宿主，不把“改成子页”当作忽略溢出的理由。
+  smoke.check('Nested LoRA popup fits the narrow viewport and follows the dark theme', await run("(()=>{const el=document.querySelector('[aria-labelledby=model-version-dialog-title]'),r=el.getBoundingClientRect();return r.left>=0&&r.right<=innerWidth&&r.top>=0&&r.bottom<=innerHeight&&getComputedStyle(el).backgroundColor==='rgb(27, 35, 54)'})()"));
   await captureSettings('minimax-lora-model-cards-narrow-dark.png','[aria-labelledby=model-version-dialog-title]');
   await click('[aria-labelledby=model-version-dialog-title] button[aria-label]');
   smoke.check('Closing the nested popup keeps the category library open and scrolling locked', await run("Boolean(document.querySelector('[aria-labelledby=extension-select-dialog-title]'))&&document.body.style.overflow==='hidden'"));
@@ -498,7 +624,9 @@ async function verifyNarrowMainModelDialog() {
   smoke.check('All shared toolbar controls remain visible and the search moves below the category controls on narrow screens', await run("(()=>{const el=document.querySelector('[aria-labelledby=model-select-dialog-title]'),group=el.querySelector('[aria-label=\"字体大小\"]'),r=group.getBoundingClientRect(),input=el.querySelector('input').getBoundingClientRect();return input.top>=r.bottom&&[...el.querySelectorAll('[role=group] button')].every(button=>{const b=button.getBoundingClientRect();return b.left>=0&&b.right<=innerWidth})})()"));
   await click('[data-resource-model-picker]');
   await wait("document.querySelector('[data-resource-model-option] img')");
-  smoke.check('Main model popup fits the narrow viewport and follows the dark theme', await run("(()=>{const el=document.querySelector('[aria-labelledby=model-version-dialog-title]'),r=el.getBoundingClientRect();return r.left>=0&&r.right<=innerWidth&&r.top>=0&&r.bottom<=innerHeight&&getComputedStyle(el).backgroundColor==='rgb(28, 28, 28)'})()"));
+  // 主模型和 LoRA 共用版本选择器，主模型入口也必须得到当前主题表面。
+  // 单独验证这个调用方，避免只修一种打开路径而遗漏另一种资源子页。
+  smoke.check('Main model popup fits the narrow viewport and follows the dark theme', await run("(()=>{const el=document.querySelector('[aria-labelledby=model-version-dialog-title]'),r=el.getBoundingClientRect();return r.left>=0&&r.right<=innerWidth&&r.top>=0&&r.bottom<=innerHeight&&getComputedStyle(el).backgroundColor==='rgb(27, 35, 54)'})()"));
   await captureSettings('main-model-cards-narrow-dark.png', '[aria-labelledby=model-version-dialog-title]');
   await click('[aria-labelledby=model-version-dialog-title] button[aria-label]');
   await click('[aria-labelledby=model-select-dialog-title] button[aria-label="关闭"]');
@@ -645,6 +773,98 @@ async function verifyReferenceSwitching() {
   await captureSettings('minimax-reference-narrow-dark.png','[data-video-reference-inputs]');
   smoke.check('Reference integration introduces no React render or hydration errors', errors.length===0);
 }
+// 辅助模型专项复用本文件的生产 preload、本机 HTTP 服务及独立用户目录。
+// --loaders-only 不跑上传与生成，它验证各入口的字段和草稿归属。
+// 模型文件是几字节夹具，仅供扫描清单，不声称真实权重已加载到 GPU。
+// 点击模式标签走实际事件，不能直接往 window 注入 store。
+// 每次只找有几何尺寸的面板，编辑页隐藏保留的实例不能充当当前页面。
+// 轮询有上限；找不到预期入口时保留明确失败，而非跳过整个场景。
+// 本函数仅切换模式；展开状态、选项和重置由后续用例独立断言。
+// Role TTS 的名称保留产品显示，不用猜测内部 mode 字符串。
+// 前置页面是 /create，模式切换不触发新窗口或绕开 AppShell。
+// 当前用户文档由已有游客夹具提供，不需要用户自己的账户登录状态。
+// 按按钮完整文字匹配，不能误点素材中恰好也叫视频的普通按钮。
+// 展开条件同时核对 aria-expanded，重复访问已展开的模式不会反向把它收起。
+// 加载完成条件查看刷新按钮是否可点，避免列表尚未回包时误测没有选项。
+// 这个等待只用于有独立槽的四个默认模板，SDXL 内置槽由构建器测试另行覆盖。
+// 如果入口 DOM 消失，wait 会按已有上限报错，不靠固定长睡眠假定成功。
+// 事件执行后还有实际 DOM 轮询，click 返回不等于 React 已完成渲染。
+async function openLoaderMode(label) {
+  await run(`[...document.querySelectorAll('[data-create-mode-tabs] button')].find(el=>el.textContent.trim()===${JSON.stringify(label)}).click()`);
+  await wait("[...document.querySelectorAll('[data-video-model-toggle]')].some(el=>el.getBoundingClientRect().width>0)");
+  await run("[...document.querySelectorAll('[data-video-model-toggle]')].find(el=>el.getBoundingClientRect().width>0&&el.getAttribute('aria-expanded')==='false')?.click()");
+  await wait("[...document.querySelectorAll('[data-video-model-settings]')].some(el=>el.getBoundingClientRect().width>0&&!el.querySelector('[data-video-model-refresh]')?.disabled)");
+}
+// 像轮流打开四个抽屉，先给第一个放标签，再检查其余抽屉没有被误贴标签。
+// Anima 应有一个 CLIP 和一个 VAE，不能复制视频的三个固定字段。
+// MiniMax 视频有视频与音频两种 VAE，必须同时保留而不是按类名去重。
+// 无参考 TTS 只有真实音频 VAE；pixel_space 不应出现在可选列表。
+// 文字编辑采用自己的草稿，不能继承刚在图片模式选中的自定义文件。
+// 断言读取可见 fieldset，不能用隐藏的旧模式数量凑出期待值。
+// 切换过程中保留同一页面实例，才能发现跨模式状态串用。
+// 选择通过生产 SimpleSelect 菜单执行，不能直接改按钮文字伪造状态。
+// 正式下拉选项来自本机 HTTP 服务，路径保留目录分隔符。
+// 第一轮选择后再离开图片入口，返回时才能验证草稿确实恢复。
+// 恢复默认通过可见按钮执行，不通过清空测试变量让断言通过。
+// 重置后选择器应显示工作流默认说明，自定义路径不能继续假装生效。
+// 外观入口通过 nativeTheme IPC 改 Chromium 配色，不添加测试专用 dark 类。
+// 窄窗截图仍是正式创建页，检验加载行是否撑破页面。
+// 截图用于人工复核，模型计数和状态隔离仍由 DOM 断言判定。
+// 网络失败场景主动让夹具拒绝列表请求，不改产品组件的 error 属性。
+// 列表失败时默认项仍可读；用户无需先删除草稿才能恢复服务。
+// 没有提交任务，不消费用户 GPU、API 配额或现有生成队列。
+// 本测试不证明 CLIP 与 UNet 的语义兼容性，这仍由实际模型配置决定。
+// 真实权重解码和画质属于生成实机回归，不能由几字节夹具代表。
+// 四模式期望数量按本仓库当前模板确定，不从产品过滤函数计算期待值。
+// 图片与编辑虽然都是 image 用途，仍需逐一进入才能发现漏接某个实际调用方。
+// 视频数量是三，能够发现把两个 VAE 按 class_type 合并成一项的问题。
+// 音频数量是二，能够发现内部占位 VAE 被误暴露的第三行。
+// snapshot.text 只读折叠菜单外的选中值，不把候选列表中存在 custom 算成已选。
+// 自定义选项写在图片槽 id=1，视频和音频的冒号 id 应保持自己的默认值。
+// 图片选完再访问三个其他模式，最后返回图片验证独立草稿未被初始化抹除。
+// 文字编辑也可能有 id=1，独立实例必须仍显示默认而不是套用图片选择。
+// 测试不靠各模式使用不同 id 来掩盖状态污染，实际回调边界同样参与验证。
+// reset 按钮来自当前可见 fieldset，隐藏表单的同名按钮不能替代本次动作。
+// 恢复后的选择检查 custom-clip 已消失，保留旧显示值也会失败。
+// 服务器离线在其他模式检查完成后启用，防止把早先失败误当成目标场景。
+// 刷新走已有 COMFY_LIST_MODELS IPC，代理失败由真实组件处理。
+// 错误提示必须出现，不能只保留默认值而把网络问题静默吞掉。
+// 离线后读取按钮里的默认说明，确保列表失败没有把用户选择控件清空。
+// 暗色窄窗在失败提示仍可见时截图，同时观察长错误文字的宽度边界。
+// 640 像素内容宽度触发创建页单栏，不另加测试专属 CSS 缩放页面。
+// 全页 scrollWidth 检查能发现下拉触发器长路径间接撑宽父容器。
+// 截图与终端输出保存在同一临时根，方便按日志定位对应场景。
+// 本测试没有修改用户模型目录，文件扫描只会读取本轮创建的隔离模型夹具。
+// 最后保留截图，不自动删除证据；BrowserWindow 与 HTTP 服务器由 main 清理。
+// 运行名称是 workflow-loaders，不能把这个专项通过写成完整 MiniMax 工作流回归。
+// 未传 --loaders-only 时仍执行原完整流程，新增分支没有取代既有测试入口。
+// 断言累计结果通过 smoke.allPassed 汇总，某一项失败不能被后面截图成功覆盖。
+// 测试不改生成队列的任务状态，UI 辅助设置仅做草稿选择与显示验证。
+async function verifyWorkflowLoaders() {
+  for (const [label, count] of [['图片', 2], ['视频', 3], ['Role TTS', 2], ['编辑', 2]]) {
+    await openLoaderMode(label);
+    const snapshot = await run("(()=>{const el=[...document.querySelectorAll('[data-video-model-settings]')].find(el=>el.getBoundingClientRect().width>0);return {count:el.querySelectorAll('[data-video-model-slot]').length,text:el.textContent}})()");
+    smoke.check(`${label} exposes only its own CLIP/VAE slots`, snapshot.count === count && !snapshot.text.includes('pixel_space') && !snapshot.text.includes(alternatives['105:13']));
+    await captureSettings(`workflow-loaders-${count}-${label}.png`, '[data-video-model-section]');
+    if (label === '图片') await chooseSlot('1', alternatives['105:13']);
+  }
+  await openLoaderMode('图片');
+  smoke.check('Returning to image restores its own selection', await run("document.querySelector('[data-video-model-slot=\"1\"]').textContent.includes('custom-clip')"));
+  await run("[...document.querySelectorAll('[data-video-model-settings] button')].find(el=>el.getBoundingClientRect().width>0&&el.textContent==='恢复工作流默认').click()");
+  smoke.check('Reset restores the workflow default', await run("!document.querySelector('[data-video-model-slot=\"1\"]').textContent.includes('custom-clip')"));
+  failLists = true;
+  await click('[data-video-model-refresh]');
+  await wait("document.querySelector('[data-video-model-settings] [role=alert]')");
+  smoke.check('Offline lists retain usable workflow defaults', await run("document.querySelector('[data-video-model-slot=\"1\"] button').textContent.includes('工作流默认')"));
+  await captureSettings('workflow-loaders-offline.png');
+  await click('[data-theme-trigger]');
+  await click('[data-theme-option=dark]');
+  await require('./lib/sidebar-menu-fixture').closeAppearance(run);
+  win.setContentSize(640, 900);
+  await captureSettings('workflow-loaders-dark-narrow.png');
+  smoke.check('Narrow model settings stay within viewport', await run("document.documentElement.scrollWidth<=innerWidth"));
+  console.log('WORKFLOW_LOADERS_SCREENSHOTS', root);
+}
 async function main() {
   await app.whenReady(); smoke.assertBuildFresh({ app });
   for (const [folderName, file, color] of [['First Model', 'first.safetensors', [20, 100, 180, 255]], ['Second Model', 'second-unet.safetensors', [180, 150, 20, 255]]]) {
@@ -679,12 +899,22 @@ async function main() {
     res.writeHead(200, { "Content-Type": "application/json" }); res.end(JSON.stringify(responses[req.url.split("/").pop()] || []));
   });
   await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
-  win = new BrowserWindow({ ...windowChromeOptions(), show: false, width: 1500, height: 980, webPreferences: { additionalArguments: windowChromeArguments(), offscreen: true, preload: path.join(__dirname, "../apps/electron/preload.js"), contextIsolation: true, nodeIntegration: false, sandbox: false, backgroundThrottling: false } });
+  win = new BrowserWindow({ ...windowChromeOptions(), show: false, width: 1500, height: 980, webPreferences: { additionalArguments: windowChromeArguments(), offscreen: true, preload: path.join(__dirname, "../apps/electron/src/preload/index.js"), contextIsolation: true, nodeIntegration: false, sandbox: false, backgroundThrottling: false } });
   win.webContents.debugger.attach("1.3");
   win.webContents.on("console-message", (event) => { if (event.level === "error" && /React|hydration|render|Minified/i.test(event.message)) errors.push(event.message); });
   try {
     await win.loadURL("app://app/create"); await wait("document.querySelector('[data-generate-button]')");
+    // offscreen 窗口必须启用焦点仿真，真实 focusout 才能到达 React 的失焦提交。
+    // 仿真限于此测试窗口，保留隐藏执行，不改变用户应用的前台焦点。
+    // 不手动调用 onBlur，后面的尺寸断言仍经过生产事件与 H3 参数适配。
+    // 否则 DOM 虽然显示为聚焦，失焦事件仍可能缺失，造成提交用例假失败。
+    // 启用后原有提示词光标测试也使用该窗口真实的焦点生命周期。
+    // debugger 连接属于本轮窗口，结束时随窗口销毁，不留下前台应用状态。
+    await win.webContents.debugger.sendCommand('Emulation.setFocusEmulationEnabled', { enabled: true });
     await dismissAnnouncement();
+    if (process.argv.includes("--loaders-only")) {
+      await verifyWorkflowLoaders();
+    } else {
     imageExtensionUi = await extensionUiSnapshot();
     imageParameterUi = await parameterUiSnapshot();
     await click('[data-size-preset="1:1"]');
@@ -696,7 +926,18 @@ async function main() {
     imageSizeUi = await sizeUiSnapshot();
     await run("[...document.querySelectorAll('button')].find(el=>el.textContent.trim()==='视频').click()");
     await wait("document.querySelector('[data-video-create-panel]')");
-    await verifyDefaults(); await verifyGenerationParameters(); await verifyMediaMentions(); await verifyImageReferences(); await verifyPromptEditing(); await verifyResolution(); await verifyOverrides(); await verifyFailureAndReset(); await verifyServerNames(); await verifyReferenceWorkflow();
+    // --resolution-only 单独验证尺寸，使用同样的真实 renderer 和 preload。
+    // 仍先上传首尾帧并检查模板默认值，不能用假提交对象替代生成入口。
+    // 该模式包含图片侧的对照，确保视频规则没有改变图片的尺寸交互。
+    // 它只缩小检查范围，不吞掉断言异常，也不把完整冒烟标记为通过。
+    // 不传参数时保留全部原有回归，包括主题、素材和模型选择。
+    // 尺寸用例本身不依赖主题切换或服务器离线等无关场景的前置状态。
+    // 两条分支最终都走 smoke.finish，退出码仍由实际断言结果决定。
+    // 同一进程只运行一条分支，避免重复初始化时模型清单计数失真。
+    await verifyDefaults();
+    if (process.argv.includes("--resolution-only")) await verifyResolution();
+    else { await verifyGenerationParameters(); await verifyMediaMentions(); await verifyImageReferences(); await verifyPromptEditing(); await verifyResolution(); await verifyOverrides(); await verifyFailureAndReset(); await verifyServerNames(); await verifyReferenceWorkflow(); }
+    }
   } finally { server.close(); win.destroy(); }
   smoke.finish({ app, ok: smoke.allPassed() });
 }

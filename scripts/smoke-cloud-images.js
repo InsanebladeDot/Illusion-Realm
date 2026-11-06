@@ -1,10 +1,25 @@
+/**
+ * ipc-channels：主进程和 preload 消费同一份 CommonJS 通道常量。
+ * result：沿用统一 IPC 结果和参数校验入口。
+ * window-chrome：复用同一份窗口装饰配置与启动参数。
+ * protocol：使用客户端的 app:// 与 localfile:// 协议实现。
+ * window.handlers：窗口和主题 IPC 隶属 core 的系统交互边界。
+ * index：窗口加载迁移后的真实 preload 桥接文件。
+ * ipc-channels：通道值必须与 shared 的类型表一致，路径调整不能重命名通道。
+ * result：注册时先移除同名 handler，返回值仍为 IpcResult。
+ * window-chrome：窗口样式和传给 preload 的标记必须配套，不能各自猜测当前装饰模式。
+ * protocol：Next 静态资源含绝对 URL，必须保持应用同源加载。
+ * window.handlers：handler 仍通过统一结果封装注册，不因移动改变参数和错误码。
+ * index：contextIsolation 保持启用，CommonJS 本地依赖仍需要 sandbox 为 false。
+ * ipc-channels：避免新旧通道混用造成 invoke 找不到 handler。
+ */
 /** 云端图片 UI 冒烟：只走模拟 IPC，验证上传重试、收藏夹与窄屏；不连接后端或图床。 */
 const fs = require("node:fs"), os = require("node:os"), path = require("node:path");
 const { app, BrowserWindow, session } = require("electron");
-const { IPC_CHANNELS: C } = require("../apps/electron/ipcChannels");
-const { registerHandle } = require("../apps/electron/ipcHandlers");
+const { IPC_CHANNELS: C } = require("../apps/electron/src/common/ipc-channels");
+const { registerHandle } = require("../apps/electron/src/main/ipc/result");
 const smoke = require("./lib/smoke-harness").createSmokeHarness({ name: "cloud-images", timeoutMs: 45000 });
-const { windowChromeOptions, windowChromeArguments } = require("../apps/electron/window-chrome");
+const { windowChromeOptions, windowChromeArguments } = require("../apps/electron/src/main/core/windows/window-chrome");
 const directory = fs.mkdtempSync(path.join(os.tmpdir(), "ir-cloud-images-"));
 const png = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=";
 const image = { id: "42", ownerId: "7", revision: "1", title: "Fixture", fileName: "fixture.png", mimeType: "image/png", sizeBytes: "68", width: 1, height: 1, visibility: "private", presentationMode: "imageOnly", parseState: "pending", sourceUrl: "https://cloud-image.invalid/42.png", createdAt: "2026-10-15T00:00:00Z" };
@@ -17,8 +32,8 @@ let collection = { id: "8", ownerId: "7", name: "Fixture collection", descriptio
 const ok = data => ({ status: 200, body: { success: true, code: "OK", data } });
 app.disableHardwareAcceleration(); app.setPath("userData", path.join(directory, "browser"));
 smoke.setWorkDir(directory); smoke.installWatchdog(app);
-require("../apps/electron/appProtocol").registerAppProtocol();
-require("../apps/electron/ipc-handlers/window.handlers").registerThemeHandlers();
+require("../apps/electron/src/main/core/protocol").registerAppProtocol();
+require("../apps/electron/src/main/core/windows/window.handlers").registerThemeHandlers();
 registerHandle(C.USER_DATA_READ, () => ({ data: document, filePath: "", isNew: false }));
 registerHandle(C.USER_DATA_WRITE, (_event, next) => { document = next; });
 registerHandle(C.USER_DATA_GET_DEFAULT_PATH, () => "");
@@ -60,7 +75,7 @@ async function verifyForm(win) {
   await wait("document.querySelector('[data-cloud-upload-trigger]')?.offsetHeight");
   await click('[data-cloud-upload-trigger]');
   await wait("document.querySelector('[data-cloud-upload]')?.offsetHeight");
-  smoke.check("upload defaults are private and image-only", await run("[...document.querySelectorAll('[data-cloud-upload] select')].map(x=>x.value).join(',')==='private,imageOnly'"));
+  smoke.check("upload defaults are private and image-only", await run("[...document.querySelectorAll('[data-cloud-upload] [data-simple-select-value]')].map(x=>x.dataset.simpleSelectValue).join(',')==='private,imageOnly'"));
   await run(`(() => { const file=new File([Uint8Array.from(atob('${png}'),x=>x.charCodeAt(0))],'fixture.png',{type:'image/png'});const files=new DataTransfer();files.items.add(file);const input=document.querySelector('[data-cloud-upload] input[type=file]');input.files=files.files;input.dispatchEvent(new Event('change',{bubbles:true})); })()`);
   await wait("document.querySelector('[data-cloud-upload] input:not([type=file])').value==='fixture'");
   await run("document.querySelector('[data-cloud-upload]').requestSubmit()");
@@ -111,12 +126,15 @@ async function verifyCollectionAndLayout(win) {
   await capture(win, "cloud-images-narrow");
   smoke.check("no React render or hydration errors", !errors.some(value => /while rendering|hydration|Minified React error/.test(value)));
 }
-// 外观回归：验证连续外壳、真正的滚动归属及同一份列表切换；不触碰真实账户。
+// 外观回归：按 profile-templates 的横幅与整页滚动契约验收；云端业务断言保持独立。
 async function verifyProfileShell(win) {
-  smoke.check("head and nav share one background without dividing borders", await run("(()=>{const n=getComputedStyle(document.querySelector('nav[aria-expanded]')),h=getComputedStyle(document.querySelector('[data-window-titlebar]'));return n.backgroundColor===h.backgroundColor&&n.borderRightWidth==='0px'&&h.borderBottomWidth==='0px'})()"));
+  // 参考模板改为 207px 横幅；账户邮箱通过 summary 展开验证，不再要求默认全部展开。
+  smoke.check("head and nav preserve 54px application chrome without dividing borders", await run("(()=>{const n=document.querySelector('nav[aria-expanded]'),h=document.querySelector('[data-window-titlebar]');return n.getBoundingClientRect().top===54&&h.getBoundingClientRect().height===54&&getComputedStyle(n).borderRightWidth==='0px'&&getComputedStyle(h).borderBottomWidth==='0px'})()"));
   smoke.check("shared main retains its rounded white surface while profile content owns scrolling", await run("(()=>{const s=getComputedStyle(document.querySelector('[data-app-main]'));return s.borderRadius==='8px'&&s.backgroundColor==='rgb(255, 255, 255)'&&s.overflowY==='hidden'&&getComputedStyle(document.querySelector('[data-profile-scroll]')).overflowY==='auto'})()"));
-  smoke.check("wide profile cover is reduced by one quarter to 144px", await run("document.querySelector('[data-profile-cover]').getBoundingClientRect().height===144"));
-  smoke.check("account identity remains below the profile name", await run("document.querySelector('[data-profile-account-details]').innerText.includes('fixture@example.test')"));
+  smoke.check("wide profile cover matches the 207px reference", await run("document.querySelector('[data-profile-cover]').getBoundingClientRect().height===207"));
+  await click('[data-profile-account-details] summary');
+  smoke.check("account disclosure retains email and account ID below the name", await run("(()=>{const d=document.querySelector('[data-profile-account-details]');return d.open&&d.innerText.includes('fixture@example.test')&&d.querySelector('summary').textContent.includes('7')})()"));
+  await click('[data-profile-account-details] summary');
   await capture(win, "profile-shell-light");
 }
 async function verifyCollectionViews(win) {
@@ -135,10 +153,11 @@ async function verifyCollectionViews(win) {
   smoke.check("wide collection grid uses three columns inside the expanded nav", await run("getComputedStyle(document.querySelector('[data-collection-layout=grid]')).gridTemplateColumns.split(' ').length===3"));
   await capture(win, "profile-collections-grid");
   win.setContentSize(320, 620); await delay(150);
-  smoke.check("narrow profile cover is reduced by one quarter to 108px", await run("document.querySelector('[data-profile-cover]').getBoundingClientRect().height===108"));
+  smoke.check("narrow profile cover matches the 192px reference", await run("document.querySelector('[data-profile-cover]').getBoundingClientRect().height===192"));
   smoke.check("320px profile surface and collection cards do not overflow", await run("(()=>{const p=document.querySelector('[data-app-main]'),c=document.querySelector('[data-cloud-collections]');return p.scrollWidth<=p.clientWidth+1&&c.scrollWidth<=c.clientWidth+1&&c.getBoundingClientRect().right<=innerWidth})()"));
   await run("document.querySelector('[data-cloud-collections]').scrollIntoView({block:'start'})");
-  smoke.check("narrow content scrolling keeps the cover and tabs fixed inside main", await run("(()=>{const h=document.querySelector('[data-profile-fixed-header]'),m=document.querySelector('#main-content'),s=document.querySelector('[data-profile-scroll]');return scrollY===0&&m.scrollTop===0&&h.getBoundingClientRect().top===44&&s.clientHeight>0&&s.scrollTop>0&&document.querySelector('[role=tablist]').getBoundingClientRect().bottom<=s.getBoundingClientRect().top+1})()"));
+  // 新模板由同一个容器滚动横幅、标签与列表；主区和应用标题栏仍固定在自己的外壳中。
+  smoke.check("narrow page scroll moves profile content while app chrome stays fixed", await run("(()=>{const h=document.querySelector('[data-profile-fixed-header]'),m=document.querySelector('#main-content'),s=document.querySelector('[data-profile-scroll]');return scrollY===0&&m.scrollTop===0&&s.clientHeight>0&&s.scrollTop>0&&h.getBoundingClientRect().bottom<s.getBoundingClientRect().top&&document.querySelector('[data-window-titlebar]').getBoundingClientRect().top===0})()"));
   await capture(win, "profile-collections-narrow");
   win.setContentSize(1350, 1000); await delay(100);
   await click('[data-profile-content-tab="cloudImages"]');
@@ -171,8 +190,12 @@ async function verifyLibraryWrites(win) {
   await wait("!document.querySelector('[data-cloud-image-editor]')&&document.body.innerText.includes('Updated fixture')");
   smoke.check("image editing sends server revision and reloads saved library", libraryCalls.some(item => item.action === "updateImage" && item.expectedRevision === "1" && item.title === "Updated fixture"));
   await buttonIn('[data-cloud-image-id="42"]', "加入收藏夹");
-  await wait("document.querySelector('[data-cloud-add-to-collection] option[value=\"8\"]')");
-  await run("(()=>{const i=document.querySelector('[data-cloud-add-to-collection] select');i.value='8';i.dispatchEvent(new Event('change',{bubbles:true}));})()");
+  // 菜单选项在展开后才挂载，等待真实选项而非伪造原生 change 事件。
+  // 选定目标集合后仍由生产表单提交，检查服务器收到的集合 ID。
+  await wait("document.querySelector('[data-cloud-add-to-collection] [data-simple-select]>button')");
+  await click('[data-cloud-add-to-collection] [data-simple-select]>button');
+  await wait("document.querySelector('[data-simple-select-option=\"8\"]')");
+  await click('[data-simple-select-option="8"]');
   await buttonIn("[data-cloud-add-to-collection]", "加入收藏夹"); await wait("document.querySelector('[data-cloud-add-to-collection] [role=status]')");
   smoke.check("image card adds selected image to chosen collection", libraryCalls.some(item => item.action === "addItem" && item.imageId === "42" && item.id === "8"));
   await click('[data-profile-content-tab="cloudCollections"]'); await click("[data-cloud-create-collection]");
@@ -208,15 +231,16 @@ async function verifyLibraryWrites(win) {
   await buttonIn('[role=tabpanel]:not([hidden])', "加载更多");
   await wait("[...document.querySelectorAll('[role=tabpanel]')].find(x=>!x.hidden).querySelectorAll('[data-cloud-image-id]').length===25");
   smoke.check("public image pagination continues from raw page offset", libraryCalls.some(item => item.action === "listImages" && item.scope === "public" && item.offset === 24));
-  smoke.check("long gallery reaches the final card without moving profile header or tabs", await run("(()=>{const s=document.querySelector('[data-profile-scroll]'),tab=document.querySelector('[role=tablist]'),y=tab.getBoundingClientRect().top;s.scrollTop=s.scrollHeight;const last=[...document.querySelectorAll('[data-cloud-images] [data-cloud-image-id]')].at(-1).getBoundingClientRect(),r=s.getBoundingClientRect();return s.scrollTop>0&&last.bottom<=r.bottom&&last.bottom>r.top&&tab.getBoundingClientRect().top===y&&document.querySelector('[data-profile-fixed-header]').getBoundingClientRect().top===44&&scrollY===0})()"));
-  await capture(win, "profile-fixed-header-gallery-scrolled");
+  // 25 张真实组件卡片构成长列表；必须实际滚到最后一张，不能只检查存在滚动条。
+  smoke.check("long gallery reaches the final card through the single profile scroller", await run("(()=>{const s=document.querySelector('[data-profile-scroll]');s.scrollTop=0;const y=document.querySelector('[data-profile-cover]').getBoundingClientRect().top;s.scrollTop=s.scrollHeight;const last=[...document.querySelectorAll('[data-cloud-images] [data-cloud-image-id]')].at(-1).getBoundingClientRect(),r=s.getBoundingClientRect();return s.scrollTop>0&&last.bottom<=r.bottom&&last.bottom>r.top&&document.querySelector('[data-profile-cover]').getBoundingClientRect().top<y&&scrollY===0&&document.querySelector('#main-content').scrollTop===0})()"));
+  await capture(win, "profile-gallery-scrolled");
 }
 async function main() {
   await app.whenReady(); smoke.assertBuildFresh({ app });
   session.defaultSession.protocol.handle("https", request => request.url.startsWith("https://cloud-image.invalid/")
     ? new Response(Buffer.from(png, "base64"), { headers: { "Content-Type": "image/png" } }) : new Response(null, { status: 404 }));
   session.defaultSession.webRequest.onBeforeRequest({ urls: ["http://*/*"] }, (_details, callback) => callback({ cancel: true }));
-  const win = new BrowserWindow({ ...windowChromeOptions(), show: false, width: 1350, height: 900, webPreferences: { additionalArguments: windowChromeArguments(), offscreen: true, preload: path.join(__dirname, "../apps/electron/preload.js"), contextIsolation: true, nodeIntegration: false, sandbox: false, backgroundThrottling: false } });
+  const win = new BrowserWindow({ ...windowChromeOptions(), show: false, width: 1350, height: 900, webPreferences: { additionalArguments: windowChromeArguments(), offscreen: true, preload: path.join(__dirname, "../apps/electron/src/preload/index.js"), contextIsolation: true, nodeIntegration: false, sandbox: false, backgroundThrottling: false } });
   smoke.attachWebContents(win.webContents); const occlusion = await smoke.hardenWindow(win);
   win.webContents.on("console-message", event => { if (event.level === "error") errors.push(event.message); });
   try {

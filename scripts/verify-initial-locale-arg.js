@@ -12,7 +12,7 @@ const {
   parseInitialLocale,
   buildInitialLocaleArg,
   initialLocaleArguments,
-} = require(path.join(__dirname, "..", "apps", "electron", "initialLocale.js"));
+} = require(path.join(__dirname, "../apps/electron/src/common/initial-locale.js"));
 
 const checks = [];
 function check(name, ok, detail = "") {
@@ -129,7 +129,7 @@ function offendingIdentifiers(source) {
 }
 
 const mainSource = require("fs").readFileSync(
-  path.join(__dirname, "..", "apps", "electron", "main.js"),
+  path.join(__dirname, "../apps/electron/src/main/index.js"),
   "utf8"
 );
 const offenders = offendingIdentifiers(mainSource);

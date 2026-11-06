@@ -22,8 +22,8 @@ const os = require("os");
 const path = require("path");
 
 const REPO_ROOT = path.join(__dirname, "..");
-const APP_PATHS_MODULE = path.join(REPO_ROOT, "apps", "electron", "appPaths.js");
-const GENERATED_IMAGES_MODULE = path.join(REPO_ROOT, "apps", "electron", "generatedImages.js");
+const APP_PATHS_MODULE = path.join(REPO_ROOT, "apps/electron/src/main/core/paths.js");
+const GENERATED_IMAGES_MODULE = path.join(REPO_ROOT, "apps/electron/src/main/modules/images/generated-images.js");
 
 const checks = [];
 function check(name, ok, detail = "") {

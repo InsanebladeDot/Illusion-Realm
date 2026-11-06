@@ -22,7 +22,7 @@ const path = require("path");
 const { spawnSync } = require("child_process");
 const { app, BrowserWindow } = require("electron");
 
-const PRELOAD = path.join(__dirname, "..", "apps", "electron", "preload.js");
+const PRELOAD = path.join(__dirname, "../apps/electron/src/preload/index.js");
 const EXIT_SKIP = 3;
 
 const CASES = [

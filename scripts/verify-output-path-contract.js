@@ -21,9 +21,9 @@ const fs = require("fs");
 const path = require("path");
 
 const REPO_ROOT = path.join(__dirname, "..");
-const APP_PATHS_MODULE = path.join(REPO_ROOT, "apps", "electron", "appPaths.js");
-const OUTPUT_PATHS_MODULE = path.join(REPO_ROOT, "apps", "electron", "outputPaths.js");
-const FILES_HANDLERS = path.join(REPO_ROOT, "apps", "electron", "ipc-handlers", "files.handlers.js");
+const APP_PATHS_MODULE = path.join(REPO_ROOT, "apps/electron/src/main/core/paths.js");
+const OUTPUT_PATHS_MODULE = path.join(REPO_ROOT, "apps/electron/src/main/storage/output-paths.js");
+const FILES_HANDLERS = path.join(REPO_ROOT, "apps/electron/src/main/modules/images/files.handlers.js");
 
 const FAKE_APP_ROOT = path.join(REPO_ROOT, "fake-app-dir");
 
