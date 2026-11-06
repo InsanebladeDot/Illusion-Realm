@@ -36,6 +36,9 @@ import { useIsHydrated } from "@/hooks/useIsHydrated";
 import { useMediaQueryAfterHydration } from "@/hooks/useMediaQuery";
 import { SIDEBAR_WIDTH_COLLAPSED, SIDEBAR_WIDTH_EXPANDED } from "@/data/navigation";
 import { useSidebarStore } from "@/stores/useSidebarStore";
+// 接入创建主区不改变 3D 场景本身的相机、模型导入或提示词生成状态。
+// 正常工具页与显式全屏共享同一打开实例，避免模式切换时把后台工作区提前显示出来。
+import { useCreateMainPage } from "@/hooks/use-create-main-page";
 
 type View3DPromptDialogProps = {
   open: boolean;
@@ -122,8 +125,20 @@ export function View3DPromptDialog({
 }: View3DPromptDialogProps) {
   const { t } = useTranslation();
   const isHydrated = useIsHydrated();
+  // 创建页普通模式替换 main 内容；窗口全屏仍保留 body 级覆盖层。
+  // 全屏期间也保持入栈，不能因 portal 暂时移到 body 就解除父组件的工作区隐藏状态。
+  // open 与 hydration 同时满足才登记，避免预渲染阶段存在没有可显示内容的页面栈项。
+  // 没有创建页宿主时仍使用原弹窗路径，组件在其他页面无需依赖 CreateMainArea。
+  // 返回操作仍由 onOpenChange 控制，hook 不修改已存模型路径或视角参数。
+  const mainPage = useCreateMainPage(open && isHydrated);
   /** 首帧就取值：本弹窗只在打开时挂载，用 `useMediaQuery` 会先渲染一帧紧凑版式（见 hook 注释） */
-  const isCompact = !useMediaQueryAfterHydration("(min-width: 1280px)");
+  const isNarrowViewport = !useMediaQueryAfterHydration("(min-width: 1280px)");
+  // 主区页始终使用带返回按钮的紧凑页头，尺寸由父容器决定而不是由窗口断点决定。
+  // 视口 hook 独立调用，不能放在宿主条件的短路分支里，保证 hook 顺序稳定。
+  // 创建页至少两栏时恢复 3D 居中弹窗，单栏仍交给展示区正常流宿主。
+  // 非创建入口保留原来的视口规则；显式全屏操作继续使用窗口层。
+  // 不按弹窗内部画布宽度判断，否则打开后会因自身变窄反复切换形态。
+  const isCompact = Boolean(mainPage.host) || (!mainPage.inCreate && isNarrowViewport);
   const navExpanded = useSidebarStore((state) => state.expanded);
   const hasDesktopNav = useMediaQueryAfterHydration("(min-width: 768px)");
   const navOffset = hasDesktopNav
@@ -457,10 +472,17 @@ export function View3DPromptDialog({
   /**
    * 几何全部用**内联样式**表达（而不是 Tailwind 类）：内联样式优先级固定，
    * 不会出现「-translate-x-1/2 与 translate-x-0 同时存在、谁生效取决于 CSS 顺序」
-   * 这类问题，退出全屏一定能回到最初的居中弹框 + 左 70% / 右 30%。
+   * 这类问题，退出全屏可回到父容器页面或非创建场景的原居中弹框。
+   * 3D 与控制栏的 70%/30% 分配仍由原布局负责，不在宿主集成中调整。
+   * 有宿主且非全屏时使用 static；正常文档流不会盖住标题栏、nav 或状态栏。
+   * 主区宽高使用 100%，其实际矩形来自 AppShell 的 main，不重新计算窗口边距。
+   * 全屏是用户显式操作，继续用窗口级 fixed 几何；不能受 main 的宽高约束。
+   * 退出全屏后复用 host 分支，避免保留 100vw/100dvh 导致控制栏或创建区溢出。
    */
   const dialogLayoutStyle: CSSProperties =
-    fullscreen === "none" && isCompact
+    mainPage.host && fullscreen === "none"
+      ? { position: "static", width: "100%", height: "100%", zIndex: 1 }
+      : fullscreen === "none" && isCompact
       ? {
           position: "fixed",
           left: navOffset,
@@ -502,10 +524,27 @@ export function View3DPromptDialog({
   const asideLayoutStyle: CSSProperties =
     fullscreen === "none" ? { flexBasis: "30%" } : { display: "none" };
 
-  /** 与 ResourceDialogShell 同因：必须挂到 body，否则会被右侧栏按 DOM 顺序压住。 */
+  // 主区页面挂到宿主；仅窗口全屏继续挂 body，避免全屏时受布局容器裁切。
+  // host 存在时没有背景遮罩，原创建内容已由父级隐藏，不依赖黑色浮层遮住它。
+  // 普通主区页移除 aria-modal，nav 仍可用于离开当前工作流；原回退弹窗保留模态语义。
+  // 不修改 View3DScene 的缓冲区尺寸或 CSS canvas 尺寸，显示缩放逻辑继续由原场景负责。
+  // 显式全屏可能改变 portal 目标，但 useView3DStore 的模型路径和增强权重继续保持。
+  // 普通模式回到宿主后，原角度输入、快捷视图与确认按钮仍按既有处理器工作。
+  // 普通主区和全屏均退出全局 dialog 入场动画，避免 scale 影响填充父级或窗口的边界。
+  // 主区的 min-w-0 允许 3D 区域跟随 main 缩小，不把原弹窗最小宽度带入父级布局。
+  // 右侧实时预览仍是工具的一部分；全屏时原 asideLayoutStyle 将它隐藏，仅放大场景。
+  // 返回按钮沿用 isCompact 页头，不额外增加第二个关闭入口或更改提示词写入方式。
+  // 最终插入仍调用 onInsert，后台编辑器虽不可见，但 DOM 节点与调用者引用继续存在。
+  // 3D 内部的窗口/无边框全屏清理仍由原 effect 负责，主区栈只在工具整体关闭时退栈。
+  // 关闭资源不会直接改变 Electron 窗口状态，原 exitFullscreen 的清理路径继续生效。
+  // 这些分支不新增 IPC；只有既有导入模型与系统全屏操作继续通过 preload 执行。
+  // 全屏后的画布尺寸依然由场景容器观测，主区状态栈不直接调用 renderer.setSize。
+  // 退出窗口全屏先恢复普通工具模式，整个工具关闭时才恢复后台创建表单。
+  // 这里的窗口全屏属于工具展示模式，不代表已经验证操作系统的无边框全屏。
+  // 非创建路由没有宿主时仍需要原 backdrop，防止把其他页面内容误当作可交互背景。
   return createPortal(
     <>
-      {fullscreen === "none" && isCompact ? null : (
+      {mainPage.host || (fullscreen === "none" && isCompact) ? null : (
         <div
           className="fixed inset-0 z-[88] bg-black/60"
           aria-hidden
@@ -515,17 +554,19 @@ export function View3DPromptDialog({
 
       <div
         role="dialog"
-        aria-modal="true"
+        aria-modal={mainPage.host ? undefined : true}
         aria-labelledby="view3d-dialog-title"
         data-view3d-dialog-fullscreen={fullscreen}
         style={dialogLayoutStyle}
         className={cn(
           "flex min-h-0 flex-col overflow-hidden",
-          fullscreen === "none"
+          mainPage.host && fullscreen === "none"
+            ? "motion-none h-full w-full min-h-0 min-w-0 bg-background"
+            : fullscreen === "none"
             ? isCompact
               ? "motion-none bg-background"
               : cn("rounded-xl border bg-background shadow-xl", THIN_BORDER_CLASS)
-            : "shadow-none"
+            : "motion-none shadow-none"
         )}
       >
         <header
@@ -1033,6 +1074,6 @@ export function View3DPromptDialog({
         </div>
       </div>
     </>,
-    document.body
+    fullscreen === "none" ? mainPage.host ?? document.body : document.body
   );
 }

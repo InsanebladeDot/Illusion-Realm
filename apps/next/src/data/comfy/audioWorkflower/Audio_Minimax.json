@@ -1,0 +1,205 @@
+{
+  "156": {
+    "inputs": {
+      "audio": [
+        "153:141",
+        0
+      ]
+    },
+    "class_type": "PreviewAudio",
+    "_meta": {
+      "title": "预览音频"
+    }
+  },
+  "153:11": {
+    "inputs": {
+      "vae_name": "pixel_space"
+    },
+    "class_type": "VAELoader",
+    "_meta": {
+      "title": "加载VAE"
+    }
+  },
+  "153:24": {
+    "inputs": {
+      "vae_name": "Minimax\\Audio\\minimax_h3_audio_vae_fp32.safetensors"
+    },
+    "class_type": "VAELoader",
+    "_meta": {
+      "title": "加载VAE"
+    }
+  },
+  "153:17": {
+    "inputs": {
+      "sampler_name": "res_multistep"
+    },
+    "class_type": "KSamplerSelect",
+    "_meta": {
+      "title": "K采样器选择"
+    }
+  },
+  "153:9": {
+    "inputs": {
+      "scheduler": "simple",
+      "steps": 10,
+      "denoise": 1,
+      "model": [
+        "153:121",
+        0
+      ]
+    },
+    "class_type": "BasicScheduler",
+    "_meta": {
+      "title": "基本调度器"
+    }
+  },
+  "153:14": {
+    "inputs": {
+      "noise": [
+        "153:15",
+        0
+      ],
+      "guider": [
+        "153:16",
+        0
+      ],
+      "sampler": [
+        "153:17",
+        0
+      ],
+      "sigmas": [
+        "153:9",
+        0
+      ],
+      "latent_image": [
+        "153:104",
+        1
+      ]
+    },
+    "class_type": "SamplerCustomAdvanced",
+    "_meta": {
+      "title": "自定义采样器（高级）"
+    }
+  },
+  "153:16": {
+    "inputs": {
+      "model": [
+        "153:121",
+        0
+      ],
+      "conditioning": [
+        "153:104",
+        0
+      ]
+    },
+    "class_type": "BasicGuider",
+    "_meta": {
+      "title": "基本引导器"
+    }
+  },
+  "153:6": {
+    "inputs": {
+      "unet_name": "Minimax\\minimax_h3_fl2va_pruned_int8_convrot\\minimax_h3_fl2va_pruned_int8_convrot.safetensors",
+      "weight_dtype": "fp8_e5m2"
+    },
+    "class_type": "UNETLoader",
+    "_meta": {
+      "title": "UNet加载器"
+    }
+  },
+  "153:13": {
+    "inputs": {
+      "clip_name": "Minimax\\minimax_h3\\qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors",
+      "type": "minimax",
+      "device": "default"
+    },
+    "class_type": "CLIPLoader",
+    "_meta": {
+      "title": "加载CLIP"
+    }
+  },
+  "153:15": {
+    "inputs": {
+      "noise_seed": 757358688076805
+    },
+    "class_type": "RandomNoise",
+    "_meta": {
+      "title": "随机噪波"
+    }
+  },
+  "153:104": {
+    "inputs": {
+      "prompt": "\n用柔和可爱的日语声音（S1）以连续、略显犹豫但又充满“温柔暴躁”气质的语气说道：<d>[日语] あっ、待ってたのに…今さら来たの？</d> \n\n\n非环境音效：无",
+      "width": 32,
+      "height": 32,
+      "length": [
+        "153:107",
+        1
+      ],
+      "clip": [
+        "153:13",
+        0
+      ],
+      "vae": [
+        "153:11",
+        0
+      ]
+    },
+    "class_type": "MiniMaxH3ImageToVideo",
+    "_meta": {
+      "title": "MiniMax H3 图像转视频"
+    }
+  },
+  "153:107": {
+    "inputs": {
+      "expression": "max(5, round(a * 24)) + (5 - (max(5, round(a * 24)) % 17)) % 17",
+      "values.a": [
+        "153:111",
+        0
+      ]
+    },
+    "class_type": "ComfyMathExpression",
+    "_meta": {
+      "title": "数学表达式"
+    }
+  },
+  "153:111": {
+    "inputs": {
+      "value": 4
+    },
+    "class_type": "PrimitiveFloat",
+    "_meta": {
+      "title": "Float (duration)"
+    }
+  },
+  "153:121": {
+    "inputs": {
+      "lora_name": "Minimax\\加速lora\\minimax_h3_fl2v_turbo_8step_v1.0_comfyui_bf16.safetensors",
+      "strength_model": 1,
+      "model": [
+        "153:6",
+        0
+      ]
+    },
+    "class_type": "LoraLoaderModelOnly",
+    "_meta": {
+      "title": "LoRA加载器（仅模型）"
+    }
+  },
+  "153:141": {
+    "inputs": {
+      "samples": [
+        "153:14",
+        0
+      ],
+      "vae": [
+        "153:24",
+        0
+      ]
+    },
+    "class_type": "VAEDecodeAudio",
+    "_meta": {
+      "title": "VAE解码（音频）"
+    }
+  }
+}

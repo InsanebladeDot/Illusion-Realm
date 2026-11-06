@@ -12,7 +12,7 @@ const os = require("os");
 const path = require("path");
 const { createSmokeHarness } = require("./lib/smoke-harness");
 const { app, BrowserWindow, nativeTheme, ipcMain: realIpcMain } = require("electron");
-const { registerAppProtocol } = require("../apps/electron/appProtocol");
+const { registerAppProtocol } = require("../apps/electron/src/main/core/protocol");
 
 /**
  * 本脚本注册的 IPC stub 统一包装成真实的 IpcResult 形状
@@ -121,6 +121,18 @@ const searchCalls = [];
 ipcMain.handle("animadex:search", async (_event, params) => {
   const requested = params ?? {};
   searchCalls.push(requested);
+  // 本地分支调用正式资料读取器，不能用线上 mock 假装八千条数据已接通。
+  // 在线分支保留旧替身，既有二十四张卡片与分页断言继续验证原功能。
+  // 所有本地请求走同一主进程实现，不会访问远端站点。
+  if (requested.source === "local") return require("../apps/electron/src/main/modules/animadex").searchCharacters(requested);
+  // 这份人工在线详情只用于验证本地角色与远端展示合并，不访问真实站点。
+  // q 的角色名与作品要同时一致，才能在正式 mergeCharacterDetails 中得到封面。
+  // 头像用内存 data URL，避免 UI 冒烟依赖第三方 CDN 或图片服务状态。
+  // LoRA 仍是资料推荐，不触发真实下载或模型加载。
+  // 列表依然来自八千条本地 JSON，只有用户点击的一个详情使用此 HTTP 替身。
+  // 其他在线浏览保留原 Alice 卡片基准，防止破坏旧功能的对照数据。
+  // 模拟不能说明公网接口正常；断网/无匹配由保留本地资料的路径负责。
+  if (requested.source === "online" && requested.q === "princess zelda") return {total:1,page:1,pageSize:8,pages:1,results:[{...buildCharacter(1),name:"princess zelda",copyright:"the legend of zelda",copyrightName:"The Legend of Zelda",thumbUrl:"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jXioAAAAASUVORK5CYII="}]};
   if (requested.copyright === "touhou") {
     return {
       total: 2,
@@ -156,7 +168,7 @@ app.whenReady().then(async () => {
       nodeIntegration: false,
       // 与真实应用 main.js 一致：preload 是手写 CommonJS，需 Node 环境才能 require 本地模块
       sandbox: false,
-      preload: path.join(__dirname, "..", "apps", "electron", "preload.js"),
+      preload: path.join(__dirname, "../apps/electron/src/preload/index.js"),
       /**
        * 关闭后台节流：置顶也挡不住桌面上的其它窗口，一旦被盖住，Chromium 会把这个页面
        * 标记为 hidden 并停摆渲染生命周期 —— CSS 过渡停在半路、rAF 不再回调。
@@ -165,6 +177,28 @@ app.whenReady().then(async () => {
        */
       backgroundThrottling: false,
     },
+  });
+
+  // 封面测试仅拦截固定 CDN，不修改本地目录查询和正式预览地址。
+  // React 仍收到正式主进程生成的 URL，图片请求由 Chromium 自己发起。
+  // 替身在请求层回传本地夹具，能验证图片真正解码而非仅出现 img 标签。
+  // princess zelda 刻意返回损坏数据，覆盖 CDN 缺图时的 onError 分支。
+  // 其他封面使用项目已有测试图片，不将公网波动当成布局回归。
+  // 字节替身只存在测试会话，不写入产品角色资料或用户收藏。
+  // requests 记录真实图片请求，后续同时检查是否绕开逐卡搜索 API。
+  // 本专项不验证站点是否收录所有角色，也不宣称夹具内容是角色官方图。
+  // 仅替换 blobs 封面响应，其他 HTTPS 请求仍交给 Chromium 原有网络能力。
+  // 图片文件已存在于 scripts/fixtures，不新增产品依赖和缓存存储。
+  // 协议处理器属于测试 session，进程退出后一起释放，不改变产品协议。
+  // 直接回应图片字节，避开浏览器禁止 HTTPS 重定向到 data URL 的限制。
+  // 兜底网络失败返回受控 502，避免协议回调产生未处理的 Promise 拒绝。
+  // URL 保持不变时 onError 应只隐藏图片，不启动组件内部无限重试。
+  const previewRequests = [];
+  const previewFixture = fs.readFileSync(path.join(__dirname,'fixtures/create-layout/hero.webp'));
+  win.webContents.session.protocol.handle('https',request => {
+    if (!request.url.startsWith('https://blobs.animadex.net/Outputs/thumbs/')) return require('electron').net.fetch(request,{bypassCustomProtocolHandlers:true}).catch(()=>new Response(null,{status:502}));
+    previewRequests.push(request.url);
+    return new Response(request.url.includes('princess%20zelda%2C') ? 'broken' : new Uint8Array(previewFixture),{headers:{'Content-Type':'image/webp'}});
   });
 
   const consoleErrors = [];
@@ -187,9 +221,52 @@ app.whenReady().then(async () => {
     return false;
   };
 
-  const openPicker = async () => {
+  /**
+   * 原有断言专测在线库，显式切回 online 以保持旧 mock 的意义。
+   * 新增 local 分支不切来源，验证产品默认确实能直接显示离线资料。
+   * 选择器菜单由真实点击展开，不篡改 React state 或直接调用组件函数。
+   * 来源切换会清空旧卡片，等待指定来源卡片可排除迟到结果误通过。
+   * 此辅助也用于窄窗口首帧探针，首帧仍由真实默认 local 绘制。
+   * 首帧布局与来源无关，切 online 只为后续既有功能断言准备资料。
+   * UI 文案使用固定中文测试环境，不模拟浏览器原生 select。
+   * 等待是主进程轮询，不依赖可能因窗口遮挡暂停的 rAF。
+   */
+  const openPicker = async (source = "online") => {
     await run(`document.querySelector('[data-character-picker-trigger]').click(); true`);
-    return waitFor(`document.querySelectorAll('[data-character-card]').length > 0`, 20000);
+    await waitFor(`document.querySelector('[aria-label="角色库来源"]')`);
+    if (source === "online") await selectReference("角色库来源", "在线角色库");
+    return waitFor(`Array.from(document.querySelectorAll('[data-character-card]')).some(card => card.getAttribute('data-character-card').startsWith('${source === "local" ? "local:" : "character_"}'))`, 20000);
+  };
+
+  /**
+   * 来源仍是复用菜单，属性改为左侧展开列表，不能再点击已移除的顶部下拉。
+   * 测试按真实分类标题展开，查找当前属性对应的原始值按钮。
+   * 发色与瞳色可能同为 blue，必须同时限定 field，不能取第一个同色项。
+   * 点击前让目标进入侧栏滚动视口，模拟列表实际可达操作。
+   * 来源菜单保留真实 portal 选项，不直接篡改 React 内部状态。
+   * 作品原名保留英文，界面标题中文只是测试入口标签，不参与后端匹配。
+   * 本地列表与线上作品旧段落互不覆盖，旧套件继续验证在线作品逻辑。
+   * 找不到选项会明确抛错，不能用可选链跳过后冒充筛选成功。
+   * 后续仍检查请求参数与实际卡片，不能只证明点击动作没有报错。
+   * selectReference 用于本地四属性与来源，其他原有卡片动作保持原实现。
+   * 这里的固定 field 映射只服务测试点击，不复制任何真实分类或计数数据。
+   * 等待通过主进程轮询完成，不要求页面 rAF 一定正在推进。
+   */
+  const selectReference = async (label, value) => {
+    const field = {"作品":"copyright","性别":"gender","发色":"hair","瞳色":"eye"}[label];
+    if (field) {
+      // 热门作品只默认显示三十项，先搜索完整作品集合再定位目标。
+      // 通过原生输入事件驱动真实状态，不注入 facets 或修改 React 内部对象。
+      // 这样可验证低热度作品仍可选，不把菜单截断误当成数据丢失。
+      // 性别、发色和瞳色不走这个入口，保持精确字段定位。
+      if (field === "copyright") await run(`(() => { const input=document.querySelector('[data-character-reference-section="copyright"] input'); Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(input,${JSON.stringify(value)}); input.dispatchEvent(new Event('input',{bubbles:true})); return true; })()`);
+      await run(`(() => { const toggle=document.querySelector('[data-character-reference-toggle="${field}"]'); if(toggle.getAttribute('aria-expanded')!=='true')toggle.click(); return true; })()`);
+      await run(`(() => { const option=Array.from(document.querySelectorAll('[data-character-reference-field="${field}"]')).find(item=>item.getAttribute('data-character-reference-value')===${JSON.stringify(value)}); option.scrollIntoView({block:'nearest'}); option.click(); return true; })()`);
+      return;
+    }
+    await run(`document.querySelector('[data-character-reference-filters] [aria-label='+CSS.escape(${JSON.stringify(label)})+']').click(); true`);
+    await waitFor(`document.querySelector('[data-simple-select-panel] [role="option"]')`);
+    await run(`Array.from(document.querySelectorAll('[data-simple-select-panel] [role="option"]')).find(item=>item.textContent.trim()===${JSON.stringify(value)}).click(); true`);
   };
 
   const closePicker = async () => {
@@ -331,6 +408,13 @@ app.whenReady().then(async () => {
   try {
     await win.loadURL("app://app/create");
     await sleep(3500);
+    // 临时用户目录没有已读公告记录，首次启动可能弹出真实更新通知。
+    // 用实际“知道了”按钮关闭，不能让程序化点击穿过遮罩而假装用户可操作。
+    // 公告不属于角色库受测内容，但必须清除才能审查真实侧栏截图。
+    // 不删除 DOM 或修改产品状态，保留公告自己的持久化与关闭逻辑。
+    // 按文案限定按钮，避免误点角色选择器或其他正在加载的入口。
+    await run(`Array.from(document.querySelectorAll('button')).find(button=>button.textContent.trim()==='知道了')?.click(); true`);
+    await sleep(400);
 
     // ---------- 入口：提示词框下方、「画师」右侧 ----------
     const trigger = await run(`(() => {
@@ -357,6 +441,122 @@ app.whenReady().then(async () => {
       trigger.sameRowAsPainter && trigger.rightOfPainter && trigger.belowEditor,
       JSON.stringify(trigger)
     );
+
+    /**
+     * 默认离线库正向验证：数据来自 shared JSON，UI 不靠网络图片补齐角色。
+     * 按四属性筛选后再输入原名，验证条件确实组合提交。
+     * 不能只检查四个菜单存在；卡片和请求必须反映用户选择。
+     * 多选、收藏、详情仍复用原卡片，下方旧套件继续覆盖在线行为。
+     * 先验证空关键词的属性浏览，再验证姓名精确查找，避免只测单一路径。
+     * 资料原名是 princess zelda，不把简称 zelda 假装成唯一身份。
+     * 蓝眼与金发各自放在正确字段，防止两个颜色菜单串值。
+     * 原提示词后续仍可追加旧在线角色，证明接入没有替换应用契约。
+     * 反向过滤给 black 发色，精确姓名也不能绕过筛选偷偷返回角色。
+     * 测试不声称真实模型按这些属性生成，只确认提示词准备和显示行为。
+     * 本地关联封面独立加载，CDN 缺图的角色也不应从列表消失。
+     * 所有资料请求保留 source 标记，能判定默认加载实际走了哪条路径。
+     */
+    // 点击实际创建页入口后应先看到 local 卡片，而不是来自旧在线替身的 Alice。
+    // 不只观察文字“本地参考库”，因为标签正确并不能证明请求真的选择了 local。
+    // openPicker 通过 slug 前缀与实际卡片数量等待后端和 React 完成。
+    // 浏览四属性应命中五个角色（包括 tetra），不能只数名字含 zelda 的记录。
+    // 四个菜单依次点击，最终一条请求需同时含有全部字段。
+    // 请求参数断言和显示条数断言配对，避免只测 UI 文案而未测实际过滤。
+    // 不人为写 state，不直接调用 IPC 搜索函数作为“点击”替身。
+    // label/value 是受控测试常量，不执行用户提供的 JavaScript。
+    check("默认打开本地参考库并加载真实角色", await openPicker("local"));
+    // 默认第一页初音封面应有真实解码尺寸，而不是只有非空 src 属性。
+    // src 仍指向按姓名与作品生成的正式 CDN 地址，夹具只负责替代图片字节。
+    // 关联图片不应调用角色搜索 API；用户尚未点击任何详情。
+    // 第一次打开前尚无其他 online 请求，使这条负向断言有明确前提。
+    // 这验证了本地索引和远端图片分工，不把整个列表改成网络搜索。
+    // shared LibraryCard 仍是唯一卡片表面，选中和收藏在后续旧用例继续验证。
+    // loading 属性必须保留 lazy，不能因补封面就强制八千张图片预加载。
+    // fixture 能证明渲染链路，真实公网可用性在交付中单独说明。
+    check("本地角色复用共享卡片懒加载网络封面",await waitFor(`Array.from(document.querySelectorAll('[data-character-card] img')).some(img=>img.src.includes('hatsune%20miku%2C%20vocaloid.webp')&&img.complete&&img.naturalWidth>0&&img.loading==='lazy')`));
+    check("浏览本地封面不逐卡查询线上搜索",previewRequests.length>0 && !searchCalls.some(args=>args.source==='online'));
+    // 可选截图只记录真实窗口，不改页面 DOM 或给组件注入模拟的外观状态。
+    // 首次本地列表已加载，数量与作品来自真实 JSON，图片字节由上述 CDN 夹具提供。
+    // 截图写入本轮指定的临时目录，不覆盖用户图片或生产输出目录。
+    // 左侧默认展开性别和作品，便于核对标题、图标、徽标和滚动区域的排列。
+    // 图像仅作为布局复核，筛选是否正确仍依赖后面的请求与卡片断言。
+    // 无截图环境变量时不写文件，CI 不需要保存大量二进制产物。
+    // capturePage 属于测试主进程，产品 renderer 不因此得到新的截图权限。
+    // 等一小段主进程时间让弹窗入场完成，避免保存动画缩放中间态。
+    // 没有图片加载前置条件，本地缺封面时依然必须能观察分类与记录数量。
+    // 截图后仍从当前同一弹窗继续筛选，避免另开静态样例页面冒充产品验证。
+    if (process.env.CHARACTER_REFERENCE_SCREENSHOTS) {
+      fs.mkdirSync(process.env.CHARACTER_REFERENCE_SCREENSHOTS,{recursive:true}); await sleep(400);
+      fs.writeFileSync(path.join(process.env.CHARACTER_REFERENCE_SCREENSHOTS,"sidebar-local.png"),(await win.webContents.capturePage()).toPNG());
+    }
+    // 分类必须实际位于 nav 侧栏，工具条上方不再留第二套四属性选择器。
+    // 性别数字来自真实 JSON，不能照抄截图的统计或拿热度作数量。
+    // 数字断言与后续筛选结果配对，排除仅搬了静态 UI 没接真实查询。
+    // 计数不会因在线详情替身存在就改变来源，本地 JSON 才是这项断言的分母。
+    const sidebarClassifications = await run(`(() => { const panel=document.querySelector('[data-character-reference-filters]'); const female=panel.querySelector('[data-character-reference-field="gender"][data-character-reference-value="1girl"]'); return {inSidebar:!!panel.closest('[data-character-sidebar]'),inToolbar:!!panel.closest('[data-character-toolbar]'),count:Number(female.querySelector('[data-character-reference-count]').textContent)}; })()`);
+    check("四属性分类位于侧栏且数量来自真实本地记录",sidebarClassifications.inSidebar && !sidebarClassifications.inToolbar && sidebarClassifications.count===require("../packages/shared/src/data/character-reference.json").filter(row=>row.gender==="1girl").length,JSON.stringify(sidebarClassifications));
+    // 默认作品菜单按参考工具限制为热门30项，角色总数仍为8000。
+    // 菜单截断不能等同于只保留30个作品的数据，后续会搜索完整集合。
+    // 这里读取真实分类按钮，不把“全部”清除行算成一个作品。
+    // 使用已加载的本地数据计数，网络替身不会改变分类分母。
+    check("角色默认只展示热门30个作品", await run(`document.querySelectorAll('[data-character-reference-field="copyright"]').length===30`));
+    for (const [label,value] of [["作品","the legend of zelda"],["性别","1girl"],["发色","blonde"],["瞳色","blue"]]) await selectReference(label,value);
+    check("四属性联合查询实际传到主进程", await waitFor(`document.querySelectorAll('[data-character-card]').length===5`) && searchCalls.some(args=>args.source==="local" && args.copyright==="the legend of zelda" && args.gender==="1girl" && args.hair==="blonde" && args.eye==="blue"));
+    // 清除四属性后要恢复第一页全部结果，不能只擦掉颜色高亮。
+    // 原搜索尚为空，24张卡片和8000总量能排除残留隐藏条件。
+    // 再次选择四属性，随后姓名与详情旧断言继续验证数据传递。
+    // 清除按钮属于侧栏分类，不应顺便清掉用户已选草稿。
+    await run(`document.querySelector('[data-character-reference-clear]').click(); true`);
+    check("角色清除分类恢复完整本地库", await waitFor(`document.querySelectorAll('[data-character-card]').length===24 && document.querySelector('[data-character-pagination-info]')?.textContent.includes('8,000')`));
+    for (const [label,value] of [["作品","the legend of zelda"],["性别","1girl"],["发色","blonde"],["瞳色","blue"]]) await selectReference(label,value);
+    await waitFor(`document.querySelectorAll('[data-character-card]').length===5`);
+    await run(`(() => { const input=document.querySelector('[data-character-toolbar] input'); Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(input,'princess zelda'); input.dispatchEvent(new Event('input',{bubbles:true})); return true; })()`);
+    // 输入通过原生 value setter 触发 React onChange，保留产品真实防抖过程。
+    // 等唯一角色卡出现，避免把初始四个候选误认为姓名查询已完成。
+    // princess zelda 必须来自卡片正文，不能仅因搜索框含此名字就通过。
+    // 应用按钮等待解除禁用，确认点击卡片确实改变选择状态。
+    // 选择动作复用现有角色卡按钮，验证新数据兼容原多选契约。
+    // 应用“触发词+Tags”后检查三个字段共同存在，而不只检查弹窗关闭。
+    // 没有预览图仍能选中，这与原数据不含封面链接的事实相符。
+    // 此操作只改临时用户目录的提示词，不访问生产账户或真实模型。
+    check("原名结合分类得到唯一角色卡", await waitFor(`document.querySelectorAll('[data-character-card]').length===1 && document.querySelector('[data-character-card]')?.textContent.includes('princess zelda')`));
+    // princess 的图片由请求夹具返回坏字节，必须由浏览器实际触发解码失败。
+    // 非空 URL 的坏图与没有 URL 不同，只有前者能检测 onError 是否真正接通。
+    // 缺图后仍有共享卡片和选择按钮，不能把角色从分类结果删除。
+    // 不手动派发 error 或改组件状态，确保测试覆盖真实 Image.onError 接线。
+    // 之后仍打开详情并插入标签，证明坏图没有阻断原有操作流程。
+    // 搜索词已收敛到唯一角色，不能误把其他成功卡片当作缺图对象。
+    check("网络封面损坏后显示占位且角色仍可选择",await waitFor(`!document.querySelector('[data-character-card] img')&&document.querySelector('[data-character-card]')?.textContent.includes('无预览图')&&Boolean(document.querySelector('[data-character-card] button[aria-label^="选择"]'))`));
+    // 点击真实本地详情入口，线上请求应按原名发出并完成身份一致的媒体补全。
+    // 标签仍保留本地颜色，封面与 LoRA 资料则来自上方确定性的线上替身。
+    // 不只断言发过网络请求，还要求详情图片节点真正显示远端返回内容。
+    // 关闭嵌套详情后继续应用原卡片，检查本地 slug 和选择流程未被线上替换。
+    // 此处不检查站点真实可用性，fixture 在同一 IPC 契约下响应。
+    await run(`document.querySelector('[data-character-card] [data-character-detail]').click(); true`);
+    check("本地分类角色按名称与作品合并线上封面和LoRA资料",await waitFor(`Boolean(document.querySelector('[data-resource-dialog="character-detail-dialog-title"] img')) && !document.querySelector('[data-character-online-status]') && document.querySelector('[data-character-add-lora]')?.textContent.includes('1')`) && searchCalls.some(args=>args.source==="online"&&args.q==="princess zelda"));
+    await run(`document.querySelector('[data-resource-dialog="character-detail-dialog-title"] button[aria-label="关闭"]').click(); true`);
+    await run(`document.querySelector('[data-character-card] button[aria-label^="选择"]').click(); true`);
+    await waitFor(`document.querySelector('[data-character-apply-both]:not(:disabled)')`);
+    await run(`document.querySelector('[data-character-apply-both]').click(); true`);
+    check("本地角色应用真实姓名和外观标签", await waitFor(`['princess zelda','blonde hair','blue eyes'].every(tag=>document.getElementById('prompt-editor')?.textContent.includes(tag))`));
+    // 本地用例完成后清空实际 contentEditable，隔离旧在线断言的初始提示词。
+    // 必须派发 input 让受控状态同步，不能只改 DOM 留下旧文本等待恢复。
+    // 此处不修改去重算法；旧套件仍验证单次应用中重复 tag 只出现一次。
+    await run(`(() => { const editor=document.getElementById('prompt-editor'); editor.textContent=''; editor.dispatchEvent(new Event('input',{bubbles:true})); return true; })()`);
+    // 第二次打开先恢复默认空条件，再制造与已知姓名矛盾的发色。
+    // 如果代码用姓名精确项跳过外观条件，这个反向对照必须失败。
+    // 预期是空网格和明确空结果文案，不是红色请求错误或一直 loading。
+    // 原作品菜单已清空，避免旧条件碰巧导致零项而掩盖发色逻辑错误。
+    // 关闭后重新运行旧在线套件，检验保留功能而非只测新入口。
+    // 旧套件仍使用独立人工角色资料，不能被本地热门角色顺序影响。
+    // 来源切换的异步回执有取消边界，后续在线卡片不能被本地迟到结果覆盖。
+    // 前向与反向对照均经过真实组件，未从 DOM 注入伪造角色卡。
+    // 反向用例不触发生成按钮，只验证准备阶段，避免消耗显存或生成队列。
+    await openPicker("local");
+    await run(`(() => { const input=document.querySelector('[data-character-toolbar] input'); Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(input,'princess zelda'); input.dispatchEvent(new Event('input',{bubbles:true})); return true; })()`);
+    await selectReference("发色","black");
+    check("不匹配属性显示空结果且不伪造角色", await waitFor(`document.querySelectorAll('[data-character-card]').length===0 && document.querySelector('[data-character-main]')?.textContent.includes('没有找到匹配的角色')`));
+    await closePicker();
 
     // ---------- 弹窗外壳 ----------
     check("点击后弹出角色选择弹窗并加载数据", (await openPicker()) === true);
@@ -479,12 +679,29 @@ app.whenReady().then(async () => {
 
     // 真实采样展开过程：应出现介于 0 与最终高度之间的中间帧（证明是平滑过渡而非瞬变）
     // 注意：窗口被遮挡时 Chromium 会暂停 transition，这里失败会折叠后重试一次
+    // 保存起跑前的可见性与动画，失败时区分过渡未开始与渲染被暂停。
+    // 诊断不改变等待时长或断言，也不把采样失败自动当作通过。
+    // getAnimations 只观察浏览器状态，真实通过仍要求高度中间帧。
+    // visibility=visible 本身不足以证明 compositor 的时间线正在推进。
+    // open 读取 DOM 提交值，区分 React 未响应和已响应但过渡停滞。
+    // animations 为空时可能是尚未起跑或已经结束，须结合前后高度判断。
+    // running 且 time=0 持续不变则记录为时间线停滞，不能说动画没创建。
+    // currentTime 保留原始值，不将 null 伪装成已经播放零毫秒。
+    // 只收集受测 body 的动画，不被全局加载旋转图标污染诊断。
+    // 起跑前快照确认是否残留上次收起动画，避免把回程当作展开帧。
+    // 结束快照与最终高度同次返回，便于定位状态与几何不一致。
+    // 箭头仍单独采样 transform，高度正常也不能掩盖箭头停摆。
+    // 页面侧 setTimeout 只是采样节拍，不会主动推进 CSS 动画。
+    // 一次诊断只含公开 UI 状态，不收集账户信息或用户目录。
+    // 这些证据追加到原冒烟日志，失败退出码由既有护栏维持。
     const sampleExpand = () =>
       run(`(async () => {
       const toggle = document.querySelector('[data-character-section-toggle="favorites"]');
       const body = document.querySelector('[data-character-section-body="favorites"]');
       const arrow = toggle.querySelector('[data-character-section-arrow]');
       const before = Math.round(body.getBoundingClientRect().height);
+      const probe = () => ({visibility:document.visibilityState,open:toggle.getAttribute('aria-expanded'),animations:body.getAnimations().map(animation=>({state:animation.playState,time:animation.currentTime}))});
+      const initialProbe = probe();
       toggle.click();
       const samples = [];
       const arrowFrames = [];
@@ -495,6 +712,7 @@ app.whenReady().then(async () => {
       }
       return {
         before,
+        initialProbe, finalProbe:probe(),
         samples,
         arrowFrames,
         finalHeight: Math.round(body.getBoundingClientRect().height),
@@ -507,6 +725,9 @@ app.whenReady().then(async () => {
       (h) => h > 0 && h < expandAnimation.finalHeight
     );
     if (intermediateFrames.length < 2) {
+      // 首次失败留档，重试不会抹掉这一份原始动画诊断。
+      // 只有完整的独立复跑与实际断言可以形成最终验证结论。
+      console.log("[收藏展开诊断]", JSON.stringify(expandAnimation));
       // 收起后重试（把窗口拉到最前，避免被遮挡导致过渡暂停）
       win.focus();
       await collapseSection("favorites");
@@ -1068,13 +1289,25 @@ app.whenReady().then(async () => {
         selected: document.querySelectorAll('[data-character-checked]').length,
         detailOpen: Boolean(document.querySelector('[data-character-trigger]')) };
     })()`);
+    // 主题切换有两层信号：系统媒体查询先变化，React 主题提交随后到达。
+    // 只等 matchMedia 会在旧 data-theme 上读到自洽的旧颜色，产生假通过。
+    // 详情还带颜色过渡，列表背景就绪不代表嵌套标题和面板也已落定。
+    // 同时轮询实际详情颜色，避免把动画中的 rgb(252,252,252) 误报为产品回归。
+    // 期限仍固定三秒，不能无限等到通过或用长 sleep 掩盖真正的主题失败。
+    // 最后保持原来的精确颜色比较，不放宽成“差不多接近”新配色。
+    // light-dark-light 是配对对照，防止探针永远返回深色也被误判通过。
+    // 当前测试只改等待前提，不修改主题信号或产品的切换动画。
+    // 未打开详情时此用例不会运行，详情存在已在上方单独确认。
+    // readThemeColors 仍读取正式计算样式，没有将 expected 直接写进被测节点。
+    // 等待在主进程定时，页面不可见时也能正常超时并报告失败。
+    // 若最终颜色未一致，下面保留完整实际值便于区别请求失败和过渡未结束。
     for (const theme of ["light", "dark", "light"]) {
       nativeTheme.themeSource = theme;
       check(`角色库 ${theme}：媒体查询切换完成`,
-        await waitFor(`matchMedia('(prefers-color-scheme: dark)').matches === ${theme === "dark"}`));
+        await waitFor(`matchMedia('(prefers-color-scheme: dark)').matches === ${theme === "dark"} && document.documentElement.dataset.theme === '${theme}'`));
       const deadline = Date.now() + 3000;
       let colors = await readThemeColors();
-      while (colors.regions.some(region => region.bg !== colors.expected.bg) && Date.now() < deadline) {
+      while ((colors.regions.some(region => region.bg !== colors.expected.bg) || colors.dialogBg !== (theme === "dark" ? colors.expected.muted : colors.expected.bg) || colors.titleColor !== colors.expected.fg) && Date.now() < deadline) {
         await sleep(80);
         colors = await readThemeColors();
       }
@@ -1192,6 +1425,10 @@ app.whenReady().then(async () => {
           return {
             id: el.getAttribute('data-resource-dialog'),
             motionNone: el.classList.contains('motion-none'),
+            // 新创建页的单栏替换是宿主内的正常流，不再铺满整个窗口。
+            // 必须观察宿主尺寸，不能拿含 head/footer 的窗口高度作基准。
+            // 记录归属证明紧凑层确实进入 main，而非只盖住表单的浮动层。
+            mainPage: el.hasAttribute('data-resource-main-page'), parentHeight: el.parentElement.clientHeight,
             offsetWidth: el.offsetWidth,
             offsetHeight: el.offsetHeight,
             rectWidth: Math.round(rect.width),
@@ -1217,7 +1454,10 @@ app.whenReady().then(async () => {
             }
           }
         });
-        observer.observe(document.body, { childList: true });
+        // 宿主模式的插入发生在 body 子孙，subtree 覆盖新旧两种挂载位置。
+        // 仍只记录首次真正出现的对话框，不改成稳定后才采样蒙混首帧问题。
+        // MutationObserver 不依赖 rAF，窗口遮挡时也能记录结构变化。
+        observer.observe(document.body, { childList: true, subtree: true });
         window.__dialogProbeStop = () => observer.disconnect();
         return true;
       })()`);
@@ -1269,16 +1509,34 @@ app.whenReady().then(async () => {
     await closePicker();
 
     /**
-     * 配对对照：窄窗口（< xl）下同一探针必须读到**紧凑变体**。
+     * 配对对照：主区小于 760px 时同一探针必须读到**宿主内紧凑变体**。
      * 没有这一段，上面两条断言可能是「无论如何都判居中」的恒真对照 ——
      * 这个仓库已经吃过一次恒真对照的亏（见 logs.md）。
      *
-     * 刻意**另开一个 1100px 宽的窗口**，而不是 `win.setSize()`：窗口被遮挡 / 最小化时
+     * 创建页现在按父 main 的 760px 能力判断，1100px 窗口通常已能放两栏。
+     * 旧例使用视口 <1280px 与产品实现分叉，因此改为真正小于主区阈值的窗口。
+     * 首帧不应覆盖 head/nav/footer，而是完全填充创建页常驻宿主。
+     * 同时断言 mainPage 和父高度，不能只靠 motion-none 猜测它是否替换主区。
+     * body 子树观察覆盖宿主 portal，避免只有 body 直接子节点时漏掉新路径。
+     * 这些改变只修正测试命题，不把产品重新改回基于视口的旧规则。
+     * 失败仍视为失败，前置条件不成立按仓库约定退环境码二。
+     * 两个窗口按顺序运行，不能把同时开两套 Electron 冒烟造成的抢占当布局问题。
+     * 窄窗口销毁后恢复旧 webContents，后续断言不会误读已关闭的页面。
+     * 之前的背景节流保护保留，测试不会通过隐藏窗口制造事件不来的假红。
+     * 窗口宽度不同是正反对照的必要输入，其他业务数据和选择器实现保持一致。
+     * 角色库本地来源缺封面，探针不能依赖图片 load 才记录首帧。
+     * 在线来源的人工图片也为空，正反对照不会被网络图片加载时序干扰。
+     * 居中弹窗的 transform 会影响 rect，首次高度继续使用 offsetHeight。
+     * 宿主内父高度在正常流中确定，量它可排除标题栏或状态栏被错误覆盖。
+     * 窄窗口仍使用与生产一致的 contextIsolation 与 preload，不能直接调用 Node。
+     * 页面加载后再读主区，避免把加载前的零宽误认成合法单栏。
+     * 弹窗关闭后再打开扩展，防止两个页面层争用同一宿主污染宽度结果。
+     * 刻意**另开一个 800px 宽的窗口**，而不是 `win.setSize()`：窗口被遮挡 / 最小化时
      * 尺寸变化不一定传导到渲染进程（首次实现就是这么失败的：页面仍读到 1440，
-     * 前置条件不成立、退化成 exit 2）。新窗口「生来就是 1100px」，视口没有悬念。
+     * 前置条件不成立、退化成 exit 2）。新窗口「生来就是 800px」，视口没有悬念。
      */
     const narrowWin = new BrowserWindow({
-      width: 1100,
+      width: 800,
       height: 950,
       show: true,
       alwaysOnTop: true,
@@ -1286,7 +1544,7 @@ app.whenReady().then(async () => {
         contextIsolation: true,
         nodeIntegration: false,
         sandbox: false,
-        preload: path.join(__dirname, "..", "apps", "electron", "preload.js"),
+        preload: path.join(__dirname, "../apps/electron/src/preload/index.js"),
         backgroundThrottling: false,
       },
     });
@@ -1298,17 +1556,20 @@ app.whenReady().then(async () => {
 
       const narrowPrecondition = await run(`({
         innerWidth: window.innerWidth,
-        xlMatches: window.matchMedia('(min-width: 1280px)').matches,
+        // 视口宽度不是创建页分栏阈值，读正常流父 main 的实际宽度。
+        // 隐藏的 workspace 会返回零宽，所以必须读常驻 main-area。
+        // 若环境没有进入单栏，先退环境问题而非把居中弹窗误报代码回归。
+        singleMain: document.querySelector('[data-create-main-area]')?.getBoundingClientRect().width < 760,
         triggerPresent: Boolean(document.querySelector('[data-character-picker-trigger]')),
       })`);
 
       if (
         !narrowPrecondition ||
-        narrowPrecondition.xlMatches ||
+        !narrowPrecondition.singleMain ||
         !narrowPrecondition.triggerPresent
       ) {
         smoke.exitEnvironment(
-          "窄窗口配对对照的前置条件不成立（1100px 窗口没有落在 < xl，或创建页触发按钮不在）：" +
+          "窄窗口配对对照的前置条件不成立（800px 窗口主区没有落在 < 760px，或创建页触发按钮不在）：" +
             JSON.stringify(narrowPrecondition),
           { app }
         );
@@ -1320,12 +1581,12 @@ app.whenReady().then(async () => {
       const narrowFirstFrame = await run(`window.__dialogFirstFrame`);
 
       check(
-        "配对对照（1100px 窗口）：同一探针在窄窗口首帧读到的就是紧凑变体",
+        "配对对照（800px 窗口）：同一探针在窄窗口首帧读到的就是紧凑变体",
         Boolean(narrowFirstFrame) &&
-          narrowFirstFrame.motionNone === true &&
-          Math.abs(narrowFirstFrame.offsetHeight - narrowFirstFrame.innerHeight) <= 1,
+          narrowFirstFrame.motionNone === true && narrowFirstFrame.mainPage === true &&
+          Math.abs(narrowFirstFrame.offsetHeight - narrowFirstFrame.parentHeight) <= 1,
         narrowFirstFrame
-          ? `首帧 motionNone=${narrowFirstFrame.motionNone} 布局高=${narrowFirstFrame.offsetHeight}/${narrowFirstFrame.innerHeight}`
+          ? `首帧 motionNone=${narrowFirstFrame.motionNone} 布局高=${narrowFirstFrame.offsetHeight}/${narrowFirstFrame.parentHeight}`
           : "没有记录到首帧"
       );
 
@@ -1335,8 +1596,16 @@ app.whenReady().then(async () => {
       await sleep(900);
       const narrowSearch = await measureDialogSearch("extension-select-dialog-title");
       check(
-        "紧凑（1100px）：扩展弹窗搜索框抬到 ≥36px 且占满剩余宽度（与上面宽屏那条配对）",
-        narrowSearch && narrowSearch.height >= 36 && narrowSearch.width >= 300,
+        // 窗口变窄到真正单栏后，剩余搜索宽度会小于旧 1100px 用例的 300px。
+      // 用同一轮实测宽屏固定宽度作对照，验证紧凑搜索确实伸展而非只保留 w-40。
+      // 高度仍必须达到 36px，不因窗口变窄就降低点击区域的要求。
+      // 这里比较的是行为差异，不把某台机器的剩余宽度硬编码成产品最低宽度。
+      // 更改布局阈值后若两端都变成固定宽，这条与宽屏断言会形成失败对照。
+      // 宽屏测量发生在同一套组件和主题中，不依赖另一个历史截图的像素。
+      // 数值留在报告里，能看到 28/160 与紧凑实际尺寸的区别。
+      // 这条不重新定义产品断点，断点是否进入单栏已由前置条件直接读 main。
+      "紧凑（800px）：扩展搜索框达到36px且宽于宽屏固定搜索框",
+        narrowSearch && narrowSearch.height >= 36 && narrowSearch.width > wideSearch.width + 60,
         JSON.stringify(narrowSearch)
       );
       await closeResourceDialog("extension-select-dialog-title");

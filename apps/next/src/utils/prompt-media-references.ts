@@ -27,11 +27,20 @@ export function filterPromptMedia(media: readonly PromptReferenceMedia[], query:
   const search = query.trim().toLocaleLowerCase();
   return media.filter((item) => `${item.name} ${item.label ?? ""} ${mediaReferenceToken(item)} ${MEDIA_ALIASES[item.kind]}${item.number}`.toLocaleLowerCase().includes(search));
 }
+// 手输 @audio 1 与菜单插入 @audio1 等价，允许水平空格但不能跨换行引用。
+// 编号捕获组位置保持不变，现有装饰器仍能用 match[1] 找对应素材。
+// 左右文字边界继续阻止邮箱或单词中的 image1 被意外改写。
+// 显式共用同一个匹配入口，预览、编辑装饰与提交不会各认一套空格写法。
+// 返回 match 原始区间，替换时可精确保留周边对白和换行。
+// 不 trim 整段提示词，避免用户有意义的格式被引用处理顺手删除。
 export function promptMediaMatches(text: string) {
-  return [...text.matchAll(/(?<![\p{L}\p{N}_])(?:@(?:image|图|video|视频|audio|音频)|image)([1-9]\d*)(?![\p{L}\p{N}_])/giu)];
+  return [...text.matchAll(/(?<![\p{L}\p{N}_])(?:@(?:image|图|video|视频|audio|音频)|image)[\t ]*([1-9]\d*)(?![\p{L}\p{N}_])/giu)];
 }
 export function findPromptReferenceMedia(token: string, media: readonly PromptReferenceMedia[]) {
-  const match = token.match(/^@?(image|图|video|视频|audio|音频)([1-9]\d*)$/iu);
+  // 可选空格只位于类型与编号之间，不能把普通段落拼成一个引用。
+  // 菜单依旧插入紧凑写法，手动输入的有空格别名也能映射同一素材。
+  // 实际素材必须在当前任务列表中存在，正则匹配本身不提供资源。
+  const match = token.match(/^@?(image|图|video|视频|audio|音频)[\t ]*([1-9]\d*)$/iu);
   if (!match) return undefined;
   const alias = match[1].toLowerCase();
   // 中文别名是用户输入协议的一部分，不是界面文案。

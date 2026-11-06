@@ -18,6 +18,18 @@ export const promptAssembly = {
     placeholderAdvanced: "高级组装模式：内容由右侧「提示词组装」的分类自动拼接",
   },
   filled: "已填",
+  sort: {
+    // 浏览态明确按钮名称，排序态用独立标题，避免让孤立图标承担模式含义。
+    // 完成和取消来自同一排序会话，说明不再承诺拖一次就永久保存。
+    // 项数只表示按逗号或换行分隔的内容片段，空分组单独显示未填写。
+    groups: "提示词分组", currentOrder: "按当前顺序组合", toggle: "调整顺序",
+    title: "手动排序", hint: "拖动分组，决定提示词组合顺序；完成后保存。",
+    done: "完成", items: "{count} 项", empty: "未填写",
+    // 手柄保留原 dnd-kit 的键盘路径：空格提起、方向键移动、空格放下。
+    // Esc 只取消本次拖动；模式栏“取消”才会放弃本轮全部草稿。
+    // 可访问名称注入分组名，同名显示文字仍由不同稳定 id 识别。
+    drag: "拖动「{label}」排序；键盘空格提起、方向键移动、空格放下，Esc 取消",
+  },
   close: {
     title: "返回图库（关闭高级组装）",
     inlineTitle: "收起组装面板",
@@ -63,6 +75,7 @@ export const promptAssembly = {
     doneEditing: "完成编辑快捷词",
     inputPlaceholder: "新增快捷词后回车",
     removeLabel: "移除快捷词 {word}",
+    clearAll: "清空快捷词",
   },
   customTab: {
     titlePrefix: "自定义分类（如 光效 / 色彩，最多",

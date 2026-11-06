@@ -8,6 +8,50 @@
  * 卡片里的条目名（角色名 / 动作名 / 背景名 / Tags）是数据不是文案，不进词条表。
  */
 export const characters = {
+  favorites: {"view": "收藏 {count}", "export": "导出收藏", "exportHint": "将所有功能组收藏导出为一个 JSON 文件", "exportFailed": "无法发起收藏导出，请重试", "missingSnapshots": "有 {count} 个旧在线收藏尚无资料快照，请在原资料库中找到后重新收藏；导出仍保留其身份。"},
+  artist: {
+  "title": "画师库",
+  "unit": "画师",
+  "search": "画师名称…",
+  "all": "全部画师",
+  "collections": "我的收藏分组",
+  "favorites": "默认收藏",
+  "newGroup": "新建分组",
+  "groupName": "分组名称",
+  "rename": "重命名分组",
+  "deleteGroup": "删除分组（保留收藏画师）",
+  "addSelected": "将已选加入此组",
+  "removeSelected": "将已选移出此组",
+  "hint": "名称、作品数与独特性评分来自本地参考资料，预览图按需在线加载；删除分组不会删除收藏画师。",
+  "applied": "已写入画师风格分类",
+  "works": "作品数 {count}",
+  "unique": "独特性 {score}",
+  "sort": {
+    "works-desc": "作品数 ↓",
+    "works-asc": "作品数 ↑",
+    "unique-desc": "独特性 ↓",
+    "unique-asc": "独特性 ↑",
+    "name-asc": "名称 A–Z",
+    "name-desc": "名称 Z–A",
+    "random": "随机排序"
+  }
+},
+
+  facets: { clear: "清除分类筛选" },
+  background: {
+    categories: "场景大类", traits: "特征标签",
+    nature: "自然与户外", urban: "都市与日常", fantasy: "幻想与科幻", minimalist: "极简与纯色",
+    hint: "场景满足任意一项，特征需全部满足。分类与数量来自本地资料，预览图按原地址在线加载。",
+  },
+  reference: {
+    source: "角色库来源", local: "本地分类 · 在线资料", online: "在线角色库",
+    copyright: "热门作品系列", gender: "角色性别", hair: "角色发色", eye: "角色瞳色", all: "全部",
+    hint: "分类与数量来自本地参考库；打开详情时匹配线上图片与资料。",
+    searchWorks: "搜索作品", female: "单人女性 (1girl)", male: "单人男性 (1boy)",
+    onlineLoading: "正在匹配线上资料…", onlineUnavailable: "线上资料暂不可用，已保留本地资料。", onlineMissing: "未找到名称与作品一致的线上角色，已保留本地资料。",
+    colors: { black: "黑", blonde: "金", white: "白 / 银", brown: "棕 / 褐", blue: "蓝", pink: "粉", red: "红", purple: "紫", green: "绿", yellow: "黄 / 金" },
+  },
+
   picker: {
     title: "选择角色",
     loadFailed: "角色库加载失败",

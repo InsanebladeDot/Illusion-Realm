@@ -1,0 +1,206 @@
+{
+  "237": {
+    "inputs": {
+      "text": "Change the background to be outside with a few trees and grass, it's very vibrant. Make the character hold up a sign that says \"AnimaEditV2, Out Now!\". The sign should be covering her chest and navel. Also, change her expression to be excited and remove the blush. Keep the clothing the exact same.",
+      "clip": [
+        "236:4",
+        0
+      ]
+    },
+    "class_type": "CLIPTextEncode",
+    "_meta": {
+      "title": "CLIP文本编码"
+    }
+  },
+  "238": {
+    "inputs": {
+      "text": "",
+      "clip": [
+        "236:4",
+        0
+      ]
+    },
+    "class_type": "CLIPTextEncode",
+    "_meta": {
+      "title": "CLIP文本编码"
+    }
+  },
+  "240": {
+    "inputs": {
+      "samples": [
+        "254",
+        0
+      ],
+      "vae": [
+        "236:10",
+        0
+      ]
+    },
+    "class_type": "VAEDecode",
+    "_meta": {
+      "title": "VAE解码"
+    }
+  },
+  "245": {
+    "inputs": {
+      "lora_name": "Anima\\Image_edit\\Anima Edit\\AnimeEditV2.safetensors",
+      "strength_model": 1,
+      "model": [
+        "236:3",
+        0
+      ]
+    },
+    "class_type": "LoraLoaderModelOnly",
+    "_meta": {
+      "title": "LoRA加载器（仅模型）"
+    }
+  },
+  "254": {
+    "inputs": {
+      "seed": 866466607276076,
+      "steps": 30,
+      "cfg": 4,
+      "sampler_name": "euler_ancestral",
+      "scheduler": "simple",
+      "denoise": 1,
+      "model": [
+        "295",
+        0
+      ],
+      "positive": [
+        "237",
+        0
+      ],
+      "negative": [
+        "238",
+        0
+      ],
+      "latent_image": [
+        "264",
+        0
+      ]
+    },
+    "class_type": "KSampler",
+    "_meta": {
+      "title": "K采样器"
+    }
+  },
+  "264": {
+    "inputs": {
+      "pixels": [
+        "296",
+        0
+      ],
+      "vae": [
+        "236:10",
+        0
+      ]
+    },
+    "class_type": "VAEEncode",
+    "_meta": {
+      "title": "VAE编码"
+    }
+  },
+  "289": {
+    "inputs": {
+      "image": "IR_2026-10-12_183028_1684b389_1.png"
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "加载图像"
+    }
+  },
+  "293": {
+    "inputs": {
+      "direction": "down",
+      "match_image_size": true,
+      "spacing_width": 0,
+      "spacing_color": "white",
+      "image1": [
+        "296",
+        0
+      ],
+      "image2": [
+        "240",
+        0
+      ]
+    },
+    "class_type": "ImageStitch",
+    "_meta": {
+      "title": "图像拼接"
+    }
+  },
+  "295": {
+    "inputs": {
+      "model": [
+        "245",
+        0
+      ],
+      "ref_latents.ref_latent_1": [
+        "264",
+        0
+      ]
+    },
+    "class_type": "ApplyCosmosReferenceLatent",
+    "_meta": {
+      "title": "Apply Cosmos Reference Latent"
+    }
+  },
+  "296": {
+    "inputs": {
+      "upscale_method": "lanczos",
+      "megapixels": 1,
+      "resolution_steps": 8,
+      "image": [
+        "289",
+        0
+      ]
+    },
+    "class_type": "ImageScaleToTotalPixels",
+    "_meta": {
+      "title": "缩放图像（像素）"
+    }
+  },
+  "297": {
+    "inputs": {
+      "images": [
+        "293",
+        0
+      ]
+    },
+    "class_type": "PreviewImage",
+    "_meta": {
+      "title": "预览图像"
+    }
+  },
+  "236:3": {
+    "inputs": {
+      "unet_name": "Anima\\anima_aestheticV11\\anima_aestheticV11.safetensors",
+      "weight_dtype": "default"
+    },
+    "class_type": "UNETLoader",
+    "_meta": {
+      "title": "UNet加载器"
+    }
+  },
+  "236:4": {
+    "inputs": {
+      "clip_name": "Anima\\anima_baseV10_txt\\anima_baseV10_txt.safetensors",
+      "type": "cosmos",
+      "device": "default"
+    },
+    "class_type": "CLIPLoader",
+    "_meta": {
+      "title": "加载CLIP"
+    }
+  },
+  "236:10": {
+    "inputs": {
+      "vae_name": "Anima\\qwen_image_vae\\qwen_image_vae.safetensors"
+    },
+    "class_type": "VAELoader",
+    "_meta": {
+      "title": "加载VAE"
+    }
+  }
+}

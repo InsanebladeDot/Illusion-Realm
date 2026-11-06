@@ -91,7 +91,6 @@ export function normalizeCharacter(
 
   const box = new THREE.Box3().setFromObject(object);
   const size = box.getSize(new THREE.Vector3());
-  const center = box.getCenter(new THREE.Vector3());
 
   const rawHeight = size.y > 1e-6 ? size.y : 1;
   const scale = CHARACTER_TARGET_HEIGHT / rawHeight;

@@ -21,6 +21,18 @@ export const promptAssembly = {
     "placeholderAdvanced": "高级组装模式：内容由右侧「提示词组装」的分类自动拼接"
   },
   "filled": "已填",
+  sort: {
+    // 英文同样区分进入排序与确认排序，不把 Edit order 误说成自动语义分类。
+    // 确认动作没有 API 请求，完成只保存用户自己安排的队列。
+    // 数量文案与中文保持同一统计口径，不把输入片段说成模型 token。
+    groups: "Prompt groups", currentOrder: "Combined in this order", toggle: "Edit order",
+    title: "Manual order", hint: "Drag groups to arrange the prompt. Select Done to save.",
+    done: "Done", items: "{count} items", empty: "Empty",
+    // 复用浏览器键盘传感器，手柄提示随本行真实名称变化。
+    // cancel drag 与模式栏 Cancel 含义不同，前者不会退出整个排序模式。
+    // 英文路径不依赖中文按键名称或标签文字定位任何分组。
+    drag: "Reorder {label}; Space to pick up, arrows to move, Space to drop, Esc to cancel",
+  },
   "close": {
     "title": "返回图库（关闭高级组装）",
     "inlineTitle": "收起组装面板",
@@ -64,7 +76,8 @@ export const promptAssembly = {
     "edit": "编辑快捷词",
     "doneEditing": "完成编辑快捷词",
     "inputPlaceholder": "新增快捷词后回车",
-    "removeLabel": "移除快捷词 {word}"
+    "removeLabel": "移除快捷词 {word}",
+    "clearAll": "Clear shortcuts"
   },
   "customTab": {
     "titlePrefix": "自定义分类（如 光效 / 色彩，最多",

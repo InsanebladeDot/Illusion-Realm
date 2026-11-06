@@ -1,4 +1,10 @@
 /**
+ * protocol：使用客户端的 app:// 与 localfile:// 协议实现。
+ * scanner：使用本地模型扫描器发现目录里的实际模型文件。
+ * generated-images：使用本地生成媒体扫描和文件操作实现。
+ * window.handlers：窗口和主题 IPC 隶属 core 的系统交互边界。
+ */
+/**
  * Anima 工作流动态生成验证（任务规范《ComfyUI Anima 工作流动态生成规范》）
  *
  * 做法：真实跑一遍创建页（Electron 渲染进程），把「生成」时发给主进程的
@@ -14,9 +20,9 @@ const fs = require("fs");
 const os = require("os");
 const path = require("path");
 const { app, BrowserWindow, ipcMain: realIpcMain } = require("electron");
-const { registerAppProtocol } = require("../apps/electron/appProtocol");
-const { scanModelsInDirectory } = require("../apps/electron/modelScanner");
-const { listGeneratedImages } = require("../apps/electron/generatedImages");
+const { registerAppProtocol } = require("../apps/electron/src/main/core/protocol");
+const { scanModelsInDirectory } = require("../apps/electron/src/main/modules/models/scanner");
+const { listGeneratedImages } = require("../apps/electron/src/main/modules/images/generated-images");
 
 /** 1×1 PNG：用于让「生成结果」真实走一遍预览/落盘链路 */
 const TINY_PNG_BASE64 =
@@ -278,7 +284,7 @@ ipcMain.handle("userData:getDefaultPath", async () => userDataFile);
 ipcMain.handle("paths:getDefaultOutput", async () => outputDir);
 ipcMain.handle("models:downloadList", async () => []);
 ipcMain.handle("comfy:listModels", async () => ({ checkpoints: [], loras: [], diffusionModels: [], clips: [], vaes: [] }));
-require("../apps/electron/ipc-handlers/window.handlers").registerThemeHandlers();
+require("../apps/electron/src/main/core/windows/window.handlers").registerThemeHandlers();
 ipcMain.handle("models:scan", async (_event, dirPath, type) => {
   if (!dirPath || (type !== "checkpoint" && type !== "lora")) return [];
   try {
@@ -369,7 +375,7 @@ app.whenReady().then(async () => {
       // 与真实应用 main.js 一致：preload 是手写 CommonJS，需 Node 环境才能 require 本地模块
       sandbox: false,
       backgroundThrottling: false,
-      preload: path.join(__dirname, "..", "apps", "electron", "preload.js"),
+      preload: path.join(__dirname, "../apps/electron/src/preload/index.js"),
     },
   });
 

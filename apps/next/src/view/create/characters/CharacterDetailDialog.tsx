@@ -10,6 +10,10 @@ import type { AnimadexCharacter, AnimadexLora } from "@/types/character";
 import { copyText, formatCount } from "@/utils/charactersFormat";
 import { cn } from "@/utils/cn";
 import { PRIMARY_BUTTON_CLASS } from "@/utils/layout";
+// 本地分类选中的角色按姓名与作品补充线上媒体，不能只按同名借图。
+// hook 在切换/关闭时隔离迟到回执，原详情的收藏和插入仍用稳定本地 slug。
+// 在线无法匹配时保持本地详情可用，并说明实际状态而非无止境加载。
+import { useCharacterOnlineDetails } from "@/hooks/use-character-online-details";
 
 type CharacterDetailDialogProps = {
   character: AnimadexCharacter | null;
@@ -59,7 +63,10 @@ function OutlineAction({
  * （ResourceDialogShell），保证遮罩、容器、关闭按钮、标题与滚动行为完全一致。
  */
 export function CharacterDetailDialog({
-  character,
+  // 分别保存选择基准与展示结果，线上补图不改变本地筛选身份。
+  // 原 props 名不变，外层多选和详情关闭逻辑无需维护第二套对象。
+  // 直接在线角色不会额外联网，只有 local 前缀才尝试组合资料。
+  character: selectedCharacter,
   favorite,
   onToggleFavorite,
   onInsert,
@@ -68,10 +75,24 @@ export function CharacterDetailDialog({
   const { t } = useTranslation();
   const showToast = useToastStore((state) => state.show);
   const [lorasOpen, setLorasOpen] = useState(false);
+  // 详情也会先展示本地关联封面，CDN 缺图时回落已有占位而非破损图片。
+  // 失败状态只记地址，不改角色资料、标签或父层的选择草稿。
+  // 记录地址而非布尔值，在线补全返回新地址时仍允许重新加载。
+  // 与 LibraryCard 使用同样的失败归属规则，不另造下载和重试服务。
+  const [failedPreview, setFailedPreview] = useState("");
+  // 详情首帧显示本地字段，线上只补图片、来源链接和推荐 LoRA。
+  // notice 是 i18n key；网络错误不向 UI 泄露上游异常或磁盘路径。
+  // 同名不同作品无匹配时保持原数据，不能把第一个候选当成用户角色。
+  const { character,notice } = useCharacterOnlineDetails(selectedCharacter);
 
   if (!character) return null;
 
   const loras = character.loras;
+  // 线上高清图优先，其次缩略图；本地适配器已关联同一参考封面。
+  // 图片失败只影响展示，不阻塞触发词插入、收藏与详情关闭。
+  // hook 切换角色时仍核对原对象归属，此处不通过姓名猜图片所属。
+  // 没有自动重试循环，用户换图后才会尝试新的资源地址。
+  const preview = character.imageUrl || character.thumbUrl;
 
   const handleCopyTrigger = async () => {
     const ok = await copyText(character.trigger);
@@ -104,6 +125,10 @@ export function CharacterDetailDialog({
             {character.copyrightName || character.copyright || t("characters.detail.unknownWork")}
           </span>
           <span>{character.tags.length}{t("characters.detail.tagUnit")}</span>
+          {/* 界面：线上资料匹配状态；失败仍可使用本地触发词。 */}
+          {/* 通知不替代已有作品标签，用户能继续核对正在查看的身份。 */}
+          {/* 线上原卡片不显示此通知，避免把已加载详情误标为等待。 */}
+          {notice && <span data-character-online-status className="text-xs text-muted-foreground">{t(notice)}</span>}
         </span>
       }
       onOpenChange={onOpenChange}
@@ -112,9 +137,13 @@ export function CharacterDetailDialog({
       <div className="mx-auto flex max-w-4xl flex-col gap-5 lg:flex-row">
         {/* 主图 */}
         <div className="relative min-h-[240px] w-full shrink-0 overflow-hidden rounded-xl border border-border bg-muted lg:w-72">
-          {character.imageUrl || character.thumbUrl ? (
+          {/* 界面：角色封面；未收录的 CDN 图片沿用原缺图文案。 */}
+          {/* 图片错误不冒泡成整张详情的加载失败，离线资料仍然可用。 */}
+          {preview && failedPreview !== preview ? (
             <Image
-              src={character.imageUrl || character.thumbUrl}
+              key={preview}
+              src={preview}
+              onError={() => setFailedPreview(preview)}
               alt={character.name}
               fill
               sizes="(max-width: 1024px) 100vw, 288px"

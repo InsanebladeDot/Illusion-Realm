@@ -6,29 +6,18 @@ import {
   Info,
   Settings,
 } from "lucide-react";
-import {
-  CFG_MAX,
-  CFG_MIN,
-  CFG_STEP,
-  RANDOM_SEED,
-  SAMPLERS,
-  SCHEDULERS,
-  SEED_MAX,
-  SEED_MIN,
-  STEPS_MAX,
-  STEPS_MIN,
-} from "@/data/createForm";
 import { DEFAULT_PRESET_ID, findPresetInAll } from "@/data/presetPrompts";
 import type { PresetPromptOption } from "@/types/presetPrompt";
 import { useCreateFormStore } from "@/stores/useCreateFormStore";
 import { useTranslation } from "@/i18n";
 import { PresetPromptDialog } from "@/view/create/PresetPromptDialog";
-import { GenerationParameterControl } from "@/view/create/generation-parameter-control";
+// 采样器到种子直接复用完整字段块，普通图片继续拥有自己的表单状态。
+// 共用组件不决定工作流默认值，当前系列模板仍由本层读取。
+// 原图预设选择与保存弹窗保留，不随参数块抽取而重置。
+import { GenerationSamplingFields } from "./generation-sampling-fields";
 import { AdvancedSettingsSection } from "./advanced-settings-section";
-import { OptionSelect } from "@/view/create/OptionSelect";
 import { getImageWorkflowDefaults } from "@/utils/comfy/imageWorkflow";
 import { clampSeed, generateRandomSeed } from "@/utils/seed";
-import { ACCENT_FOCUS_RING_CLASS, INPUT_BORDER_CLASS } from "@/utils/layout";
 import { cn } from "@/utils/cn";
 
 export function AdvancedSettings({ series = "anima", children }: { series?: "anima" | "sdxl"; children?: ReactNode }) {
@@ -57,7 +46,6 @@ export function AdvancedSettings({ series = "anima", children }: { series?: "ani
     findPresetInAll(selectedPresetId, customPresets) ??
     findPresetInAll(DEFAULT_PRESET_ID, customPresets)!;
 
-  const resolvedSeed = seedMode === "random" ? RANDOM_SEED : customSeed;
 
   const handleSeedModeChange = (mode: "random" | "custom") => {
     setAdvancedSettings({
@@ -137,122 +125,10 @@ export function AdvancedSettings({ series = "anima", children }: { series?: "ani
             </div>
           </div>
 
-          <div className="space-y-1.5">
-            <div className="flex items-center gap-2">
-              <label className="text-sm font-medium">
-                {t("create.advancedSettings.sampler")}
-              </label>
-              <button
-                type="button"
-                className="focus:outline-none"
-                aria-label={t("create.advancedSettings.samplerHint")}
-              >
-                <Info className="h-4 w-4 cursor-pointer text-muted-foreground opacity-80 hover:text-foreground hover:opacity-100" />
-              </button>
-            </div>
-            <OptionSelect
-              value={sampler}
-              options={SAMPLERS}
-              ariaLabel={t("create.advancedSettings.sampler")}
-              onChange={(value) => setAdvancedSettings({ sampler: value })}
-            />
-          </div>
-
-          <div className="space-y-1.5">
-            <div className="flex items-center gap-2">
-              <label className="text-sm font-medium">
-                {t("create.advancedSettings.scheduler")}
-              </label>
-              <button
-                type="button"
-                className="focus:outline-none"
-                aria-label={t("create.advancedSettings.schedulerHint")}
-              >
-                <Info className="h-4 w-4 cursor-pointer text-muted-foreground opacity-80 hover:text-foreground hover:opacity-100" />
-              </button>
-            </div>
-            <OptionSelect
-              value={scheduler}
-              options={SCHEDULERS}
-              ariaLabel={t("create.advancedSettings.scheduler")}
-              onChange={(value) => setAdvancedSettings({ scheduler: value })}
-            />
-          </div>
-
-          {/* 界面：「步数 / CFG 比例」整行与视频生成参数共用 */}
-          <GenerationParameterControl
-            name="steps" label={t("create.advancedSettings.steps")} hint={t("create.advancedSettings.stepsHint")}
-            min={STEPS_MIN} max={STEPS_MAX} value={steps}
-            onChange={(value) => setAdvancedSettings({ steps: value })}
-          />
-          <GenerationParameterControl
-            name="cfg" label={t("create.advancedSettings.cfgRatio")} hint={t("create.advancedSettings.cfgHint")}
-            inputAriaLabel="CFG" min={CFG_MIN} max={CFG_MAX} step={CFG_STEP} value={cfg} precision={1}
-            onChange={(value) => setAdvancedSettings({ cfg: value })}
-          />
-
-          <div className="space-y-1.5">
-            <div className="flex items-center gap-2">
-              <label className="text-sm font-medium">
-                {t("create.advancedSettings.seed")}
-              </label>
-              <button
-                type="button"
-                className="focus:outline-none"
-                aria-label={t("create.advancedSettings.seedHint")}
-              >
-                <Info className="h-4 w-4 cursor-pointer text-muted-foreground opacity-80 hover:text-foreground hover:opacity-100" />
-              </button>
-            </div>
-            <div className="flex min-w-0 gap-1">
-              <div className="grid min-w-0 flex-1 grid-cols-2 rounded-md border border-transparent bg-muted p-0.5 shadow-none dark:border-border dark:bg-background">
-                <button
-                  type="button"
-                  onClick={() => handleSeedModeChange("random")}
-                  className={cn(
-                    "rounded-sm text-sm transition-colors",
-                    seedMode === "random"
-                      ? "bg-background text-foreground shadow-sm dark:bg-muted"
-                      : "bg-transparent text-muted-foreground"
-                  )}
-                >
-                  {t("create.advancedSettings.random")}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleSeedModeChange("custom")}
-                  className={cn(
-                    "rounded-sm text-sm transition-colors",
-                    seedMode === "custom"
-                      ? "bg-background text-foreground shadow-sm dark:bg-muted"
-                      : "bg-transparent text-muted-foreground"
-                  )}
-                >
-                  {t("create.advancedSettings.custom")}
-                </button>
-              </div>
-              <input
-                type="number"
-                min={SEED_MIN}
-                max={SEED_MAX}
-                placeholder={
-                  seedMode === "random"
-                    ? t("create.advancedSettings.random")
-                    : t("create.advancedSettings.seedPlaceholder")
-                }
-                value={seedMode === "custom" ? customSeed : ""}
-                disabled={seedMode === "random"}
-                onChange={(event) => handleCustomSeedChange(event.target.value)}
-                aria-label={t("create.advancedSettings.seed")}
-                data-seed-value={resolvedSeed}
-                className={cn(
-                  "h-9 min-w-0 flex-1 rounded-md bg-background text-sm shadow-none focus-visible:outline-none focus-visible:ring-1",
-                  ACCENT_FOCUS_RING_CLASS,
-                  INPUT_BORDER_CLASS
-                )}
-              />
-            </div>
-          </div>
+          {/* 界面：采样器、调度器、滑条及种子与编辑工作区复用整个参数块。 */}
+          {/* 普通图片仍使用原领域 store，组件复用不混用两个模式的草稿。 */}
+          {/* 随机模式保持原提交路径，实际种子仍由生成器逐张产生。 */}
+          <GenerationSamplingFields sampler={sampler} scheduler={scheduler} steps={steps} cfg={cfg} seed={String(customSeed)} seedMode={seedMode} onSampler={sampler => setAdvancedSettings({ sampler })} onScheduler={scheduler => setAdvancedSettings({ scheduler })} onSteps={steps => setAdvancedSettings({ steps })} onCfg={cfg => setAdvancedSettings({ cfg })} onSeed={handleCustomSeedChange} onSeedMode={handleSeedModeChange} />
           {/* 界面：图片模式特有的高级选项，由创建页提供状态。 */}
           {children}
       </AdvancedSettingsSection>

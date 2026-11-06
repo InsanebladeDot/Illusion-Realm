@@ -1,0 +1,134 @@
+{
+  "format": "illusion-realm-library-favorites",
+  "version": 1,
+  "libraries": {
+    "character": {
+      "ids": [
+        "character_1",
+        "character_25"
+      ],
+      "items": [
+        {
+          "slug": "character_1",
+          "name": "Alice 1",
+          "copyright": "vocaloid",
+          "copyrightName": "Vocaloid",
+          "trigger": "alice_1",
+          "tags": [
+            "1girl",
+            "aqua eyes"
+          ],
+          "count": 12000,
+          "url": "",
+          "thumbUrl": "",
+          "imageUrl": "",
+          "hasImage": false,
+          "loras": [],
+          "rating": {
+            "up": 0,
+            "down": 0
+          },
+          "favCount": 0
+        },
+        {
+          "slug": "character_25",
+          "name": "Alice 25",
+          "copyright": "vocaloid",
+          "copyrightName": "Vocaloid",
+          "trigger": "alice_25",
+          "tags": [
+            "1girl",
+            "aqua eyes"
+          ],
+          "count": 12000,
+          "url": "",
+          "thumbUrl": "",
+          "imageUrl": "",
+          "hasImage": false,
+          "loras": [],
+          "rating": {
+            "up": 0,
+            "down": 0
+          },
+          "favCount": 0
+        }
+      ],
+      "unresolved": []
+    },
+    "artist": {
+      "ids": [
+        "87540"
+      ],
+      "items": [
+        {
+          "id": "87540",
+          "name": "dairi",
+          "name_zh": "",
+          "tags": "dairi",
+          "tags_zh": "",
+          "categories": [],
+          "traits": [],
+          "folder": "artist",
+          "preview": "https://blobs.animadex.net/ArtistOutputs/thumbs/dairi.webp"
+        }
+      ],
+      "groups": []
+    },
+    "pose": [
+      {
+        "id": "pose_1792200000000",
+        "name": "Arm Support",
+        "name_zh": "用手支撑住",
+        "tags": "arm support,",
+        "tags_zh": "用手支撑住",
+        "categories": [
+          "手势与手臂 (Gestures & Arms)"
+        ],
+        "traits": [
+          "arm",
+          "support"
+        ],
+        "folder": "images",
+        "preview": "https://cdn.jsdelivr.net/gh/nregret/AnimaTags-DB@main/images/pose/pose_1792200000000.webp"
+      }
+    ],
+    "background": [
+      {
+        "id": "bg_1782247480954",
+        "name": "Beach Hammock",
+        "name_zh": "海滩上的吊床",
+        "tags": "afternoon, outdoors, plant, dappled sunlight, sand, hammock, beach, light rays, intense shadow",
+        "tags_zh": "下午, 室外, 植物, 斑驳的阳光, 沙子, 吊床, 海滩, 光束, 强烈的阴影",
+        "categories": [
+          "自然与户外 (Nature & Outdoors)"
+        ],
+        "traits": [
+          "outdoor",
+          "day",
+          "sea",
+          "water"
+        ],
+        "folder": "images",
+        "preview": "https://cdn.jsdelivr.net/gh/nregret/AnimaTags-DB@main/images/background/bg_1782247480954.webp"
+      }
+    ],
+    "expression": [
+      {
+        "id": "expression_1",
+        "name": "smile",
+        "name_zh": "微笑",
+        "tags": "smile",
+        "tags_zh": "微笑",
+        "categories": [
+          "笑"
+        ],
+        "traits": [
+          "表情",
+          "笑"
+        ],
+        "folder": "expression",
+        "preview": "https://img.aishort.top/imgprompt/20260211195712086.webp"
+      }
+    ]
+  }
+}

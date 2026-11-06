@@ -31,15 +31,15 @@ import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { applyToolPromptText, resolveToolWriteMode } from "@/utils/promptTarget";
 import type { ViewSeries } from "@/utils/view3d/promptMapping";
 import {
-  ACCENT_FOCUS_RING_CLASS,
   ACCENT_SWITCH_ON_CLASS,
   INPUT_BORDER_CLASS,
-  PROMPT_EDITOR_SCROLL_CLASS,
 } from "@/utils/layout";
 import { cn } from "@/utils/cn";
 import type { PromptTabToolId } from "@/types/promptTabs";
-import { PromptAssistantToolbar } from "@/components/prompt-assistant/prompt-assistant-toolbar";
-import { readEditableText, setEditableText } from "@/utils/promptEditor";
+// 正向输入与编辑器共用表面和助手，保留按 id 命令式读写的原有工具契约。
+// 无 value 模式不接管正文，普通 React 重绘不能擦除工具填入的提示词。
+// 高级组装使用只读表面，真实分类编辑仍由原组装面板承载。
+import { PromptInput } from "@/components/prompt-input";
 import { LoraTriggerWordsButton } from "./lora-trigger-words-button";
 
 /**
@@ -47,6 +47,8 @@ import { LoraTriggerWordsButton } from "./lora-trigger-words-button";
  * 按钮的文字、title、数据钩子、确认后写进哪个分类都在 `data/promptTools.ts` 的注册表里。
  */
 const ROW_TOOL_ICONS: Record<PromptTabToolId, typeof Users> = {
+  // 画师同样由注册表驱动，图标只作为表现层映射。
+  artist: Palette,
   character: Users,
   pose: PersonStanding,
   background: Mountain,
@@ -57,12 +59,13 @@ const ROW_TOOL_ICONS: Record<PromptTabToolId, typeof Users> = {
 export function PromptSection({
   series = "anima",
   loraIds = [],
+  sideVisible,
 }: {
   series?: ViewSeries;
   loraIds?: string[];
+  sideVisible?: boolean;
 }) {
   const { t } = useTranslation();
-  const [autocomplete, setAutocomplete] = useState(true);
   const [quickPhraseDialogOpen, setQuickPhraseDialogOpen] = useState(false);
   const [view3DOpen, setView3DOpen] = useState(false);
   const [characterPickerOpen, setCharacterPickerOpen] = useState(false);
@@ -74,7 +77,8 @@ export function PromptSection({
   const advancedPrompt = useCreateFormStore((state) => state.advancedPrompt);
   const setAdvancedPrompt = useCreateFormStore((state) => state.setAdvancedPrompt);
   /** 宽屏（xl 及以上）右侧面板可见，组装面板挂到右栏；窄屏就地展开 */
-  const isWideViewport = useMediaQuery("(min-width: 1280px)");
+  const fallbackWide = useMediaQuery("(min-width: 1280px)");
+  const isWideViewport = sideVisible ?? fallbackWide;
 
   const openQuickPhraseDialog = () => setQuickPhraseDialogOpen(true);
 
@@ -91,45 +95,33 @@ export function PromptSection({
 
   return (
     <>
-      <div className="relative space-y-1.5">
+      <div data-create-prompt className="relative space-y-3">
         <div className="space-y-2">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <div className="flex items-center gap-1.5">
+          {/* 提示词标题栏：左侧标题、帮助、高级和组装保持一行，右侧留给触发词操作。 */}
+          {/* 删除的自动补全仅有局部开关状态，没有输入处理或订阅需要清理。 */}
+          {/* nowrap 防止高级开关掉到第二行，把右侧触发词按钮挤到垂直居中。 */}
+          {/* 标题栏和正文的生命周期分离，重新排版不卸载已有 contentEditable。 */}
+          {/* 高级开关继续修改原 store；组装按钮仍切换原来的侧边组装面板。 */}
+          {/* LoRA 操作继续读取已选模型旁车文件，位置调整不改变触发词去重规则。 */}
+          {/* 无 LoRA 时原按钮自行隐藏，腾出的空间直接交给左侧，不留下占位。 */}
+          {/* 收起仍用原 PromptCollapseButton，不新增另一份展开状态或点击监听。 */}
+          {/* 左侧整组禁止缩小，较窄 rail 也不把“提示词”“高级”拆成竖排文本。 */}
+          {/* 缩小组间距而非缩放整块 UI，保留原按钮命中高度和焦点样式。 */}
+          {/* 标题 label 仍关联 prompt-editor，鼠标点击标题可以定位原输入表面。 */}
+          {/* 帮助按钮保留原辅助名称，紧凑布局不将它改成不可聚焦装饰。 */}
+          {/* 所有文案继续使用已有翻译词条，删除开关不清理其他编辑器共用的词条。 */}
+          {/* 开合按钮与触发词按钮都用原生 button，Tab 和 Enter 的路径保持有效。 */}
+          {/* 自动补全状态未持久化，删除不会修改用户保存的提示词或设置文档。 */}
+          <div data-create-prompt-header className="flex items-center justify-between gap-1 whitespace-nowrap">
+            <div className="flex shrink-0 items-center gap-1">
               <label className="text-sm font-semibold" htmlFor="prompt-editor">
                 {t("promptAssembly.editor.label")}
               </label>
               <button type="button" className="focus:outline-none" aria-label={t("promptAssembly.editor.helpLabel")}>
                 <Info className="h-4 w-4 cursor-pointer text-muted-foreground opacity-80 hover:text-primary hover:opacity-100 md:h-4 md:w-4" />
               </button>
-              <div className="flex items-center">
-                <button
-                  type="button"
-                  role="switch"
-                  aria-checked={autocomplete}
-                  id="anima-autocomplete-toggle"
-                  onClick={() => setAutocomplete((prev) => !prev)}
-                  className={cn(
-                    "peer inline-flex h-5 w-9 shrink-0 scale-[0.6] cursor-pointer items-center rounded-full border-2 border-transparent shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
-                    autocomplete ? ACCENT_SWITCH_ON_CLASS : "bg-gray-300 dark:bg-gray-700"
-                  )}
-                >
-                  <span
-                    className={cn(
-                      "pointer-events-none block h-4 w-4 rounded-full bg-white shadow-lg ring-0 transition-transform",
-                      autocomplete ? "translate-x-4" : "translate-x-0"
-                    )}
-                  />
-                </button>
-                <label
-                  className="cursor-pointer text-[10px] font-medium text-muted-foreground/60"
-                  htmlFor="anima-autocomplete-toggle"
-                >
-                  {t("promptAssembly.editor.autocomplete")}
-                </label>
-              </div>
-
               {/* 高级提示词组装开关（关闭 = 单一输入框） */}
-              <div className="flex items-center">
+              <div className="flex min-h-8 items-center gap-1.5">
                 <button
                   type="button"
                   role="switch"
@@ -138,7 +130,7 @@ export function PromptSection({
                   data-advanced-prompt-toggle
                   onClick={() => setAdvancedPrompt(!advancedPrompt)}
                   className={cn(
-                    "peer inline-flex h-5 w-9 shrink-0 scale-[0.6] cursor-pointer items-center rounded-full border-2 border-transparent shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+                    "peer inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
                     advancedPrompt ? ACCENT_SWITCH_ON_CLASS : "bg-gray-300 dark:bg-gray-700"
                   )}
                 >
@@ -150,7 +142,7 @@ export function PromptSection({
                   />
                 </button>
                 <label
-                  className="cursor-pointer text-[10px] font-medium text-muted-foreground/60"
+                  className="flex min-h-8 cursor-pointer items-center text-xs font-medium text-muted-foreground"
                   htmlFor="advanced-prompt-toggle"
                 >
                   {t("promptAssembly.editor.advanced")}
@@ -163,7 +155,7 @@ export function PromptSection({
                   aria-pressed={advancedPrompt}
                   onClick={() => setAdvancedPrompt(true)}
                   className={cn(
-                    "ml-1 inline-flex h-6 items-center gap-1 rounded-md bg-background px-2 text-xs font-medium text-muted-foreground shadow-none transition-colors hover:bg-accent hover:text-foreground",
+                    "ml-1 inline-flex min-h-8 items-center gap-1 whitespace-nowrap rounded-md bg-background px-2 text-xs font-medium text-muted-foreground shadow-none transition-colors hover:bg-accent hover:text-foreground",
                     INPUT_BORDER_CLASS,
                     advancedPrompt && "text-[#6D28D9]"
                   )}
@@ -174,39 +166,16 @@ export function PromptSection({
               </div>
             </div>
             {/* 界面：已选 LoRA 的 JSON 触发词，普通与高级模式复用同一写入入口。 */}
+            {/* 右侧操作区：自动左边距将应用触发词推到标题栏右侧，不受左侧标签长度影响。 */}
+            {/* 两个入口共用这一个行内容器，折叠箭头不会单独挤占额外一行。 */}
+            <div className="ml-auto flex shrink-0 items-center gap-1">
             <LoraTriggerWordsButton ids={loraIds} onApplied={() => setCollapsed(false)} />
-            <div className="inline-flex overflow-hidden rounded-md border md:hidden">
-              <button
-                type="button"
-                onClick={openQuickPhraseDialog}
-                className="inline-flex h-6 items-center justify-center rounded-none px-2 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-              >
-                {t("promptAssembly.editor.phrases")}
-              </button>
-            </div>
-            <div className="hidden overflow-hidden rounded-md border md:inline-flex">
-              <button
-                type="button"
-                onClick={openQuickPhraseDialog}
-                className="inline-flex h-6 items-center justify-center rounded-none px-2 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-              >
-                {t("promptAssembly.editor.phrases")}
-              </button>
-              <div className="h-6 w-px bg-border" />
-              <button
-                type="button"
-                aria-label={t("promptAssembly.editor.createPhrase")}
-                onClick={openQuickPhraseDialog}
-                className="inline-flex h-6 w-6 items-center justify-center rounded-none p-0 text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-              >
-                <Plus className="h-3.5 w-3.5" />
-              </button>
-            </div>
             <PromptCollapseButton
               collapsed={collapsed}
               onToggle={() => setCollapsed((prev) => !prev)}
               label={t("promptAssembly.editor.label")}
             />
+            </div>
           </div>
 
           {/* 收起 / 展开：内容不卸载（contentEditable 内容不随 React 状态保存），
@@ -231,48 +200,21 @@ export function PromptSection({
             stateAttribute="data-prompt-editor-panel"
             className="relative"
           >
-            <div
-              id="prompt-editor"
-              contentEditable={!advancedPrompt}
-              suppressContentEditableWarning
-              spellCheck={false}
-              data-placeholder={
-                advancedPrompt
-                  ? t("promptAssembly.editor.placeholderAdvanced")
-                  : t("promptAssembly.editor.placeholder")
-              }
-              className={cn(
-                /**
-                 * 这里原来还挂了一个 `dark:bg-primary-foreground` —— 那是**深色下写成了浅色**：
-                 * `--primary-foreground` 是「主色上的文字色」（#fafafa），拿它当输入框底色，
-                 * 深色模式下输入框会整块发白、正文变成浅字压白底。输入框的底色本来就该跟
-                 * `--background` 走，深色下的层次由 `INPUT_BORDER_CLASS` 的描边给（与浅色一致）。
-                 */
-                "min-h-32 whitespace-pre-wrap break-words rounded-lg bg-background px-3 pb-10 pt-2 text-sm outline-none focus-visible:ring-1",
-                PROMPT_EDITOR_SCROLL_CLASS,
-                ACCENT_FOCUS_RING_CLASS,
-                INPUT_BORDER_CLASS,
-                advancedPrompt && "bg-muted/30 text-muted-foreground"
-              )}
-            />
-            {/* 界面：输入框内的半透明提示词助手；组装模式在各分类输入框使用 */}
-            {!advancedPrompt && <PromptAssistantToolbar contextId="prompt-editor" read={() => readEditableText("prompt-editor")} write={value => setEditableText("prompt-editor", value)} />}
+            {/* 界面：统一提示词输入；保留原 id，片段、LoRA 触发词和生成继续读取同一 DOM。
+                组装模式只锁住表面并隐藏助手，不创建另一份提示词状态。
+                主题底色统一走 background，避免深色模式复用文字色而整块发白。
+                展开收起仍保留原 CollapsiblePanel，提示词不随折叠卸载。
+                输入组件不提供 value，既有工具直接写 DOM 的内容不会被覆盖。
+                禁用只影响交互，原有已组装文本仍可从相同 id 读取。 */}
+            <PromptInput id="prompt-editor" disabled={advancedPrompt} assistant={!advancedPrompt} data-placeholder={advancedPrompt ? t("promptAssembly.editor.placeholderAdvanced") : t("promptAssembly.editor.placeholder")} className={cn(advancedPrompt && "bg-muted/30 text-muted-foreground")} />
           </CollapsiblePanel>
 
         </div>
 
-        <div className="flex items-center gap-1">
-          {/* 画师：占位入口（功能未开放，保持原样） */}
-          <button
-            type="button"
-            className={cn(
-              "inline-flex h-6 items-center justify-center gap-1.5 rounded-md bg-background px-2 text-xs font-medium text-muted-foreground shadow-none transition-colors hover:bg-accent hover:text-foreground",
-              INPUT_BORDER_CLASS
-            )}
-          >
-            <Palette className="h-3.5 w-3.5" />
-            <span>{t("promptAssembly.tools.painter")}</span>
-          </button>
+        <div data-create-prompt-tools className="grid grid-cols-[repeat(auto-fit,minmax(96px,1fr))] gap-2">
+          {/* 界面：「片段」沿用原来的快捷片段编辑弹窗。 */}
+          <button type="button" title={t("promptAssembly.editor.createPhrase")} onClick={openQuickPhraseDialog} className="inline-flex min-h-8 items-center justify-center gap-1 rounded-md border border-border px-2 text-xs text-muted-foreground"><Plus className="h-3.5 w-3.5" />{t("promptAssembly.editor.phrases")}</button>
+          {/* 界面：画师与其他库统一从工具注册表生成，不再手写占位入口。 */}
           {/**
            * 既有功能入口：按钮由工具注册表生成（角色 / 动作库 / 背景库 / 表情库 / 3D 视角），
            * 顺序、文字、title 与数据钩子都在 `data/promptTools.ts` 里，加工具只改那一处。
@@ -288,7 +230,7 @@ export function PromptSection({
                 aria-label={t(tool.label)}
                 onClick={() => openToolDialog(tool.id)}
                 className={cn(
-                  "inline-flex h-6 items-center justify-center gap-1.5 rounded-md bg-background px-2 text-xs font-medium text-muted-foreground shadow-none transition-colors hover:bg-accent hover:text-foreground",
+                  "inline-flex min-h-8 items-center justify-center gap-1.5 whitespace-nowrap rounded-md bg-background px-2 text-xs font-medium text-muted-foreground shadow-none transition-colors hover:bg-accent hover:text-foreground",
                   INPUT_BORDER_CLASS
                 )}
               >

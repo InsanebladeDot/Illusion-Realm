@@ -10,6 +10,11 @@ import { useHistoryFolderStore } from "@/stores/useHistoryFolderStore";
 import { useGenerationTaskStore, isGenerationTaskActive, type GenerationTask } from "@/stores/useGenerationTaskStore";
 import { resolvePageDirection, startPageNavigation } from "@/utils/pageTransition";
 import { GenerationTaskCard, QueuedGenerationTask, stopGenerationTask, TASK_ACTION_CLASS } from "./generation-task-card";
+// 音频结果复用文件定位入口，不把 WAV/FLAC 发送到只接受图片的图库预览。
+// 主进程安全边界与实际错误处理由结果组件导出的 helper 统一维护。
+// toast 只展示友好错误，不打印用户的绝对文件路径。
+import { revealAudio } from '@/view/create/audio-results';
+import { useToastStore } from '@/stores/useToastStore';
 
 type TaskTab = "active" | "history";
 function useViewTask(onClose: () => void) {
@@ -17,6 +22,12 @@ function useViewTask(onClose: () => void) {
   return (task: GenerationTask) => {
     const path = task.savedPaths[0];
     if (!path) return;
+    // 音频不是图片作品，查看时在文件管理器定位已经保存的文件。
+    // 不修改当前图片图库或 requestOpenImage，避免进入无效图片详情页。
+    // 异步失败显式呈现，保留任务卡片及已保存结果供重试。
+    // 成功或失败均不删除磁盘文件，也不会再次请求 ComfyUI 生成。
+    // 标题栏面板可以正常关闭，音频结果仍从 Role TTS 返回查看。
+    if (task.mediaKind === 'audio') { void revealAudio(path).catch((error: unknown) => useToastStore.getState().show(error instanceof Error ? error.message : '')); onClose(); return; }
     const history = useHistoryFolderStore.getState();
     history.openFolder(task.folderId ?? DEFAULT_FOLDER_ID);
     history.requestOpenImage(path);

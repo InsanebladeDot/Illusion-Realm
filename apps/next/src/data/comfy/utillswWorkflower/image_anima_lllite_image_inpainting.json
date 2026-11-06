@@ -1,0 +1,194 @@
+{
+  "91": {
+    "inputs": {
+      "image": "clipspace-painted-masked-1792819820501.png [input]"
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "image + mask"
+    }
+  },
+  "702": {
+    "inputs": {
+      "image": [
+        "91",
+        0
+      ]
+    },
+    "class_type": "GetImageSize",
+    "_meta": {
+      "title": "获取图像尺寸"
+    }
+  },
+  "706": {
+    "inputs": {
+      "images": [
+        "88:705",
+        0
+      ]
+    },
+    "class_type": "PreviewImage",
+    "_meta": {
+      "title": "预览图像"
+    }
+  },
+  "88:78": {
+    "inputs": {
+      "clip_name": "Anima\\anima_baseV10_txt\\anima_baseV10_txt.safetensors",
+      "type": "stable_diffusion",
+      "device": "default"
+    },
+    "class_type": "CLIPLoader",
+    "_meta": {
+      "title": "加载CLIP"
+    }
+  },
+  "88:79": {
+    "inputs": {
+      "vae_name": "Anima\\qwen_image_vae\\qwen_image_vae.safetensors"
+    },
+    "class_type": "VAELoader",
+    "_meta": {
+      "title": "加载VAE"
+    }
+  },
+  "88:81": {
+    "inputs": {
+      "width": [
+        "702",
+        0
+      ],
+      "height": [
+        "702",
+        1
+      ],
+      "batch_size": 1
+    },
+    "class_type": "EmptyLatentImage",
+    "_meta": {
+      "title": "空Latent图像"
+    }
+  },
+  "88:82": {
+    "inputs": {
+      "text": "",
+      "clip": [
+        "88:78",
+        0
+      ]
+    },
+    "class_type": "CLIPTextEncode",
+    "_meta": {
+      "title": "CLIP Text Encode (Negative Prompt)"
+    }
+  },
+  "88:84": {
+    "inputs": {
+      "text": "Large breasts, breast grasping, deep penetration of the breasts, breasts being grabbed by hands, hands grasping the breasts, fingers spread and forcefully grasping,Grabbed Breast,",
+      "clip": [
+        "88:78",
+        0
+      ]
+    },
+    "class_type": "CLIPTextEncode",
+    "_meta": {
+      "title": "CLIP Text Encode (Positive Prompt)"
+    }
+  },
+  "88:85": {
+    "inputs": {
+      "unet_name": "Anima\\anima_aestheticV11\\anima_aestheticV11.safetensors",
+      "weight_dtype": "default"
+    },
+    "class_type": "UNETLoader",
+    "_meta": {
+      "title": "UNet加载器"
+    }
+  },
+  "88:86": {
+    "inputs": {
+      "name": "Anima\\anima-lllite-inpainting-v2.safetensors"
+    },
+    "class_type": "ModelPatchLoader",
+    "_meta": {
+      "title": "加载模型补丁"
+    }
+  },
+  "88:87": {
+    "inputs": {
+      "strength": 1,
+      "start_percent": 0,
+      "end_percent": 1,
+      "model": [
+        "88:85",
+        0
+      ],
+      "model_patch": [
+        "88:86",
+        0
+      ],
+      "image": [
+        "91",
+        0
+      ],
+      "mask": [
+        "91",
+        1
+      ]
+    },
+    "class_type": "AnimaLLLiteApply",
+    "_meta": {
+      "title": "应用 Anima LLLite"
+    }
+  },
+  "88:106": {
+    "inputs": {
+      "seed": 1116671677902762,
+      "steps": 15,
+      "cfg": 3,
+      "sampler_name": "euler",
+      "scheduler": "simple",
+      "denoise": 1,
+      "model": [
+        "88:87",
+        0
+      ],
+      "positive": [
+        "88:84",
+        0
+      ],
+      "negative": [
+        "88:82",
+        0
+      ],
+      "latent_image": [
+        "88:81",
+        0
+      ]
+    },
+    "class_type": "KSampler",
+    "_meta": {
+      "title": "K采样器"
+    }
+  },
+  "88:705": {
+    "inputs": {
+      "tile_size": 512,
+      "overlap": 64,
+      "temporal_size": 64,
+      "temporal_overlap": 8,
+      "samples": [
+        "88:106",
+        0
+      ],
+      "vae": [
+        "88:79",
+        0
+      ]
+    },
+    "class_type": "VAEDecodeTiled",
+    "_meta": {
+      "title": "VAE解码（分块）"
+    }
+  }
+}

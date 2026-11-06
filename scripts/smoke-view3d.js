@@ -17,8 +17,8 @@ const os = require("os");
 const path = require("path");
 const { createSmokeHarness } = require("./lib/smoke-harness");
 const { app, BrowserWindow, dialog, ipcMain: realIpcMain } = require("electron");
-const { registerAppProtocol } = require("../apps/electron/appProtocol");
-const { registerVideoToolIpc } = require("../apps/electron/ffmpeg");
+const { registerAppProtocol } = require("../apps/electron/src/main/core/protocol");
+const { registerVideoToolIpc } = require("../apps/electron/src/main/modules/ffmpeg/index.js");
 
 /**
  * 显示缩放维度：Windows 显示缩放 ≠ 100% 时 `devicePixelRatio > 1`，
@@ -218,7 +218,7 @@ app.whenReady().then(async () => {
       nodeIntegration: false,
       // 与真实应用 main.js 一致：preload 是手写 CommonJS，需 Node 环境才能 require 本地模块
       sandbox: false,
-      preload: path.join(__dirname, "..", "apps", "electron", "preload.js"),
+      preload: path.join(__dirname, "../apps/electron/src/preload/index.js"),
     },
   });
 

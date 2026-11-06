@@ -1,8 +1,11 @@
 "use client";
 
-// 图片和视频共用完整尺寸交互：同一预设、缩放、输入范围与返回结构；模型限制由工作流层负责。
+// 图片复用公共尺寸 UI，但不传业务上限；视频由独立适配层提供限制。
 import { IMAGE_SIZE_PRESETS } from "@/data/imageSizes";
-import { clampImageSide, createSizeSelection, IMAGE_SIZE_MAX, IMAGE_SIZE_MIN, IMAGE_SIZE_STEP, type ImageSizeInput, type ImageSizeSelection } from "@/utils/imageSize";
+// 图片只提供 8 像素对齐，不能把 MiniMax 的尺寸检查带进此组件。
+// 公共 UI 接收参数，不自行猜测模型或创作模式。
+// 更大分辨率经同一 onChange 返回，不另建一套图片输入框。
+import { clampImageSide, createSizeSelection, IMAGE_SIZE_MIN, IMAGE_SIZE_STEP, type ImageSizeInput, type ImageSizeSelection } from "@/utils/imageSize";
 import { SizeSelector } from "./size-selector";
 
 interface Props {
@@ -21,9 +24,9 @@ export function CreationSizeSelector({ value, onChange, className, disabled }: P
   }));
   return (
     <fieldset disabled={disabled} className={className}>
-      {/* 界面：「图片尺寸」，图片和视频完整复用此组件，只传入当前值并接收返回参数 */}
+      {/* 界面：「图片尺寸」不传 max；视频仍通过同一 SizeSelector 注入自己的范围。 */}
       <SizeSelector value={{ ...selection, customWidth: selection.width, customHeight: selection.height }} dimensions={selection}
-        presets={IMAGE_SIZE_PRESETS} min={IMAGE_SIZE_MIN} max={IMAGE_SIZE_MAX} step={IMAGE_SIZE_STEP}
+        presets={IMAGE_SIZE_PRESETS} min={IMAGE_SIZE_MIN} step={IMAGE_SIZE_STEP}
         scale={selection.scale} onScaleChange={(scale) => onChange(createSizeSelection({ ...value, scale }))}
         onPresetChange={onPresetChange} onCustomSizeChange={onCustomSizeChange} />
     </fieldset>

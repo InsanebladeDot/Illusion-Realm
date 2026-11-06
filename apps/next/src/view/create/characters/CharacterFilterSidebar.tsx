@@ -1,5 +1,13 @@
 "use client";
 
+// 侧栏父级与其他库共用，字母和分类只是其内部可组合内容。
+// 统一宽度和主题边界，避免同一个modal里出现两套浅色背景。
+// 子级仍保留自己的固定区和内部滚动，不改变现有筛选状态。
+/**
+ * 字母固定区继续使用原先的数据入口，供窄屏与筛选回归核对。
+ * 收藏和作品段仍由本组件控制开合，共用父级只负责几何和主题。
+ */
+import { LibrarySidebar } from "@/components/library/library-sidebar";
 import { useState } from "react";
 import { ChevronRight } from "lucide-react";
 import { useTranslation } from "@/i18n";
@@ -8,6 +16,14 @@ import { cn } from "@/utils/cn";
 import { ACCENT_PILL_ACTIVE_CLASS, ACCENT_SELECTED_SOFT_CLASS } from "@/utils/layout";
 
 type CharacterFilterSidebarProps = {
+  /** 本地库在侧栏提供真实作品分类，隐藏远端固定作品表。 */
+  /** 字母与收藏区保持可用，不因来源切换移除原有能力。 */
+  /** 缺省 false 以兼容其他仍使用原在线侧栏的调用。 */
+  hideCopyright?: boolean;
+  /** 侧栏底部接入共享的本地属性分类，原字母和收藏保持独立。 */
+  /** ReactNode 仅用于渲染组合，不把分类算法复制到导航组件。 */
+  /** 分类区可独立滚动，多个展开段不会被固定页脚裁掉。 */
+  referenceFilters?: React.ReactNode;
   /** 名称首字母（""=全部） */
   letter: string;
   copyright: string;
@@ -29,6 +45,14 @@ const LETTERS = ["#", ..."ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("")];
  * 收纳箭头：收起为 ↓、展开为 ↑，点击切换，再点回到原状态。
  */
 export function CharacterFilterSidebar({
+  // 来源只影响作品导航，不能隐藏多选和收藏入口。
+  // 父组件明确传入本地来源，避免异步结果到达前闪现远端作品。
+  // 这里没有另维护一套本地分类，分类来自查询结果 facets。
+  hideCopyright = false,
+  // 传入的是同一份筛选组件，不同时在顶部工具栏再渲染一份。
+  // 外层负责滚动与高度，分类组件仅负责列表、计数和回调。
+  // 在线时该区域仍显示来源菜单，方便返回本地分类。
+  referenceFilters,
   letter,
   copyright,
   favoritesOnly,
@@ -45,10 +69,7 @@ export function CharacterFilterSidebar({
   const [copyrightsOpen, setCopyrightsOpen] = useState(false);
 
   return (
-    <aside
-      data-character-sidebar
-      className="flex h-full w-full shrink-0 flex-col overflow-hidden border-b border-border bg-background md:w-56 md:border-b-0 md:border-r"
-    >
+    <LibrarySidebar prefix="character">
       {/* 固定区：字母（不收纳） */}
       <div
         data-character-sidebar-fixed
@@ -96,7 +117,17 @@ export function CharacterFilterSidebar({
         </div>
       </CollapsibleSection>
 
-      {/* 作品：可收纳 + 内部滚动 */}
+      {/* 界面：本地分类位于字母、收藏之后，区域内部纵向滚动。 */}
+      {/* 固定区不会随分类滚走，卡片区域与分类区互不抢滚动。 */}
+      {/* 使用一个滚动容器容纳多个展开分类，适配截图中的连续列表。 */}
+      {/* 在线时这里只保留来源菜单，不能用空白 flex-1 挤压原来的作品列表。 */}
+      {/* 本地时分类区才接管剩余高度，多个展开段共用其内部滚动。 */}
+      {/* 不改变固定字母/收藏区域，也不让整个 aside 随作品列表滚动。 */}
+      {referenceFilters && <div data-character-reference-scroll className={cn("min-h-0 overflow-y-auto [scrollbar-width:thin]",hideCopyright?"flex-1":"shrink-0")}>{referenceFilters}</div>}
+      {/* 作品：在线库沿用原导航，本地库在上方侧栏按真实资料筛选。 */}
+      {/* 分类来源互斥，避免选择远端 slug 后本地总是零匹配。 */}
+      {/* 只隐藏作品段，原有字母、收藏收纳与过渡保持一致。 */}
+      {!hideCopyright && (
       <CollapsibleSection
         id="copyrights"
         title={t("characters.filterSidebar.copyrights")}
@@ -118,7 +149,8 @@ export function CharacterFilterSidebar({
           ))}
         </div>
       </CollapsibleSection>
-    </aside>
+      )}
+    </LibrarySidebar>
   );
 }
 

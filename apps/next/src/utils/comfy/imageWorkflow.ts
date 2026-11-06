@@ -9,6 +9,9 @@ import animaWorkflowJson from "@/data/comfy/imageWorkflower/Anima/标准anima生
 import sdxlWorkflowJson from "@/data/comfy/imageWorkflower/SDXL/标准SDXL生成.json";
 import { t } from "@/i18n";
 import { cloneComfyPrompt } from "@/utils/comfy/workflowToApi";
+// 图片与视频共用槽位校验，只把当前图片工作流的 CLIP/VAE 交给辅助设置。
+// 参数随队列深拷贝，后续改选只影响下一次生成。
+import { applyWorkflowAuxiliaryOverrides, type VideoModelOverrides } from "./video-workflow-models";
 
 /** 图像生成工作流系列（对应创建页模型系列） */
 export type ImageWorkflowSeries = "anima" | "sdxl";
@@ -36,6 +39,9 @@ export type ImageWorkflowParams = {
   loras?: LoraPromptItem[];
   /** 使用哪个系列的工作流（默认 anima） */
   series?: ImageWorkflowSeries;
+  // 节点号属于当前系列，SDXL 与 Anima 的覆盖不能互相套用。
+  // 未提供时保持原工作流，不新增任何加载节点或重接 checkpoint 输出。
+  modelOverrides?: VideoModelOverrides;
 };
 
 type WorkflowNode = {
@@ -52,6 +58,18 @@ const IMAGE_WORKFLOWS: Record<ImageWorkflowSeries, ComfyApiPrompt> = {
   anima: animaWorkflowJson as ComfyApiPrompt,
   sdxl: sdxlWorkflowJson as ComfyApiPrompt,
 };
+// UI 与提交使用同一模板来源，文件改名后的默认展示不会另维护一份常量。
+// 返回深拷贝，设置组件读取它不会污染下一次图片或编辑生成。
+// SDXL 的 CLIP/VAE 来自 checkpoint 输出，不能虚构独立加载器。
+// 模板 getter 与生成构建器引用同一张 IMAGE_WORKFLOWS 表，避免配置来源分叉。
+// 这里只暴露拷贝，UI 即使为了展示遍历或暂存也拿不到模块原件的写权限。
+// 系列是已支持的工作流联合类型，不能把外部任意路径当成模板导入位置。
+// Anima 的独立 loader 可以改名，SDXL 的内置输出则保持原有连线。
+// 克隆不替换节点 id，设置面板拿到的键才能直接用于实际生成。
+// 读取模板本身不注入提示词、随机种子或用户 LoRA，展示不会改变生成草稿。
+export function getImageWorkflowTemplate(series: ImageWorkflowSeries): ComfyApiPrompt {
+  return cloneComfyPrompt(IMAGE_WORKFLOWS[series]);
+}
 
 function findNodes(
   prompt: ComfyApiPrompt,
@@ -246,6 +264,9 @@ export function buildImagePrompt(
 
   // LoRA 注入：模型链由加载器 → LoRA(100…) → KSampler，CLIP 链路不动
   injectUserLoras(prompt, sampler.id, params.loras ?? []);
+  // LoRA 注入不改变 CLIP/VAE 的节点身份，辅助覆盖最后写入实际提交图。
+  // 路径和槽位校验失败交给生成入口提示，不能悄悄回落到另一个模型。
+  applyWorkflowAuxiliaryOverrides(prompt, params.modelOverrides);
 
   // ComfyUI 侧校验：没有输出节点会直接 400（prompt_no_outputs），提前给出可读报错
   assertHasOutputNode(prompt, series);

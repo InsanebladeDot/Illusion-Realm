@@ -1,5 +1,8 @@
 "use client";
 
+// 下拉选项沿用原业务值，菜单外观、滚动与键盘操作统一复用采样器组件。
+import { SimpleSelect } from "@/components/SimpleSelect";
+
 import { useEffect, useState } from "react";
 import NextImage from "next/image";
 import { Info, Star, X } from "lucide-react";
@@ -198,22 +201,17 @@ export function RoleSelectDialog({
                     </div>
 
                     <div className="mt-3 grid min-w-0 grid-cols-2 items-center gap-2">
-                      <select
-                        value={modelId}
-                        onChange={(event) =>
+                      <SimpleSelect
+ value={String(modelId)}
+ onChange={(value) =>
                           setDraftModels((prev) => ({
                             ...prev,
-                            [role.id]: event.target.value,
+                            [role.id]: value,
                           }))
                         }
-                        className="h-9 min-w-0 truncate rounded-xl border border-input bg-background px-2 text-xs text-foreground shadow-sm outline-none focus:ring-1 focus:ring-ring"
-                      >
-                        {role.models.map((model) => (
-                          <option key={model.id} value={model.id}>
-                            {model.label}
-                          </option>
-                        ))}
-                      </select>
+ className="min-w-0 flex-1" portal
+ options={[...role.models.map((model) => ({ value: String(model.id), label: model.label }))]}
+ />
                       <button
                         type="button"
                         onClick={() => handleSelect(role)}

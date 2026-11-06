@@ -1,0 +1,424 @@
+{
+  "baseline": "C:\\Users\\18305\\AppData\\Local\\Temp\\ir-library-unification-baseline-pu8veqh4\\baseline.json",
+  "baselineMethod": "工作区任务开始快照；新增/替换行统计，删除和未变上下文排除；纯注释定界符及跨文件完全重复说明排除。",
+  "totals": {
+    "business": {
+      "C": 220,
+      "B": 766,
+      "rate": 22.31
+    },
+    "test": {
+      "C": 96,
+      "B": 305,
+      "rate": 23.94
+    }
+  },
+  "files": [
+    {
+      "file": "apps/next/src/view/cartoon/CartoonComposeSidebar.tsx",
+      "kind": "business",
+      "B": 12,
+      "C": 1,
+      "rate": 7.69
+    },
+    {
+      "file": "apps/next/src/view/create/creation-preview-tools.tsx",
+      "kind": "business",
+      "B": 11,
+      "C": 0,
+      "rate": 0.0
+    },
+    {
+      "file": "apps/next/src/view/create/RoleSelectDialog.tsx",
+      "kind": "business",
+      "B": 8,
+      "C": 0,
+      "rate": 0.0
+    },
+    {
+      "file": "apps/next/src/view/profile/cloud-add-to-collection.tsx",
+      "kind": "business",
+      "B": 9,
+      "C": 0,
+      "rate": 0.0
+    },
+    {
+      "file": "apps/next/src/view/profile/cloud-resource-fields.tsx",
+      "kind": "business",
+      "B": 16,
+      "C": 2,
+      "rate": 11.11
+    },
+    {
+      "file": "apps/next/src/view/profile/cloud-upload-form.tsx",
+      "kind": "business",
+      "B": 15,
+      "C": 1,
+      "rate": 6.25
+    },
+    {
+      "file": "apps/next/src/view/profile/EditProfileDialog.tsx",
+      "kind": "business",
+      "B": 8,
+      "C": 0,
+      "rate": 0.0
+    },
+    {
+      "file": "apps/next/src/view/profile/profile-collections-panel.tsx",
+      "kind": "business",
+      "B": 8,
+      "C": 0,
+      "rate": 0.0
+    },
+    {
+      "file": "apps/next/src/view/profile/profile-posts-panel.tsx",
+      "kind": "business",
+      "B": 8,
+      "C": 0,
+      "rate": 0.0
+    },
+    {
+      "file": "apps/next/src/view/profile/profile-statistics-panel.tsx",
+      "kind": "business",
+      "B": 15,
+      "C": 0,
+      "rate": 0.0
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/comic/comic-save-template-dialog.tsx",
+      "kind": "business",
+      "B": 9,
+      "C": 0,
+      "rate": 0.0
+    },
+    {
+      "file": "apps/next/src/view/create/promptAssembly/PromptAssemblyPanel.tsx",
+      "kind": "business",
+      "B": 9,
+      "C": 0,
+      "rate": 0.0
+    },
+    {
+      "file": "apps/next/src/components/prompt-assistant/assistant-history.tsx",
+      "kind": "business",
+      "B": 9,
+      "C": 0,
+      "rate": 0.0
+    },
+    {
+      "file": "apps/next/src/components/videoEdit/video-reframe-controls.tsx",
+      "kind": "business",
+      "B": 9,
+      "C": 0,
+      "rate": 0.0
+    },
+    {
+      "file": "apps/next/src/components/SimpleSelect.tsx",
+      "kind": "business",
+      "B": 75,
+      "C": 34,
+      "rate": 31.19
+    },
+    {
+      "file": "apps/next/src/components/library/library-card.tsx",
+      "kind": "business",
+      "B": 6,
+      "C": 4,
+      "rate": 40.0
+    },
+    {
+      "file": "apps/next/src/components/library/library-text-item.tsx",
+      "kind": "business",
+      "B": 24,
+      "C": 13,
+      "rate": 35.14
+    },
+    {
+      "file": "apps/next/src/components/library/library-display-switch.tsx",
+      "kind": "business",
+      "B": 18,
+      "C": 11,
+      "rate": 37.93
+    },
+    {
+      "file": "apps/next/src/components/library/library-favorites-controls.tsx",
+      "kind": "business",
+      "B": 24,
+      "C": 9,
+      "rate": 27.27
+    },
+    {
+      "file": "apps/next/src/view/create/CharacterPickerDialog.tsx",
+      "kind": "business",
+      "B": 36,
+      "C": 3,
+      "rate": 7.69
+    },
+    {
+      "file": "apps/next/src/view/create/characters/CharacterCard.tsx",
+      "kind": "business",
+      "B": 3,
+      "C": 1,
+      "rate": 25.0
+    },
+    {
+      "file": "apps/next/src/view/create/characters/CharacterPickerToolbar.tsx",
+      "kind": "business",
+      "B": 7,
+      "C": 4,
+      "rate": 36.36
+    },
+    {
+      "file": "apps/next/src/view/create/tagLibrary/TagLibraryDialog.tsx",
+      "kind": "business",
+      "B": 22,
+      "C": 6,
+      "rate": 21.43
+    },
+    {
+      "file": "apps/next/src/view/create/tagLibrary/TagLibraryCard.tsx",
+      "kind": "business",
+      "B": 3,
+      "C": 0,
+      "rate": 0.0
+    },
+    {
+      "file": "apps/next/src/view/create/tagLibrary/TagLibraryToolbar.tsx",
+      "kind": "business",
+      "B": 2,
+      "C": 2,
+      "rate": 50.0
+    },
+    {
+      "file": "apps/next/src/components/AppShell.tsx",
+      "kind": "business",
+      "B": 4,
+      "C": 2,
+      "rate": 33.33
+    },
+    {
+      "file": "apps/next/src/stores/useCharacterFavoriteStore.ts",
+      "kind": "business",
+      "B": 19,
+      "C": 7,
+      "rate": 26.92
+    },
+    {
+      "file": "apps/next/src/stores/use-library-favorites-store.ts",
+      "kind": "business",
+      "B": 19,
+      "C": 12,
+      "rate": 38.71
+    },
+    {
+      "file": "apps/next/src/utils/library-favorites.ts",
+      "kind": "business",
+      "B": 54,
+      "C": 36,
+      "rate": 40.0
+    },
+    {
+      "file": "apps/next/src/utils/export-library-favorites.ts",
+      "kind": "business",
+      "B": 16,
+      "C": 13,
+      "rate": 44.83
+    },
+    {
+      "file": "apps/next/src/i18n/locales/zh-CN/characters.ts",
+      "kind": "business",
+      "B": 1,
+      "C": 0,
+      "rate": 0.0
+    },
+    {
+      "file": "apps/next/src/i18n/locales/en/characters.ts",
+      "kind": "business",
+      "B": 1,
+      "C": 0,
+      "rate": 0.0
+    },
+    {
+      "file": "packages/shared/src/types/library-favorites.ts",
+      "kind": "business",
+      "B": 6,
+      "C": 9,
+      "rate": 60.0
+    },
+    {
+      "file": "packages/shared/src/types/userData.ts",
+      "kind": "business",
+      "B": 2,
+      "C": 4,
+      "rate": 66.67
+    },
+    {
+      "file": "apps/next/src/view/profile/profile-replica.css",
+      "kind": "business",
+      "B": 3,
+      "C": 0,
+      "rate": 0.0
+    },
+    {
+      "file": "scripts/lib/check-prompt-translation-history.js",
+      "kind": "test",
+      "B": 2,
+      "C": 1,
+      "rate": 33.33
+    },
+    {
+      "file": "scripts/verify-library-favorites.js",
+      "kind": "test",
+      "B": 41,
+      "C": 15,
+      "rate": 26.79
+    },
+    {
+      "file": "scripts/smoke-profile-ui.js",
+      "kind": "test",
+      "B": 7,
+      "C": 2,
+      "rate": 22.22
+    },
+    {
+      "file": "scripts/smoke-prompt-assembly.js",
+      "kind": "test",
+      "B": 30,
+      "C": 8,
+      "rate": 21.05
+    },
+    {
+      "file": "scripts/lib/check-library-preferences.js",
+      "kind": "test",
+      "B": 118,
+      "C": 30,
+      "rate": 20.27
+    },
+    {
+      "file": "scripts/smoke-cloud-images.js",
+      "kind": "test",
+      "B": 5,
+      "C": 2,
+      "rate": 28.57
+    },
+    {
+      "file": "scripts/smoke-video-reframe.js",
+      "kind": "test",
+      "B": 5,
+      "C": 2,
+      "rate": 28.57
+    },
+    {
+      "file": "scripts/lib/check-mask-prompt.js",
+      "kind": "test",
+      "B": 1,
+      "C": 1,
+      "rate": 50.0
+    },
+    {
+      "file": "scripts/smoke-prompt-assistant.js",
+      "kind": "test",
+      "B": 5,
+      "C": 0,
+      "rate": 0.0
+    },
+    {
+      "file": "apps/next/src/components/create-edit/anima-edit-form.tsx",
+      "kind": "business",
+      "B": 6,
+      "C": 4,
+      "rate": 40.0
+    },
+    {
+      "file": "apps/next/src/components/create-edit/anima-edit-workspace.tsx",
+      "kind": "business",
+      "B": 1,
+      "C": 2,
+      "rate": 66.67
+    },
+    {
+      "file": "apps/next/src/i18n/locales/zh-CN/create.ts",
+      "kind": "business",
+      "B": 1,
+      "C": 0,
+      "rate": 0.0
+    },
+    {
+      "file": "apps/next/src/i18n/locales/en/create.ts",
+      "kind": "business",
+      "B": 1,
+      "C": 0,
+      "rate": 0.0
+    },
+    {
+      "file": "apps/next/src/view/HomePage.tsx",
+      "kind": "business",
+      "B": 12,
+      "C": 3,
+      "rate": 20.0
+    },
+    {
+      "file": "apps/next/src/view/home/template-v2/home-v2.tsx",
+      "kind": "business",
+      "B": 80,
+      "C": 19,
+      "rate": 19.19
+    },
+    {
+      "file": "apps/next/src/view/home/template-v2/home-v2.module.css",
+      "kind": "business",
+      "B": 58,
+      "C": 7,
+      "rate": 10.77
+    },
+    {
+      "file": "apps/next/src/view/home/template-v2/config.ts",
+      "kind": "business",
+      "B": 27,
+      "C": 8,
+      "rate": 22.86
+    },
+    {
+      "file": "apps/next/src/i18n/locales/zh-CN/home.ts",
+      "kind": "business",
+      "B": 43,
+      "C": 0,
+      "rate": 0.0
+    },
+    {
+      "file": "apps/next/src/i18n/locales/en/home.ts",
+      "kind": "business",
+      "B": 43,
+      "C": 0,
+      "rate": 0.0
+    },
+    {
+      "file": "scripts/lib/check-home-template.js",
+      "kind": "test",
+      "B": 91,
+      "C": 35,
+      "rate": 27.78
+    },
+    {
+      "file": "apps/next/src/hooks/use-anima-edit.ts",
+      "kind": "business",
+      "B": 1,
+      "C": 3,
+      "rate": 75.0
+    },
+    {
+      "file": "apps/next/src/view/profile/cloud-image-editor.tsx",
+      "kind": "business",
+      "B": 1,
+      "C": 0,
+      "rate": 0.0
+    },
+    {
+      "file": "apps/next/src/view/profile/cloud-collection-editor.tsx",
+      "kind": "business",
+      "B": 1,
+      "C": 0,
+      "rate": 0.0
+    }
+  ]
+}

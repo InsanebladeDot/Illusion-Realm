@@ -1,49 +1,50 @@
 "use client";
 
-import { useEffect, useState, type RefObject } from "react";
-import { createPortal } from "react-dom";
-import { Check, ChevronLeft, ChevronRight } from "lucide-react";
+import { type RefObject } from "react";
 import { useTranslation } from "@/i18n";
-import { useMediaQueryAfterHydration } from "@/hooks/useMediaQuery";
 import { usePromptAssistantStore } from "@/stores/usePromptAssistantStore";
 import { useToastStore } from "@/stores/useToastStore";
 import { GLM_MODELS } from "@/utils/prompt-assistant";
-import { useCascadePosition } from "./use-cascade-position";
-interface MenuItem { id: string; label: string; description?: string; selected?: boolean; children?: MenuItem[]; action?: () => void }
-interface MenuProps { anchor: RefObject<HTMLDivElement | null>; onClose: () => void; onConfigure: (mode: "connection" | "preset") => void }
-export function AssistantMenu({ anchor, onClose, onConfigure }: MenuProps) {
-  const { t } = useTranslation(); const compact = !useMediaQueryAfterHydration("(min-width: 720px)");
+// 这里只组装翻译业务，列布局、悬停展开和边缘换向由共用级联菜单维护。
+// 视频右键也调用相同组件，不能在两个入口分别修补菜单外观。
+import { CascadeMenu, type CascadeMenuItem } from "@/components/cascade-menu";
+// 可选 id 将既有添加表单定位到当前记录；连接设置无需提供目标。
+// 菜单不直接修改或删除数据，持久化和错误反馈由编辑表单统一处理。
+// 保持外层关闭回调，菜单 Escape 与点击外部仍沿用原实现。
+// 历史只通知外层打开查看页，菜单不持有记录或直接覆盖任何输入框。
+// 沿用同一列菜单的按钮与键盘焦点样式，不新增悬浮按钮挤占正文。
+interface MenuProps { anchor: RefObject<HTMLDivElement | null>; onClose: () => void; onHistory: () => void; onConfigure: (mode: "connection" | "preset", presetId?: string) => void }
+export function AssistantMenu({ anchor, onClose, onConfigure, onHistory }: MenuProps) {
+  const { t } = useTranslation();
   const preferences = usePromptAssistantStore(state => state.preferences); const save = usePromptAssistantStore(state => state.save);
-  const [path, setPath] = useState<string[]>([]);
   const choose = (patch: Parameters<typeof save>[0]) => { void save(patch).then(onClose).catch(() => useToastStore.getState().show(t("create.promptAssistant.failed"))); };
-  const items: MenuItem[] = [
+  const items: CascadeMenuItem[] = [
     { id: "provider", label: t("create.promptAssistant.provider"), children: [
       { id: "glm", label: "GLM", selected: preferences.provider === "glm", children: GLM_MODELS.map(model => ({ id: model, label: model.toUpperCase(), selected: preferences.provider === "glm" && preferences.model === model, action: () => choose({ provider: "glm", model }) })) },
+      // 供应商列表：直接沿用同一个菜单项、选中态和保存回调，不增加第二套弹窗。
+      // 说明明确模型与凭据来自 Agent，点击只选站，不自动提交翻译或产生推理费用。
+      // 原 custom 入口仍可用于其他中转地址，已有用户连接不会被覆盖。
+      { id: "euzhi", label: t("agent.providers.euzhi"), description: t("create.promptAssistant.euzhiShared"), selected: preferences.provider === "euzhi", action: () => choose({ provider: "euzhi" }) },
       { id: "custom", label: t("create.promptAssistant.customProvider"), selected: preferences.provider === "custom", action: () => { void save({ provider: "custom" }).then(() => onConfigure("connection")).catch(() => useToastStore.getState().show(t("create.promptAssistant.failed"))); } },
     ] },
     { id: "presets", label: t("create.promptAssistant.presets"), children: [
       { id: "translate", label: t("create.promptAssistant.translation"), description: t("create.promptAssistant.translationInstruction"), selected: preferences.presetId === "translate", action: () => choose({ presetId: "translate" }) },
       { id: "anima", label: t("create.promptAssistant.anima"), description: t("create.promptAssistant.animaInstruction"), selected: preferences.presetId === "anima", action: () => choose({ presetId: "anima" }) },
-      ...preferences.presets.map(preset => ({ id: preset.id, label: preset.name, description: preset.instruction, selected: preferences.presetId === preset.id, action: () => choose({ presetId: preset.id }) })),
+      // 选择保留原点击语义，铅笔另行打开同一预设的编辑与删除表单。
+      // 名称可以重复，回调始终捕获稳定 id，避免误改其他同名记录。
+      // 编辑动作不调用 choose，因此未保存之前不会改变当前使用的预设。
+      ...preferences.presets.map(preset => ({ id: preset.id, label: preset.name, description: preset.instruction, selected: preferences.presetId === preset.id, action: () => choose({ presetId: preset.id }), edit: () => onConfigure("preset", preset.id), editLabel: t("create.promptAssistant.editNamedPreset", { name: preset.name }), editTitle: t("create.promptAssistant.editPreset") })),
       { id: "add", label: t("create.promptAssistant.addPreset"), action: () => onConfigure("preset") },
     ] },
+    // 历史属于一级动作，不放到供应商或预设子菜单，切站以后仍能找到所有结果。
+    // 直接使用原 MenuItem 的 action，因此鼠标、触屏与键盘走同一个打开回调。
+    // 不设置 selected：打开历史不是修改正在使用的供应商或系统指令。
+    // 入口始终可见，即使尚未翻译，也能在空态了解何时开始记录。
+    // 不在菜单里显示正文片段，避免长结果撑大截图中已经紧凑的菜单宽度。
+    // 也不在 hover 时加载详情，用户必须明确点击才会进入历史资源页。
+    { id: "history", label: t("create.promptAssistant.history.title"), action: onHistory },
     { id: "settings", label: t("create.promptAssistant.configure"), action: () => onConfigure("connection") },
   ];
-  const columns = [items]; for (const id of path) { const children = columns.at(-1)?.find(item => item.id === id)?.children; if (children) columns.push(children); }
-  const { panel, capacity } = useCascadePosition(anchor, compact ? 0 : columns.length - 1);
-  useEffect(() => {
-    const outside = (event: PointerEvent) => { if (event.target instanceof Node && !panel.current?.contains(event.target) && !anchor.current?.contains(event.target)) onClose(); };
-    const key = (event: KeyboardEvent) => { if (event.key === "Escape") { onClose(); anchor.current?.querySelector<HTMLButtonElement>("button")?.focus(); } };
-    document.addEventListener("pointerdown", outside, true); document.addEventListener("keydown", key);
-    return () => { document.removeEventListener("pointerdown", outside, true); document.removeEventListener("keydown", key); };
-  }, [anchor, onClose, panel]);
-  const drilldown = compact || capacity === 0;
-  const visible = drilldown ? [columns.at(-1)!] : [columns[0], ...columns.slice(1).slice(-capacity)];
-  const skipped = columns.length - visible.length;
-  return createPortal(<div ref={panel} data-prompt-assistant-menu className="fixed z-[1100] w-52 max-w-[calc(100vw-16px)] text-foreground" aria-label={t("create.promptAssistant.title")}>
-    {visible.map((column, columnIndex) => <div key={columnIndex} data-assistant-column={columnIndex} role="menu" style={columnIndex ? { left: `calc(var(--assistant-cascade-offset, 208px) * ${columnIndex})`, maxHeight: "min(480px, var(--assistant-cascade-height, calc(100dvh - 64px)))" } : undefined} className={`${columnIndex ? "absolute top-0" : "relative"} max-h-[min(480px,calc(100dvh-64px))] w-full overflow-y-auto rounded-xl border border-border bg-background/95 p-1.5 shadow-lg backdrop-blur-xl`}>
-      {path.length > 0 && (drilldown || skipped > 0 && columnIndex > 0) && <button type="button" className="flex w-full items-center gap-1 rounded-lg p-2 text-xs text-muted-foreground" onClick={() => setPath(path.slice(0, -1))}><ChevronLeft size={14} />{t("create.promptAssistant.back")}</button>}
-      {column.map(item => { const depth = drilldown ? columns.length - 1 : columnIndex === 0 ? 0 : columnIndex + skipped; return <button type="button" key={item.id} role="menuitem" data-assistant-item={item.id} title={item.description ?? item.label} aria-haspopup={item.children ? "menu" : undefined} aria-expanded={item.children ? path[depth] === item.id : undefined} onPointerEnter={event => { if (!drilldown && event.pointerType === "mouse") setPath(item.children ? [...path.slice(0, depth), item.id] : path.slice(0, depth)); }} onClick={() => item.children ? setPath([...path.slice(0, depth), item.id]) : item.action?.()} className={`flex w-full items-start gap-2 rounded-lg px-2.5 py-2 text-left text-xs hover:bg-muted focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent-stroke ${item.selected ? "bg-muted" : ""}`}><span className="min-w-0 flex-1"><span className="block">{item.label}</span>{item.description && <span className="mt-1 line-clamp-6 block text-[10px] leading-relaxed text-muted-foreground">{item.description}</span>}</span>{item.selected && <Check size={13} className="shrink-0" />}{item.children && <ChevronRight size={13} style={{ rotate: drilldown ? undefined : "var(--assistant-cascade-arrow, 0deg)" }} className="shrink-0" />}</button>; })}
-    </div>)}
-  </div>, document.body);
+  // 菜单关闭和预设保存仍属于创建页，公共展示不持有任何供应商密钥。
+  return <CascadeMenu anchor={anchor} items={items} label={t("create.promptAssistant.title")} backLabel={t("create.promptAssistant.back")} onClose={onClose} attributes={{ "data-prompt-assistant-menu": true }} />;
 }

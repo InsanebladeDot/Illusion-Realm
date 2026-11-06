@@ -20,14 +20,14 @@
  *   SMOKE_SWALLOW_MEDIA_EVENT=change|all
  *                    在页面脚本执行前装 shim，吞掉 matchMedia 的 change 事件，
  *                    验证 useMediaQuery 的冗余触发（resize / visibilitychange）能否纠正变体；
- *                    `all` 连冗余触发一起掐断，作为负向对照（应失败，证明正向那条有区分度）
+ *                    `all` 连冗余触发和容器观测一起掐断，验证变体应停留在原布局
  */
 const fs = require("fs");
 const os = require("os");
 const path = require("path");
 const { app, BrowserWindow, ipcMain: realIpcMain } = require("electron");
-const { registerAppProtocol } = require("../apps/electron/appProtocol");
-const { scanModelsInDirectory } = require("../apps/electron/modelScanner");
+const { registerAppProtocol } = require("../apps/electron/src/main/core/protocol");
+const { scanModelsInDirectory } = require("../apps/electron/src/main/modules/models/scanner");
 /**
  * 深浅色走的是**真实**主进程 handler（不是桩）：它只依赖 `nativeTheme`，
  * 没有外部副作用，装进来之后这条断言覆盖的是「IPC 契约 + 主进程行为 + 渲染进程接线 + 媒体查询真的翻」
@@ -36,7 +36,8 @@ const { scanModelsInDirectory } = require("../apps/electron/modelScanner");
  */
 const {
   registerThemeHandlers,
-} = require("../apps/electron/ipc-handlers/window.handlers");
+  registerWindowHandlers,
+} = require("../apps/electron/src/main/core/windows/window.handlers");
 const { createSmokeHarness } = require("./lib/smoke-harness");
 
 const smoke = createSmokeHarness({ name: "prompt-assembly" });
@@ -67,6 +68,10 @@ const ipcMain = {
 
 registerAppProtocol();
 registerThemeHandlers();
+// 共用资料库主题专项使用真实自定义顶栏，窗口动作走正式handler。
+// 默认旧套件不改变窗口形态，保留此前顶栏前置条件问题的可见性。
+// 生产preload只认additionalArguments，不能在页面伪造hasCustomTitleBar。
+if (process.env.LIBRARY_REUSE_ONLY === "1") registerWindowHandlers();
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -140,7 +145,19 @@ ipcMain.handle("comfy:generate", async (_event, prompt) => {
 });
 
 /** 角色库：给角色选择器提供 stub 数据 */
-ipcMain.handle("animadex:search", async () => ({
+// 专项生成两页互不重叠的角色，默认套件继续沿用原单角色回包。
+// 固定身份用来验证跨页收藏，不用真实线上库的当前排序作不稳定前提。
+function libraryCharacterPage(args, original) {
+  if (process.env.LIBRARY_REUSE_ONLY !== "1") return original;
+  const page = args?.page === 2 ? 2 : 1;
+  const results = Array.from({ length: page === 1 ? 24 : 1 }, (_, index) => {
+    const number = page === 1 ? index + 1 : 25;
+    return { ...original.results[0], slug: `character_${number}`, name: `Alice ${number}`, trigger: `alice_${number}` };
+  });
+  return { ...original, total: 25, pages: 2, page, results };
+}
+
+ipcMain.handle("animadex:search", async (_event, args) => libraryCharacterPage(args, {
   total: 1,
   page: 1,
   pageSize: 24,
@@ -173,14 +190,21 @@ app.whenReady().then(async () => {
     width: 1600,
     height: 1000,
     // 显示且置顶：隐藏窗口下 Chromium 会暂停 CSS 过渡，面板/角标测不到真实状态
-    show: true,
-    alwaysOnTop: true,
+    show: process.env.LIBRARY_REUSE_ONLY !== "1",
+    alwaysOnTop: process.env.LIBRARY_REUSE_ONLY !== "1",
     webPreferences: {
+      // 专项通过真实外观入口切主题，避免只改系统主题又被持久化偏好覆盖。
+      // 只在显式专项入口注入，旧完整套件保持原窗口配置。
+      // 与生产启动使用相同参数，标题栏不是测试临时画出来的DOM。
+      additionalArguments: process.env.LIBRARY_REUSE_ONLY === "1" ? ["--illusion-custom-titlebar"] : [],
+      // 资料库专项使用真实离屏合成，桌面遮挡不应导致截图反复读到旧帧。
+      // 只有测试窗口改变渲染方式，不修改用户应用或组件行为。
+      offscreen: process.env.LIBRARY_REUSE_ONLY === "1",
       contextIsolation: true,
       nodeIntegration: false,
       // 与真实应用 main.js 一致：preload 是手写 CommonJS，需 Node 环境才能 require 本地模块
       sandbox: false,
-      preload: path.join(__dirname, "..", "apps", "electron", "preload.js"),
+      preload: path.join(__dirname, "../apps/electron/src/preload/index.js"),
       /**
        * 关闭后台节流。这一条不是「保险」，是**本套件窄屏断言的正确性前提**：
        *
@@ -246,7 +270,7 @@ app.whenReady().then(async () => {
         editorText: document.getElementById('prompt-editor')?.textContent?.trim() ?? '',
         editorEditable: document.getElementById('prompt-editor')?.getAttribute('contenteditable') ?? '',
         toggleChecked: document.querySelector('[data-advanced-prompt-toggle]')?.getAttribute('aria-checked') ?? '',
-        templateOptions: Array.from(document.querySelectorAll('[data-prompt-template-select] option')).map(
+        templateOptions: Array.from(document.querySelectorAll('[data-simple-select-option]')).map(
           (el) => el.textContent.trim()
         ),
       };
@@ -333,6 +357,110 @@ app.whenReady().then(async () => {
   try {
     await win.loadURL("app://app/create");
     await sleep(4000);
+
+    // 只缩小回归集合，仍使用正式导出、preload和隔离用户文档，不伪造组件状态。
+    // 原有完整入口保持不变；此专项避免无关历史顶栏前置阻塞快捷词回归。
+    // 专项开关由命令行环境显式传入，默认仍执行旧完整提示词套件。
+    // 共用原生value setter和点击助手，组件的onChange与onKeyDown必须真实接通。
+    // readAssembly读取页面公开textarea，helper无法通过私有store造一个正确答案。
+    // 用户文档写入仍经当前测试桥接，磁盘读取用同一个隔离路径核对。
+    // 专项结束不删除证据目录，便于交付真实长标签截图。
+    // finish仍使用harness累计断言，不把执行到return等同全部成功。
+    // helper出错向外抛，原try/catch负责失败退出与窗口清理。
+    // 没有额外Electron进程，调用它之前仍须按约定确认静态导出新鲜。
+    // 本分支没有人工鼠标证据，应在最终验证报告单独标为自动事件。
+    // 不修改原语言菜单用例预期，历史无关入口问题不能靠本专项声称已修复。
+    if (process.env.QUICK_WORDS_ONLY === "1") {
+      await require("./lib/check-prompt-quick-words")({ run, waitFor, check, click: clickSelector, setInput: setInputValue, selectTab, readAssembly, win, delay: sleep, userDataFile, directory: workDir });
+      await smoke.finish({ app, ok: smoke.allPassed() });
+      return;
+    }
+
+    // 分类专项沿用同一真实窗口、静态产物检查和临时用户数据。
+    // 只有显式设置 LIBRARY_FILTER_ONLY=1 才走此分支。
+    // 默认入口继续执行完整历史套件，既有失败不会被跳过或改绿。
+    // 当前历史套件的顶栏前置条件不完整，会在背景库用例之前中断。
+    // 专项直接从创建表单打开背景库，隔离主题菜单与语言菜单的无关依赖。
+    // 这个入口不注入过滤结果、不改DOM，也不替代被测React组件。
+    // 背景预期仍由helper从原始数据独立计算，不能从实际结果反推。
+    // 单独启动与其他Electron冒烟互斥，避免窗口时序互相干扰。
+    // 冒烟窗口使用的软件渲染参数由运行命令提供，产品启动参数保持原样。
+    // 退出仍经过smoke.finish与退出码护栏，失败不能伪装成成功。
+    // 该分支既验证新增过滤，也验证应用标签后真实编辑框收到结果。
+    // 不调用付费聊天接口，不提交ComfyUI生成，不需要线上预览可用。
+    // 资料库重用专项使用同一个创建页与临时配置，独立于旧顶栏交互断言。
+    // 默认完整套件仍按原流程运行，新增开关不会把历史失败隐藏成通过。
+    // helper通过真实点击操作，不向页面注入过滤后的候选数组。
+    // 暗色与浅色分别采样实际CSS；本地文档写盘后销毁页面再恢复。
+    // 主题通过应用外观按钮切换，不用DOM手工上色来伪造主题正确。
+    // 图片地址被fixture重定向为单像素，测试不依赖公网资源可访问。
+    // 这个隔离只针对图片加载，数据搜索、选择和保存均使用正式实现。
+    // 截图默认保存到临时测试目录，用户额外指定时使用该目录。
+    // 断言失败沿用finish非零退出码，不直接调用quit掩盖错误。
+    // 只修改测试临时用户文件，不清空真实收藏或操作本机模型。
+    if (process.env.LIBRARY_REUSE_ONLY === "1") {
+      win.webContents.session.webRequest.onBeforeRequest({urls:["http://*/*","https://*/*"]}, (request, callback) => callback(request.resourceType === "image" ? {redirectURL:"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Wl6hQAAAABJRU5ErkJggg=="} : {}));
+      // write测试轮询读取临时文件，每次重新解析以排除只验证内存缓存。
+      // 四秒上限足够覆盖300ms节流，但不会等待没有结束条件的Promise。
+      // 读取失败视为未落盘继续等待，最终仍未命中则记录明确失败。
+      // readDocument不打印原文，不把收藏列表混进测试输出。
+      const readDocument = async predicate => { for(let attempt=0;attempt<40;attempt++){try{if(predicate(JSON.parse(fs.readFileSync(userDataFile,"utf8"))))return true;}catch{}await sleep(100);}return false; };
+      // reload是真正页面重载，旧组件和store随渲染上下文一并重建。
+      // 等实际创建表单出现后再继续点击，避免把加载中误判成无收藏。
+      // 截图只捕获被测窗口，不截整个用户桌面。
+      // 控制台网络警告不代表生成结果，此专项不提交任何实际生成。
+      const reload = async () => { await win.loadURL("app://app/create"); await waitFor(`Boolean(document.getElementById('prompt-editor'))`); await sleep(700); };
+      const screenshot = async name => { const directory=process.env.LIBRARY_FILTER_SCREENSHOTS || workDir;fs.mkdirSync(directory,{recursive:true});win.webContents.invalidate();await sleep(300);fs.writeFileSync(path.join(directory,`${name}.png`),(await win.webContents.capturePage()).toPNG()); };
+      // 首页局部复测不重复修改收藏；不设置该开关时仍完整执行资料库验收。
+      // 两种运行范围会写入同一日志，控制台也标注以免把局部结果误报成全套通过。
+      console.log(process.env.HOME_TEMPLATE_ONLY === "1" ? "SCOPE home-template-only" : "SCOPE library-preferences-and-home");
+      if (process.env.HOME_TEMPLATE_ONLY !== "1") {
+        await require("./lib/check-shared-libraries")({run,waitFor,check,click:clickSelector,setInput:setInputValue,readDocument,reload,screenshot});
+        await require("./lib/check-library-preferences")({run,waitFor,check,click:clickSelector,setInput:setInputValue,readDocument,reload,screenshot,win,directory:process.env.LIBRARY_FILTER_SCREENSHOTS || workDir});
+      }
+      // 复用同一隔离窗口覆盖新首页与文字编辑删项，避免再启动第二个 Electron 实例。
+      // 资料库持久化已经验证完毕，导航不会提前丢掉尚未读取的收藏状态。
+      await require("./lib/check-home-template")({run,waitFor,check,click:clickSelector,screenshot,win});
+      // 汇总仍取本harness累积结果，某个分组或主题失败不得单独回落成功。
+      // 保留失败日志和临时目录；成功时统一清理数据，显式截图目录不受影响。
+      // 当前入口仅验证构建后的页面，不声称exe安装或在线预览已被验证。
+      await smoke.finish({app,ok:smoke.allPassed(),cleanupDir:workDir}); return;
+    }
+
+    if (process.env.LIBRARY_FILTER_ONLY === "1") {
+      await clickSelector('[data-background-library-trigger]');
+      check("创建表单可直接打开背景库", await waitFor(`Boolean(document.querySelector('[data-background-filters]'))`));
+      await require("./lib/check-background-filters")({run,waitFor,check});
+      // 截图捕获实际组件，只在显式配置的临时目录中保存。
+      // 等待入场绘制再捕获，避免将动画中的空白帧误认为真实布局。
+      // 不把截图存在作为过滤正确性的证据，前面的ID比较才是判据。
+      // helper已经清除条件，此时四类与动态特征应同时位于侧栏。
+      // 文件命名与完整套件相同，方便对照同一组件而非两份示例。
+      // 未配置截图目录时不新增文件，不影响CI的断言结果。
+      // capturePage仅作用被测窗口，不截取桌面上的其他应用。
+      if (process.env.LIBRARY_FILTER_SCREENSHOTS) {
+        fs.mkdirSync(process.env.LIBRARY_FILTER_SCREENSHOTS,{recursive:true}); await sleep(500);
+        fs.writeFileSync(path.join(process.env.LIBRARY_FILTER_SCREENSHOTS,"background-filters.png"),(await win.webContents.capturePage()).toPNG());
+      }
+      // 选择第一条正式资料，读取源Tags供应用后的独立预期比较。
+      // 不能仅断言弹窗关闭，因为关闭并不证明提示词已经写入。
+      // 不硬编码第一条名称，资料排序变化仍可验证真实选择的内容。
+      // helper结束时已清空跨页草稿，因此本次确认只包含这一条。
+      // 原始逗号按既有组装规则拆分，逐项核对避免空字符串恒真。
+      // 读取源记录时仅按卡片ID查找，不读取组件内部状态。
+      // 此处验证的是创建页提示词应用，不声称实际图像生成成功。
+      const tags = await run(`(() => { const card=document.querySelector('[data-background-card]'); const row=window.backgroundData.find(item=>item.id===card.getAttribute('data-background-card')); card.querySelector('button').click(); return row.tags.split(',').map(value=>value.trim()).filter(Boolean); })()`);
+      await clickSelector('[data-background-apply]');
+      check("背景选择确认后应用全部源标签", tags.length > 0 && await waitFor(`${JSON.stringify(tags)}.every(tag=>document.getElementById('prompt-editor').textContent.includes(tag))&&!document.querySelector('[data-background-filters]')`));
+      // consoleErrors收集真实渲染错误，不把主进程缺少无关桩的输出混入。
+      // 网络图片不参与筛选判据，但组件脚本抛错仍须导致专项失败。
+      // 结束前先记录错误维度，finish根据所有检查统一决定退出码。
+      // 保留临时数据和日志便于失败复现，不修改实际用户的收藏与设置。
+      check("背景分类专项无渲染错误", consoleErrors.length === 0, consoleErrors.join(" | "));
+      // 显式传入所有累计断言的结果，finish没有默认成功值。
+      // 任一新筛选或应用检查失败都返回1，不能直接调用app.quit。
+      await smoke.finish({app,ok:smoke.allPassed(),cleanupDir:workDir}); return;
+    }
 
     check("创作页加载完成", (await run(`Boolean(document.getElementById('prompt-editor'))`)) === true);
 
@@ -1160,7 +1288,35 @@ app.whenReady().then(async () => {
       `document.querySelector('[data-resource-dialog="background-library-dialog-title"]')`
     );
     check("点击后打开背景库弹窗（复用同一套外壳与卡片排版）", bgOpen === true);
+    // 新用例在真实背景弹窗内点击大类与特征，不用离线函数替代 UI。
+    // 预期从原始可用数据独立计算，检查并集、交集和清除后的结果。
+    // helper 完成后恢复无分类状态，后续原篝火选择和 Tags 应用继续执行。
+    // 测试只访问临时用户目录，不修改生产收藏或调用生成工作流。
+    await require("./lib/check-background-filters")({run,waitFor,check});
+    // 截图仅在显式提供临时目录时保存，产品页面不增加截图权限。
+    // 使用真实弹窗的当前画面，不能修改DOM伪造分类效果。
+    // 本地分类不依赖预览联网成功，图片失败也应保持列表与徽标可用。
+    // 等待主进程计时器让入场绘制完成，避免抓到过渡中间透明帧。
+    // 截图不替代筛选断言，只用于复核侧栏密度和卡片区域位置。
+    // 存储位置来自本次测试环境变量，不覆盖生产输出目录。
+    // helper已恢复无筛选，截图应展示完整分类入口而非测试末尾的空结果。
+    // 后续测试仍在这个弹窗继续，保证截图来自实际业务组件。
+    // 文件名固定于本轮截图目录，便于复核相同布局而不产生仓库二进制修改。
+    // CI未设置变量时完全跳过此分支，不要求桌面截图能力作为通过前提。
+    if (process.env.LIBRARY_FILTER_SCREENSHOTS) {
+      fs.mkdirSync(process.env.LIBRARY_FILTER_SCREENSHOTS,{recursive:true}); await sleep(500);
+      fs.writeFileSync(path.join(process.env.LIBRARY_FILTER_SCREENSHOTS,"background-filters.png"),(await win.webContents.capturePage()).toPNG());
+    }
 
+
+
+    // 原背景卡片与分页回归继续执行，不因新增侧栏而删掉旧断言。
+    // 背景大类按钮现在带计数，定位使用字段数据入口而不是整行纯文案。
+    // 新面板共用原TagCategorySidebar父容器，不能另起覆盖层挡住卡片。
+    // 查询四个大类时不把特征列表混入，避免类别数量出现虚假的增长。
+    // 全部类别通过清除两组条件恢复，不再额外算作第五个场景分类。
+    // 当前可用分母仍是1056，分类调整不能静默改变过滤占位的规则。
+    // 后续搜索campfire与应用Tags检查保持原来的精确输出要求。
     const bgInfo = await run(`(() => {
       const dialog = document.querySelector('[data-resource-dialog="background-library-dialog-title"]');
       if (!dialog) return { exists: false };
@@ -1175,7 +1331,7 @@ app.whenReady().then(async () => {
         usable,
         rawTotal: raw.length,
         info: dialog.querySelector('[data-background-pagination-info]')?.innerText.replace(/\\s+/g, ' ').trim() ?? '',
-        categories: Array.from(dialog.querySelectorAll('[data-background-category]')).map((el) => el.textContent.trim()),
+        categories: Array.from(dialog.querySelectorAll('[data-background-filter-field="categories"]')).map((el) => el.textContent.trim()),
       };
     })()`);
     check("背景库过滤掉重复 / 占位 / 空条目（原始 1087 → 可用 1056）",
@@ -1184,14 +1340,16 @@ app.whenReady().then(async () => {
     check("背景库分页按背景计数",
       bgInfo.info.includes("1,056") && bgInfo.info.includes("个背景"),
       bgInfo.info);
-    check("背景库渲染 24 张卡片、4 个分类 + 全部分类",
-      bgInfo.cards === 24 && bgInfo.categories.length === 5 &&
-        bgInfo.categories.some((label) => label.startsWith("全部分类")),
+    // 分类改为四个多选场景，原来的全部分类按钮由双组清除入口替代。
+    // 数量徽标是实际条目数，因此不再用整行精确文案识别分类。
+    // 原卡片数和分页断言继续保留，不能只验证新侧栏存在。
+    check("背景库渲染 24 张卡片、4 个场景大类",
+      bgInfo.cards === 24 && bgInfo.categories.length === 4,
       `${bgInfo.cards} 张 | ${bgInfo.categories.join(" | ")}`);
 
     await run(`(() => {
-      const btn = Array.from(document.querySelectorAll('[data-background-category]')).find(
-        (el) => el.textContent.trim() === '自然与户外'
+      const btn = Array.from(document.querySelectorAll('[data-background-filter-field="categories"]')).find(
+        (el) => el.title === '自然与户外 (Nature & Outdoors)'
       );
       btn?.click();
       return !!btn;
@@ -1464,14 +1622,16 @@ app.whenReady().then(async () => {
     // ---------- 6. 模板保存 / 加载 / 删除 ----------
     await setInputValue("[data-prompt-template-name]", "SDXL 完美人像模板");
     await clickSelector("[data-prompt-template-save]");
+    await clickSelector("[data-prompt-template-select]");
     state = await readAssembly();
     check("保存模板后出现在下拉列表",
       state.templateOptions.includes("SDXL 完美人像模板"),
       state.templateOptions.join(" | "));
 
     const templateId = await run(
-      `(() => Array.from(document.querySelectorAll('[data-prompt-template-select] option')).find((o) => o.value)?.value ?? '')()`
+      `(() => Array.from(document.querySelectorAll('[data-simple-select-option]')).find((o) => o.dataset.simpleSelectOption)?.dataset.simpleSelectOption ?? '')()`
     );
+    await run("document.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}))");
     await selectTab("quality");
     await setTabContent("");
     await selectTab("character");
@@ -1484,19 +1644,23 @@ app.whenReady().then(async () => {
         (state.merged === "" || state.merged.includes("各分类都为空")),
       `${state.merged} | editor=${state.editorText}`);
 
-    await setInputValue("[data-prompt-template-select]", templateId);
+    await clickSelector("[data-prompt-template-select]");
+    await clickSelector(`[data-simple-select-option="${templateId}"]`);
     await clickSelector("[data-prompt-template-apply]");
     state = await readAssembly();
     check("加载模板恢复各分类填写状态",
       state.merged === "masterpiece, 1girl, school uniform", state.merged);
 
-    await setInputValue("[data-prompt-template-select]", templateId);
+    await clickSelector("[data-prompt-template-select]");
+    await clickSelector(`[data-simple-select-option="${templateId}"]`);
     await clickSelector("[data-prompt-template-delete]");
+    await clickSelector("[data-prompt-template-select]");
     state = await readAssembly();
     check("删除模板后下拉列表不再包含它",
       !state.templateOptions.includes("SDXL 完美人像模板"),
       state.templateOptions.join(" | "));
 
+    await run("document.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}))");
     // ---------- 7. 落盘 ----------
     let persistedDoc = {};
     for (let attempt = 0; attempt < 12; attempt += 1) {
@@ -2002,6 +2166,18 @@ app.whenReady().then(async () => {
           };
         };
         if (dropExtraTriggers) {
+          // 创建页改用容器宽度；负向对照也要切断 ResizeObserver 后续通知。
+          const OriginalObserver = window.ResizeObserver;
+          window.__droppedContainerChanges = 0;
+          window.ResizeObserver = class extends OriginalObserver {
+            constructor(callback) {
+              let first = true;
+              super((entries, observer) => {
+                if (first) { first = false; callback(entries, observer); }
+                else { window.__droppedContainerChanges += 1; }
+              });
+            }
+          };
           // 把 useMediaQuery 的冗余触发也掐掉 = 还原成「纯事件驱动」的旧实现
           for (const [target, type] of [[window, 'resize'], [document, 'visibilitychange']]) {
             const originalAdd = target.addEventListener.bind(target);
@@ -2058,6 +2234,7 @@ app.whenReady().then(async () => {
       const shimState = await readAssembly();
       const swallowed = await run(`window.__swallowedMediaChanges ?? -1`);
       const dropped = await run(`window.__droppedExtraTriggers ?? 0`);
+      const containerDropped = await run(`window.__droppedContainerChanges ?? 0`);
       const timeline = await run(`Array.isArray(window.__eventLog) ? window.__eventLog : []`);
       /**
        * 归因：翻转成 inline 之前的最后一条**非被吞**事件，才是「救场的那条」。
@@ -2072,12 +2249,12 @@ app.whenReady().then(async () => {
         "（无前置事件）";
       const shimDetail =
         `${shimWait.ok ? "轮询命中" : "轮询超时"}[${shimWait.waitedMs}ms] ` +
-        `variant=${shimState.variant} 被吞掉的 change=${swallowed} 被掐断的冗余触发=${dropped} ` +
+        `variant=${shimState.variant} 被吞掉的 change=${swallowed} 被掐断的冗余触发=${dropped} 容器通知=${containerDropped} ` +
         `救场事件=${responsible} 时间线=${JSON.stringify(timeline.slice(-8))}`;
 
       if (dropExtraTriggers) {
-        check("负向对照：连 resize / visibilitychange 也掐断时，变体不再被纠正（证明上一条有区分度）",
-          shimWait.ok === false && shimState.variant === "panel" && swallowed > 0 && dropped > 0,
+        check("负向对照：容器观测、resize、visibilitychange 全掐断时，变体不再被纠正",
+          shimWait.ok === false && shimState.variant === "panel" && swallowed > 0 && dropped > 0 && containerDropped > 0,
           shimDetail);
       } else {
         check("change 事件被吞掉后仍能纠正到窄屏变体（读为准，不靠事件载荷）",

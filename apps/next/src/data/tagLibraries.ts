@@ -1,3 +1,7 @@
+// 画师元数据转换为既有条目契约，所有库共用卡片/弹窗而不是独立实现。
+// 收藏分类和评分排序留给查询器，不伪造静态画风标签。
+// 不在模块加载时请求任何预览图片，只有可见卡片访问资源地址。
+import { ARTIST_ITEMS } from "@/utils/artist-library";
 import { backgroundData } from "@/data/prompt/background_prompt";
 import { expressionData } from "@/data/prompt/expression";
 import { poseData } from "@/data/prompt/pose_prompt";
@@ -6,7 +10,7 @@ import type { MessageKey } from "@/i18n";
 import type { StaticTagItem } from "@/types/staticTagLibrary";
 import type { PromptTabToolId } from "@/types/promptTabs";
 
-export type TagLibraryId = "pose" | "background" | "expression";
+export type TagLibraryId = "artist" | "pose" | "background" | "expression";
 
 /**
  * 库在 UI 层的形状（卡片 / 侧栏 / 工具栏 / 弹窗共用）：
@@ -73,6 +77,10 @@ function buildLibrary(definition: TagLibraryDefinition): LocalizedTagLibraryConf
 
 /** 静态标签库声明表（**加新库只有这一处要填**）：顺序即按钮行里的先后顺序 */
 export const TAG_LIBRARY_DEFINITIONS: TagLibraryDefinition[] = [
+  // 标题、单位和搜索提示继续来自配置，源数据不夹带UI词条。
+  // 用已有staticTagItem适配器，不给画师新建一份卡片形状。
+  // 预览字段只是URL，资料列表和选择本身可离线工作。
+  { id: "artist", title: "characters.artist.title", unitLabel: "characters.artist.unit", searchPlaceholder: "characters.artist.search", testIdPrefix: "artist", tool: "artist", format: "staticTagItem", source: ARTIST_ITEMS },
   {
     id: "pose",
     title: "taxonomy.tagLibraries.pose.title",

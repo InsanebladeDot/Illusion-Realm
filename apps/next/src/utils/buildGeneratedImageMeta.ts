@@ -61,5 +61,8 @@ export function buildGeneratedImageMeta(input: {
 export function displayModelFileName(modelPath: string): string {
   const normalized = modelPath.replace(/\\/g, "/");
   const base = normalized.split("/").pop() ?? modelPath;
-  return base.replace(/\.(safetensors|ckpt|pt|pth)$/i, "");
+  // GGUF 和 safetensors 都是模型文件格式，前缀展示应遵循同一规则。
+  // 只移除结尾的已知扩展名，模型版本中的小数点和其他名字内容保留。
+  // 调用方仍保存原始路径，这个短名字不用于加载模型或统计去重。
+  return base.replace(/\.(safetensors|ckpt|pt|pth|gguf)$/i, "");
 }

@@ -1,6 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+// 分页只保存输入页码，不注册 effect；移除未使用的 hook 不改变翻页回调。
+// 保留 useState 的现有受控草稿，父级传入的 page/pages 契约沿用原实现。
+// 纯导入收缩不触及渲染条件或用户输入的校验分支。
+import { useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useTranslation } from "@/i18n";
 import { cn } from "@/utils/cn";

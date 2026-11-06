@@ -157,6 +157,23 @@ export async function cancelComfyGeneration(requestId: string): Promise<boolean>
   return unwrapIpc(await window.electronAPI.comfyCancel(requestId));
 }
 
+/**
+ * 释放 ComfyUI 模型内存走 preload，渲染层不直接请求本地服务。
+ * 复用设置中的地址；空设置采用与生成相同的默认本地端口。
+ * 旧版 preload 或浏览器环境不具备此能力，明确报告不可用。
+ * 不用失败回退读取助手，清理动作失败必须由按钮提示给用户。
+ * 接受标记只说明请求已到达，不作为已经释放显存的证明。
+ * 这里不刷新模型目录缓存：目录内容没有因卸载内存而改变。
+ * Promise 拒绝交给按钮处理，避免接口和界面重复弹错误提示。
+ * 入口只接收地址，不允许 UI 选择任意 ComfyUI 路由或请求内容。
+ * 异步等待期间的防重复提交由顶栏按钮负责，接口不引入全局锁。
+ * 本操作没有生成请求 ID，不能与停止某个生成会话混用。
+ */
+export async function freeComfyMemory(serverAddress: string): Promise<boolean> {
+  if (!window.electronAPI?.comfyFreeMemory) throw new Error(t("common.comfyMemoryUnavailable"));
+  return unwrapIpc(await window.electronAPI.comfyFreeMemory(serverAddress || DEFAULT_COMFY_SERVER));
+}
+
 /** 拉取模型列表：优先 IPC，60s TTL 缓存，避免每次生成都请求 */
 export async function fetchComfyModelLists(
   serverAddress: string,

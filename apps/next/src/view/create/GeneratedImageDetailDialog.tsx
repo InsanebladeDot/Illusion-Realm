@@ -30,6 +30,10 @@ import {
 } from "@/data/navigation";
 import { THIN_DIVIDER_CLASS } from "@/utils/layout";
 import { runPageStyleTransition } from "@/utils/pageTransition";
+// 图片详情在创建单栏使用正常流宿主；至少两栏时恢复原居中弹窗。
+// 非创建入口没有宿主，继续保留原来的窄屏页/宽屏弹窗。
+// portal 只改变呈现位置，Meta 读取、复制和二创仍由当前组件处理。
+import { useCreateMainPage } from "@/hooks/use-create-main-page";
 
 type GeneratedImageDetailDialogProps = {
   image: GeneratedImageFile | null;
@@ -111,7 +115,7 @@ export function GeneratedImageDetailDialog({
   const [loadingMeta, setLoadingMeta] = useState(false);
 
   /**
-   * 窄屏（< lg）走「主显示区里的页」版式，宽屏保持原来的两栏弹窗。
+   * 创建路由按主区实际宽度切换；其他路由窄屏走主区版式，宽屏保留两栏弹窗。
    *
    * 为什么窄屏要换版式：原来的窄屏形态是「屏幕居中、整宽、85dvh」——
    * 图片区独占 `min(58vh, 560px)`，剩下的信息全被挤到下面还要再滚一次，
@@ -121,7 +125,18 @@ export function GeneratedImageDetailDialog({
    * 元信息区独立滚动，关闭按钮从「浮在图上」挪到标题栏里。
    */
   /** 首帧就取值：本弹窗只在打开时挂载，用 `useMediaQuery` 会先渲染一帧紧凑版式（见 hook 注释） */
-  const isCompact = !useMediaQueryAfterHydration("(min-width: 1024px)");
+  // responsive 策略与资源窗口共用两栏门槛，主区宽度达到 760px 即恢复弹窗。
+  // 所有媒体 hook 仍无条件调用，不能因宿主出现而改变 React hook 顺序。
+  // 首帧在 hydration 后登记，避免还没有详情内容时提前隐藏创建工作区。
+  // 父区域在后台工作区隐藏后仍有真实尺寸，缩窄再扩宽时详情不会意外卸载。
+  // 相同图片与 Meta 状态随 portal 位置迁移，不重新打开或清空用户正在看的内容。
+  // 不使用窗口 1024px 覆盖创建页容器规则，nav 展开后可用宽度才是依据。
+  const mainPage = useCreateMainPage(open && Boolean(image) && isHydrated);
+  const isNarrowViewport = !useMediaQueryAfterHydration("(min-width: 1024px)");
+  // 创建宽屏无宿主代表居中弹窗，不能再被全局窗口媒体查询强制切回紧凑页。
+  // 非创建页面继续保留原 1024px 视口规则，避免影响其他图片详情入口。
+  // 三元能力判断与共享 ResourceDialogShell 一致，只有单栏才替换完整展示区。
+  const isCompact = mainPage.inCreate ? Boolean(mainPage.host) : isNarrowViewport;
   const isExtraWide = useMediaQueryAfterHydration("(min-width: 1280px)");
   const navExpanded = useSidebarStore((state) => state.expanded);
   const hasDesktopNav = useMediaQueryAfterHydration("(min-width: 768px)");
@@ -252,13 +267,20 @@ export function GeneratedImageDetailDialog({
 
       <div
         role="dialog"
-        aria-modal="true"
+        // 正常流替换页保留全局导航可用性，只有 body 回退弹窗声明模态语义。
+        // 页面边界由父级提供，不再根据固定导航宽度猜测左边缘。
+        // 当前详情的数据与返回回调保持原样，不提交新的选择或生成任务。
+        aria-modal={mainPage.host ? undefined : true}
         aria-labelledby="generated-image-detail-title"
         data-generated-image-detail
+        data-generated-image-main-page={Boolean(mainPage.host) || undefined}
         data-image-detail-panel={isCompact ? "" : undefined}
         className={cn(
           "z-[90] overflow-hidden bg-background outline-none",
-          isCompact
+          // 创建详情继承宿主的完整矩形，退出通用 dialog 的缩放入场规则。
+          // 不留 fixed、translate 或独立最大高度，避免右下仍露出后台页条带。
+          // 底层工作区只隐藏不卸载，返回后编辑器和图库原节点继续使用。
+          mainPage.host ? "motion-none flex h-full w-full min-h-0 min-w-0 flex-col" : isCompact
             ? cn(
                 /**
                  * 挂 `motion-none` 退出「所有弹窗统一缩放淡入」那条规则：
@@ -277,7 +299,10 @@ export function GeneratedImageDetailDialog({
                 "h-[calc(85dvh-env(safe-area-inset-top))] max-h-[calc(95dvh-env(safe-area-inset-top))]"
               )
         )}
-        style={isCompact ? { left: navOffset, top: "var(--window-chrome-height)" } : undefined}
+        // 仅旧 body 紧凑回退使用窗口坐标，主区宿主分支完全由父级布局决定。
+        // 否则 nav 留白会被重复扣除，详情尺寸也会越过底部状态栏。
+        // 宽屏非创建弹窗继续使用原有居中 class，不新增内联定位。
+        style={!mainPage.host && isCompact ? { left: navOffset, top: "var(--window-chrome-height)" } : undefined}
       >
         {/**
          * 窄屏标题栏与「已生成图片」那一页**同一条**：◀ 返回 + 文件名。
@@ -529,6 +554,9 @@ export function GeneratedImageDetailDialog({
         </div>
       </div>
     </>,
-    document.body
+    // 创建页挂到展示区宿主并由父容器隐藏原内容，真正替换而非窗口覆盖。
+    // 关闭时 hook 按实例出栈，返回此前文件管理或创建表单。
+    // 其他页面没有宿主，保持原有 body portal，避免影响跨页共享行为。
+    mainPage.host ?? document.body
   );
 }

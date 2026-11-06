@@ -68,8 +68,16 @@ function ResourceSelectSession({
   /** 与 `ResourceDialogShell` 同一个断点：紧凑形态下工具栏控件占满整行（外壳负责抬最小高度） */
   const isCompact = !useMediaQueryAfterHydration("(min-width: 1280px)");
   const [search, setSearch] = useState("");
-  const [multiple, setMultiple] = useState(false);
-  const [pendingIds, setPendingIds] = useState<string[]>(selectedIds.slice(0, 1));
+  // 已加载列表就是打开时的选择快照，不能像只看购物车第一件商品那样截断其余项。
+  // 先按精确模型 ID 去重，数量不由分类数或当前搜索结果推断。
+  // 已有多个模型时直接启用多选，避免界面说单选却同时保留多个选中项。
+  // 新会话只读取一次初值，搜索或父级重渲染不会把用户临时修改的草稿覆盖掉。
+  // 关闭后会话卸载；下次打开重新读取调用方最新的已加载列表。
+  // 图片、视频和音频的扩展入口共用这里，各自仍通过 selectedIds 注入本模式数据。
+  // 主模型通常只传一个 ID，继续使用原单选行为与单模型确认校验。
+  // 保留草稿不会自动提交，用户取消仍沿用外层原有的关闭回调。
+  const [multiple, setMultiple] = useState(() => new Set(selectedIds).size > 1);
+  const [pendingIds, setPendingIds] = useState<string[]>(() => [...new Set(selectedIds)]);
   const activeIds = pendingIds;
   const pick = (id: string) => setPendingIds((current) => multiple
     ? current.includes(id) ? current.filter((item) => item !== id) : [...current, id]
@@ -120,7 +128,13 @@ function ResourceSelectSession({
         titleId={titleId}
         bodyPadded={false}
         bodyClassName="px-3 pb-5 pt-7 sm:px-6"
-        footer={<button type="button" data-resource-confirm data-extension-confirm disabled={!pendingIds.length} onClick={confirm} className={cn("ml-auto block h-9 rounded-xl px-4 text-sm font-medium", PRIMARY_BUTTON_CLASS, "disabled:cursor-not-allowed disabled:opacity-40")}>{t("common.confirm")}</button>}
+        // 底部计数属于当前草稿；分类筛选或关键词只改变可见卡片，不减少已选数量。
+        // 确认仍走原 resolveResourceSelection 和业务回调，不根据屏幕数字组装工作流。
+        // 计数用既有“已选”翻译，动态数字不写入设置或生成参数。
+        // 整条 footer 共用外壳布局，左侧状态与右侧确认分别保持独立语义。
+        // 主模型弹窗复用此处时显示一项，不会因为增加计数而放宽其业务限制。
+        // role=status 让键盘勾选后也能获知数量，无需仅凭绿色边框判断。
+        footer={<div className="flex w-full items-center justify-between gap-3"><span role="status" data-resource-total-selected={pendingIds.length} className="text-xs text-muted-foreground">{t("create.extensionSelectDialog.selected")} {pendingIds.length}</span><button type="button" data-resource-confirm data-extension-confirm disabled={!pendingIds.length} onClick={confirm} className={cn("ml-auto block h-9 rounded-xl px-4 text-sm font-medium", PRIMARY_BUTTON_CLASS, "disabled:cursor-not-allowed disabled:opacity-40")}>{t("common.confirm")}</button></div>}
         toolbar={
           <div className="flex flex-col gap-2 py-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
             <ResourceCategoryFilter
@@ -176,13 +190,17 @@ function ResourceSelectSession({
                 draftVersions[resource.id] ?? versions[0]?.id ?? resource.id;
               const version =
                 versions.find((item) => item.id === versionId) ?? versions[0];
-              const isSelected = versions.some((item) =>
-                activeIds.includes(item.id)
-              );
+              // 分类只是多个模型的容器，一张分类卡片可能对应多个已选版本。
+              // 按此分类里的真实版本 ID 求交集，不能用当前下拉框显示的单个版本代替。
+              // 隐藏的其他分类仍留在草稿里，本卡片只报告自己包含的已选数。
+              // 同一分类选两个时角标为二，内层每个模型仍按独立 ID 标记。
+              // 这里不修改 activeIds，不会因筛选或渲染重复执行选中操作。
+              const selectedCount = versions.filter((item) => activeIds.includes(item.id)).length;
+              const isSelected = selectedCount > 0;
 
               return (
                 <ResourceSelectionCard key={resource.id} name={resource.name} cover={resource.cover}
-                  selected={isSelected} typography={typography} tag={resource.tag} tagClassName={resource.tagClassName}
+                  selected={isSelected} selectedCount={selectedCount} typography={typography} tag={resource.tag} tagClassName={resource.tagClassName}
                   meta={<>{versions.length} {t("create.extensionSelectDialog.versionUnit")}</>}>
                     <div className="mt-3 grid min-w-0 grid-cols-2 items-center gap-2">
                       {versions.length === 1 ? (

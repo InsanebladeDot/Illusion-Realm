@@ -6,6 +6,50 @@
  * 因此「翻了哪些」是可以机检的数字，不靠人记。
  */
 export const characters = {
+  favorites: {"view": "Favorites {count}", "export": "Export favorites", "exportHint": "Export favorites from every library as one JSON file", "exportFailed": "Could not start exporting favorites. Please try again.", "missingSnapshots": "{count} older online favorites have no saved details. Find them in the original library and favorite them again; their IDs remain in the export."},
+  artist: {
+  "title": "Artist library",
+  "unit": "artist",
+  "search": "Artist name…",
+  "all": "All artists",
+  "collections": "My collections",
+  "favorites": "Favorites",
+  "newGroup": "New group",
+  "groupName": "Group name",
+  "rename": "Rename group",
+  "deleteGroup": "Delete group (keep favorites)",
+  "addSelected": "Add selected to this group",
+  "removeSelected": "Remove selected from this group",
+  "hint": "Names, work counts and uniqueness scores are local reference data. Previews load online on demand. Deleting a group keeps its artists in favorites.",
+  "applied": "Applied to artist style",
+  "works": "Works: {count}",
+  "unique": "Uniqueness: {score}",
+  "sort": {
+    "works-desc": "Works ↓",
+    "works-asc": "Works ↑",
+    "unique-desc": "Uniqueness ↓",
+    "unique-asc": "Uniqueness ↑",
+    "name-asc": "Name A–Z",
+    "name-desc": "Name Z–A",
+    "random": "Random"
+  }
+},
+
+  facets: { clear: "Clear category filters" },
+  background: {
+    categories: "Scene categories", traits: "Traits",
+    nature: "Nature & Outdoors", urban: "Urban & Daily", fantasy: "Fantasy & Sci-Fi", minimalist: "Minimalist & Abstract",
+    hint: "Match any selected scene and all selected traits. Filters and counts use local data; preview images load from their original online URLs.",
+  },
+  reference: {
+    source: "Character library source", local: "Local filters · Online details", online: "Online library",
+    copyright: "Popular franchises", gender: "Gender", hair: "Hair color", eye: "Eye color", all: "All",
+    hint: "Filters and counts use local reference data; opening details matches online images and information.",
+    searchWorks: "Search works", female: "One female (1girl)", male: "One male (1boy)",
+    onlineLoading: "Matching online details…", onlineUnavailable: "Online details are unavailable; local reference retained.", onlineMissing: "No online character matched both name and work; local reference retained.",
+    colors: { black: "Black", blonde: "Blonde", white: "White / Silver", brown: "Brown", blue: "Blue", pink: "Pink", red: "Red", purple: "Purple", green: "Green", yellow: "Yellow / Gold" },
+  },
+
   "picker": {
     "title": "选择角色",
     "loadFailed": "角色库加载失败",

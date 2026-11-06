@@ -19,7 +19,13 @@ import {
   THIN_DIVIDER_CLASS,
 } from "@/utils/layout";
 import { cn } from "@/utils/cn";
-import { VideoModelSettings } from "./video-model-settings";
+// 视频沿用原草稿和重置动作，只把展示交给四模式共用的设置组件。
+// 工作流 id 仍决定视频模板，不把图片或音频的覆盖带入这里。
+// 视频仍将当前 workflowId 交给表单，参考视频与首尾帧图不共享节点假设。
+// 恢复默认继续使用原回调，不把这个 UI 复用扩展成重置上传素材。
+// 生成提交已有的 modelOverrides map，表单改名不引入另一份转换或保存协议。
+// 辅助表单隐藏主模型和 LoRA 后，原有模型封面与扩展控件仍是唯一选择入口。
+import { WorkflowModelSettings } from "./video-model-settings";
 import { VideoModelSelect } from "./video-model-select";
 import type { VideoModelOverrides } from "@/utils/comfy/video-workflow-models";
 import { getVideoLoras, type VideoLora } from "@/utils/comfy/video-workflow-loras";
@@ -31,6 +37,10 @@ import type { VideoResolutionSettings } from "@/utils/comfy/video-resolution";
 import { VideoResolutionControls } from "./video-resolution-controls";
 import { VideoFrameInputs } from "./video-frame-inputs";
 import { ImageReferencePrompt } from "./image-reference-prompt";
+// 视频与音频共用转换预览，沿用提交阶段的素材排序与编号规则。
+// 仅 MiniMax 显示官方标记预览，不把其他视频工作流误当 H3。
+// 不改写原稿和已选素材，展开预览也不触发生成。
+import { PromptConversionPreview } from './prompt-conversion-preview';
 import { normalizeImageReferences } from "@/utils/image-prompt-references";
 import type { PromptReferenceMedia } from "@/utils/prompt-media-references";
 import { normalizeVideoReferences, orderedReferences, referenceImageSources } from "@/utils/comfy/video-reference-media";
@@ -171,10 +181,13 @@ export function VideoCreatePanel() {
           <VideoWorkflowSelect value={workflowId} onChange={setWorkflowId} />
           {/* 界面：「模型」封面入口，与图片生成复用；工作流决定可选模型系列 */}
           <VideoModelSelect key={workflowId} workflowId={workflowId} overrides={modelOverrides} onChange={(value) => setOverridesByWorkflow((current) => ({ ...current, [workflowId]: value }))} disabled={generating} />
+          {/* rail：主模型与扩展共用外层留白，避免 LoRA 卡片额外缩进。 */}
+          {/* 按工作流保留扩展列表和权重，位置调整不改变生成参数。 */}
+          {/* 继续使用同一选择器，切换工作流时仍按原 key 隔离弹窗状态。 */}
+          <VideoLoraSelect key={`loras-${workflowId}`} workflowId={workflowId} value={loras} disabled={generating} onChange={(value) => setLorasByWorkflow((current) => ({ ...current, [workflowId]: typeof value === "function" ? value(current[workflowId] ?? getVideoLoras(getVideoWorkflowTemplate(workflowId))) : value }))} />
         </div>
         {/* 界面：模型加载设置，默认使用当前工作流中的 UNet / CLIP / VAE */}
-        <VideoLoraSelect key={`loras-${workflowId}`} workflowId={workflowId} value={loras} disabled={generating} onChange={(value) => setLorasByWorkflow((current) => ({ ...current, [workflowId]: typeof value === "function" ? value(current[workflowId] ?? getVideoLoras(getVideoWorkflowTemplate(workflowId))) : value }))} />
-        <VideoModelSettings key={workflowId} workflowId={workflowId} overrides={modelOverrides} disabled={generating} onChange={(value) => setOverridesByWorkflow((current) => ({ ...current, [workflowId]: value }))} onReset={() => { setOverridesByWorkflow((current) => ({ ...current, [workflowId]: {} })); setLorasByWorkflow((current) => ({ ...current, [workflowId]: undefined })); }} />
+        <WorkflowModelSettings key={workflowId} workflowId={workflowId} overrides={modelOverrides} disabled={generating} onChange={(value) => setOverridesByWorkflow((current) => ({ ...current, [workflowId]: value }))} onReset={() => { setOverridesByWorkflow((current) => ({ ...current, [workflowId]: {} })); setLorasByWorkflow((current) => ({ ...current, [workflowId]: undefined })); }} />
 
         {workflow.requiresDuration && (
           <div className="space-y-3 px-2 py-2 sm:px-3 sm:py-3">
@@ -230,6 +243,10 @@ export function VideoCreatePanel() {
             </label>
             {/* 界面：图片引用只装饰文字，点击使用图库原有预览 */}
             <ImageReferencePrompt value={prompt} onChange={setPrompt} images={referenceImages} media={referenceMedia} disabled={generating} />
+            {/* 界面：MiniMax 引用转换预览，图片、视频、音频采用技能原格式。 */}
+            {/* 直接传实际提交候选，预览重编号与 handleSubmit 使用同一函数。 */}
+            {/* 非 H3 模式继续原有提示词规则，不展示不适用的转换结果。 */}
+            {isMinimax && <PromptConversionPreview value={prompt} media={referenceMedia} />}
           </div>
 
           {/* 界面：Minimax 的生成参数，默认读取工作流；与图片高级设置共用输入控件 */}

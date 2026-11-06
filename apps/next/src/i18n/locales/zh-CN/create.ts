@@ -5,22 +5,145 @@
  * 多个组件共用的同一句话请复用 `common.*`，不要在这里重复登记。
  */
 export const create = {
+  animaEdit: {
+    controlStrength: "控制强度",
+    controlStart: "起始百分比",
+    controlEnd: "结束百分比",
+    runInpaint: "运行蒙版重绘",
+    inpaint: "蒙版重绘", controlSize: "使用输入图片原尺寸",
+    syncImageModels: "同步图片模式",
+    readImageModels: "读取原图模型",
+    resourceHint: "仅加载模型与 LoRA，保留当前已选编辑 LoRA。读取原图需要图片内嵌工作流参数。",
+    resourcesLoaded: "已加载模型与 LoRA，可继续调整。",
+    readingModels: "正在读取模型参数…",
+    resourceUnavailable: "资源未扫描到或不适用于 Anima，请检查本地模型目录后手动选择。",
+    resourceMissing: "本地未扫描到模型或有多个同名版本：{name}。请检查模型目录并手动选择。",
+    animaOnly: "当前文字改图仅支持 Anima UNet，请使用兼容的图片模式或原图工作流。",
+    metaUnsupported: "原图参数版本高于当前应用支持范围，请升级应用后重试。",
+    noModelMetadata: "原图未包含可读取的工作流模型参数，请同步图片模式或手动选择。",
+    "textTab": "文字改图",
+    "maskTab": "蒙版编辑",
+    "source": "导入原图",
+    "fileHint": "PNG / JPG / WebP · 最大 25 MB",
+    "instruction": "描述你的修改",
+    "placeholder": "例如：把背景换成樱花盛开的庭院，保留人物的脸、发型与服装。",
+    "instructionHint": "说清楚“改变什么”和“保留什么”，指令可以使用自然语言。",
+    "resolution": "输出分辨率",
+    "resolutionHint": "保持原图比例 · 尺寸步进 8",
+    "estimate": "约 {size}",
+    "advanced": "高级设置",
+    "steps": "采样步数",
+    "denoise": "降噪强度",
+    "randomSeed": "随机种子",
+    "dependencies": "必需节点 · 安装说明",
+    "dependencyHint": "文字改图依赖 ComfyUI-Cosmos-Reference，请先在 ComfyUI 安装下方参考图节点。",
+    "installHint": "进入 ComfyUI 的 custom_nodes 目录，在该目录打开终端并执行上方命令。重启 ComfyUI 后搜索此节点并确认可用；这里不会自动安装或判断安装成功。",
+    "run": "运行文字编辑",
+    "stop": "停止生成",
+    "resultTitle": "编辑结果",
+    "original": "原图参考",
+    "generated": "已生成",
+    "pending": "待生成",
+    "result": "结果图",
+    "viewOriginal": "查看原图",
+    "emptyTitle": "编辑结果将在这里呈现",
+    "emptyHint": "先导入原图，再描述你想改变的内容。",
+    "waitTitle": "正在等待编辑结果…",
+    "waitHint": "正在处理本次编辑，真实结果返回并保存后会显示在这里。",
+    "download": "下载结果图",
+    "savedHint": "结果已保存到生成输出目录，可在文件管理中查看；切换原图可对照检查。",
+    "resultHint": "生成后直接展示编辑后的图片；需要核对时，可切换查看原图。",
+    "sourceRequired": "请先导入一张原图。",
+    "invalidFile": "请选择 PNG、JPEG 或 WebP 图片，文件大小不超过 25 MB。",
+    "tooLarge": "图片超过 4000 万像素，请缩小后重新导入。",
+    "invalidInstruction": "请填写修改指令，指令和反向提示词均不能超过 3000 字。",
+    "invalidSeed": "Seed 必须是 0 到 9007199254740991 之间的整数。",
+    "invalidParameters": "编辑参数超出范围，请检查高级设置和输出分辨率。",
+    "modelMissing": "服务端缺少模型或存在多个同名模型：{name}。请检查安装文件与目录。",
+    "noResult": "未收到文字改图节点的结果图片，请检查工作流与必需节点。",
+    "phase": {
+      "idle": "原图仅在运行编辑时发送到已配置的 ComfyUI。",
+      "checking": "正在检查模型与输出目录…",
+      "uploading": "正在上传本次原图…",
+      "generating": "正在等待 ComfyUI 编辑结果…",
+      "saving": "正在保存编辑结果…",
+      "stopping": "正在请求停止本次生成…"
+    },
+    "presets": {
+      "background": {
+        "label": "换个背景",
+        "text": "把背景换成樱花盛开的庭院，保留人物的脸、发型、姿势与服装。"
+      },
+      "expression": {
+        "label": "调整表情",
+        "text": "把人物的表情改为开心的微笑，保留脸部特征、发型、服装与背景。"
+      },
+      "lettering": {
+        "label": "修改画面文字",
+        "text": "把画面标牌上的文字改为“Hello, Illusion Realm!”，保留人物、服装与背景。"
+      }
+    }
+  },
+  workspace: {
+    totalFiles: "共 {count} 个文件", previousPage: "上一页", nextPage: "下一页",
+    latestResult: "最新生成结果", emptyResult: "暂无生成结果", startCreating: "开始创作，欣赏你的作品吧",
+    fileCount: "共 {count} 个文件 · 查看全部",
+    zoom: "缩放", zoomIn: "放大预览", previous: "上一张", next: "下一张",
+    files: "文件管理", upload: "上传", localFile: "本地作品",
+    importing: "正在导入…", imported: "已导入 {count} 张图片", importFailed: "导入失败，请检查图片和输出目录后重试。", importInvalid: "请选择 PNG、JPEG 或 WebP 图片，单张不超过 50 MB。",
+    edit: "编辑", preview: "预览", emptyTitle: "等待你的第一张作品",
+    emptyHint: "在左侧填写提示词，点击生成。完成的作品会显示在这里，并保存到作品库。",
+    emptyHintMobile: "在编辑页填写提示词并点击生成，然后在这里查看作品。",
+    expandSettings: "展开设置", loadFailed: "读取作品失败，请检查输出目录后重试。",
+    folderLoadFailed: "读取文件夹失败，请检查输出目录后重试。", retry: "重试",
+    browseAll: "查看全部作品", noMatches: "没有匹配的作品，请调整搜索内容。",
+  },
   loraTriggers: {
     apply: "应用触发词", hint: "追加已选 LoRA 的触发词，跳过已有词；高级模式写入当前分类。",
     applied: "已追加 {count} 个触发词", unchanged: "提示词已包含这些触发词",
   },
   maskEditor: {
-    title: "蒙版编辑 · 快速验证", import: "导入图片", empty: "导入图片后涂抹需要重绘的区域",
-    hint: "涂抹区域用于重绘；显示颜色只影响预览。导出始终保持原图宽高，切换模式会结束本次编辑。",
-    draw: "涂抹", erase: "擦除", brush: "笔刷", color: "显示颜色", undo: "撤销", redo: "重做", clear: "清空",
-    export: "生成导出预览", upload: "上传到 ComfyUI 验证", busy: "正在处理…", download: "下载 PNG",
+    useGeneration: "使用蒙版重绘",
+    title: "蒙版编辑", import: "导入图片", empty: "导入图片后涂抹需要重绘的区域",
+    color: "显示颜色",
     mask: "独立黑白 mask", alphaImage: "原图 + 透明通道 mask",
-    exportHint: "黑白 mask：白色重绘、黑色保留，请使用 LoadImageMask 或 ImageToMask 读取。透明通道原图：涂抹区域变透明，ComfyUI LoadImage 的 MASK 输出可直接读取；透明区域仍保留原图 RGB。",
-    uploaded: "上传成功。以下为 LoadImage 输入节点及 IMAGE / MASK 输出引用示例；尚未连接完整重绘工作流。",
     loadFailed: "图片读取失败，请选择有效的 PNG、JPEG 或 WebP 图片。", exportFailed: "蒙版导出失败，请重试。",
-    tooLarge: "快速验证支持不超过 1600 万像素、单边不超过 8192 像素的图片。",
+    tooLarge: "支持不超过 1600 万像素、单边不超过 8192 像素的图片。",
   },
   promptAssistant: {
+    // 历史是本机成功转换的收据，空态明确从启用功能后开始记录。
+    // 默认最新在前，切换方向只改变查看顺序，不改写已记录时间。
+    // 保留上限写在说明里，避免用户把本地历史理解为无限云端备份。
+    // 保存失败和翻译失败分开提示，用户已经拿到的译文不会被丢掉。
+    // 剪贴板可能被系统拒绝，必须使用失败文案而不是无条件提示已复制。
+    history: {
+      // 重试针对本地读取，不意味着重新向服务商发送翻译。
+      // 名称沿用“翻译”帮助用户从截图中的助手菜单识别入口。
+      // 同一入口也收录标签转换，保存的预设标签说明当次处理方式。
+      // 描述同时交代存储位置、容量与查看边界，避免用户担心点击即替换原稿。
+      // 空态不显示默认样例，因为没有真实响应就没有可以找回的结果。
+      // 原文与结果标题顺序固定，左右或上下布局变化也保持相同阅读关系。
+      // 排序按时间有两种方向，不借用模型名称排列的“递增”造成含义不明。
+      // 保存失败建议及时复制，是因为程序重启后不能保证这条收据还存在。
+      // 读取失败允许重试，不引导用户重新填写已配置的供应商密钥。
+      // 所有说明都是界面文案，不把译文正文放进翻译词条表。
+      retry: "重试",
+      title: "翻译历史", description: "保存在本机，最多保留最近 100 条成功结果。查看历史不会修改当前提示词。",
+      order: "时间排序", newest: "最新在前", oldest: "最早在前",
+      empty: "暂无翻译记录。成功翻译后，原文和结果会自动保存在这里。",
+      original: "原文", translated: "翻译结果", copy: "复制译文",
+      loadFailed: "翻译历史读取失败，请重试。", saveFailed: "翻译已完成，但历史保存失败；请及时复制结果。",
+      copyFailed: "复制失败，请手动选择并复制译文。",
+    },
+    // 两个入口共用本站凭据，必须明确保存和清除会影响 Agent。
+    // 模型入口留在 Agent，避免用户误以为创建页另有独立 Grok 设置。
+    // 服务商品牌仍使用 agent.providers.euzhi，这里只新增当前功能的说明文案。
+    // 共用提示包含删除语义，避免仅提醒保存共享却遗漏清除也会影响聊天。
+    // 管理链接描述的是模型选择，不把打开设置说成已验证本站连接成功。
+    euzhiShared: "与 Agent 共用 Euzhi API Key 和 Grok 模型选择；在此保存或清除密钥也会同步影响 Agent。",
+    euzhiManage: "前往 Agent 设置选择 Grok 模型",
+    editPreset: "编辑自定义预设", editNamedPreset: "编辑或删除预设：{name}", presetDeleted: "已删除自定义预设",
+    deletePresetConfirm: "确定删除预设“{name}”？删除后无法恢复。", confirmDeletePreset: "确认删除",
     back: "返回上一级",
     title: "提示词助手", translate: "翻译为英文", busy: "正在处理…", provider: "选择供应商", customProvider: "其他平台 / 中转站",
     presets: "预设文本", configure: "连接设置", addPreset: "添加自定义预设", copy: "复制", undo: "撤销替换",
@@ -39,7 +162,15 @@ export const create = {
     emptyResponse: "模型未返回有效文本", truncatedResponse: "输出超过长度限制，请缩短输入后重试", failed: "处理失败，请检查连接设置后重试",
     desktopOnly: "请在桌面端使用提示词助手", presetInvalid: "请填写预设名称和系统指令", presetSaved: "已保存自定义预设",
   },
+  /*
+   * 队列时间文案的语义边界：
+   * 提交、开始、完成是三个不同时间，不能只统一叫生成时间。
+   * 耗时插值来自真实起止差，词条中不写固定的示例秒数。
+   * 两种已登记语言使用相同键，切换语言不改变历史时间戳。
+   * 终态名称继续沿用原状态词条，异常失败和主动停止仍能区分。
+   */
   generationTasks: {
+    submittedAt: "提交时间", startedAt: "开始时间", finishedAt: "完成时间", elapsed: "耗时 {seconds} 秒",
     summary: "{running} 个生成中 · {queued} 个排队中", categories: "任务分类",
     tabs: { active: "进行中", history: "历史" }, current: "当前生成",
     emptyActive: "暂无进行中的任务", emptyHistory: "暂无历史任务",
@@ -118,7 +249,51 @@ export const create = {
     create: "创建",
     failed: "创建文件夹失败",
   },
+  historyOrder: {
+    // 标题同时用于入口悬停与窗口名称，“排列”区别真正的磁盘移动操作。
+    "title": "图片排列",
+    // 描述区将手动显示排序和可选改名分开，用户无需接受改名才能排列。
+    // 手柄才是拖动入口，不暗示点击任意缩略图都会开始拖拽。
+    "description": "拖动图片手柄调整显示顺序，也可以按序号批量修改文件名。",
+    // 数量取整个打开目录，特别说明隐藏项参与，避免误认为只处理当前九张图。
+    // 当前搜索只控制列表显示，不是本次批量改名的范围选择器。
+    "hint": "当前打开目录共 {count} 张图片（包括其他分页和搜索隐藏的图片）。拖动手柄排列；需要批量改名时启用下方设置。",
+    // 计数和提示共享 count 插值，不在组件里额外拼中文量词。
+    "count": "{count} 张图片",
+    // 外部删除后可能变空，不能把空库当作成功排列了零张图。
+    "empty": "当前文件夹没有可排列的图片",
+    // 手柄读屏名称保留完整文件名，视觉上的省略不会丢失操作对象。
+    "drag": "拖动「{name}」调整图片顺序",
+    // 和 EXIF 功能保持一致的叫法，体现这里复用了相同命名设置。
+    "renameTitle": "批量重命名",
+    // 打开开关后确认按钮写明两项副作用，不让用户误认为只保存显示顺序。
+    // 不用“自动整理”掩盖真正的文件名变更。
+    "renameAction": "批量改名并保存顺序",
+    // 命名关闭时不声称文件被移动或改名。
+    "applyOrder": "保存顺序",
+    // 预览截取五项后说明剩余数量，执行范围不随预览条数缩减。
+    "more": "另有 {count} 个名称预览",
+    // 成功数量取正式回执，不能拿最初计划数量冒充已经完成的数量。
+    "renameComplete": "已重命名 {count} 张图片",
+    // 逐文件服务没有事务回滚，这里必须说明已完成部分仍然有效。
+    // reason 取真实失败原因，不预先把所有异常都叫作网络问题。
+    "renamePartial": "已重命名 {count} 张，后续文件失败：{reason}。已完成的更改不会撤销。",
+    // 未知异常使用中性兜底，不编造具体的系统或权限原因。
+    "renameFailed": "图片改名失败",
+    // 末尾也须为正数，解释为何递减时一个正起点仍可能不合法。
+    // 修复方式由用户决定，提示不会偷偷替换非法前缀。
+    "invalidName": "请输入不含路径和非法字符的前缀，以及有效的正整数序号。递减序号不能小于 1。",
+    // 冲突区别于格式错误，当前流程保守拒绝名称互换，不覆盖已有图片。
+    "nameConflict": "目标文件名发生冲突。请更换前缀或起始序号，不会覆盖已有图片。"
+},
   createHistorySidebar: {
+    // 移动只整理当前输出根内的文件；目标限制应在打开系统选择器前可见。
+    // 使用实际返回的新路径数量反馈，跳过原地文件时不能把选择数当成功数。
+    // 处理中只说明当前操作，不宣称所有选中图片已移动完成。
+    // 越界提示与普通磁盘失败分开，用户可以直接改选允许范围内的文件夹。
+    // moveHint 用在按钮悬停说明，系统选择器仍沿用项目已有的通用标题。
+    move: "移动", moving: "移动中…", moveHint: "选择当前输出目录内的目标文件夹",
+    moved: "已移动 {count} 张图片", moveFailed: "移动失败，请检查目标文件夹后重试", moveOutside: "请选择当前输出目录或其子文件夹",
     all: "全部",
     folder: "文件夹",
     doubleClickToOpen: "双击打开",
@@ -245,6 +420,7 @@ export const create = {
   generatedImageContextMenu: {
     saveAs: "保存图片",
     rename: "在线改名",
+    move: "移动到…",
     delete: "删除图片",
     saveUnsupported: "保存功能未加载，请完全退出 Electron 后重新启动应用",
     renameUnsupported: "重命名功能未加载，请完全退出 Electron 后重新启动应用",
@@ -276,11 +452,15 @@ export const create = {
   },
   imageSizeSection: {
     scale: "等比例缩放",
-    scaleHint: "按原始宽高的 0.1–1 倍缩放，实际尺寸遵循模型的像素对齐规则。",
+    scaleHint: "双击倍率可编辑，回车或失焦确认，Esc 取消；保留一位小数，宽高输出为整数像素。",
+    scaleLimitedHint: "双击倍率可编辑（0.1–{max} 倍），回车或失焦确认，Esc 取消；宽高按模型规则对齐。",
     title: "图片尺寸",
     custom: "自定义",
     customLabel: "（自定义）",
     customHint: "自定义宽高：{min}–{max}，自动对齐 {step} 像素。",
+    unlimited: "无上限",
+    customUnlimitedHint: "自定义宽高无上限，自动对齐 {step} 像素。",
+    presetUnlimitedHint: "预设取自模型训练分辨率（{note}）；自定义宽高无上限。",
     presetHint: "预设取自模型训练分辨率（{note}），比任意等比缩放更稳定；宽高上限 {max}。",
     presetNoteFallback: "训练友好",
     aspectRatioLabel: "（{ratio}）",
@@ -332,7 +512,6 @@ export const create = {
     addExtension: "添加扩展",
     generating: "正在生成{dots}",
     mediaVideo: "视频",
-    mediaRoleCover: "翻唱",
     mediaRoleTts: "语音",
     mediaImage: "图片",
     previewAlt: "刚刚生成",
@@ -429,15 +608,6 @@ export const create = {
     select: "选择",
     modelLabel: "模型：",
   },
-  roleTtsPanel: {
-    textLabel: "输入文本",
-    textPlaceholder: "输入要合成的文本...",
-    audioLabel: "参考语音",
-    audioEmptyHint: "上传参考语音音频",
-    referenceTextLabel: "参考语音文本",
-    referenceTextPlaceholder: "输入参考语音对应的文本...",
-    generateVoice: "生成语音",
-  },
   selectedExtensionRow: {
     weightLabel: "{name} 权重",
     editWeightHint: "双击编辑权重",
@@ -483,13 +653,16 @@ export const create = {
     unavailable: "未在 ComfyUI 中找到{label}：{name}。请刷新模型列表并选择已安装的文件；同名文件存在多份时请指定准确路径。",
     videoVae: "视频 VAE", audioVae: "音频 VAE",
     selectLocal: "选择本地 Minimax 模型", selectLora: "从 LoRA 库选择", incompatible: "Minimax 工作流只能选择 Minimax 分类下的模型或 LoRA。", emptyMinimax: "未发现 Minimax 模型，请在 Diffusion 模型根目录下的 Minimax 子目录放入模型并重新扫描。",
-    title: "模型加载设置", hint: "默认沿用工作流配置；模型名称或位置不同时可修改。CLIP 从本地 text_encoders / clip 目录读取，视频与音频 VAE 从 vae 目录读取。",
+    title: "模型加载设置", hint: "默认沿用当前工作流配置；模型名称或位置不同时可修改。CLIP 从 text_encoders / clip 目录读取，VAE 从 vae 目录读取。",
+    embedded: "当前工作流的 CLIP 与 VAE 由主模型（Checkpoint）自带，无需单独选择；切换上方主模型即可。",
     unet: "UNet 模型", clip: "CLIP 文本编码器", vae: "VAE", lora: "LoRA",
     default: "工作流默认 · {name}", reset: "恢复工作流默认", refresh: "刷新可选模型",
     listFailed: "未能获取 ComfyUI 模型列表，请检查连接或重启软件后刷新。仍可使用本地扫描结果及工作流默认值。",
     invalid: "模型设置无效，请选择模型相对路径。", missingNode: "视频模板缺少必要节点或连接：{name}",
   },
   videoSettings: {
+    resolutionHint: "MiniMax H3 宽高自动对齐 32 像素；预设、自定义及缩放均以显示的实际尺寸提交。",
+    invalidResolution: "视频宽高无效，请输入 {min}–{max} 范围内的整数，尺寸将自动对齐 {step} 像素。",
     title: "视频生成参数", fps: "帧率 (fps)",
     actualDuration: "实际长度约 {seconds} 秒",
     firstOnly: "仅首帧", bothFrames: "首尾帧", firstFrame: "首帧", lastFrame: "尾帧",
@@ -499,6 +672,10 @@ export const create = {
     invalid: "视频参数无效，请检查生成步数、帧率、长度和总帧数。",
   },
   mediaReferences: {
+    // 这里只是只读转换结果的折叠标题，不把整个技能长文放进表单。
+    // 标记格式由转换器生成，翻译不得改变 Picture/Video/Audio 的协议写法。
+    // 视频和音频共同引用此词条，避免两处名称逐渐漂移。
+    conversionPreview: "转换预览",
     back: "返回分类",
     title: "搜索已导入素材",
     empty: "没有匹配的素材，请先在当前任务中导入。",
@@ -513,12 +690,132 @@ export const create = {
     missing: "素材引用 {token} 不存在，请先导入对应素材或移除引用。",
   },
   canny: {
+    controlRequired: "边缘控制仅支持 Anima，请导入图片并等待当前边缘检测完成。",
     title: "检测边缘", invert: "反转", thresholds: "检测阈值", lower: "检测阈值下限", upper: "检测阈值上限",
     original: "原图", result: "检测后的图", preview: "预览", loading: "正在读取图片…",
     pending: "上传原图后自动检测",
-    outputHint: "检测后的图为默认转换输出，可预览或下载原尺寸 PNG。当前生成工作流尚未接入边缘控制。",
+    outputHint: "开启后点击生成将使用当前边缘图进行 Anima LLLite 控制绘画，保留输入图尺寸；也可预览或下载 PNG。",
     processing: "正在检测边缘…", processingFailed: "边缘检测失败，请重试", retry: "重试检测", download: "下载 PNG",
     tooLarge: "图片尺寸过大，请使用不超过 8192 像素边长且不超过 1600 万像素的图片",
     invalidImage: "请选择 PNG、JPEG 或 WebP 图片", loadFailed: "图片读取失败，请重新选择",
   },
+  colorPicker: {
+    area: "饱和度与亮度",
+    hue: "色相",
+    red: "红色通道",
+    green: "绿色通道",
+    blue: "蓝色通道",
+    keyboard: "左右调整饱和度，上下调整亮度，按住 Shift 加速",
+    position: "饱和度 {s}%，亮度 {v}%",
+  },
+  maskStudio: {
+    positivePrompt: "正向提示词",
+    returnSettings: "返回生成参数",
+    positivePlaceholder: "描述希望生成的画面…",
+    exportCurrent: "导出当前图片",
+    rectangle: "矩形选区",
+    ellipse: "椭圆选区",
+    invertSelection: "反向选择",
+    deleteSelection: "删除选中区域",
+    cropSelection: "使用选区裁剪",
+    selectionMenu: "选区操作",
+    tools: "图片编辑工具",
+
+    lasso: "套索选区",
+    crop: "裁剪",
+    blur: "模糊笔刷",
+    gaussian: "高斯模糊",
+    blurRadius: "模糊半径",
+    selectionMask: "选区转蒙版",
+    deselect: "取消选区",
+    applyCrop: "确认裁剪",
+    cancelCrop: "取消裁剪",
+    cropHint: "拖动框选范围，确认后删除框外像素",
+    lassoHint: "拖动套索勾选主体，可转为蒙版或限定模糊范围",
+    brushGroup: "绘画工具",
+    selectionGroup: "选区与裁剪",
+    retouchGroup: "修饰工具",
+    historyGroup: "文档操作",
+    channels: "图像通道",
+    editingChannel: "编辑图像",
+    readOnlyChannel: "通道预览 · 点击首张返回编辑",
+
+    "rotateLeft": "逆时针旋转",
+    "title": "蒙版编辑",
+    "brushSettings": "笔刷设置",
+    "reset": "恢复默认",
+    "shape": "笔刷形状",
+    "circle": "圆形",
+    "square": "方形",
+    "size": "笔刷大小",
+    "opacity": "笔刷不透明度",
+    "hardness": "硬度",
+    "spacing": "笔触间距",
+    "paintColor": "绘画颜色",
+    "displayOpacity": "蒙版显示透明度",
+    "tolerance": "颜色容差",
+    "contiguous": "仅连通区域",
+    "layers": "图层",
+    "original": "原图",
+    "painted": "绘画层",
+    "mask": "蒙版层",
+    "activeLayer": "当前编辑层",
+    "zoomOut": "缩小",
+    "zoomIn": "放大",
+    "fit": "适应画布",
+    "edgeTab": "边缘绘画",
+    "runEdge": "边缘生成",
+    "draw": "蒙版笔",
+    "paint": "RGB 画笔",
+    "erase": "橡皮擦",
+    "fill": "油漆桶",
+    "select": "颜色选择",
+    "pan": "移动画布",
+    "undo": "撤销",
+    "redo": "重做",
+    "invert": "反转蒙版",
+    "clear": "清空当前层",
+    "rotate": "顺时针旋转",
+    "flipX": "水平翻转",
+    "flipY": "垂直翻转",
+    "save": "保存编辑",
+    "cancel": "取消编辑",
+    "paintingExport": "原图与绘画合成",
+    "composite": "绘画合成与透明通道",
+    "canvas": "画布",
+    "settings": "生成参数"
+},
+audio: {
+  // 单位放在标签内，数字输入与滑条共享同一个可访问名称。
+  // 小数秒只是期望值，提示明确说明原图仍会做帧数对齐。
+  // 上限为本客户端的输入范围，不作为模型的官方上限宣传。
+  duration: "时长（秒）",
+  durationHint: "支持 0.1–60 秒；实际时长按工作流帧数对齐，较长音频需要更多显存和时间。",
+  invalidDuration: "音频时长须为 0.1–60 秒之间的有效数值。",
+  invalidSettings: "请选择有效的 MiniMax 主模型，步数须为 1–100 的整数。",
+progress: "已完成 {completed} / {total} 项",
+quantity: "生成数量",
+  saved: "音频已生成并保存",
+  prompt: "音频提示词",
+  promptHint: "描述声音、语气和对白；可使用助手转为英文描述，保留所需对白语言。",
+  reference: "参考音频",
+  referenceHint: "不上传时使用文生音频；上传后自动使用参考音频生音频。",
+  // 两种模式都显示草稿当前秒数，防止修改参数后摘要仍显示默认值。
+  // seconds 来自共享参数状态，不使用参考文件自身的播放长度。
+  // 有无参考只改变模式名称与缺省值，不覆盖用户自定义时长。
+  // 模板默认仍分别为四秒和五秒，文案本身不承担保存默认值的职责。
+  // 不写成“精确输出”，因为帧数表达式可能产生少量时长对齐差异。
+  textWorkflow: "文生音频 · Audio_Minimax · {seconds} 秒",
+  referenceWorkflow: "参考音频生音频 · {seconds} 秒",
+  generating: "正在生成音频",
+  media: "音频",
+  results: "生成的音频",
+  empty: "生成的音频将在这里显示",
+  resultNumber: "生成音频 {number}",
+  reveal: "查看文件",
+  invalid: "请输入音频描述，并使用有效的非负整数种子。",
+  invalidReference: "请选择有效的音频文件（不超过 500 MiB）。",
+  desktopOnly: "请在桌面客户端中生成或查看音频。",
+  noOutput: "ComfyUI 未返回可用的音频文件。"
+},
 } as const;

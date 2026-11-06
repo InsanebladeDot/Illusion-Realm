@@ -48,27 +48,23 @@ export type RenameGeneratedImageResult = {
 
 export async function listGeneratedImages(
   outputPath: string,
-  folderDirPath: string | null = null
+  folderDirPath: string | null = null,
+  strict = false
 ): Promise<GeneratedImageFile[]> {
   if (isElectronEnvironment() && window.electronAPI?.listGeneratedImages) {
-    return unwrapIpcOr(
-      await window.electronAPI.listGeneratedImages(outputPath, folderDirPath),
-      [],
-      "listGeneratedImages"
-    );
+    const result = await window.electronAPI.listGeneratedImages(outputPath, folderDirPath);
+    return strict ? unwrapIpc(result) : unwrapIpcOr(result, [], "listGeneratedImages");
   }
   return [];
 }
 
 export async function listOutputFoldersOnDisk(
-  outputPath: string
+  outputPath: string,
+  strict = false
 ): Promise<OutputFolderDiskEntry[]> {
   if (isElectronEnvironment() && window.electronAPI?.listOutputFolders) {
-    return unwrapIpcOr(
-      await window.electronAPI.listOutputFolders(outputPath),
-      [],
-      "listOutputFolders"
-    );
+    const result = await window.electronAPI.listOutputFolders(outputPath);
+    return strict ? unwrapIpc(result) : unwrapIpcOr(result, [], "listOutputFolders");
   }
   return [];
 }

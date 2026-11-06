@@ -42,6 +42,10 @@ export type PromptToolDefinition = {
 
 /** 顺序即按钮行 / 挂载开关里的先后顺序 */
 export const PROMPT_TOOLS: PromptToolDefinition[] = [
+  // 画师由同一工具注册表生成入口，不再保留不可点击的占位按钮。
+  // 确认后普通模式追加提示词，高级模式写入既有画师风格分类。
+  // 弹窗查找沿用tagLibrary反查，组件无需知道四万条数据如何读取。
+  { id: "artist", label: "promptAssembly.tools.painter", rowTitle: "characters.artist.title", panelTitle: "characters.artist.title", rowTestId: "artist-library", panelTestId: "artist", defaultTab: "style", covered: "characters.artist.applied", dialog: "tagLibrary" },
   {
     id: "character",
     label: "promptAssembly.tools.character",

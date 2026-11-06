@@ -1,0 +1,456 @@
+{
+  "baseline": "C:\\Users\\18305\\AppData\\Local\\Temp\\ir-tags-move-baseline-fmi22z0b\\baseline.json",
+  "method": "任务开始快照比较新增/替换行；新文件全文。逐行识别纯注释，混合行只记代码；人工复核职责、原因、类比、失败恢复，重复说明保守剔除。JSX装配与普通函数长度另行检查。",
+  "files": [
+    {
+      "file": "apps/next/src/view/toolBox/Tool/civitai/model-trigger-words.tsx",
+      "group": "business",
+      "C": 9,
+      "B": 2,
+      "excluded": [],
+      "changedLineRanges": [
+        {
+          "start": 7,
+          "end": 16
+        },
+        {
+          "start": 93,
+          "end": 93
+        }
+      ],
+      "baselineSha256Lf": "36b7ed1f4258657d44ab41d7240251378515a08066809612257be848039f0a4a",
+      "currentSha256Lf": "b974cf27da081b81554bd58f48d900a1c399014c8a1accd2babc53d584a6fdba"
+    },
+    {
+      "file": "apps/next/src/view/create/promptAssembly/PromptAssemblyPanel.tsx",
+      "group": "business",
+      "C": 20,
+      "B": 8,
+      "excluded": [],
+      "changedLineRanges": [
+        {
+          "start": 5,
+          "end": 8
+        },
+        {
+          "start": 590,
+          "end": 595
+        },
+        {
+          "start": 598,
+          "end": 598
+        },
+        {
+          "start": 600,
+          "end": 616
+        }
+      ],
+      "baselineSha256Lf": "21fa13a7a39c2ec73a13bd6ed003d05c9bc9a7fff4818726451d3198e351d8af",
+      "currentSha256Lf": "b515e13ca92929a05b6f4f2c5373fbf4bded5d66c22c780cc0d2c8179156c9aa"
+    },
+    {
+      "file": "apps/next/src/utils/promptTabs.ts",
+      "group": "business",
+      "C": 16,
+      "B": 2,
+      "excluded": [],
+      "changedLineRanges": [
+        {
+          "start": 223,
+          "end": 238
+        },
+        {
+          "start": 256,
+          "end": 256
+        },
+        {
+          "start": 275,
+          "end": 275
+        }
+      ],
+      "baselineSha256Lf": "37291f67c8af70df86ae3c29e384cf0f958873d96e18ff1341155e6aae0ce526",
+      "currentSha256Lf": "2e4b48a8baeaa7ca5737c19154bbed3c5685a38eac8067a1ff87b87f7978b4bc"
+    },
+    {
+      "file": "apps/next/src/view/create/GeneratedImageContextMenu.tsx",
+      "group": "business",
+      "C": 11,
+      "B": 4,
+      "excluded": [],
+      "changedLineRanges": [
+        {
+          "start": 8,
+          "end": 8
+        },
+        {
+          "start": 25,
+          "end": 35
+        },
+        {
+          "start": 45,
+          "end": 45
+        },
+        {
+          "start": 51,
+          "end": 52
+        }
+      ],
+      "baselineSha256Lf": "e9c4a7c361d02fb53d0710e75076d3edf01305129fb45d184f3fa273cf570b06",
+      "currentSha256Lf": "67b11981c378669e06638d722a6a48f379fc5ce9f5122eb97c6360036be03f09"
+    },
+    {
+      "file": "apps/next/src/view/create/GeneratedImageActionLayer.tsx",
+      "group": "business",
+      "C": 16,
+      "B": 6,
+      "excluded": [],
+      "changedLineRanges": [
+        {
+          "start": 8,
+          "end": 9
+        },
+        {
+          "start": 34,
+          "end": 35
+        },
+        {
+          "start": 46,
+          "end": 46
+        },
+        {
+          "start": 62,
+          "end": 76
+        },
+        {
+          "start": 138,
+          "end": 139
+        }
+      ],
+      "baselineSha256Lf": "698146d9a6e6fcb839e7b9089faca94c6c34e0ebb9539d31ce8e411afdb68331",
+      "currentSha256Lf": "3fe435d76a7f95fa77944815c89e009d2b215c7a89522522ee28c505f82e3b8f"
+    },
+    {
+      "file": "apps/next/src/view/create/CreateHistorySidebar.tsx",
+      "group": "business",
+      "C": 19,
+      "B": 7,
+      "excluded": [],
+      "changedLineRanges": [
+        {
+          "start": 64,
+          "end": 64
+        },
+        {
+          "start": 158,
+          "end": 159
+        },
+        {
+          "start": 306,
+          "end": 306
+        },
+        {
+          "start": 567,
+          "end": 585
+        },
+        {
+          "start": 589,
+          "end": 589
+        },
+        {
+          "start": 591,
+          "end": 591
+        },
+        {
+          "start": 1626,
+          "end": 1626
+        }
+      ],
+      "baselineSha256Lf": "f49807552cf3db8c7fe1bc075aa00d4243bcd0348dc35147b3d8066277bc8f72",
+      "currentSha256Lf": "a64336d620e1325753cecd200c157ef5de8bfab30f2e172704ce70de9d346e4e"
+    },
+    {
+      "file": "apps/next/src/view/CreatePage.tsx",
+      "group": "business",
+      "C": 12,
+      "B": 9,
+      "excluded": [],
+      "changedLineRanges": [
+        {
+          "start": 415,
+          "end": 431
+        },
+        {
+          "start": 1018,
+          "end": 1018
+        },
+        {
+          "start": 1102,
+          "end": 1102
+        },
+        {
+          "start": 1145,
+          "end": 1146
+        }
+      ],
+      "baselineSha256Lf": "952ab096b3132cc737492989079fbdab07f5c296da4a5825620b7b000564c71f",
+      "currentSha256Lf": "897a910f51f8282b451d8336ce079a13a5afd4a9709f1aeffbfb26b9fb400a33"
+    },
+    {
+      "file": "apps/next/src/i18n/locales/zh-CN/create.ts",
+      "group": "business",
+      "C": 0,
+      "B": 1,
+      "excluded": [],
+      "changedLineRanges": [
+        {
+          "start": 423,
+          "end": 423
+        }
+      ],
+      "baselineSha256Lf": "6a257d427a5417a31807a1f4c5ea9b1adfb69dd0554a2b953870763bfe7202fe",
+      "currentSha256Lf": "f448ca3b9bf038fa9c513fb51de22177726fefd5ba0855e283bc15b86b3f3f76"
+    },
+    {
+      "file": "apps/next/src/i18n/locales/en/create.ts",
+      "group": "business",
+      "C": 0,
+      "B": 1,
+      "excluded": [],
+      "changedLineRanges": [
+        {
+          "start": 415,
+          "end": 415
+        }
+      ],
+      "baselineSha256Lf": "55295ea617a005c99717bf4c9c6d1f3327b10306ca1762ff94a26936dafa1f2e",
+      "currentSha256Lf": "8c424a4ca39e4a9129fa18283578f860408579f81a518caf873fa8ab14c7e766"
+    },
+    {
+      "file": "apps/next/src/i18n/locales/zh-CN/promptAssembly.ts",
+      "group": "business",
+      "C": 0,
+      "B": 1,
+      "excluded": [],
+      "changedLineRanges": [
+        {
+          "start": 78,
+          "end": 78
+        }
+      ],
+      "baselineSha256Lf": "a3062694a79a52f7a93a57d8a0689d1c0fd9e234ab1e264ddab1b59200888b5b",
+      "currentSha256Lf": "ef01c973ce60d46bd142dca50d85206f94a60bd5eac046f30f0fa5d03a5679a5"
+    },
+    {
+      "file": "apps/next/src/i18n/locales/en/promptAssembly.ts",
+      "group": "business",
+      "C": 0,
+      "B": 2,
+      "excluded": [],
+      "changedLineRanges": [
+        {
+          "start": 79,
+          "end": 80
+        }
+      ],
+      "baselineSha256Lf": "27de1d66f31b028aabd3f3a8a29f1ed2c65928a03543307277f7b023bb158047",
+      "currentSha256Lf": "a8adbf9a20ce8c0d402defb2b04d5093dfe2246a24d52d41d59259dbef7246b7"
+    },
+    {
+      "file": "scripts/smoke-create-layout.js",
+      "group": "test",
+      "C": 4,
+      "B": 1,
+      "excluded": [],
+      "changedLineRanges": [
+        {
+          "start": 808,
+          "end": 812
+        }
+      ],
+      "baselineSha256Lf": "bd74588c97c273de6d65ea8ac274de1704e8ca9b8b5ed5e0899b9f0df18731d4",
+      "currentSha256Lf": "52e3231dcfdfd20a0dea6e5cf139ff968af2e14cfb3f2fe6e3a494417599680c"
+    },
+    {
+      "file": "scripts/lib/check-history-move.js",
+      "group": "test",
+      "C": 46,
+      "B": 23,
+      "excluded": [
+        {
+          "line": 252,
+          "reason": "与同文件契约说明重复，保守剔除"
+        }
+      ],
+      "changedLineRanges": [
+        {
+          "start": 227,
+          "end": 296
+        },
+        {
+          "start": 303,
+          "end": 303
+        }
+      ],
+      "baselineSha256Lf": "843dbcac77b2688be8d6113fb795d2a472f6c8e27263da330589e277823b46c5",
+      "currentSha256Lf": "2d4ee622a5f4874e18bb5d64a4d5f038fef9924a692a4709b9bbcba548474375"
+    },
+    {
+      "file": "apps/next/src/view/toolBox/Tool/video/editor/editor.module.css",
+      "group": "business",
+      "C": 35,
+      "B": 7,
+      "excluded": [
+        {
+          "line": 767,
+          "reason": "与同文件契约说明重复，保守剔除"
+        }
+      ],
+      "changedLineRanges": [
+        {
+          "start": 90,
+          "end": 95
+        },
+        {
+          "start": 342,
+          "end": 344
+        },
+        {
+          "start": 763,
+          "end": 794
+        },
+        {
+          "start": 796,
+          "end": 797
+        }
+      ],
+      "baselineSha256Lf": "d4a59ba82ab61451f33b217f3494ac1b23e01715e253cf32f9dee9c50956976c",
+      "currentSha256Lf": "9ea3ccfb006f2cbaa5be1f97f44833a4e23dc449eb33abfc73edb5a96ce67ec2"
+    },
+    {
+      "file": "scripts/lib/check-video-filmstrip.js",
+      "group": "test",
+      "C": 64,
+      "B": 14,
+      "excluded": [],
+      "changedLineRanges": [
+        {
+          "start": 355,
+          "end": 432
+        },
+        {
+          "start": 436,
+          "end": 436
+        }
+      ],
+      "baselineSha256Lf": "f810c0b5dcbf64adcd54566825fe5a0283a747633765e654a82165b1cc1e931f",
+      "currentSha256Lf": "93322b3cc457d59101ecd9182be20d4145d6e16aeb8a93673126216b2d5d0efc"
+    },
+    {
+      "file": "scripts/smoke-prompt-assembly.js",
+      "group": "test",
+      "C": 12,
+      "B": 5,
+      "excluded": [],
+      "changedLineRanges": [
+        {
+          "start": 360,
+          "end": 377
+        }
+      ],
+      "baselineSha256Lf": "392db77b3ebe40aacafa4d30f77ffe1b551594d1a9fd1df63e85ea54169d2f73",
+      "currentSha256Lf": "84f89e56d7a61c0cc3e58dd28b38db4af5d8993ca74159f3c02b7e0c9812fac5"
+    },
+    {
+      "file": "apps/next/src/components/prompt-tag.tsx",
+      "group": "business",
+      "C": 47,
+      "B": 14,
+      "excluded": [
+        {
+          "line": 14,
+          "reason": "与同文件契约说明重复，保守剔除"
+        },
+        {
+          "line": 50,
+          "reason": "与同文件契约说明重复，保守剔除"
+        }
+      ],
+      "changedLineRanges": [
+        {
+          "start": 1,
+          "end": 66
+        }
+      ],
+      "baselineSha256Lf": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "currentSha256Lf": "4a064d065bebcfe8116c69b1eecf483396f1dcd59e6106a3e2d995d0dcaf3176"
+    },
+    {
+      "file": "apps/next/src/utils/prompt-quick-words.ts",
+      "group": "business",
+      "C": 25,
+      "B": 6,
+      "excluded": [],
+      "changedLineRanges": [
+        {
+          "start": 1,
+          "end": 33
+        }
+      ],
+      "baselineSha256Lf": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "currentSha256Lf": "31dae3e981253f2a2d69c3bd057933ea4b554ba8ada88460eeb41fe728e15642"
+    },
+    {
+      "file": "apps/next/src/hooks/use-move-generated-images.ts",
+      "group": "business",
+      "C": 80,
+      "B": 50,
+      "excluded": [],
+      "changedLineRanges": [
+        {
+          "start": 1,
+          "end": 134
+        }
+      ],
+      "baselineSha256Lf": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "currentSha256Lf": "475d4eef4356867313608d433bcbee539616089b822051e557efba678c9b06ef"
+    },
+    {
+      "file": "scripts/lib/check-prompt-quick-words.js",
+      "group": "test",
+      "C": 115,
+      "B": 55,
+      "excluded": [
+        {
+          "line": 130,
+          "reason": "与同文件契约说明重复，保守剔除"
+        },
+        {
+          "line": 171,
+          "reason": "与同文件契约说明重复，保守剔除"
+        }
+      ],
+      "changedLineRanges": [
+        {
+          "start": 1,
+          "end": 176
+        }
+      ],
+      "baselineSha256Lf": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "currentSha256Lf": "02d5857510346c7d77fed92f8d4599016b709bdd16e6d48de4c75f56f7abb14a"
+    }
+  ],
+  "totals": {
+    "business": {
+      "C": 290,
+      "B": 120,
+      "excludedC": 3,
+      "percent": 70.7317
+    },
+    "test": {
+      "C": 241,
+      "B": 98,
+      "excludedC": 3,
+      "percent": 71.0914
+    }
+  }
+}

@@ -1,11 +1,19 @@
 "use client";
 
-import { Copy, Eye, Grid2X2, List, Search, Trash2 } from "lucide-react";
+/**
+ * 静态库工具栏适配器，实际搜索/单多选/复制/已选按钮复用角色工具栏。
+ * 展示模式与收藏配置直接传给共用工具栏，不另写第二套横向布局。
+ * 排序值在适配层校验，普通库只接收default和az。
+ * 动作、背景、表情与画师都通过本组件传递相同的选择参数。
+ */
 import { useTranslation } from "@/i18n";
 import { TAG_SORT_OPTIONS, type TagSortMode } from "@/utils/tagLibrary";
-import { cn } from "@/utils/cn";
+import { LibraryPickerToolbar } from "@/view/create/characters/CharacterPickerToolbar";
 
 type TagLibraryToolbarProps = {
+  favorites?: { count: number; active: boolean; onToggle: () => void };
+  /** 画师的完整排序在侧栏，无需重复渲染default/az。 */
+  hideSort?: boolean;
   displayMode: "card" | "text";
   query: string;
   sort: TagSortMode;
@@ -24,195 +32,21 @@ type TagLibraryToolbarProps = {
 };
 
 /**
- * 静态标签库工具条：与角色选择器同一套排版
- * （搜索框固定宽度左浮动，其余控件整体右浮动）。
+ * 传给共用工具栏的prefix保留所有既有静态库定位入口。
+ * 显示模式按钮有单独可访问标签，与单多选切换不是同一个状态。
+ * 只读工具动作来自父组件，包装器没有自己的选择草稿。
+ * 图标和文本展示取同一displayMode，aria-pressed不会与内容脱节。
+ * 明暗主题不再使用独立的白色输入和紫色按钮样式。
+ * 原来两种排序值保持不变，画师额外排序由侧栏提供。
+ * 未选择时复制和清除仍由共用工具栏禁用，不在这里重复判断。
+ * 显示开关置于排序与多选之间，窄宽度下跟随共同flex换行。
  */
-export function TagLibraryToolbar({
-  displayMode,
-  query,
-  sort,
-  multi,
-  selectedCount,
-  selectedOnly,
-  prefix,
-  placeholder,
-  onQueryChange,
-  onSortChange,
-  onMultiChange,
-  onCopySelected,
-  onToggleSelectedOnly,
-  onClearSelected,
-  onDisplayModeChange,
-}: TagLibraryToolbarProps) {
+/**
+ * 保留原data-<prefix>-display-mode入口，旧的文本模式回归无需改定位方式。
+ * 工具栏不处理收藏过滤，组与已选视图统一交给父级查询函数。
+ */
+export function TagLibraryToolbar(props: TagLibraryToolbarProps) {
   const { t } = useTranslation();
 
-  return (
-    <div
-      {...{ [`data-${prefix}-toolbar`]: "true" }}
-      className="flex flex-wrap items-center gap-x-3 gap-y-2 py-2"
-    >
-      <div
-        {...{ [`data-${prefix}-search`]: "true" }}
-        className="relative w-[220px] max-w-full shrink-0"
-      >
-        <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[#9CA3AF]" />
-        <input
-          type="search"
-          value={query}
-          aria-label={t("characters.tagLibrary.searchLabel", { label: placeholder })}
-          onChange={(event) => onQueryChange(event.target.value)}
-          placeholder={placeholder}
-          className="h-8 w-full rounded-lg border border-[#E5E7EB] bg-[#F8F9FA] pl-8 pr-2.5 text-sm text-[#333333] placeholder:text-[#9CA3AF] focus:outline-none focus:ring-2 focus:ring-[#A78BFA]/40"
-        />
-      </div>
-
-      <div
-        {...{ [`data-${prefix}-toolbar-right`]: "true" }}
-        className="ml-auto flex flex-wrap items-center gap-x-3 gap-y-2"
-      >
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-[#888888]">{t("characters.toolbar.sort")}</span>
-          <div className="flex overflow-hidden rounded-lg border border-[#E5E7EB]">
-            {TAG_SORT_OPTIONS.map((option) => {
-              const active = sort === option.value;
-              return (
-                <button
-                  key={option.value}
-                  type="button"
-                  {...{ [`data-${prefix}-sort`]: option.value }}
-                  aria-pressed={active}
-                  onClick={() => onSortChange(option.value)}
-                  className={cn(
-                    "h-8 px-3 text-xs transition-colors",
-                    active
-                      ? "bg-[#F5F3FF] font-medium text-[#6D28D9]"
-                      : "bg-white text-[#333333] hover:bg-[#F8F9FA]"
-                  )}
-                >
-                  {t(option.label)}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        <button
-          type="button"
-          role="switch"
-          {...{ [`data-${prefix}-mode`]: multi ? "multi" : "single" }}
-          aria-checked={multi}
-          onClick={() => onMultiChange(!multi)}
-          className="flex items-center gap-2 rounded-lg border border-[#E5E7EB] bg-white px-2.5 py-1.5 text-xs text-[#333333] transition-colors hover:bg-[#F8F9FA]"
-        >
-          <span
-            aria-hidden
-            className={cn(
-              "flex h-4 w-4 items-center justify-center rounded-full border transition-colors",
-              multi ? "border-[#A78BFA] bg-[#A78BFA]" : "border-[#D1D5DB] bg-white"
-            )}
-          >
-            {multi ? <span className="h-1.5 w-1.5 rounded-full bg-white" /> : null}
-          </span>
-          {multi ? t("characters.toolbar.multi") : t("characters.toolbar.single")}
-        </button>
-
-        <div className="flex items-center gap-1.5">
-          <div
-            role="group"
-            aria-label={t("characters.tagLibrary.displayModeLabel")}
-            className="flex overflow-hidden rounded-lg border border-[#E5E7EB]"
-          >
-            <button
-              type="button"
-              {...{ [`data-${prefix}-display-mode`]: "card" }}
-              aria-label={t("characters.tagLibrary.cardMode")}
-              aria-pressed={displayMode === "card"}
-              onClick={() => onDisplayModeChange("card")}
-              className={cn(
-                "inline-flex h-8 items-center gap-1.5 px-2.5 text-xs transition-colors",
-                displayMode === "card"
-                  ? "bg-[#F5F3FF] font-medium text-[#6D28D9]"
-                  : "bg-white text-[#333333] hover:bg-[#F8F9FA]"
-              )}
-            >
-              <Grid2X2 className="h-3.5 w-3.5" />
-              {t("characters.tagLibrary.cardMode")}
-            </button>
-            <button
-              type="button"
-              {...{ [`data-${prefix}-display-mode`]: "text" }}
-              aria-label={t("characters.tagLibrary.textMode")}
-              aria-pressed={displayMode === "text"}
-              onClick={() => onDisplayModeChange("text")}
-              className={cn(
-                "inline-flex h-8 items-center gap-1.5 border-l border-[#E5E7EB] px-2.5 text-xs transition-colors",
-                displayMode === "text"
-                  ? "bg-[#F5F3FF] font-medium text-[#6D28D9]"
-                  : "bg-white text-[#333333] hover:bg-[#F8F9FA]"
-              )}
-            >
-              <List className="h-3.5 w-3.5" />
-              {t("characters.tagLibrary.textMode")}
-            </button>
-          </div>
-          <ToolbarButton
-            dataAttr={`data-${prefix}-copy-selected`}
-            icon={<Copy className="h-3.5 w-3.5" />}
-            label={t("characters.toolbar.copySelected")}
-            disabled={selectedCount === 0}
-            onClick={onCopySelected}
-          />
-          <ToolbarButton
-            dataAttr={`data-${prefix}-only-selected`}
-            icon={<Eye className="h-3.5 w-3.5" />}
-            label={t("characters.toolbar.onlySelected")}
-            active={selectedOnly}
-            onClick={onToggleSelectedOnly}
-          />
-          <ToolbarButton
-            dataAttr={`data-${prefix}-clear-selected`}
-            icon={<Trash2 className="h-3.5 w-3.5" />}
-            label={t("characters.toolbar.clearSelected")}
-            disabled={selectedCount === 0}
-            onClick={onClearSelected}
-          />
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function ToolbarButton({
-  dataAttr,
-  icon,
-  label,
-  onClick,
-  disabled = false,
-  active = false,
-}: {
-  dataAttr: string;
-  icon: React.ReactNode;
-  label: string;
-  onClick: () => void;
-  disabled?: boolean;
-  active?: boolean;
-}) {
-  return (
-    <button
-      type="button"
-      {...{ [dataAttr]: "true" }}
-      aria-pressed={active}
-      disabled={disabled}
-      onClick={onClick}
-      className={cn(
-        "inline-flex h-8 items-center gap-1.5 rounded-lg border border-[#E5E7EB] px-2.5 text-xs transition-colors disabled:cursor-not-allowed disabled:opacity-45",
-        active
-          ? "bg-[#F5F3FF] font-medium text-[#6D28D9]"
-          : "bg-white text-[#333333] hover:bg-[#F8F9FA]"
-      )}
-    >
-      {icon}
-      {label}
-    </button>
-  );
+  return <LibraryPickerToolbar {...props} searchLabel={t("characters.tagLibrary.searchLabel", { label: props.placeholder })} sortOptions={TAG_SORT_OPTIONS.map(item => ({ ...item, label: t(item.label) }))} onSortChange={value => { if (value === "default" || value === "az") props.onSortChange(value); }} />;
 }

@@ -12,16 +12,21 @@ import type { ResourceDialogTypography } from "@/utils/resourceDialogFontSize";
 interface Props {
   name: string; cover: ModelCover; selected: boolean; typography: ResourceDialogTypography;
   tag?: string; tagClassName?: string; meta?: ReactNode; children: ReactNode;
+  // 分类卡片可包含多个模型，计数由拥有草稿的选择器计算后注入。
+  // 内层单模型卡片不传计数，仍只显示原来的“已选”，避免改变其选中语义。
+  // 计数不决定 selected，也不在展示组件重新读取全局模型状态。
+  // 同一组件的主模型与 LoRA 实例各自接收数据，不共用另一份计数缓存。
+  selectedCount?: number;
   optionId?: string; onPick?: () => void;
 }
-export function ResourceSelectionCard({ name, cover, selected, typography, tag, tagClassName, meta, children, optionId, onPick }: Props) {
+export function ResourceSelectionCard({ name, cover, selected, selectedCount, typography, tag, tagClassName, meta, children, optionId, onPick }: Props) {
   const { t } = useTranslation();
   return <div data-resource-model-option={optionId} data-lora-model-option={optionId}
     role={onPick ? "button" : undefined} tabIndex={onPick ? 0 : undefined} aria-pressed={onPick ? selected : undefined}
     onClick={onPick} onKeyDown={(event) => { if (onPick && event.target === event.currentTarget && ["Enter", " "].includes(event.key)) { event.preventDefault(); onPick(); } }}
     className={cn("group relative flex min-w-0 flex-col rounded-xl border bg-background transition-colors",
       onPick && "cursor-pointer", selected ? "overflow-visible border-green-500 outline outline-1 outline-green-500" : "overflow-hidden border-border/60 hover:border-foreground/40 dark:border-gray-700")}>
-    {selected && <span className={cn("absolute -top-5 right-2 z-30 rounded-t-md bg-green-500 px-2 py-0.5 font-bold text-white", typography.selectedBadge)}>{t("create.extensionSelectDialog.selected")}</span>}
+    {selected && <span className={cn("absolute -top-5 right-2 z-30 rounded-t-md bg-green-500 px-2 py-0.5 font-bold text-white", typography.selectedBadge)}>{t("create.extensionSelectDialog.selected")}{selectedCount !== undefined && <span data-resource-selected-count={selectedCount}> {selectedCount}</span>}</span>}
     <div className="relative isolate aspect-[4/5] w-full shrink-0 overflow-hidden rounded-t-xl bg-muted">
       <ResourceCoverImage cover={cover} alt={name} fill sizes="(max-width: 640px) 50vw, 33vw" className="absolute inset-0 h-full w-full object-cover" />
       {tag && <span title={tag} className={cn("absolute left-2 top-2 max-w-[70%] truncate rounded-full px-2 py-1 font-semibold", typography.coverTag, tagClassName ?? "bg-zinc-700/80 text-white")}>{tag}</span>}
