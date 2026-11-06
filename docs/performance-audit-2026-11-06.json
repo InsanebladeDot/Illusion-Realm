@@ -1,0 +1,89 @@
+{
+  "date": "2026-11-06",
+  "method": "Read-only source inspection and direct script references in exported HTML; raw bytes are not measured memory, FPS, or page load time. Shared script bytes can be reused on navigation.",
+  "buildRecordedAt": "2026-11-06T08:01:54.580Z",
+  "buildFingerprint": "889b67441d37eaa0538974e6cac53cebd6fcca3ad82458745d45054a616ba53e",
+  "routes": [
+    {
+      "route": "/",
+      "directScriptCount": 14,
+      "rawBytes": 1275005
+    },
+    {
+      "route": "/create",
+      "directScriptCount": 18,
+      "rawBytes": 6829279
+    },
+    {
+      "route": "/canvas",
+      "directScriptCount": 15,
+      "rawBytes": 1526180
+    },
+    {
+      "route": "/agent",
+      "directScriptCount": 16,
+      "rawBytes": 1655136
+    },
+    {
+      "route": "/profile",
+      "directScriptCount": 15,
+      "rawBytes": 1937521
+    },
+    {
+      "route": "/tools/video/editor",
+      "directScriptCount": 17,
+      "rawBytes": 1426463
+    },
+    {
+      "route": "/tools/models/civitai",
+      "directScriptCount": 16,
+      "rawBytes": 1384320
+    }
+  ],
+  "javascriptChunks": {
+    "count": 58,
+    "rawBytes": 9234087,
+    "largest": [
+      {
+        "path": "apps/next/out/_next/static/chunks/0_1dxuowxgvix.js",
+        "rawBytes": 5272149,
+        "gzipBytesForComparisonOnly": 1072792
+      },
+      {
+        "path": "apps/next/out/_next/static/chunks/3sf_5i7r6k0hd.js",
+        "rawBytes": 643203,
+        "gzipBytesForComparisonOnly": 212496
+      },
+      {
+        "path": "apps/next/out/_next/static/chunks/3rc-bvm6rcdux.js",
+        "rawBytes": 352116,
+        "gzipBytesForComparisonOnly": 100856
+      },
+      {
+        "path": "apps/next/out/_next/static/chunks/1m0x4t1_4bs-2.js",
+        "rawBytes": 262906,
+        "gzipBytesForComparisonOnly": 96096
+      },
+      {
+        "path": "apps/next/out/_next/static/chunks/2ycyzxvj92b_j.js",
+        "rawBytes": 245150,
+        "gzipBytesForComparisonOnly": 75917
+      }
+    ]
+  },
+  "artistData": {
+    "bytes": 3466762,
+    "rows": 40600
+  },
+  "fonts": {
+    "files": 10,
+    "rawBytes": 36937044,
+    "loading": "on demand, not all startup requests"
+  },
+  "mask4096TheoreticalBytes": {
+    "rgbaLayer": 67108864,
+    "threeLayerSnapshot": 201326592
+  },
+  "runtimeProfilerRun": false,
+  "productCodeModified": false
+}
