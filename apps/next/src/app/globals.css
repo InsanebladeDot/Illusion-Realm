@@ -785,7 +785,15 @@ html.page-transition[data-page-direction="backward"]::view-transition-group(page
 /* 顶栏按钮保留各自的浅底或危险色反馈，不套用页面操作按钮的悬停描边。 */
 /* 素材分类与翻页箭头同样只用颜色反馈，避免经过图标时出现参考图中的方框。 */
 /* 此处只排除hover规则，键盘focus-visible仍由下方规则提供可见的一像素提示。 */
-:root :is(button, [role="button"]):not(:disabled):not([aria-disabled="true"]):not(:where([data-window-titlebar] *, [data-media-library-tabs] *)):hover {
+/* 个人主页标签以文字和下划线提示选择，鼠标悬停不再叠加矩形轮廓。 */
+/* 设置分类同样只排除悬停描边，aria-pressed 对应的选中填充仍由原组件维护。 */
+/* 两处使用既有业务标记定位，不排除整个页面，以免误伤删除和确认等操作。 */
+/* 这不是取消焦点：后续 focus-visible 规则仍向键盘用户展示当前位置。 */
+/* 鼠标点击后若指针仍停在标签上，也不会再次被通用 hover 规则套上边框。 */
+/* 与已有创作模式标签共用同一排除机制，避免新增一套高优先级覆盖。 */
+/* 原生禁用与 aria-disabled 的边界保持不变，禁用入口不会借此获得高亮。 */
+/* 语义主题变量仍由各原组件读取，不针对深浅主题硬编码边框或文字颜色。 */
+:root :is(button, [role="button"]):not(:disabled):not([aria-disabled="true"]):not(:where([data-window-titlebar] *, [data-media-library-tabs] *, [data-profile-content-tab], [data-settings-category])):hover {
   outline: 1px solid color-mix(in srgb, var(--foreground) 30%, var(--border));
   outline-offset: -1px;
 }

@@ -57,7 +57,14 @@ export function ProfileTabs({ sample }: { sample: boolean }) {
   const onTab = (tab: ProfileContentTab) => { setActive(tab); setVisited(current => current.includes(tab) ? current : [...current, tab]); };
   const postsVisible = ["posts", "likes", "privatePosts"].includes(active);
   return <div className="pr-layout" data-profile-layout={active === "private" ? "statistics" : "posts"}>
-    <div className="pr-main"><ProfileTabBar active={active} onTab={onTab} />
+    {/* 标签栏占据网格首行，正文与右栏共享下一行；像同一层书架，自然顶齐。 */}
+    {/* 不用标签高度换算偏移，字体或容器宽度变化后仍由浏览器统一排版。 */}
+    {/* 这里只移动原组件的装配位置，标签选择、方向键和面板 ID 继续沿用原实现。 */}
+    {/* 云端面板仍留在原正文宿主，改变对齐不会卸载其草稿或重新发起请求。 */}
+    {/* 收藏分类与普通数据侧栏共用同一网格位置，不分别维护定位数值。 */}
+    {/* 单列时侧栏由容器规则排到正文下方，标签不横跨正文与侧栏形成额外空白。 */}
+    <ProfileTabBar active={active} onTab={onTab} />
+    <div className="pr-main">
       {/* 界面：帖子、喜欢与仅自己可见共用一份样例状态，不切换卸载。 */}
       <div id="profile-panel-posts" role="tabpanel" aria-labelledby={`profile-tab-${postsVisible ? active : "posts"}`} hidden={!postsVisible}><ProfilePostsPanel sample={sample} tab={active} /></div>
       <div id="profile-panel-private" role="tabpanel" aria-labelledby="profile-tab-private" hidden={active !== "private"}><ProfileStatisticsPanel sample={sample} /></div>

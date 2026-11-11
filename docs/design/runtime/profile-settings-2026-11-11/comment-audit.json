@@ -1,0 +1,30 @@
+{
+  "baseline": "C:\\Users\\18305\\AppData\\Local\\Temp\\ir-profile-settings-baseline",
+  "reports": [
+    {
+      "file": "apps/next/src/view/profile/ProfileTabs.tsx",
+      "C": 6,
+      "B": 2
+    },
+    {
+      "file": "apps/next/src/view/profile/profile-replica.css",
+      "C": 12,
+      "B": 5
+    },
+    {
+      "file": "apps/next/src/view/SettingsPage.tsx",
+      "C": 4,
+      "B": 1
+    },
+    {
+      "file": "apps/next/src/app/globals.css",
+      "C": 8,
+      "B": 1
+    }
+  ],
+  "total": {
+    "C": 30,
+    "B": 9,
+    "rate": 76.92307692307693
+  }
+}

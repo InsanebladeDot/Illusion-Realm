@@ -119,7 +119,11 @@ export function SettingsPage() {
         <div className="flex min-w-max gap-1">
           {(["all", "tools", "image", "video", "models", "keys"] as const).map((key) => (
             <button key={key} data-settings-category={key} type="button" onClick={() => setCategory(key)} aria-pressed={category === key}
-              className={cn("rounded-lg px-3 py-2 text-sm transition-colors", category === key ? "bg-accent-fill text-accent-fill-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground")}>
+              // 分类状态仍由当前页面独立维护，主页标签不会改变设置的筛选。
+              // 未选中项只提升文字对比度，鼠标经过不再添加底色或边框。
+              // 选中项继续使用主题强调色填充，移开鼠标后也能识别当前分类。
+              // 不阻止原生聚焦和点击，因此键盘导航与 keys 定位仍可正常工作。
+              className={cn("rounded-lg px-3 py-2 text-sm transition-colors", category === key ? "bg-accent-fill text-accent-fill-foreground" : "text-muted-foreground hover:text-foreground")}>
               {categories[key]}
             </button>
           ))}

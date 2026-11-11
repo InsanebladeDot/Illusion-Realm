@@ -312,8 +312,17 @@
 }
 
 .pr-main {
+  /* 正文固定在左列，标签单独占首行，右侧信息卡与正文共享第二行。 */
+  /* 显式列号防止自动排版把正文塞到首行的空右列。 */
+  /* 隐藏面板依旧服从原来的 hidden 规则，不参与网格尺寸计算。 */
+  grid-column:1;
   min-width:0
 }
+
+/* 两种右栏都使用 pr-side，收藏与统计切换时保持相同的顶部基线。 */
+/* 让浏览器计算标签实际高度，不另设随字号失效的 margin-top。 */
+/* 不改侧栏内部卡片排列，现有快捷入口和最近收藏仍保留各自状态。 */
+.pr-layout>.pr-side { grid-column:2; grid-row:2 }
 
 .pr-panel {
   min-width:0;
@@ -324,6 +333,10 @@
 }
 
 .pr-tabs {
+  /* 标签只属于左列；横向滚动仍在标签自身，不把右侧卡片一起带动。 */
+  /* 与正文间距统一交给外层 gap，避免首行高度再重复计入旧下边距。 */
+  /* 标签仍是原生 tablist，键盘焦点与 aria-controls 的关联不变。 */
+  grid-column:1;
   display:flex;
   align-items:stretch;
   gap:20px;
@@ -331,7 +344,7 @@
   min-height:49px;
   border-radius:9px;
   padding:0 19px;
-  margin-bottom:12px;
+  margin-bottom:0;
   overflow-x:auto;
   scrollbar-width:none;
   white-space:nowrap;
@@ -1362,6 +1375,10 @@
 }
 
 @container(max-width:1050px) {
+  /* 单列时解除右栏的桌面行列约束，让它自然排在正文之后。 */
+  /* 如果保留第二列会凭空撑宽容器，即使正文自身已经是单列。 */
+  /* 同时解除行号，避免右栏与第二行正文重叠；内部双列布局继续沿用。 */
+  .pr-layout>.pr-side { grid-column:1; grid-row:auto }
   .pr-layout,.pr-layout[data-profile-layout=statistics] {
     grid-template-columns:1fr
   }
