@@ -48,7 +48,9 @@
 
 ## 架构
 
-pnpm workspace，三个包，进程边界由包结构强制：
+项目采用 monorepo 结构。`apps/` 下有 Electron 桌面主进程、Next.js 界面和 Python Beta Agent。pnpm workspace 管理 Electron、Next.js 和 `packages/shared` 三个 JavaScript / TypeScript 包。Python Agent 的依赖由 `apps/agent/pyproject.toml` 声明。
+
+Next.js 界面通过 preload 提供的 API 向 Electron 主进程发起 IPC 请求。Electron 主进程负责桌面系统交互，并按需启动 Python Agent 子进程，通过标准输入和输出传递请求和事件。`packages/shared` 为 Electron 和 Next.js 提供类型、IPC 通道和公共数据。
 
 ```
 Illusion Realm/
@@ -66,17 +68,23 @@ Illusion Realm/
 │   │   ├── scripts/            构建工具
 │   │   ├── bin/ffmpeg/         内置媒体二进制
 │   │   └── electron-builder.yml
-│   └── next/            @illusion-realm/next       — 渲染进程（App Router）
-│       ├── src/app/           路由（首页 / 创建 / 本地解析 / 漫画 / 主页 / 更新 / 设置 / 工具箱）
-│       ├── src/view/          页面级组件
-│       ├── src/components/    跨页面组件
-│       ├── src/stores/        Zustand store（settings / createForm / historyFolder …）
-│       ├── src/utils/         纯逻辑（imageSize / comfy / sdImageInspector / video / view3d）
-│       ├── src/api/comfyui/   ComfyUI 客户端
-│       ├── src/data/          静态数据（模型清单、标签库、导航）
-│       ├── src/i18n/          界面文案词条表（强类型，见「关键约定」）
-│       ├── scripts/           文案逃逸断言与迁移校验（check-i18n、verify-i18n-values）
-│       └── next.config.ts     output: export + transpilePackages
+│   ├── next/            @illusion-realm/next       — 渲染进程（App Router）
+│   │   ├── src/app/           路由（首页 / 创建 / 本地解析 / 漫画 / 主页 / 更新 / 设置 / 工具箱）
+│   │   ├── src/view/          页面级组件
+│   │   ├── src/components/    跨页面组件
+│   │   ├── src/stores/        Zustand store（settings / createForm / historyFolder …）
+│   │   ├── src/utils/         纯逻辑（imageSize / comfy / sdImageInspector / video / view3d）
+│   │   ├── src/api/comfyui/   ComfyUI 客户端
+│   │   ├── src/data/          静态数据（模型清单、标签库、导航）
+│   │   ├── src/i18n/          界面文案词条表（强类型，见「关键约定」）
+│   │   ├── scripts/           文案逃逸断言与迁移校验（check-i18n、verify-i18n-values）
+│   │   └── next.config.ts     output: export + transpilePackages
+│   └── agent/           illusion-realm-agent      — 应用内 Beta Agent（Python 子进程）
+│       ├── agent_core/        模型调用、工具调用与运行控制
+│       │   └── entrypoints/stdio_agent.py  Electron 调用入口
+│       ├── tools/             Agent 工具与注册逻辑
+│       ├── scripts/           Python 工具自检
+│       └── pyproject.toml     Python 项目与依赖声明
 ├── packages/shared/     @illusion-realm/shared     — 跨进程类型 + 纯数据常量
 │   └── src/{types,data,ipc-channels.ts,index.ts}
 ├── scripts/                   开发与校验脚本（sync-changelog、verify-*、smoke-*）
@@ -84,7 +92,7 @@ Illusion Realm/
 └── pnpm-workspace.yaml
 ```
 
-Electron 的详细职责与新增文件规则见 [Electron 目录约定](apps/electron/README.md)。
+模块的开发说明见 [Electron 目录约定](apps/electron/README.md) 和 [Agent 开发说明](apps/agent/README.md)。
 
 **关键约定**
 
