@@ -291,6 +291,8 @@ $env:SMOKE_AGENT_FAKE_LLM="1"; npx electron scripts/smoke-agent.js
 
 ## 六、已定的决策（2026-09-27）
 
+> Windows x64 现已改为随安装包分发独立的嵌入式 Python。以下 `.venv` 体积和路径限制是早期方案的记录，当前构建与使用方式见 [Agent README](../apps/agent/README.md)。
+
 1. **✅ 走 A（子进程 sidecar）** —— P0 + P1 已落地并验证（`scripts/verify-agent-events.js` 6/6）。
 2. **✅ Python 用 venv 分发 —— 已随包（2026-09-27 落地并验证）**：
    `electron-builder.yml` 的 `extraResources` 已启用 `from: ../agent, to: agent`，

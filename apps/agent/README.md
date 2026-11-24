@@ -50,14 +50,12 @@ sidecar → stdout   {"type":"host_request","id":…,"name":"list_local_models",
 ## 现在的状态（已就绪）
 
 ```powershell
-# 这个 venv 已经建好并装好了运行期依赖（实测 76 MB；不含 langgraph/langsmith/fastapi 那些
-# 开发期才用的包 —— 别直接拷 D:/Code/LLM/.venv，那是 110 MB 且绑着它的基础解释器路径）
-.\.venv\Scripts\python.exe -V
-
-# 重建（换机器 / 升依赖时）：
+# 在 apps/agent 中创建开发用环境。
 python -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -e .
 ```
+
+Windows x64 完整构建（`pnpm build`、`pnpm pack`、`pnpm build:setup:native`）会用构建机上的 `uv` 准备独立 Python 和锁定的依赖，并放入客户端的 `resources/agent/python`。用户安装后即可使用内置环境。`pnpm build:setup` 复用上一次完整构建的客户端引擎，需要先用本版本重新完整构建一次。
 
 ## 配置写在哪（**一份，全工作区共用**）
 

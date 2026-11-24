@@ -81,8 +81,8 @@ scripts/                     # 跨包校验、冒烟与门禁自检
 - 标识符使用英文：变量/函数 camelCase，组件/类型 PascalCase，常量 UPPER_SNAKE_CASE；新普通文件用 kebab-case，路由保留框架文件名，已有文件不因命名规则批量重命名。
 - 异步失败必须有明确处理边界（try-catch 或 `.catch()`），同时处理取消、状态恢复与资源清理。IPC handler 可由注册助手统一捕获，后台任务不能依赖已结束的 handler 接住错误。
 - 全局客户端状态使用 Zustand，不引入 Redux 或全局 Context。相似 UI 通过参数、插槽和回调复用；业务行为只有完全相同时才合并。
-- **功能、测试及辅助脚本修改必须使用 [.agents/skills/comment-coverage/SKILL.md](.agents/skills/comment-coverage/SKILL.md)。大白话优先，复杂逻辑必须用生活类比；业务代码与测试代码有效注释率分别至少 70%，禁止废话、重复与凑数。** 统计范围、混合行和交付报告按该技能执行；函数长度与注释率分别计算。
-- 注释用中文并解释职责、原因和边界。UI 使用处写界面名称，如 `{/* rail：创建输入区 */}`；用户可见文案仍走 i18n，注释不计入文案逃逸。
+- **功能、测试及辅助脚本修改必须使用 [.agents/skills/comment-coverage/SKILL.md](.agents/skills/comment-coverage/SKILL.md)。用大白话精准说明做什么、怎么用、能提供什么；复杂逻辑必须用简短生活类比解释机制。业务代码与测试代码有效注释率分别以 20%–30% 为参考，禁止废话、重复与凑数，不为比例增删必要说明。** 统计范围、混合行和交付报告按该技能执行；函数长度与注释率分别计算。
+- 注释用中文，按需说明用途、调用条件、返回结果或副作用，补充不明显的原因和边界。UI 使用处写界面名称，如 `{/* rail：创建输入区 */}`；用户可见文案仍走 i18n，注释不计入文案逃逸。
 - utils、shared 和主进程文件头说明“做什么 + 关键机制”；需要 `"use client";` 的文件将其放在第一行，头注释放在其后。
 
 ## IPC、安全与持久化
@@ -95,7 +95,7 @@ scripts/                     # 跨包校验、冒烟与门禁自检
 - 窗口显式设置 `contextIsolation: true`、`nodeIntegration: false`。当前 `sandbox: false` 支持 preload 的 CommonJS 本地 require，例如 `../common/ipc-channels`；仅在桥接实现允许时重新评估开启 sandbox。
 - 不暴露原始 ipcRenderer、任意通道或 Node 能力。主进程按调用者和业务规则校验权限、路径与参数；事件订阅返回独立取消函数，卸载时清理。
 - 错误日志保留级别、模块及必要诊断信息并脱敏；不记录令牌、API 密钥和用户路径，堆栈不返回渲染层。
-- 用户数据是 JSON 单文件，默认 `user/illusion-realm.json`。主进程 `apps/electron/src/main/storage/user-data.js` 负责读写与路径；默认值、合并和迁移由 shared 类型及 `apps/next/src/utils/userDataDocument.ts` 负责。不引入 SQLite、ORM 或另一套存储层。
+- 按 2026-11-11 用户授权，生成小票、无限画布草稿和快捷词由 `storage/sqlite/user-document.js` 接管 SQLite 读写；原 USER_DATA IPC 形状保持不变。设置、账号偏好及首帧语言继续使用实际 `user/illusion-realm.json`，凭据继续原专用服务。业务库与实际 JSON 同目录、同名前缀；下载恢复队列独立使用原 Electron userData 目录的 `model-download-queue.sqlite`。迁移先备份原字节、事务写入并反读对照，再切换权威来源；不引入 ORM，不把媒体字节塞进库。工作流参数和外嵌工具文档保留明确版本化附表；具体范围、例外与恢复边界见 `docs/design/sqlite-migration-2026-11-11.md`。
 
 ## 主题与 i18n
 
@@ -173,6 +173,7 @@ scripts/                     # 跨包校验、冒烟与门禁自检
 | 页面与渲染逻辑 | [nextjs-renderer](.agents/skills/nextjs-renderer/SKILL.md) |
 | 视觉与交互 / 相似 UI 复用 | [interface-ui-design](.agents/skills/interface-ui-design/SKILL.md) / [ui-parameter-reuse](.agents/skills/ui-parameter-reuse/SKILL.md) |
 | 构建、资源与安装器 | [electron-build](.agents/skills/electron-build/SKILL.md) |
+| GitHub 提交、Review 与主分支合并 | [github-merge](.agents/skills/github-merge/SKILL.md)；验收、Review、已知问题清零和 CLI 检查全部通过才允许合并 |
 
 ## 提交与交付
 

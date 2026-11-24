@@ -1,5 +1,17 @@
 # Windows 打包指南：一键生成 EXE
 
+## 直接生成原生安装包
+
+在仓库根运行 `pnpm build:setup:native`。它构建当前页面和客户端，用 electron-builder 自带的 NSIS 向导生成一个离线安装 EXE，无需事先运行 `pnpm build`。成品位于 `apps/electron/release/setup-native/Illusion-Realm-Setup-0.1.0.exe`，版本号随 Electron 包版本更新。`release/native-build` 用于存放构建中间产物。
+
+## 只重新打包 Setup 向导
+
+在仓库根目录执行 `pnpm build:setup`。它复用上一次完整构建的客户端安装引擎，只重新打包安装向导，最终文件为 `apps/electron/release/setup/Illusion-Realm-Setup-0.1.0.exe`（版本随 Electron 包版本变化）。此 EXE 包含原客户端，可以实际安装。
+
+首次没有引擎时先运行一次 `pnpm build`。以后只修改安装向导时使用 `pnpm build:setup`；如果修改客户端、网页或客户端图标，需要重新执行 `pnpm build`，单打 Setup 不会把这些客户端改动装进去。
+
+需要保留配对的 `apps/electron/release/illusion-realm-engine-版本.exe` 和 `release/installer-stage/payload/manifest.json`。命令会校验版本、安装身份、容量和引擎 SHA-256；缺少或不匹配直接报错，不自动启动完整构建。无需保留 `win-unpacked` 才能重新封装。仅分发 `release/setup` 中的单个 EXE，内部引擎、staging、blockmap 不需发给用户。
+
 本项目 Windows 安装包由 electron-builder 的 NSIS target 生成。日常打包只需要在仓库根目录执行：
 
 ```powershell
@@ -13,6 +25,7 @@ Next 静态导出（apps/next/out）
   -> electron-builder 收集主进程、preload、app.asar
   -> 把静态导出复制到 resources/next-out
   -> 生成 NSIS 安装包
+  -> 封装独立安装向导，输出单文件 Setup
 ```
 
 ## 环境要求
@@ -51,8 +64,8 @@ pnpm build
 
 | 产物 | 路径 | 说明 |
 |---|---|---|
-| NSIS 安装包 | `apps/electron/release/Illusion Realm Setup 0.1.0.exe` | 双击安装，文件名中的版本号来自根 `package.json` |
-| 安装包增量文件 | `apps/electron/release/Illusion Realm Setup 0.1.0.exe.blockmap` | electron-builder 生成，分发安装包时一并保留 |
+| 单文件安装向导 | `apps/electron/release/setup/Illusion-Realm-Setup-0.1.0.exe` | 双击安装，版本来自 `apps/electron/package.json`；只需分发这一份 |
+| 内部安装引擎 | `apps/electron/release/illusion-realm-engine-0.1.0.exe` | 供向导封装复用，不单独分发 |
 | 免安装目录 | `apps/electron/release/win-unpacked/` | 便于本地验证，不生成安装向导 |
 | 应用入口 | `apps/electron/release/win-unpacked/Illusion Realm.exe` | 免安装目录中的主程序 |
 | Next 静态导出 | `apps/electron/release/win-unpacked/resources/next-out/` | 生产环境由 `app://` 协议读取 |
@@ -71,7 +84,7 @@ pnpm pack
 确认安装包存在并读取版本信息：
 
 ```powershell
-$exe = Get-Item 'apps/electron/release/Illusion Realm Setup 0.1.0.exe'
+$exe = Get-Item 'apps/electron/release/setup/Illusion-Realm-Setup-0.1.0.exe'
 "{0} bytes ({1:N2} MiB)" -f $exe.Length, ($exe.Length / 1MB)
 (Get-Item 'apps/electron/release/win-unpacked/Illusion Realm.exe').VersionInfo |
   Select-Object ProductName, FileVersion, ProductVersion
@@ -103,7 +116,7 @@ Test-Path 'apps/electron/release/win-unpacked/resources/app.asar'
 `NotSigned`。因此 Windows 可能显示 SmartScreen 警告：
 
 ```powershell
-(Get-AuthenticodeSignature 'apps/electron/release/Illusion Realm Setup 0.1.0.exe').Status
+(Get-AuthenticodeSignature 'apps/electron/release/setup/Illusion-Realm-Setup-0.1.0.exe').Status
 ```
 
 本地验证时可在确认来源后选择「更多信息」→「仍要运行」。如果用于公开分发，应在
@@ -184,7 +197,7 @@ npx --yes @electron/asar list apps/electron/release/win-unpacked/resources/app.a
 
 ### 安装包版本号不对
 
-版本号来自根 `package.json` 的 `version` 字段。修改后重新执行 `pnpm build`，
+安装包版本号来自 `apps/electron/package.json` 的 `version` 字段。修改后重新执行 `pnpm build`，
 electron-builder 会据此生成新的安装包文件名。
 
 ### 打包结果疑似使用了旧页面

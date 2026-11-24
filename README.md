@@ -48,7 +48,9 @@
 
 ## 架构
 
-pnpm workspace，三个包，进程边界由包结构强制：
+项目采用 monorepo 结构。`apps/` 下有 Electron 桌面主进程、Next.js 界面和 Python Beta Agent。pnpm workspace 管理 Electron、Next.js 和 `packages/shared` 三个 JavaScript / TypeScript 包。Python Agent 的依赖由 `apps/agent/pyproject.toml` 声明。
+
+Next.js 界面通过 preload 提供的 API 向 Electron 主进程发起 IPC 请求。Electron 主进程负责桌面系统交互，并按需启动 Python Agent 子进程，通过标准输入和输出传递请求和事件。`packages/shared` 为 Electron 和 Next.js 提供类型、IPC 通道和公共数据。
 
 ```
 Illusion Realm/
@@ -66,17 +68,24 @@ Illusion Realm/
 │   │   ├── scripts/            构建工具
 │   │   ├── bin/ffmpeg/         内置媒体二进制
 │   │   └── electron-builder.yml
-│   └── next/            @illusion-realm/next       — 渲染进程（App Router）
-│       ├── src/app/           路由（首页 / 创建 / 本地解析 / 漫画 / 主页 / 更新 / 设置 / 工具箱）
-│       ├── src/view/          页面级组件
-│       ├── src/components/    跨页面组件
-│       ├── src/stores/        Zustand store（settings / createForm / historyFolder …）
-│       ├── src/utils/         纯逻辑（imageSize / comfy / sdImageInspector / video / view3d）
-│       ├── src/api/comfyui/   ComfyUI 客户端
-│       ├── src/data/          静态数据（模型清单、标签库、导航）
-│       ├── src/i18n/          界面文案词条表（强类型，见「关键约定」）
-│       ├── scripts/           文案逃逸断言与迁移校验（check-i18n、verify-i18n-values）
-│       └── next.config.ts     output: export + transpilePackages
+│   ├── next/            @illusion-realm/next       — 渲染进程（App Router）
+│   │   ├── src/app/           路由（首页 / 创建 / 本地解析 / 漫画 / 主页 / 更新 / 设置 / 工具箱）
+│   │   ├── src/view/          页面级组件
+│   │   ├── src/components/    跨页面组件
+│   │   ├── src/stores/        Zustand store（settings / createForm / historyFolder …）
+│   │   ├── src/utils/         纯逻辑（imageSize / comfy / sdImageInspector / video / view3d）
+│   │   ├── src/api/comfyui/   ComfyUI 客户端
+│   │   ├── src/data/          静态数据（模型清单、标签库、导航）
+│   │   ├── src/i18n/          界面文案词条表（强类型，见「关键约定」）
+│   │   ├── scripts/           文案逃逸断言与迁移校验（check-i18n、verify-i18n-values）
+│   │   └── next.config.ts     output: export + transpilePackages
+│   └── agent/           illusion-realm-agent      — 应用内 Beta Agent（Python 子进程）
+│       ├── agent_core/        模型调用、工具调用与运行控制
+│       │   └── entrypoints/stdio_agent.py  Electron 调用入口
+│       ├── tools/             Agent 工具与注册逻辑
+│       ├── scripts/           Python 工具自检
+│       ├── pyproject.toml     Python 项目与依赖声明
+│       └── requirements-windows-x64.txt  安装包内置 Python 依赖清单
 ├── packages/shared/     @illusion-realm/shared     — 跨进程类型 + 纯数据常量
 │   └── src/{types,data,ipc-channels.ts,index.ts}
 ├── scripts/                   开发与校验脚本（sync-changelog、verify-*、smoke-*）
@@ -84,7 +93,7 @@ Illusion Realm/
 └── pnpm-workspace.yaml
 ```
 
-Electron 的详细职责与新增文件规则见 [Electron 目录约定](apps/electron/README.md)。
+模块的开发说明见 [Electron 目录约定](apps/electron/README.md) 和 [Agent 开发说明](apps/agent/README.md)。
 
 **关键约定**
 
@@ -134,13 +143,18 @@ pnpm dev:electron   # 仅 Electron（需 3000 端口已有服务）
 
 ### 3. 打包
 
-```bash
-pnpm pack    # 只出 unpacked 目录，用于快速验证：apps/electron/release/win-unpacked/
-pnpm build   # 单文件安装入口：apps/electron/release/setup/Illusion-Realm-Setup-<版本>.exe
-```
+在 Windows x64 构建机上运行。完整构建需要将 `uv` 加入 `PATH`，并在首次下载时能访问 Python 发行包和 Python 依赖源。
 
-`pnpm build` 会先做 Next 静态导出（产物在 `apps/next/out`），再由 electron-builder 收集主进程代码、
-把静态导出放进 `resources/next-out`、并按需带上 ffmpeg。
+| 命令 | 用途 | 产物 |
+| --- | --- | --- |
+| `pnpm build` | 导出 Next 页面，构建客户端安装引擎，再封装自定义安装向导 | `apps/electron/release/setup/Illusion-Realm-Setup-<版本>.exe` |
+| `pnpm build:setup` | 复用已有客户端引擎，只重打自定义安装向导 | `apps/electron/release/setup/Illusion-Realm-Setup-<版本>.exe` |
+| `pnpm build:setup:native` | 完整构建客户端，使用原生 NSIS 安装向导 | `apps/electron/release/setup-native/Illusion-Realm-Setup-<版本>.exe` |
+| `pnpm pack` | 导出 Next 页面并生成客户端目录，用于验证打包结果 | `apps/electron/release/win-unpacked/` |
+
+`pnpm build:setup` 首次使用前需运行一次 `pnpm build`，生成与当前版本匹配的客户端引擎和清单。页面、主进程或 Agent 运行环境有变更时，重新运行 `pnpm build` 才会将这些变更写入引擎。
+
+Windows 客户端默认将独立的 Python 3.13 和锁定的依赖放在 `resources/agent/python`，供应用内 Beta Agent 使用。安装后无需配置系统 Python 或安装 `uv`。开发时可以单独使用 `apps/agent/.venv`。详细配置见 [Agent 开发说明](apps/agent/README.md)。
 
 Windows 安装入口采用模板风格的六步向导，可选择当前用户的安装目录及桌面／开始菜单快捷方式。
 只需分发 `release/setup/` 下对应版本的一个 EXE；`win-unpacked`、`installer-stage` 和内部安装引擎是构建中间产物。
@@ -157,6 +171,7 @@ pnpm lint        # 渲染进程 ESLint
 pnpm verify      # 主进程模块审计 + IPC handler 注册校验（Electron 里跑）
 pnpm check       # typecheck + verify + check:i18n
 pnpm check:i18n  # 硬编码中文文案数量与基线比较（只减不增）
+pnpm check:packaged-agent  # pnpm pack 后验证包内 Python 和 Agent 工具调用
 ```
 
 `scripts/` 下还有若干针对性脚本，用 Electron 运行，例如：
@@ -303,3 +318,19 @@ node apps/next/scripts/verify-i18n-values.mjs --base HEAD           # 迁移后�
    但 `CreatePage.tsx` 结构复杂、字段互相牵连，彻底拆分留到有回归测试之后再动。
 4. **没有单元测试框架**：回归依赖 `pnpm check`（typecheck + 主进程 verify + 文案断言）
    与 `scripts/verify-*.js` / `scripts/smoke-*.js`（九个真实启动流程）。
+
+
+## 无限画布工程素材（2026-11-13）
+
+工程素材按图片、视频、音频存放于用户目录的 `Infinite Canvas/工程目录/`。手放及旧未登记文件归入“未知归属”，原位保留、不自动删除；明确受管副本保存并关闭后，无任何工程依赖才进入统一temp，24小时后重新核对清理。素材库支持直接复用、保留与恢复。节点网预览复用原媒体组件，提供缩略导航、信息、缩放与旋转。
+
+实际验证、九宫格数据关系、自动测试与人工待验边界见[实施记录](docs/代办/infinite-canvas-ui/resource-management-preview-implementation.md)。完整check的旧文案和Meta阻塞仍保留，不能将本轮专项通过理解为全仓验收通过。
+
+画布音频节点复用原输入框和 ↑，固定单份生成；正文半高，秒数用原浮层选择，“参数”打开创作页同一模型与高级设置组件。支持参考、工程内保存与恢复；视频 LoRA 修复 MiniMax 大小写与深层目录漏项。[最新音频调整与验证](docs/代办/infinite-canvas-ui/canvas-audio-compact-implementation.md) · [原请求接入与边界](docs/代办/infinite-canvas-ui/canvas-audio-lora-implementation.md)。
+
+MiniMax 引用统一为图片 `<Picture N>`、视频 `<Video N>`、音频 `<Slot N>`。画布 ↑ 左侧“预览提示词”复用原轻量浮层；右下角转换助手发送官方标记并保留原稿撤销。H3 图片编辑的真实请求同步接入转换，旧 `<Audio N>` 草稿可兼容升级。[实施、截图与验证边界](docs/代办/infinite-canvas-ui/canvas-reference-preview-implementation.md)。
+
+画布节点输入统一复用音频基准面板：同一外壳、80px正文与单行操作区，内容和动作通过参数注入；设置齿轮复用标准图标。类型、lint、构建通过，串行Electron专项34/34、完整画布149/149；人工与真实模型推理未验。[本轮复用关系与截图](docs/代办/infinite-canvas-ui/canvas-panel-reuse-implementation.md)。
+
+
+无限画布新增全局资源库，批量复制导入图片/视频/音频，所有画布可通过 `@/资源库/` 直接引用；`@/图片/` 选择当前画布图片。选中仍显示缩略图＋文件名前缀，MiniMax沿用原编号转换，不创建连线。工程与全局清单共用原卡片、按钮和引用编辑器；多选下全选再次点击全部取消，明确删除移入系统回收站，当前草稿和其他工程依赖受保护，未知文件仍不自动回收。[实施、截图、测试与限制](docs/代办/infinite-canvas-ui/canvas-global-resources-implementation.md)。
