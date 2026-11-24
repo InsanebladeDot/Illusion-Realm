@@ -1,5 +1,5 @@
 /**
- * 构建离线单文件安装入口：先产出 NSIS 引擎，再封装本地 HTML 向导。
+ * 构建 Windows 离线安装包。--setup-only 复用自定义引擎，--native 直接生成原生 NSIS 安装包。
  * 临时 staging 放在 release 内，源码目录不接收安装二进制或生成清单。
  * 两层构建都显式 publish:never，运行本命令不会推送或发布版本。
  * 向导使用现有 Electron 发行包，不引入 WebView2 的目标机依赖。
@@ -13,6 +13,7 @@ const root = path.resolve(__dirname, '..'), repo = path.resolve(root, '../..');
 // createRequire 从 builder 依赖域解析，不新增运行时依赖或手改锁文件。
 // 配置解析读取应用实际 appId，后续改名也不会漏掉原生安装标记。
 const { prepareRepairEngine } = require('./prepare-repair-engine.cjs');
+const { prepareWindowsIcon } = require('./prepare-windows-icon.cjs');
 const builderRequire = require('node:module').createRequire(require.resolve('electron-builder'));
 /**
  * 构建输入由三个不同位置组成：客户端配置、向导源码、仓库许可。
@@ -67,7 +68,7 @@ async function treeBytes(dir) {
   return bytes;
 }
 /**
- * 每轮都覆盖 staging 清单，不借用上一轮 release 中遗留的安装包。
+ * 每轮刷新 staging 源码与清单；只有 --setup-only 允许复用已核对的客户端引擎。
  * 引擎文件名由本轮 package.version 推导；缺少输出时 fs.copyFile 会失败。
  * 正式 LICENSE 逐字复制，安装提示单独追加，不偷偷替换根目录许可。
  * 角色图片是用户提供模板的本地资源，构建不再依赖用户的临时目录。
@@ -76,7 +77,7 @@ async function treeBytes(dir) {
  * @param {string} stage 独立向导的临时项目目录。
  * @param {string} version 本轮客户端版本。
  */
-async function prepareStage(stage, version) {
+async function prepareStage(stage, version, reusedManifest) {
   // payload 是 Windows 可执行文件的物理目录，不把 EXE 藏在 asar 路径里。
   // 创建 stage 不删除之前的输出，允许检查失败原因并保留既有手工构建。
   // 复制文件名都是固定常量，安装页面无权要求收集额外开发文件。
@@ -102,56 +103,95 @@ async function prepareStage(stage, version) {
   // UUID 命名空间来自 builder，与内层引擎生成身份保持配对。
   const config = builderRequire('js-yaml').load(await fs.readFile(path.join(root, 'electron-builder.yml'), 'utf8')), { UUID } = builderRequire('builder-util-runtime');
   const registryKey = config.nsis.guid || UUID.v5(config.appId, UUID.parse('50e065bc-3134-11e6-9bab-38c9862bdaf3'));
-  const manifest = { version, registryKey, engineSha256: await sha256(engine), installedBytes: await treeBytes(path.join(root, 'release/win-unpacked')) };
+  // 只重打向导时复用与引擎摘要配对的容量，不能拿当前源码或另一份展开目录冒充。
+  const manifest = reusedManifest ?? { version, registryKey, engineSha256: await sha256(engine), installedBytes: await treeBytes(path.join(root, 'release/win-unpacked')) };
+  if (manifest.registryKey !== registryKey) throw new Error('Application identity changed. Run pnpm build before pnpm build:setup.');
   await fs.writeFile(path.join(payload, 'manifest.json'), JSON.stringify(manifest));
   await fs.writeFile(path.join(stage, 'package.json'), JSON.stringify({ name: 'illusion-realm-installer', version, main: 'main.cjs', author: 'Illusion Realm', description: 'Illusion Realm 安装向导' }));
 }
-/**
- * 先构建引擎并等待退出，随后才计算容量与哈希，两阶段不能并发。
- * x64 是当前客户端及内置 FFmpeg 的发布架构，不误生成 ARM64 外壳。
- * 正式入口目录 setup 只放可分发 EXE；内部引擎与 win-unpacked 留给诊断。
- * 不删除 release 的旧文件或用户目录，避免构建清理误伤已有开发数据。
- * 同版本结果覆盖同名目标，新版本文件可并存供用户手动选择。
- * Electron 运行时沿用本地安装，离线构建不再次获取 Electron zip。
- * 任一步失败立即非零退出，不能留下“构建成功”的输出提示。
- * 外部调用者仍负责先构建 Next，根目录 pnpm build 已包含这一顺序。
- */
-async function main() {
-  // 显式传入平台和架构，使从其他 shell 调用也不会变成当前平台默认目标。
-  // 第一层仍使用现有 beforePack/afterPack，FFmpeg 完整性检查不会被绕过。
-  // 客户端 NSIS 的原生卸载逻辑被保留，不在向导里重新发明注册表协议。
-  // 第二层 extends 只读取安装向导专属配置，不继承客户端 extraResources。
-  // 因此向导不会重复收录整份 Python agent 或 Next 资源树。
-  // electronDist 使用绝对路径，stage 改变项目目录后仍能定位本地发行包。
-  // electronVersion 对应实际包版本，不能使用源码描述中的历史主版本。
-  // icon.ico 由第一层 beforePack 生成，第二层不会碰用户图标源文件。
-  // artifacts 由 builder 返回，不能通过扫描旧输出猜测本轮生成了什么。
-  // 只复制 exe 到 setup，blockmap、调试 YAML 和展开目录都留在内部输出。
-  // 日志只提示固定仓库相对位置，不打印用户安装时选择的文件夹。
-  // 默认没有发布配置，publish:never 仍显式传给每次 build 防止未来漂移。
-  // portable 构建结束后才复制成品，压缩期间不向 setup 暴露半个 EXE。
-  // 交付者只需分发 setup 里的安装 EXE，不应把 stage 和引擎当作附件。
-  // 同版本 EXE 被覆盖属于可再生成产物，不影响已安装应用或用户配置。
-  // 脚本不调用 git、不上传安装包、不生成发布记录或访问代码托管服务。
-  // root pnpm pack 仍用于客户端展开版验证，不被此入口改成安装动作。
-  // 后续如接入签名，应先签引擎再求摘要，避免封装后摘要因签名改变。
-  // 当前嵌套签名策略必须保留内层引擎原始字节，否则预执行校验会拒绝。
+/** 复用清单像核对包裹封条：版本、摘要和容量均匹配，才允许重封装旧引擎。 */
+async function readReusableManifest(engine, manifestFile, version) {
+  try {
+    const manifest = JSON.parse(await fs.readFile(manifestFile, 'utf8'));
+    if (!manifest || manifest.version !== version || !/^[0-9a-f]{64}$/.test(manifest.engineSha256)
+      || !/^[0-9a-f-]{36}$/i.test(manifest.registryKey) || !Number.isSafeInteger(manifest.installedBytes)
+      || manifest.installedBytes <= 0 || (await fs.stat(engine)).size <= 0
+      || manifest.engineSha256 !== await sha256(engine)) throw new Error('invalid engine');
+    return manifest;
+  } catch {
+    throw new Error('Missing or mismatched client engine/manifest. Run pnpm build once before pnpm build:setup.');
+  }
+}
+
+/** 两种命令共用同一个向导封装步骤；只分发本次构建返回的单个 EXE。 */
+async function buildSetup(stage) {
+  await prepareWindowsIcon();
+  const artifacts = await build({
+    projectDir: stage,
+    targets: Platform.WINDOWS.createTarget('portable', Arch.x64),
+    config: {
+      extends: path.join(root, 'installer/electron-builder.yml'),
+      electronDist: path.join(root, 'node_modules/electron/dist'),
+      electronVersion: require('electron/package.json').version,
+      win: { icon: path.join(root, 'assets/icon.ico') },
+      directories: { output: path.join(root, 'release/installer-build') },
+    },
+    publish: 'never',
+  });
+  await copySetupArtifact(artifacts, 'setup');
+}
+
+// 展开目录和构建日志留在工作目录，只复制本轮返回的安装 EXE 给分发目录。
+async function copySetupArtifact(artifacts, directory) {
+  const executables = artifacts.filter(file => /\.exe$/i.test(file));
+  if (executables.length !== 1) throw new Error('Expected exactly one Setup executable.');
+  const output = path.join(root, 'release', directory);
+  await fs.mkdir(output, { recursive: true });
+  const target = path.join(output, path.basename(executables[0]));
+  await fs.copyFile(executables[0], target);
+  console.log('Single-file installer ready:', target);
+}
+
+// 复用客户端资源配置和安装身份。原生向导只替换安装界面和脚本，避免与自定义引擎混用。
+async function buildNativeSetup() {
+  const artifacts = await build({
+    projectDir: root,
+    targets: Platform.WINDOWS.createTarget('nsis', Arch.x64),
+    config: {
+      extends: path.join(root, 'electron-builder.yml'),
+      directories: { output: 'release/native-build' },
+      nsis: {
+        // null 禁止载入自定义宏，让 builder 使用自带的 NSIS 模板。
+        include: null,
+        oneClick: false,
+        allowElevation: false,
+        allowToChangeInstallationDirectory: true,
+        artifactName: 'Illusion-Realm-Setup-${version}.exe',
+      },
+    },
+    publish: 'never',
+  });
+  await copySetupArtifact(artifacts, 'setup-native');
+}
+
+/** 默认完整打包；--setup-only 不构建网页和客户端，缺少旧引擎直接失败。 */
+async function main(args = []) {
+  if (args.length > 1 || args.some(arg => arg !== '--setup-only' && arg !== '--native')) {
+    throw new Error('Supported arguments: --setup-only or --native');
+  }
+  if (args[0] === '--native') return buildNativeSetup();
   const { version } = JSON.parse(await fs.readFile(path.join(root, 'package.json'), 'utf8'));
-  // 生成脚本严格核对当前 builder 模板，锚点变化必须中止整次打包。
-  // 不能失败后自动退回旧引擎，否则向导承诺保留数据却先执行卸载。
-  // 文件路径由项目构建脚本固定，不接受命令行传入的任意 NSIS 正文。
-  // 此生成只写 release，既不修改 node_modules，也不操作已安装客户端。
-  // 输出随本次 build 显式传递，避免扫描目录误取一份旧的修复脚本。
-  // 客户端 hooks 仍由原配置继承，FFmpeg 和协议资源定位没有第二套规则。
-  // 第二层向导随后封装这一层的真实结果与摘要，不自己重建另一个客户端。
-  // publish:never 继续覆盖两层，打包成功不会把未经验收的安装器上传。
-  const repairScript = await prepareRepairEngine(path.join(root, 'release/repair-engine.nsi'));
-  await build({ projectDir: root, config: { extends: path.join(root, 'electron-builder.yml'), nsis: { script: repairScript } }, targets: Platform.WINDOWS.createTarget('nsis', Arch.x64), publish: 'never' });
-  const stage = path.join(root, 'release/installer-stage'); await prepareStage(stage, version);
-  const artifacts = await build({ projectDir: stage, targets: Platform.WINDOWS.createTarget('portable', Arch.x64), config: { extends: path.join(root, 'installer/electron-builder.yml'), electronDist: path.join(root, 'node_modules/electron/dist'), electronVersion: require('electron/package.json').version, win: { icon: path.join(root, 'assets/icon.ico') }, directories: { output: path.join(root, 'release/installer-build') } }, publish: 'never' });
-  const output = path.join(root, 'release/setup'); await fs.mkdir(output, { recursive: true });
-  for (const artifact of artifacts.filter(file => file.endsWith('.exe'))) await fs.copyFile(artifact, path.join(output, path.basename(artifact)));
-  console.log('Single-file installer ready in apps/electron/release/setup');
+  const stage = path.join(root, 'release/installer-stage');
+  let manifest;
+  if (args.includes('--setup-only')) {
+    manifest = await readReusableManifest(path.join(root, 'release', `illusion-realm-engine-${version}.exe`), path.join(stage, 'payload/manifest.json'), version);
+    console.log('Setup only: reusing verified client engine; skipping Next and client build.');
+  } else {
+    const repairScript = await prepareRepairEngine(path.join(root, 'release/repair-engine.nsi'));
+    await build({ projectDir: root, config: { extends: path.join(root, 'electron-builder.yml'), nsis: { script: repairScript } }, targets: Platform.WINDOWS.createTarget('nsis', Arch.x64), publish: 'never' });
+  }
+  await prepareStage(stage, version, manifest);
+  await buildSetup(stage);
 }
 /**
  * 导出构建辅助函数便于容量与摘要的独立检查，不在 require 时启动打包。
@@ -159,5 +199,5 @@ async function main() {
  * 失败保留 staging 供检查，但不会把它当作 setup 成品发布。
  * process.exitCode 保留正常清理机会，构建脚本不是 Electron app.quit 路径。
  */
-module.exports = { sha256, treeBytes, prepareStage };
-if (require.main === module) main().catch(error => { console.error(error.message); process.exitCode = 1; });
+module.exports = { sha256, treeBytes, prepareStage, readReusableManifest };
+if (require.main === module) main(process.argv.slice(2)).catch(error => { console.error(error.message); process.exitCode = 1; });

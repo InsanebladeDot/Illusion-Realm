@@ -1,28 +1,7 @@
 /**
- * locate：从实际所在的归档资源根解析 Python sidecar。
- * runner：直接调用 Agent 的 NDJSON 运行与事件转发实现。
- * locate：开发版 Electron 加载待测 app.asar 时，宿主 resourcesPath 不代表待测包。
- * runner：运行配置由主进程组装，页面不能读取或自行注入保存的凭据。
- * locate：打包后的 cwd 应位于资源目录，不能继续指向开发源码目录。
- */
-/**
- * 打包版 Agent 冒烟：验证 **asar 里的 locate/runner + `resources/agent` 那棵树**能真正跑通一次。
- *
- * 为什么需要它：今天已经连踩两次「打包后才炸」——
- *   ① `files:` 白名单漏收 `agent/` → 双击 exe 弹 `Cannot find module './agent/env'`；
- *   ② `extraResources` 的 filter 把 pywin32 剔了 → `mcp/os/win32/utilities.py` 直接
- *      `ModuleNotFoundError: pywintypes`。两次在 dev 下都是全绿。
- * 这两类的共同点是「**dev 全对、打包才错**」，所以只能在打包产物上断言，而且要用
- * 假模型跑（`fakeLlm: true`，不花 token）。
- *
- * 断言的是**这两条不变量**（而不是"跑完就完事"）：
- *   1. 解析出来的运行时必须落在 `<安装目录>/resources/agent/**` 之内 ——
- *      否则就是静默降级到系统 PATH 的 python（那台机器多半没装 mcp），
- *      表现是打包版"能跑"但工具一个都调不动；
- *   2. 一次假模型运行必须走完 tools → step → tool_call → tool_result → final。
- *
- * 运行：`npx electron scripts/verify-packaged-agent.js`（**需要先 `pnpm run pack`**）
- * 退出码：0 通过 / 1 断言失败 / 2 前置条件不满足（没打包目录）—— 与仓库既有约定一致。
+ * 验证 Windows 安装版的 Agent 在清空 Python 外部配置后仍能完整调用工具。
+ * 从客户端 app.asar 加载真实主进程代码，使用假模型，避免依赖网络或 API 密钥。
+ * 先运行 pnpm pack，再运行 pnpm check:packaged-agent。
  */
 const fs = require("node:fs");
 const path = require("node:path");
@@ -41,8 +20,11 @@ if (!fs.existsSync(ASAR) || !fs.existsSync(AGENT_DIR)) {
   process.exit(2);
 }
 
-// 手动指定的解释器会盖过打包产物，这里必须清掉，否则测的是别的东西
+// 排除本机安装的 Python。再用无效的 Python 配置检验包内解释器是否真的隔离。
 delete process.env.ILLUSION_AGENT_PYTHON;
+process.env.PATH = path.join(process.env.SystemRoot || "C:\\Windows", "System32");
+process.env.PYTHONHOME = path.join(AGENT_DIR, "missing-python-home");
+process.env.PYTHONPATH = path.join(AGENT_DIR, "missing-python-path");
 
 const locate = require(path.join(ASAR, "src/main/modules/agent/locate.js"));
 const runner = require(path.join(ASAR, "src/main/modules/agent/runner.js"));
@@ -55,7 +37,8 @@ function check(name, ok, detail = "") {
 
 // ---- 1. 静态：这棵树该在的东西在不在（filter 写错时先红在这里）----
 for (const relative of [
-  ".venv/Scripts/python.exe",
+  "python/python.exe",
+  "python/LICENSE.txt",
   "agent_core/entrypoints/stdio_agent.py",
   // 工具那三层：入口 / 唯一的 mcp 实例 / 自动发现，以及至少一个具体工具模块
   "tools/server.py",
@@ -63,10 +46,10 @@ for (const relative of [
   "tools/registry.py",
   "tools/math/math_tools.py",
   // mcp 在 Windows 上 import 这四个，缺一个就是打包版一跑就 ModuleNotFoundError
-  ".venv/Lib/site-packages/pywin32.pth",
-  ".venv/Lib/site-packages/pywin32_system32/pywintypes313.dll",
-  ".venv/Lib/site-packages/win32/win32job.pyd",
-  ".venv/Lib/site-packages/mcp/os/win32/utilities.py",
+  "python/Lib/site-packages/pywin32.pth",
+  "python/Lib/site-packages/pywin32_system32/pywintypes313.dll",
+  "python/Lib/site-packages/win32/win32job.pyd",
+  "python/Lib/site-packages/mcp/os/win32/utilities.py",
 ]) {
   check(`resources/agent 里有 ${relative}`, fs.existsSync(path.join(AGENT_DIR, relative)));
 }
@@ -75,11 +58,10 @@ for (const relative of [
 const runtime = locate.resolveAgentRuntime();
 check("解析到了运行时", Boolean(runtime), runtime ? `${runtime.kind} / ${runtime.source}` : "null");
 if (runtime) {
-  const expectedPrefix = path.join(RESOURCES, "agent") + path.sep;
-  const insidePack = path.resolve(runtime.command).startsWith(expectedPrefix);
+  const expectedPython = path.join(AGENT_DIR, "python", "python.exe");
   check(
-    "运行时落在 resources/agent 之内（没有静默降级到系统 Python）",
-    insidePack,
+    "默认解释器来自当前客户端的 resources/agent/python",
+    runtime.command === expectedPython && runtime.source === "bundled:windows",
     runtime.command
   );
   check("运行时文件真实存在", fs.existsSync(runtime.command), runtime.command);

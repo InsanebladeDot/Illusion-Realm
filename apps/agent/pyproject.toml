@@ -11,8 +11,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-# 打包成单文件可执行体。**当前未启用**：2026-09-27 已选「随包带 venv」（方案 A），
-# 见 docs/agent-integration.md 的「六、已定的决策」第 2 条；要走 B 再装这个 extra。
+# 可选的开发实验。Windows 正式构建使用应用自带的独立 Python。
 pack = ["pyinstaller>=6.0,<7"]
 
 [build-system]

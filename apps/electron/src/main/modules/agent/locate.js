@@ -1,29 +1,13 @@
 /**
- * asar 的父目录才是当前归档的资源根，不以测试宿主进程安装目录代替。
- * 开发路径依旧通向 apps/agent，因此虚拟环境选择和 Python 的工作目录不变。
- * 此定位只选择位置，不安装解释器；缺失随包环境仍由专项检查明确报出。
- */
-/**
- * 解析「用哪个运行时跑 Agent」—— 与 `ffmpeg/locate.js` 同一个套路：
- * 先找随包分发的可执行体，再退到开发态虚拟环境，最后才用系统 Python。
- *
- * 顺序（先专后通用）：
- *   1. 调用方显式给的路径（设置页里用户手动指定的解释器 / exe）
- *   2. 环境变量 `ILLUSION_AGENT_PYTHON`
- *   3. 开发态：`apps/agent/.venv/{Scripts/python.exe | bin/python}`
- *   4. 打包态：`resources/agent/iris-agent(.exe)`（PyInstaller 单文件）
- *   5. 系统 PATH 里的 `python` / `python3`（兜底；可能没装 mcp，见返回值 kind）
- *
- * @returns {{ kind: "executable" | "python", command: string, args: string[], cwd: string, source: string } | null}
- *   `kind === "executable"` 表示可执行体自带入口（args 为空）；
- *   `kind === "python"` 需要补 `-m agent_core.entrypoints.stdio_agent`。
+ * 定位 Agent 的解释器并组装启动命令。安装版默认使用随包 Python，开发态继续支持 .venv。
+ * 手动指定的解释器或自带入口的可执行体优先。
  */
 const fs = require("fs");
 const path = require("path");
 
 /**
  * Python sidecar 不属于主进程源码树，不可跟随当前模块层级推导打包路径。
- * asar 中只存宿主 JS；Python 与虚拟环境由 extraResources 放到 resources/agent。
+ * asar 中只存宿主 JS；Agent 源码和独立 Python 由 extraResources 放到 resources/agent。
  * Node 契约测试没有 Electron app 对象，因此以模块实际所在的 asar 路径区分两态。
  * 开发态仍指向工作区 apps/agent，不能因分类迁移而改动用户的运行时选择。
  * 测试也会用开发版 Electron 加载另一份 app.asar，此时 resourcesPath 属于测试宿主。
@@ -34,6 +18,7 @@ const asarIndex = __dirname.split(path.sep).findIndex(part => part.endsWith(".as
 const AGENT_DIR = asarIndex >= 0
   ? path.join(__dirname.split(path.sep).slice(0, asarIndex).join(path.sep) || path.sep, "agent")
   : path.join(__dirname, "../../../../../agent");
+const BUNDLED_PYTHON = path.join(AGENT_DIR, "python", "python.exe");
 const ENTRY_MODULE = "agent_core.entrypoints.stdio_agent";
 const EXECUTABLE_NAMES = ["iris-agent.exe", "iris-agent"];
 
@@ -124,20 +109,27 @@ function resolveAgentRuntime(options = {}) {
     return toRuntime(manualPath, classifyRuntime(manualPath), "manual");
   }
 
-  // 2) 随包分发的可执行体
+  // 安装版只查当前归档旁的 Python。缺失时向用户报错，避免借用环境里碰巧存在的解释器。
+  if (asarIndex >= 0 && process.platform === "win32") {
+    return fs.existsSync(BUNDLED_PYTHON)
+      ? toRuntime(BUNDLED_PYTHON, "python", "bundled:windows")
+      : null;
+  }
+
+  // 保留开发态自行构建的 Agent 可执行体。
   const executable = firstExisting(packagedExecutables());
   if (executable) {
     return toRuntime(executable.path, "executable", executable.source);
   }
 
-  // 3) 开发态虚拟环境
+  // 开发态虚拟环境
   const interpreter = firstExisting(venvInterpreters());
   if (interpreter) {
     return toRuntime(interpreter.path, "python", interpreter.source);
   }
 
   /**
-   * 4) 系统 PATH 兜底：这里只**返回命令名**（不自己解析 PATH），
+   * 系统 PATH 兜底：这里只**返回命令名**（不自己解析 PATH），
    * 真正的可用性由 spawn 的 error 事件判定 —— 猜错路径会让报错更难懂。
    */
   const systemPython = process.platform === "win32" ? "python" : "python3";
@@ -149,12 +141,16 @@ function resolveAgentRuntime(options = {}) {
  * @returns {string}
  */
 function describeAgentRuntime() {
+  if (asarIndex >= 0 && process.platform === "win32") {
+    return `安装版 Agent 解释器缺失：${BUNDLED_PYTHON}
+请重新安装完整客户端，或手动指定 Agent 解释器。`;
+  }
   const lines = [
     "Agent 运行时解析顺序：",
     "  1) 手动指定（设置页 / options.manualPath）",
     "  2) 环境变量 ILLUSION_AGENT_PYTHON",
-    `  3) 开发态虚拟环境 ${path.join(AGENT_DIR, ".venv")}`,
-    `  4) 打包产物 ${path.join(process.resourcesPath || "<resources>", "agent", "iris-agent.exe")}`,
+    `  3) Agent 可执行体 ${path.join(AGENT_DIR, "dist")}`,
+    `  4) 开发态虚拟环境 ${path.join(AGENT_DIR, ".venv")}`,
     "  5) 系统 PATH 里的 python / python3",
     `项目目录：${AGENT_DIR}`,
   ];

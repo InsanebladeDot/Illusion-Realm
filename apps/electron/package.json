@@ -12,12 +12,15 @@
     "check": "tsc -p tsconfig.json && node scripts/check-nocheck.js",
     "check:nocheck": "node scripts/check-nocheck.js",
     "dist": "node scripts/build-installer.cjs",
+    "dist:setup": "node scripts/build-installer.cjs --setup-only",
+    "dist:setup:native": "node scripts/build-installer.cjs --native",
     "install-binary": "node node_modules/electron/install.js"
   },
   "dependencies": {
     "@illusion-realm/shared": "workspace:*"
   },
   "devDependencies": {
+    "@types/node": "^24.13.5",
     "cross-env": "^10.1.0",
     "electron": "^43.1.1",
     "electron-builder": "^26.15.3",
