@@ -1,4 +1,6 @@
 "use client";
+import { HoverTip } from "@/components/hover-tip";
+
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Check, X } from "lucide-react";
@@ -29,7 +31,7 @@ function DialogHeader({ onClose, total }: Pick<TemplateDialogProps, "onClose"> &
     <header className="flex shrink-0 items-center justify-between gap-3 border-b border-border px-4 py-3">
           <div><h3 id="comic-template-library-title" className="text-base font-semibold">{t("toolBox.comic.templates.title")}</h3>
             <p className="mt-1 text-xs text-muted-foreground">{t("toolBox.comic.templates.total", { count: total })}</p></div>
-          <button type="button" onClick={onClose} title={t("common.close")} aria-label={t("common.close")} className="flex h-9 w-9 shrink-0 items-center justify-center rounded hover:bg-muted"><X size={18} /></button>
+          <HoverTip asChild layer="window" label={(t("common.close")) ?? ""}><button type="button" onClick={onClose} aria-label={t("common.close")} className="flex h-9 w-9 shrink-0 items-center justify-center rounded hover:bg-muted"><X size={18} /></button></HoverTip>
     </header>
   );
 }

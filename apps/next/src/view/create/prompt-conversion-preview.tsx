@@ -6,6 +6,7 @@
 import { useTranslation } from '@/i18n';
 import { normalizeVideoReferences } from '@/utils/comfy/video-reference-media';
 import type { PromptReferenceMedia } from '@/utils/prompt-media-references';
+import { PromptSpeechText } from '@/components/prompt-speech-text';
 
 /**
  * 输入均来自当前任务，编号与提交列表一致，不读取全局图库或账户素材。
@@ -31,18 +32,26 @@ import type { PromptReferenceMedia } from '@/utils/prompt-media-references';
  * 空错误字符串与成功正文分别保存，不能把异常对象直接渲染成 React 子项。
  * 数字边界、模型缺失和服务端失败不属于本预览，仍由原生成流程处理。
  */
-export function PromptConversionPreview({ value, media }: { value: string; media: readonly PromptReferenceMedia[] }) {
+interface PreviewProps {
+  value: string; media: readonly PromptReferenceMedia[];
+  // 浮层只复用正文；非 H3 入口可传原样函数，不能展示实际请求不会采用的标记。
+  variant?: "details" | "content";
+  normalize?: (value: string) => string;
+}
+export function PromptConversionPreview({ value, media, variant = "details", normalize }: PreviewProps) {
   const { t } = useTranslation();
   // 显示条件统一放在共用组件中，视频和 Role TTS 不需要分别判断。
   // trim 只判断是否有内容，转换仍使用原稿，保留用户的换行和间距。
-  if (!value.trim()) return null;
+  if (!value.trim()) return variant === "details" ? null : <p className="px-3 py-2 text-muted-foreground">{t("create.promptAssistant.empty")}</p>;
   let text = '', error = '';
-  try { text = normalizeVideoReferences(value, media); }
+  try { text = normalize ? normalize(value) : normalizeVideoReferences(value, media); }
   catch (cause) { error = cause instanceof Error ? cause.message : t('create.videoCreatePanel.generateFailed'); }
+  const content = <div aria-live="polite" data-prompt-conversion-text data-prompt-conversion-error={error ? "" : undefined} className="whitespace-pre-wrap break-words px-3 py-2 text-foreground">{error || <PromptSpeechText text={text} />}</div>;
+  if (variant === "content") return content;
   return <details data-prompt-conversion className="rounded-md border border-border bg-background text-xs">
     {/* 界面：手动展开查看自动转换结果，正文始终是原提示词的只读投影。 */}
     <summary className="cursor-pointer px-3 py-2 text-muted-foreground">{t('create.mediaReferences.conversionPreview')}</summary>
     {/* 错误沿用提交器的校验含义；成功时显示将传入工作流的标签文本。 */}
-    <div aria-live="polite" data-prompt-conversion-text className="whitespace-pre-wrap break-words border-t border-border px-3 py-2 text-foreground">{error || text}</div>
+    <div className="border-t border-border">{content}</div>
   </details>;
 }

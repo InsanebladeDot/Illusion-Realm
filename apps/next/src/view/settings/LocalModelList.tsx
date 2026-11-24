@@ -1,4 +1,6 @@
 "use client";
+import { HoverTip } from "@/components/hover-tip";
+
 
 import { useMemo, useState } from "react";
 import { ChevronDown, FolderOpen, Plus, Trash2 } from "lucide-react";
@@ -47,12 +49,12 @@ function FileCard({
       </div>
       <div className="min-w-0 flex-1">
         <h4 className="truncate text-sm font-medium text-foreground">{name}</h4>
-        <p
+        <HoverTip asChild layer="window" label={(source) ?? ""}><p
           className="mt-1 truncate text-xs text-muted-foreground"
-          title={source}
+
         >
           {t("settings.models.sourcePrefix")}{source}
-        </p>
+        </p></HoverTip>
       </div>
       {onRemove && (
         <button

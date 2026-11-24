@@ -40,21 +40,17 @@ export function MaskPositivePrompt({ editor, locked, onAdvancedChange }: { edito
   // 父 fieldset 处理原生按钮，显式 locked 继续约束输入和 Portal 回写。
   // 关闭组装面板等价于关闭高级，当前拼接文本保留供继续手动修改。
   // 合并结果由 store 同步写入 instruction，点击生成无需等待动画完成。
-  return <div data-mask-positive className="min-w-0 space-y-1.5">
+  return <div data-mask-positive className="min-w-0">
     {/* 界面：正向标题、独立高级开关、字数和原有折叠按钮。 */}
     {/* 开关不使用图片页固定 id，多个工具常驻时不会出现重复关联。 */}
     {/* 操作期间禁止切换输入模式，已有任务始终使用冻结的参数。 */}
     <div className="flex flex-wrap items-center gap-2"><label htmlFor="mask-positive" className="text-sm font-medium">{t('create.maskStudio.positivePrompt')}</label><button data-mask-advanced type="button" role="switch" aria-checked={advanced} disabled={locked} onClick={() => onAdvancedChange(!advanced)} className="rounded-md border border-border px-2 py-1 text-xs text-muted-foreground aria-checked:bg-accent aria-checked:text-accent-foreground disabled:opacity-40">{t('promptAssembly.editor.advanced')}</button><span className="ml-auto text-[11px] text-muted-foreground">{editor.settings.instruction.length} / 3000</span><PromptCollapseButton collapsed={collapsed} onToggle={() => setCollapsed(value => !value)} label={t('create.maskStudio.positivePrompt')} /></div>
-    {/* 折叠提示与正文分别使用既有过渡容器，不用固定占位伪装收起。 */}
-    {/* 提示可点击恢复正文，收起期间 DOM 与当前草稿仍保留。 */}
-    {/* 展开收起不改模型、图片、蒙版或正负提示词的实际值。 */}
-    <CollapsiblePanel open={collapsed} durationMs={260}><button type="button" onClick={() => setCollapsed(false)} className="w-full rounded-lg bg-muted/40 px-3 py-2 text-left text-xs text-muted-foreground">{t('promptAssembly.editor.collapsedHint')}</button></CollapsiblePanel>
     {/* 界面：普通正向正文；高级结果也通过相同受控输入显示。 */}
     {/* 开启高级后正文只读，分类编辑入口由父容器放在右侧。 */}
     {/* 本区域不挂载组装面板，高级开启前后的画布可用高度一致。 */}
     {/* 组装关闭后保留合并正文，不把普通输入恢复成启用前的旧快照。 */}
     {/* 右侧分类 store 同步正文，标签库与 3D 不插入隐藏文生图输入。 */}
     {/* 显式 locked 禁用 contenteditable，不能只依靠父 fieldset 禁用。 */}
-    <CollapsiblePanel open={!collapsed} stateAttribute="data-mask-positive-panel"><PromptInput id="mask-positive" data-anima-instruction value={editor.settings.instruction} onValueChange={instruction => editor.setSettings(previous => ({ ...previous, instruction }))} disabled={locked || advanced} assistant={!advanced} maxLength={3000} minHeight="min-h-[72px]" className="h-[72px]" data-placeholder={t('create.maskStudio.positivePlaceholder')} /></CollapsiblePanel>
+    <CollapsiblePanel open={!collapsed} stateAttribute="data-mask-positive-panel" contentClassName="pt-1.5"><PromptInput id="mask-positive" data-anima-instruction value={editor.settings.instruction} onValueChange={instruction => editor.setSettings(previous => ({ ...previous, instruction }))} disabled={locked || advanced} assistant={!advanced} maxLength={3000} minHeight="min-h-[72px]" className="h-[72px]" data-placeholder={t('create.maskStudio.positivePlaceholder')} /></CollapsiblePanel>
   </div>;
 }

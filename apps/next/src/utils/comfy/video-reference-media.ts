@@ -2,6 +2,8 @@
 import type { ComfyApiPrompt } from "@/types/comfy";
 import { t } from "@/i18n";
 import { findPromptReferenceMedia, promptMediaMatches, type PromptMediaKind, type PromptReferenceMedia } from "@/utils/prompt-media-references";
+import type { PromptReferenceLabels } from "@/schemas/prompt-reference-labels.schema";
+import { referenceLabels, DEFAULT_REFERENCE_LABELS } from "./prompt-reference-labels";
 
 export const REFERENCE_MEDIA_KINDS = ["image", "video", "audio"] as const;
 export interface UploadedVideoReference { kind: PromptMediaKind; number: number; name: string }
@@ -16,9 +18,9 @@ export function referenceImageSources(media: readonly PromptReferenceMedia[]): (
 export function orderedReferences<T extends { kind: PromptMediaKind; number: number }>(media: readonly T[]) {
   return REFERENCE_MEDIA_KINDS.flatMap((kind) => media.filter((item) => item.kind === kind).sort((a, b) => a.number - b.number));
 }
-export function normalizeVideoReferences(text: string, media: readonly PromptReferenceMedia[]) {
+export function normalizeVideoReferences(text: string, media: readonly PromptReferenceMedia[], custom?: PromptReferenceLabels) {
   const ordered = orderedReferences(media);
-  const labels = { image: "Picture", video: "Video", audio: "Audio" } as const;
+  const labels = referenceLabels(custom);
   let result = text;
   for (const match of promptMediaMatches(text).reverse()) {
     const item = findPromptReferenceMedia(match[0], ordered);
@@ -26,13 +28,17 @@ export function normalizeVideoReferences(text: string, media: readonly PromptRef
     const ordinal = ordered.filter((entry) => entry.kind === item.kind).findIndex((entry) => entry.id === item.id) + 1;
     result = result.slice(0, match.index) + `<${labels[item.kind]} ${ordinal}>` + result.slice(match.index + match[0].length);
   }
-  // 手输官方标记也要检查，不能引用删除的素材。
-  for (const match of result.matchAll(/<(Picture|Video|Audio)\s+(\d+)>/g)) {
-    const kind = REFERENCE_MEDIA_KINDS.find((item) => labels[item] === match[1])!;
-    if (Number(match[2]) < 1 || Number(match[2]) > ordered.filter((item) => item.kind === kind).length)
-      throw new Error(t("create.videoReferences.missing", { token: match[0] }));
-  }
-  return result;
+  // 兼容旧草稿的 Slot 写法；预览、助手和实际提交统一使用 Audio。
+  return normalizeReferenceMarkers(result, ordered, labels);
+}
+/** 助手返回的默认标记、旧 Slot 和自定义标记均按同一张输入表校验；重复转换不改变结果。 */
+function normalizeReferenceMarkers(text: string, media: readonly PromptReferenceMedia[], labels: ReturnType<typeof referenceLabels>) {
+  return text.replace(/<([A-Za-z][A-Za-z0-9_-]{0,31})\s+(\d+)>/g, (token: string, label: string, number: string) => {
+    const kind = REFERENCE_MEDIA_KINDS.find(item => labels[item] === label || DEFAULT_REFERENCE_LABELS[item] === label || item === "audio" && label === "Slot");
+    if (!kind) return token;
+    if (Number(number) < 1 || Number(number) > media.filter(item => item.kind === kind).length) throw Error(t("create.videoReferences.missing", { token }));
+    return `<${labels[kind]} ${Number(number)}>`;
+  });
 }
 function validateReferences(media: readonly UploadedVideoReference[]) {
   for (const kind of REFERENCE_MEDIA_KINDS) {

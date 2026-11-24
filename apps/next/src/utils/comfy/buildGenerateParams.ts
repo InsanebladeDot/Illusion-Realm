@@ -62,13 +62,13 @@ function assertUsableDiffusionModel(
     throw new Error(
       t("errors.buildGenerateParams.nonDiffusionModel", {
         filePath,
-        target: series === "anima" ? " diffusion_models" : " checkpoints",
+        target: series === "sdxl" ? " checkpoints" : " diffusion_models",
       })
     );
   }
 
   const expectedRoot = (
-    series === "anima" ? paths?.diffusionModelsPath : paths?.checkpointPath
+    series === "sdxl" ? paths?.checkpointPath : paths?.diffusionModelsPath
   )?.trim();
   if (!expectedRoot) return;
 
@@ -79,7 +79,7 @@ function assertUsableDiffusionModel(
       t("errors.buildGenerateParams.modelOutsideSeries", {
         filePath,
         seriesHint:
-          series === "anima"
+          series !== "sdxl"
             ? t("errors.buildGenerateParams.animaSeriesOnly", { root: expectedRoot })
             : t("errors.buildGenerateParams.sdxlSeriesOnly", { root: expectedRoot }),
       })

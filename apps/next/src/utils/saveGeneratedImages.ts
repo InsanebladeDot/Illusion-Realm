@@ -25,13 +25,16 @@ function formatTimestamp(date = new Date()): string {
 function buildFileName(
   promptId: string,
   index: number,
-  originalFilename: string
+  originalFilename: string,
+  derivative?: "upscale"
 ): string {
   const ext = originalFilename.includes(".")
     ? originalFilename.slice(originalFilename.lastIndexOf("."))
     : ".png";
   const shortId = promptId.replace(/-/g, "").slice(0, 8);
-  return `IR_${formatTimestamp()}_${shortId}_${index + 1}${ext}`;
+  // 短任务号像同姓，不能当唯一身份；每份输出加独立编号，同秒批量也不会覆盖原结果。
+  const suffix = `${derivative ? "_upscale" : ""}_${crypto.randomUUID()}`;
+  return `IR_${formatTimestamp()}_${shortId}_${index + 1}${suffix}${ext}`;
 }
 
 async function blobToBase64(blob: Blob): Promise<string> {
@@ -55,7 +58,8 @@ export async function saveGeneratedImagesToDisk(
   images: ComfyGeneratedImage[],
   promptId: string,
   outputPath: string,
-  metaDocument?: GeneratedImageMetaDocument
+  metaDocument?: GeneratedImageMetaDocument,
+  derivative?: "upscale"
 ): Promise<string[]> {
   if (!isElectronEnvironment() || !window.electronAPI?.saveGeneratedImages) {
     return [];
@@ -76,7 +80,7 @@ export async function saveGeneratedImagesToDisk(
       }
 
       return {
-        filename: buildFileName(promptId, index, image.filename),
+        filename: buildFileName(promptId, index, image.filename, derivative),
         dataBase64: await blobToBase64(blob),
       };
     })

@@ -1,4 +1,6 @@
 "use client";
+import { HoverTip } from "@/components/hover-tip";
+
 
 import { useState } from "react";
 import { LockKeyhole, Scan, UnlockKeyhole } from "lucide-react";
@@ -38,12 +40,12 @@ export default function ComicPageSizeControls({ size, fit, onChange, onToggleLoc
         <span aria-hidden="true" className="text-center text-xs">×</span>
         <DimensionInput key={`height-${size.height}-${size.locked}`} axis="height" value={size.height} locked={size.locked} onCommit={value => onChange("height", value)} />
         <span className="text-xs text-muted-foreground">px</span>
-        <button type="button" data-lock-canvas aria-pressed={size.locked} onClick={onToggleLock} title={lockLabel} aria-label={lockLabel}
+        <HoverTip asChild layer="window" label={(lockLabel) ?? ""}><button type="button" data-lock-canvas aria-pressed={size.locked} onClick={onToggleLock} aria-label={lockLabel}
           className={`flex h-9 w-8 items-center justify-center rounded border ${size.locked ? "border-primary bg-primary/10 text-primary" : "border-border bg-background text-muted-foreground"}`}>
           {size.locked ? <LockKeyhole size={17} /> : <UnlockKeyhole size={17} />}
-        </button>
-        <button type="button" data-fit-canvas aria-pressed={fit} aria-label={t("toolBox.comic.pageSize.fit")} onClick={onToggleFit} title={t("toolBox.comic.pageSize.fit")}
-          className={`inline-flex h-9 w-8 items-center justify-center rounded border ${fit ? "border-primary bg-primary/10 text-primary" : "border-border bg-background text-muted-foreground"}`}><Scan size={16} /></button>
+        </button></HoverTip>
+        <HoverTip asChild layer="window" label={(t("toolBox.comic.pageSize.fit")) ?? ""}><button type="button" data-fit-canvas aria-pressed={fit} aria-label={t("toolBox.comic.pageSize.fit")} onClick={onToggleFit}
+          className={`inline-flex h-9 w-8 items-center justify-center rounded border ${fit ? "border-primary bg-primary/10 text-primary" : "border-border bg-background text-muted-foreground"}`}><Scan size={16} /></button></HoverTip>
       </div>
     </div>
   );

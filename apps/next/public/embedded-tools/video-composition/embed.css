@@ -1,0 +1,22 @@
+/* 原组件拥有全部工作区布局；宿主只去掉独立演示页的外层滚动。 */
+/* 主题沿用系统媒体查询，dark 类仅给原 Vue 的 Tailwind 编译规则消费。 */
+/* 不向父窗口注入这些样式，也不重画原按钮、时间线或属性字段。 */
+html,body,#app{width:100%;height:100%;margin:0;overflow:hidden}
+
+/* 嵌入页的边界由 main 提供，普通布局直接撑满，浮动窗口仍由原组件定尺寸。 */
+.vcd-overlay:not(.is-floating) .vcd-dialog {
+  width: 100%;
+  height: 100%;
+  border-radius: 0;
+  box-shadow: none;
+}
+/* 宿主说明放在原组件之外，避免原“上传”字样让用户误以为需要联网。 */
+/* 状态只使用固定小条，不盖住导出菜单或占据剪辑素材位置。 */
+.embed-local-note{position:fixed;bottom:2px;right:8px;font:10px/1.2 sans-serif;color:#aaa;pointer-events:none;z-index:999998}
+/* 异步错误保留完整 title，页头只截断显示，不把右侧关闭与导出按钮挤出窗口。 */
+.vcd-save-status{max-width:min(30vw,280px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block;font-size:0!important}
+
+/* 独立伪元素只替换显示，不移除 Vue 用于后续补丁的文本和加载图标节点。 */
+/* 完整状态放在 title，出错时的全句仍通过原样式提示浮层给用户读取。 */
+.vcd-save-status>*{display:none}
+.vcd-save-status::after{content:attr(data-host-status);font-size:12px}

@@ -1,4 +1,6 @@
 "use client";
+import { HoverTip } from "@/components/hover-tip";
+
 
 import { useCallback, useEffect, useState } from "react";
 import { ExternalLink, FolderOpen, RotateCcw } from "lucide-react";
@@ -79,15 +81,15 @@ export function OutputPathSetting() {
         </p>
       </div>
       <div className="flex w-full min-w-0 flex-col gap-2 sm:max-w-xl sm:flex-1">
-        <div
+        <HoverTip asChild layer="window" label={(displayPath) ?? ""}><div
           className={cn(
             "flex min-h-10 items-center rounded-xl bg-muted/30 px-3 py-2 text-xs text-muted-foreground",
             INPUT_BORDER_CLASS
           )}
-          title={displayPath}
+
         >
           <span className="truncate">{displayPath}</span>
-        </div>
+        </div></HoverTip>
         {!outputPath && defaultPath && (
           <p className="text-[11px] text-muted-foreground">
             {t("settings.outputPath.defaultHint")}

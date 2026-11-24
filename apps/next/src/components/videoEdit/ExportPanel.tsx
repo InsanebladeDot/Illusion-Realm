@@ -1,4 +1,6 @@
 "use client";
+import { HoverTip } from "@/components/hover-tip";
+
 
 import type { ReactNode } from "react";
 import { CheckCircle2, Download, FolderOutput, Loader2, X } from "lucide-react";
@@ -103,9 +105,9 @@ export function ExportPanel({
             <p className="text-xs font-medium text-muted-foreground">
               {t("toolBox.videoEdit.exportPanel.folderLabel")}
             </p>
-            <p className="truncate text-sm text-foreground" title={outputFolder ?? undefined}>
+            <HoverTip asChild layer="window" label={(outputFolder ?? undefined) ?? ""}><p className="truncate text-sm text-foreground">
               {outputFolder ?? emptyFolderText}
-            </p>
+            </p></HoverTip>
           </div>
           <button
             type="button"
@@ -165,10 +167,10 @@ export function ExportPanel({
         </p>
 
         {resolvedFileName && resolvedFileName !== outputFileName && (
-          <p className="truncate text-xs text-muted-foreground" title={resolvedFileName}>
+          <HoverTip asChild layer="window" label={(resolvedFileName) ?? ""}><p className="truncate text-xs text-muted-foreground">
             {t("toolBox.videoEdit.exportPanel.resolvedPrefix")}
             <span className="text-foreground">{resolvedFileName}</span>
-          </p>
+          </p></HoverTip>
         )}
       </div>
 
@@ -189,9 +191,9 @@ export function ExportPanel({
       {resultPath && !running && (
         <div className="flex items-center gap-2 rounded-lg border border-green-500/30 bg-green-500/10 px-3 py-2 text-sm text-green-700 dark:text-green-300">
           <CheckCircle2 className="h-4 w-4 shrink-0" />
-          <span className="min-w-0 flex-1 truncate" title={resultPath}>
+          <HoverTip asChild layer="window" label={(resultPath) ?? ""}><span className="min-w-0 flex-1 truncate">
             {t("toolBox.videoEdit.exportPanel.donePrefix")}{resultPath}
-          </span>
+          </span></HoverTip>
           <button
             type="button"
             onClick={onOpenResult}

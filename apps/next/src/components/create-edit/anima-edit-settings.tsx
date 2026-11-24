@@ -28,7 +28,6 @@ import { getImageWorkflowTemplate } from '@/utils/comfy/imageWorkflow';
 import { getAnimaControlTemplate } from '@/utils/comfy/anima-control-workflow';
 import { WorkflowModelSettings } from '@/view/create/video-model-settings';
 import { useTranslation } from "@/i18n";
-import { OptionSelect } from "@/view/create/OptionSelect";
 import { GenerationParameterControl } from "@/view/create/generation-parameter-control";
 import type { AnimaEditState } from "@/hooks/use-anima-edit";
 
@@ -57,35 +56,6 @@ export function EditDisclosure({ title, summary, children }: { title: string; su
 }
 
 /**
- * 分辨率只选择 MP，保持原图比例，避免提供不生效的宽高输入。
- * 字符串仅用于菜单接口，写回状态时转换为固定选项的数值。
- * 估算值按八像素步进取整，并明确标记约数。
- * 没有原图时不显示一组虚构的默认尺寸。
- * 真实结果尺寸仍在生成后读取图片解码值。
- * 菜单按钮与其他生成页复用 OptionSelect 的选中标记及外部点击关闭。
- */
-function EditResolution({ editor }: { editor: AnimaEditState }) {
-  // MP 是目标总像素而非长边长度，缩放比需要开平方而不是直接相乘。
-  // 一百万像素按十进制计，与 ImageScaleToTotalPixels 节点参数一致。
-  // 估算仅在有真实源尺寸时进行，不依赖上传缩略图的显示大小。
-  // 八像素取整可能让总像素略偏离目标，文案用约数避免承诺精确尺寸。
-  // 极端长宽比下任一维度至少八像素，避免辅助显示出现零尺寸。
-  // 结果文件尺寸仍以服务回包实际解码值为准，不将该估算写入 Meta。
-  // OptionSelect 要求字符串 value，此处明确做数字与字符串边界转换。
-  // 固定选项与构建验证共用相同取值，不提供前端可选但后端拒绝的倍率。
-  // 分辨率切换只更新该字段，用户其他高级参数不被默认值覆盖。
-  // 窄屏标签和菜单在同一行，提示可换行，不依赖固定页面总宽度。
-  const { t } = useTranslation(), { settings, setSettings, source } = editor;
-  // 控制流保持源图自然尺寸，模板没有 MP 缩放节点，因此隐藏不生效的菜单。
-  // 尺寸直接来自已解码的源图，不能用 DOM 缩略图大小估算。
-  // 原文字改图继续使用下面的 MP 预算和八像素步进显示。
-  if (settings.controlMode) return <p className="text-xs text-muted-foreground">{t("create.animaEdit.controlSize")}{source ? ` · ${source.width} × ${source.height}` : ""}</p>;
-  const scale = source ? Math.sqrt(settings.megapixels * 1e6 / (source.width * source.height)) : 0;
-  const size = source ? `${Math.max(8, Math.round(source.width * scale / 8) * 8)} × ${Math.max(8, Math.round(source.height * scale / 8) * 8)}` : "";
-  return <section className="space-y-3 border-t border-border/70 pt-4"><div className="flex items-center gap-3"><h3 className="mr-auto shrink-0 text-sm font-medium">{t("create.animaEdit.resolution")}</h3><div className="w-28"><OptionSelect ariaLabel={t("create.animaEdit.resolution")} value={String(settings.megapixels)} options={[0.5, 1, 1.5, 2].map((value) => ({ value: String(value), label: `${value} MP` }))} onChange={(value) => setSettings((previous) => ({ ...previous, megapixels: Number(value) }))} /></div></div><p className="text-xs leading-5 text-muted-foreground">{t("create.animaEdit.resolutionHint")}{size && ` · ${t("create.animaEdit.estimate", { size })}`}</p></section>;
-}
-
-/**
  * 参数行复用文生图与视频共用的滑条/数值输入，保留相同焦点及夹取规则。
  * 采样步数为整数，CFG 和强度分别使用匹配模型参数的步进。
  * 种子使用文本框，长安全整数不会因 number 控件滚轮或箭头意外改变。
@@ -103,7 +73,7 @@ function EditResolution({ editor }: { editor: AnimaEditState }) {
 // 多个工具保持挂载，idPrefix防止label和助手把文本写进其他工具。
 // 所有回调使用函数式合并，调一个参数不能覆盖刚修改的另一字段。
 // 组件不直接计算随机数，任务提交时统一冻结本次实际seed。
-export function AnimaEditSettings({ editor, idPrefix = "anima-edit", hideNegative = false }: { editor: AnimaEditState; idPrefix?: string; hideNegative?: boolean }) {
+export function AnimaEditSettings({ editor, idPrefix = "anima-edit", hideNegative = false, advancedFields }: { editor: AnimaEditState; idPrefix?: string; hideNegative?: boolean; advancedFields?: ReactNode }) {
   // 不再次渲染只读模型清单；可选择 UNet 与 LoRA 的入口在表单顶部。
   // 三组连续参数复用相同 GenerationParameterControl，不另写 range 外观。
   // 通过字段名访问状态保持类型检查，拼错参数名无法编译。
@@ -132,12 +102,13 @@ export function AnimaEditSettings({ editor, idPrefix = "anima-edit", hideNegativ
   // 辅助覆盖随已有 settings 一起冻结，离线导出与真实运行都能使用。
   // busy 显式传入公共组件，浮层按钮也遵守当前编辑任务的禁用状态。
   const template = useMemo(() => settings.controlMode ? getAnimaControlTemplate(settings.controlMode) : getImageWorkflowTemplate('anima'), [settings.controlMode]);
-  return <><WorkflowModelSettings workflowId="anima" mediaKind="image" templateOverride={template} overrides={settings.modelOverrides ?? {}} onChange={modelOverrides => setSettings(previous => ({ ...previous, modelOverrides }))} onReset={() => setSettings(previous => ({ ...previous, modelOverrides: {} }))} disabled={editor.busy || editor.importing} />{!hideNegative && <NegativePromptSection editorId={idPrefix + '-negative'} value={settings.negative} disabled={editor.busy || editor.importing} maxLength={3000} onValueChange={negative => setSettings(previous => ({ ...previous, negative }))} />}<EditResolution editor={editor} /><AnimaControlSettings editor={editor} /><AdvancedSettingsSection>
+  return <><WorkflowModelSettings workflowId="anima" mediaKind="image" templateOverride={template} overrides={settings.modelOverrides ?? {}} onChange={modelOverrides => setSettings(previous => ({ ...previous, modelOverrides }))} onReset={() => setSettings(previous => ({ ...previous, modelOverrides: {} }))} disabled={editor.busy || editor.importing} />{!hideNegative && <NegativePromptSection editorId={idPrefix + '-negative'} value={settings.negative} disabled={editor.busy || editor.importing} maxLength={3000} onValueChange={negative => setSettings(previous => ({ ...previous, negative }))} />}<AnimaControlSettings editor={editor} /><AdvancedSettingsSection disabled={editor.busy || editor.importing}>
     {/* 界面：与文生图复用整个采样参数块，字段只写编辑草稿。 */}
     {/* 手动种子保留原校验；骰子开启的随机模式在提交时取值。 */}
     {/* 多个编辑模式共用状态，切换工具不会丢失刚调整的参数。 */}
     <GenerationSamplingFields namePrefix="anima" editSeed sampler={settings.samplerName} scheduler={settings.scheduler} steps={settings.steps} cfg={settings.cfg} seed={settings.seed} seedMode={editor.seedMode} onSampler={samplerName => setSettings(previous => ({ ...previous, samplerName }))} onScheduler={scheduler => setSettings(previous => ({ ...previous, scheduler }))} onSteps={steps => setSettings(previous => ({ ...previous, steps }))} onCfg={cfg => setSettings(previous => ({ ...previous, cfg }))} onSeed={seed => { editor.patch({ seedMode: 'custom' }); setSettings(previous => ({ ...previous, seed })); }} onSeedMode={seedMode => editor.patch({ seedMode })} />
     {/* 编辑特有的降噪参数作为补充，仍使用同一个滑条输入组件。 */}
     <GenerationParameterControl name="anima-denoise" label={t("create.animaEdit.denoise")} min={0} max={1} step={0.01} value={settings.denoise} onChange={denoise => setSettings(previous => ({ ...previous, denoise }))} />
+    {advancedFields}
   </AdvancedSettingsSection></>;
 }

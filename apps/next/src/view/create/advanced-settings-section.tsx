@@ -5,8 +5,9 @@ import { useState, type ReactNode } from "react";
 import { ChevronDown, Settings } from "lucide-react";
 import { useTranslation } from "@/i18n";
 import { cn } from "@/utils/cn";
+import { ModelAttentionControl } from "@/components/model-attention-control";
 
-export function AdvancedSettingsSection({ children, className }: { children: ReactNode; className?: string }) {
+export function AdvancedSettingsSection({ children, className, disabled = false, showModelAttention = true }: { children?: ReactNode; className?: string; disabled?: boolean; showModelAttention?: boolean }) {
   const [open, setOpen] = useState(false);
   const { t } = useTranslation();
   return <div data-advanced-settings className={cn("min-w-0 w-full max-w-full overflow-hidden rounded-xl", open && "bg-muted/30 dark:bg-muted/20", className)}>
@@ -16,7 +17,7 @@ export function AdvancedSettingsSection({ children, className }: { children: Rea
       <ChevronDown className={cn("h-4 w-4 shrink-0 transition-transform", open && "rotate-180")} />
     </button>
     <div className={cn("grid transition-[grid-template-rows] duration-200 ease-out", open ? "grid-rows-[1fr]" : "grid-rows-[0fr]")} inert={!open}>
-      <div className="min-h-0 overflow-hidden"><div className="space-y-4 px-3 pb-3 pt-2">{children}</div></div>
+      <div className="min-h-0 overflow-hidden"><div className="space-y-4 px-3 pb-3 pt-2">{children}{showModelAttention && <ModelAttentionControl disabled={disabled} />}</div></div>
     </div>
   </div>;
 }

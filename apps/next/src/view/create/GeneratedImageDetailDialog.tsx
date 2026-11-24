@@ -1,4 +1,6 @@
 "use client";
+import { HoverTip } from "@/components/hover-tip";
+
 
 import {
   useCallback,
@@ -323,13 +325,13 @@ export function GeneratedImageDetailDialog({
             >
               <ChevronLeft className="h-5 w-5" />
             </button>
-            <span
+            <HoverTip asChild layer="window" label={(image.fileName) ?? ""}><span
               id="generated-image-detail-title"
               className="min-w-0 flex-1 truncate text-sm font-semibold"
-              title={image.fileName}
+
             >
               {image.fileName}
-            </span>
+            </span></HoverTip>
           </div>
         ) : (
           <button
@@ -403,13 +405,13 @@ export function GeneratedImageDetailDialog({
               <div data-image-detail-header className="shrink-0 space-y-1 pb-4">
                 {/** 窄屏的标题在标题栏里（同一个 id 只能有一个：那边拿它做 aria-labelledby） */}
                 {isCompact ? null : (
-                  <h2
+                  <HoverTip asChild layer="window" label={(image.fileName) ?? ""}><h2
                     id="generated-image-detail-title"
                     className="truncate pr-12 text-lg font-semibold leading-snug"
-                    title={image.fileName}
+
                   >
                     {image.fileName}
-                  </h2>
+                  </h2></HoverTip>
                 )}
                 <p className="text-xs text-muted-foreground">
                   {loadingMeta

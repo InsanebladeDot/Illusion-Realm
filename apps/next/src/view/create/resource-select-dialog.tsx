@@ -1,4 +1,6 @@
 "use client";
+import { HoverTip } from "@/components/hover-tip";
+
 
 // 主模型和 LoRA 共用的分类卡片与模型弹窗；这里只处理展示和选择，不请求接口或解析工作流。
 import { useMemo, useState } from "react";
@@ -6,7 +8,10 @@ import { ChevronDown, Search } from "lucide-react";
 import { useCreateFormStore } from "@/stores/useCreateFormStore";
 import { useTranslation } from "@/i18n";
 import { ResourceDialogShell } from "@/components/ResourceDialogShell";
-import { resolveResourceSelection, type ResourceSelectionGroup, type ResourceSelectionOption } from "@/utils/resource-selection";
+// 封面只复用选择顺序的读取规则，确认仍由各调用方校验真实业务限制。
+// 主模型只能确认一项，LoRA 可确认多项，这两种业务不因共用封面逻辑而合并。
+// 展示结果不写回模型 JSON，也不会把默认预览误当成用户已经选择。
+import { resolveResourcePreview, resolveResourceSelection, type ResourceSelectionGroup, type ResourceSelectionOption } from "@/utils/resource-selection";
 import { ResourceSelectionMode } from "./resource-selection-mode";
 import { ResourceSelectionCard } from "./resource-selection-card";
 import {
@@ -21,6 +26,10 @@ import { ModelVersionDialog } from "@/view/create/ModelVersionDialog";
 
 interface ResourceSelectDialogProps {
   open: boolean;
+  // 资源选择可继承宿主要求的中性表面，默认仍保持原创建页配色。
+  // 不改变单选/多选、分类或确认语义，数据继续由调用方参数注入。
+  // 只传给外壳，资源版本身份不能依赖主题或显示色。
+  tone?: "neutral";
   selectedIds: string[];
   onOpenChange: (open: boolean) => void;
   onConfirm: (models: ResourceSelectionOption[]) => boolean | void;
@@ -42,6 +51,10 @@ export function ResourceSelectDialog(props: ResourceSelectDialogProps) {
 
 function ResourceSelectSession({
   open,
+  // 当前会话的外观与草稿一样来自当前调用方，不能写回另一窗口。
+  // 该可选参数保持旧接口兼容，未传时不附加新样式标记。
+  // 内层分类及版本继续复用原组件，不在这里复制另一套卡片。
+  tone,
   selectedIds,
   onOpenChange,
   onConfirm,
@@ -91,9 +104,6 @@ function ResourceSelectSession({
     if (onConfirm(models) !== false) onOpenChange(false);
   };
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [draftVersions, setDraftVersions] = useState<Record<string, string>>(() => Object.fromEntries(
-    resources.map((resource) => [resource.id, resource.versions.find((item) => selectedIds.includes(item.id))?.id ?? resource.versions[0]?.id ?? resource.id])
-  ));
   const [activeGroup, setActiveGroup] = useState<ResourceSelectionGroup | null>(null);
   const source = resources;
 
@@ -112,7 +122,10 @@ function ResourceSelectSession({
 
   const handleSelectResource = (resource: ResourceSelectionGroup) => {
     const versions = getResourceOptions(resource);
-    const versionId = draftVersions[resource.id] ?? versions[0]?.id;
+    // 单版本分类仍走原来的选择回调；多版本分类进入内层选择页。
+    // 不再保存另一份版本草稿，避免封面与实际勾选各记各的。
+    // 返回分类时立即读取 pendingIds，取消弹窗仍不会影响外层已确认状态。
+    const versionId = resolveResourcePreview(versions, activeIds)?.id;
     if (!versionId) return;
 
     // 单模型更新草稿；分类下有多个模型时打开同一套模型卡片，只有 footer 确认才返回数据。
@@ -124,6 +137,10 @@ function ResourceSelectSession({
     <>
       <ResourceDialogShell
         open={open}
+        // 参数只作用于门户表面，当前模型索引和已选数量保持原数据来源。
+        // 配色切换不会清空搜索，也不会把确认动作变成自动提交。
+        // 外壳负责响应式，调用方不再用CSS选择器侵入其内部结构改色。
+        tone={tone}
         title={title}
         titleId={titleId}
         bodyPadded={false}
@@ -186,10 +203,13 @@ function ResourceSelectSession({
           <div className="grid auto-rows-auto grid-cols-2 items-start gap-2 pb-4 sm:grid-cols-3 sm:gap-3 md:grid-cols-4 md:gap-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7">
             {visibleResources.map((resource) => {
               const versions = getResourceOptions(resource);
-              const versionId =
-                draftVersions[resource.id] ?? versions[0]?.id ?? resource.id;
-              const version =
-                versions.find((item) => item.id === versionId) ?? versions[0];
+              // 分类卡片的名称与封面共同跟随当前草稿，不能继续固定显示分类封面。
+              // 多选取选择队列中的第一项，不取版本列表顺序或最后点击项。
+              // 单选切换后旧项已离开草稿，下一次渲染直接显示新项。
+              // 切回单选时原 changeMode 保留首项，因此预览与最后确认仍一致。
+              // 清空本分类选择只恢复第一版的展示，不自动把第一版选中。
+              // 筛选条件只改变可见分类，不参与代表模型的判定。
+              const version = resolveResourcePreview(versions, activeIds);
               // 分类只是多个模型的容器，一张分类卡片可能对应多个已选版本。
               // 按此分类里的真实版本 ID 求交集，不能用当前下拉框显示的单个版本代替。
               // 隐藏的其他分类仍留在草稿里，本卡片只报告自己包含的已选数。
@@ -199,21 +219,24 @@ function ResourceSelectSession({
               const isSelected = selectedCount > 0;
 
               return (
-                <ResourceSelectionCard key={resource.id} name={resource.name} cover={resource.cover}
+                // 弹窗：继续复用公共卡片和图片组件，只注入当前代表模型的封面。
+                // 未声明版本封面才回落分类封面，显式空图保留原有缺图提示。
+                // 封面加载失败仍由图片组件兜底，不更改当前真实选择或选择计数。
+                <ResourceSelectionCard key={resource.id} name={resource.name} cover={version?.cover ?? resource.cover}
                   selected={isSelected} selectedCount={selectedCount} typography={typography} tag={resource.tag} tagClassName={resource.tagClassName}
                   meta={<>{versions.length} {t("create.extensionSelectDialog.versionUnit")}</>}>
                     <div className="mt-3 grid min-w-0 grid-cols-2 items-center gap-2">
                       {versions.length === 1 ? (
-                        <span title={version?.detailLabel ?? version?.label} className={cn("truncate text-muted-foreground", typography.action)}>
+                        <HoverTip asChild layer="window" label={(version?.detailLabel ?? version?.label) ?? ""}><span className={cn("truncate text-muted-foreground", typography.action)}>
                           {version?.label}
-                        </span>
+                        </span></HoverTip>
                       ) : (
-                        <button
+                        <HoverTip asChild layer="window" label={(version?.detailLabel ?? version?.label) ?? ""}><button
                           type="button"
                           data-resource-model-picker={resource.id}
                           data-lora-model-picker={resource.id}
                           aria-haspopup="dialog"
-                          title={version?.detailLabel ?? version?.label}
+
                           aria-label={t("create.extensionSelectDialog.versionDialogTitle", { name: resource.name })}
                           onClick={() => setActiveGroup(resource)}
                           className={cn(
@@ -226,7 +249,7 @@ function ResourceSelectSession({
                         >
                           <span className="min-w-0 truncate">{version?.label}</span>
                           <ChevronDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                        </button>
+                        </button></HoverTip>
                       )}
                       <button
                         type="button"
@@ -249,12 +272,19 @@ function ResourceSelectSession({
       </ResourceDialogShell>
       {/* 弹窗：图片和视频共用同一份分类数据，模型自己的封面与名称用于卡片展示 */}
       {activeGroup && <ModelVersionDialog
+        // 版本页同样是门户，显式传递外观，不能从分类页的 DOM 继承颜色。
+        // 此字段不触及 pendingIds，返回后搜索和未确认选择依旧保留。
+        // 没传 tone 的旧调用方各层都沿用原主题，不产生串色。
+        tone={tone}
         title={t("create.extensionSelectDialog.versionDialogTitle", { name: activeGroup.name })}
         selectedKeys={activeIds}
         multiple={multiple}
         options={getResourceOptions(activeGroup).map((item) => ({ key: item.id, name: item.label, label: item.detailLabel ?? item.label, cover: item.cover ?? activeGroup.cover }))}
         onOpenChange={(nextOpen) => { if (!nextOpen) setActiveGroup(null); }}
-        onSelect={(id) => { setDraftVersions((current) => ({ ...current, [activeGroup.id]: id })); pick(id); }}
+        // 内层只通知选择变化，外层从同一份队列取得封面，不另记最后点击版本。
+        // 多选取消也走 pick，移除首项后代表图片能够随剩余顺序自动更新。
+        // 这里只改会话草稿，仍需底部确认才能应用到创建页。
+        onSelect={pick}
       />}
     </>
   );

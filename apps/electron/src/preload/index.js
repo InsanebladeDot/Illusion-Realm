@@ -35,6 +35,15 @@ const api = {
 // 现有 getPathForFile 仍是 File 身份转换的唯一入口。
 // 这里没有引入 File.path 或把 Node require 暴露给 renderer。
 // 生产窗口继续 contextIsolation，新增方法不改变隔离开关。
+  // 只开放固定服务的图片动作，不给页面任意 URL、文件写入或密钥读取能力。
+  euzhiImageSecretStatus: () => ipcRenderer.invoke(IPC_CHANNELS.EUZHI_IMAGE_SECRET_STATUS),
+  euzhiImageSecretSet: key => ipcRenderer.invoke(IPC_CHANNELS.EUZHI_IMAGE_SECRET_SET, key),
+  euzhiImageSecretClear: () => ipcRenderer.invoke(IPC_CHANNELS.EUZHI_IMAGE_SECRET_CLEAR),
+  euzhiImageGenerate: request => ipcRenderer.invoke(IPC_CHANNELS.EUZHI_IMAGE_GENERATE, request),
+  euzhiImageCancel: id => ipcRenderer.invoke(IPC_CHANNELS.EUZHI_IMAGE_CANCEL, id),
+  // 仅转发合成器媒体正文，路径分配和保存框都留在主进程。
+  canvasCompositionMedia: (request) => ipcRenderer.invoke(IPC_CHANNELS.CANVAS_COMPOSITION_MEDIA, request),
+  canvasLibrary: (request) => ipcRenderer.invoke(IPC_CHANNELS.CANVAS_LIBRARY, request),
   canvasImportMedia: request => ipcRenderer.invoke(IPC_CHANNELS.CANVAS_IMPORT_MEDIA, request),
   canvasExportProject: document => ipcRenderer.invoke(IPC_CHANNELS.CANVAS_EXPORT_PROJECT, document),
   canvasOpenProject: () => ipcRenderer.invoke(IPC_CHANNELS.CANVAS_OPEN_PROJECT),
@@ -75,6 +84,9 @@ const api = {
   // 路径、并发和落盘权限都由主进程服务复核。
   // Promise 返回 IpcResult，渲染层必须解包并验证 schema。
   recoverLocalModelMetadata: (filePath) => ipcRenderer.invoke(IPC_CHANNELS.MODELS_RECOVER_METADATA, filePath),
+  hashLocalModel: (filePath) => ipcRenderer.invoke(IPC_CHANNELS.MODELS_HASH_LOCAL, filePath),
+  checkSetupModels: (ids, mode) => ipcRenderer.invoke(IPC_CHANNELS.MODELS_CHECK_SETUP, ids, mode),
+  downloadSetupModels: (ids) => ipcRenderer.invoke(IPC_CHANNELS.MODELS_DOWNLOAD_SETUP, ids),
   scanModels: (dirPath, type) =>
     ipcRenderer.invoke(IPC_CHANNELS.MODELS_SCAN, dirPath, type),
   modelDownloadTarget: (location) => ipcRenderer.invoke(IPC_CHANNELS.MODELS_DOWNLOAD_TARGET, location),
@@ -85,6 +97,9 @@ const api = {
   listModelDownloads: () => ipcRenderer.invoke(IPC_CHANNELS.MODELS_DOWNLOAD_LIST),
   changeModelLogo: (folderPath) => ipcRenderer.invoke(IPC_CHANNELS.MODELS_CHANGE_LOGO, folderPath),
   localModelCategoryTarget: (folderPath) => ipcRenderer.invoke(IPC_CHANNELS.MODELS_CATEGORY_TARGET, folderPath),
+  listLocalModelFolders: () => ipcRenderer.invoke(IPC_CHANNELS.MODELS_FOLDER_LIST),
+  deleteLocalModelFolder: (request) => ipcRenderer.invoke(IPC_CHANNELS.MODELS_FOLDER_DELETE, request),
+  createLocalModelFolder: (request) => ipcRenderer.invoke(IPC_CHANNELS.MODELS_FOLDER_CREATE, request),
   moveModelCategory: (request) => ipcRenderer.invoke(IPC_CHANNELS.MODELS_MOVE_CATEGORY, request),
   operateLocalModels: (request) => ipcRenderer.invoke(IPC_CHANNELS.MODELS_BATCH, request),
   civitaiKeyStatus: () => ipcRenderer.invoke(IPC_CHANNELS.CIVITAI_KEY_STATUS),
@@ -114,6 +129,9 @@ const api = {
     ipcRenderer.invoke(IPC_CHANNELS.COMFY_UPLOAD_IMAGE, serverAddress, payload),
   comfyListModels: (serverAddress) =>
     ipcRenderer.invoke(IPC_CHANNELS.COMFY_LIST_MODELS, serverAddress),
+  comfyGptSovitsWeights: serverAddress => ipcRenderer.invoke(IPC_CHANNELS.COMFY_GSV_WEIGHTS, serverAddress),
+  canvasReferenceVoices: () => ipcRenderer.invoke(IPC_CHANNELS.CANVAS_REFERENCE_VOICES),
+  canvasAddReferenceVoice: (request) => ipcRenderer.invoke(IPC_CHANNELS.CANVAS_ADD_REFERENCE_VOICE, request),
   getDefaultOutputPath: () =>
     ipcRenderer.invoke(IPC_CHANNELS.PATHS_GET_DEFAULT_OUTPUT),
   saveGeneratedImages: (outputPath, files) =>
@@ -189,6 +207,7 @@ const api = {
   // IpcResult原样返回，渲染侧按成功、无音轨和失败分别显示。
   // 不在preload缓存源路径、音频字节或订阅，任务生命周期由业务拥有者管理。
   videoWaveform: (payload) => ipcRenderer.invoke(IPC_CHANNELS.VIDEO_WAVEFORM, payload),
+  videoUpscale: (payload) => ipcRenderer.invoke(IPC_CHANNELS.VIDEO_UPSCALE, payload),
   videoRun: (payload) => ipcRenderer.invoke(IPC_CHANNELS.VIDEO_RUN, payload),
   videoCancel: (jobId) => ipcRenderer.invoke(IPC_CHANNELS.VIDEO_CANCEL, jobId),
 

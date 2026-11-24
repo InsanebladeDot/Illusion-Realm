@@ -29,6 +29,6 @@ export function audioPromptMedia(reference: { name: string } | null): PromptRefe
  * builder 使用上传名只是判断参考是否存在，提示词不包含服务器文件名。
  * 在上传前占位校验与实际构图都会调用，失败不能被 preview 的 catch 吞掉。
  */
-export function normalizeAudioReferences(text: string, referenceName?: string) {
-  return normalizeVideoReferences(text, audioPromptMedia(referenceName ? { name: referenceName } : null));
+export function normalizeAudioReferences(text: string, referenceName?: string, labels?: import("@/schemas/prompt-reference-labels.schema").PromptReferenceLabels) {
+  return normalizeVideoReferences(text, audioPromptMedia(referenceName ? { name: referenceName } : null), labels);
 }

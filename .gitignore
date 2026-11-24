@@ -51,6 +51,9 @@ logs/
 
 # typescript
 *.tsbuildinfo
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm
 next-env.d.ts
 # OpenCV 运行时由 prepare-opencv.mjs 从锁定依赖复制，随 Next 静态资源分发。
 /apps/next/public/vendor/opencv/
@@ -59,7 +62,9 @@ next-env.d.ts
 # generated images (dev default output sibling folder)
 * Output/
 
-# python agent（apps/agent）——依赖与缓存不入库，与 .venv 一起随包分发或打成单文件
+# Agent 的开发环境和 Windows 打包时生成的独立 Python 不入库。
+/apps/electron/bin/agent-python*/
+/apps/electron/bin/agent-python-*.zip
 apps/agent/.venv/
 apps/agent/build/
 apps/agent/dist/

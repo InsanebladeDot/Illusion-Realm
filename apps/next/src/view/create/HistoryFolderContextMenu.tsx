@@ -18,7 +18,7 @@ import { useTranslation } from "@/i18n";
 // React转义用户文字，不能把文件夹名作为菜单HTML插入。
 interface HistoryFolderContextMenuProps {
   x: number; y: number; folderName: string; canCreateSubfolder: boolean;
-  onAddImages: () => void; onCreateSubfolder: () => void; onDelete: () => void; onClose: () => void;
+  onAddImages?: () => void; canDelete?: boolean; onCreateSubfolder: () => void; onDelete: () => void; onClose: () => void;
 }
 
 // 与图片菜单使用相同188px宽度、行高、图标与分隔，只有内容通过参数变化。
@@ -29,14 +29,14 @@ interface HistoryFolderContextMenuProps {
 // 关闭菜单不会写盘或清空文件夹列表，也不修改创建页当前图片选择。
 // 图标与文字同时展示，三个动作在键盘和读屏路径中仍可区分。
 // 回调执行后关闭的顺序与原实现一致，不把确认弹窗当作菜单内部状态。
-export function HistoryFolderContextMenu({ x, y, folderName, canCreateSubfolder, onAddImages, onCreateSubfolder, onDelete, onClose }: HistoryFolderContextMenuProps) {
+export function HistoryFolderContextMenu({ x, y, folderName, canCreateSubfolder, onAddImages, canDelete = true, onCreateSubfolder, onDelete, onClose }: HistoryFolderContextMenuProps) {
   const { t } = useTranslation();
   const run = (action: () => void) => { action(); onClose(); };
   return <ContextMenuShell x={x} y={y} label={folderName} onClose={onClose} className={CONTEXT_MENU_SIZE_CLASS}>
-    <ContextMenuItem icon={ImagePlus} label={t("create.historyFolderContextMenu.addImages")} onClick={() => run(onAddImages)} />
+    {onAddImages && <ContextMenuItem icon={ImagePlus} label={t("create.historyFolderContextMenu.addImages")} onClick={() => run(onAddImages)} />}
     <ContextMenuItem icon={FolderPlus} label={t("create.historyFolderContextMenu.createSubfolder")} disabled={!canCreateSubfolder} onClick={() => { if (canCreateSubfolder) run(onCreateSubfolder); }} />
     <ContextMenuSeparator />
-    <ContextMenuItem icon={Trash2} destructive label={t("create.historyFolderContextMenu.deleteFolder")} onClick={() => run(onDelete)} />
+    <ContextMenuItem icon={Trash2} destructive disabled={!canDelete} label={t("create.historyFolderContextMenu.deleteFolder")} onClick={() => run(onDelete)} />
     <ContextMenuCaption>{folderName}</ContextMenuCaption>
   </ContextMenuShell>;
 }

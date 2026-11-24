@@ -34,6 +34,11 @@ function readDataUrl(blob: Blob): Promise<string> {
     reader.readAsDataURL(blob);
   });
 }
+/** 转译和聊天共用格式转换；读取来源由各入口限制，编码失败保留原输入。 */
+export async function encodeInputImage(blob: Blob): Promise<string> {
+  if (!blob.size || blob.size > 8 * 1024 * 1024) throw new Error(t('agent.composer.imageReadFailed'));
+  return readDataUrl(await compatibleBlob(blob));
+}
 /**
  * 兼容图片选择器已有的 BMP / AVIF，不向模型发送伪造 MIME 的原始字节。
  * 转换保持图片比例，最长边上限 4096，避免超大位图占满内存。

@@ -1,4 +1,6 @@
 "use client";
+import { HoverTip } from "@/components/hover-tip";
+
 
 /** 视频侧边快捷浮窗：宽屏停靠右侧，窄屏通过固钉展开；复用主题、视口和窗口栏高度。 */
 import { useState } from "react";
@@ -53,7 +55,7 @@ function SplitOutputControls(props: QuickControlsProps & { valid: boolean; parts
   const { t } = useTranslation();
   return <>
     <div className="flex items-center gap-2 rounded-lg border border-border p-2">
-      <span className="min-w-0 flex-1 truncate text-xs text-muted-foreground" title={props.outputFolder || undefined}>{props.outputFolder || t("toolBox.video.quick.pickOnExport")}</span>
+      <HoverTip asChild layer="window" label={(props.outputFolder || undefined) ?? ""}><span className="min-w-0 flex-1 truncate text-xs text-muted-foreground">{props.outputFolder || t("toolBox.video.quick.pickOnExport")}</span></HoverTip>
       <button type="button" disabled={props.busy || !props.isDesktop} onClick={props.onPickFolder} className="rounded p-1.5 text-muted-foreground hover:bg-muted disabled:opacity-40" aria-label={t("toolBox.videoEdit.exportPanel.pickFolder")}><FolderOpen size={16} /></button>
     </div>
     {props.split.running && <div role="status" className="space-y-2 text-xs text-muted-foreground">
@@ -81,7 +83,7 @@ function SplitControls(props: QuickControlsProps) {
     <div><h3 className="text-sm font-semibold">{t("toolBox.video.quick.equalSplit")}</h3>
       <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{t("toolBox.video.quick.description")}</p></div>
     <div className="rounded-lg border border-border p-3 text-xs">
-      <p className="truncate font-medium" title={props.clip?.name}>{props.clip?.name || t("toolBox.video.quick.noVideo")}</p>
+      <HoverTip asChild layer="window" label={(props.clip?.name) ?? ""}><p className="truncate font-medium">{props.clip?.name || t("toolBox.video.quick.noVideo")}</p></HoverTip>
       {props.clip && <p className="mt-1 font-mono text-muted-foreground">{formatTime(props.clip.duration, true)}</p>}
     </div>
     <label className="flex items-center justify-between gap-3 text-xs font-medium">
@@ -132,10 +134,10 @@ export function VideoQuickTools(props: VideoQuickToolsProps) {
   const expanded = useSidebarStore((state) => state.expanded);
   const navWidth = desktopNav ? (expanded ? SIDEBAR_WIDTH_EXPANDED : SIDEBAR_WIDTH_COLLAPSED) : 0;
   const rail = <div role="toolbar" aria-label={t("toolBox.video.quick.switch")} className="flex flex-col gap-1 rounded-xl border border-border bg-background/95 p-1 shadow-md backdrop-blur">
-    <button type="button" aria-label={t("toolBox.video.quick.editor")} title={t("toolBox.video.quick.editor")} onClick={() => setOpen(false)}
-      className={`rounded-lg p-2 ${!open ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted"}`}><SlidersHorizontal size={17} /></button>
-    <button type="button" aria-label={t("toolBox.video.quick.title")} title={t("toolBox.video.quick.title")} aria-expanded={open} onClick={() => setOpen((value) => !value)}
-      className={`rounded-lg p-2 ${open ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted"}`}><Zap size={17} /></button>
+    <HoverTip asChild layer="window" label={(t("toolBox.video.quick.editor")) ?? ""}><button type="button" aria-label={t("toolBox.video.quick.editor")} onClick={() => setOpen(false)}
+      className={`rounded-lg p-2 ${!open ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted"}`}><SlidersHorizontal size={17} /></button></HoverTip>
+    <HoverTip asChild layer="window" label={(t("toolBox.video.quick.title")) ?? ""}><button type="button" aria-label={t("toolBox.video.quick.title")} aria-expanded={open} onClick={() => setOpen((value) => !value)}
+      className={`rounded-lg p-2 ${open ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted"}`}><Zap size={17} /></button></HoverTip>
   </div>;
   if (!hydrated) return null;
   const content = <QuickToolsContent {...props} partsText={partsText} onPartsChange={setPartsText} tab={tab} onTabChange={setTab} onClose={() => setOpen(false)} />;

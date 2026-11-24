@@ -2,10 +2,11 @@
 const fs = require("fs");
 const path = require("path");
 const { randomUUID } = require("crypto");
+const { setupAsset } = require("./setup-download-catalog");
 /** 仅保留决定模型文件格式的公开参数，不记录 API Key、签名或临时 CDN 链接。 @param {string} value */
 function publicDownloadUrl(value) {
   const url = new URL(value), query = new URLSearchParams();
-  for (const key of ["type", "format", "size", "fp"]) {
+  for (const key of ["type", "format", "size", "fp", "fileId"]) {
     const option = url.searchParams.get(key);
     if (option) query.set(key, option);
   }
@@ -16,13 +17,16 @@ function publicDownloadUrl(value) {
 function downloadMetadata(request) {
   const downloadUrl = publicDownloadUrl(request.downloadUrl), origin = new URL(downloadUrl).origin;
   const source = request.source;
+  const asset = setupAsset(request.setupId);
   return {
     version: 1, downloadedAt: new Date().toISOString(),
-    source: "Civitai", sourceUrl: origin, sourceTitle: request.modelName,
-    modelPageUrl: source ? `${origin}/models/${source.modelId}?modelVersionId=${source.versionId}` : "",
+    source: origin === "https://huggingface.co" ? "HuggingFace" : "Civitai", sourceUrl: origin, sourceTitle: request.modelName,
+    modelPageUrl: asset && "sourcePage" in asset ? asset.sourcePage : source ? `${origin}/models/${source.modelId}?modelVersionId=${source.versionId}` : "",
     downloadUrl, modelId: source?.modelId ?? null, modelName: request.modelName,
-    modelType: request.modelType, baseModel: request.baseModel,
-    versionId: source?.versionId ?? Number(new URL(downloadUrl).pathname.split("/").pop()), versionName: source?.versionName ?? "",
+    modelType: asset?.metadataType ?? request.modelType, baseModel: request.baseModel,
+    ...(request.modelType === "LORA" ? { loraFamilyArchive: true } : {}),
+    ...(asset ? { originalFileName: asset.sourceFileName } : {}),
+    versionId: source?.versionId ?? (origin === "https://huggingface.co" ? null : Number(new URL(downloadUrl).pathname.split("/").pop())), versionName: source?.versionName ?? "",
     creator: source?.creator ?? "", fileName: request.fileName, sha256: request.sha256,
     trainedWords: source?.trainedWords ?? [], description: source?.description ?? "", versionDescription: source?.versionDescription ?? "",
     cover: { type: request.logoDataUrl ? "custom" : request.previewUrl ? "preview" : "none", previewUrl: request.previewUrl ? new URL(request.previewUrl).origin + new URL(request.previewUrl).pathname : "" },

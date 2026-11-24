@@ -1,4 +1,6 @@
 "use client";
+import { HoverTip } from "@/components/hover-tip";
+
 
 // 视频、图片和音频共享工程坐标与选择外框，内容通过 children 注入。
 // 秒数像一把共同的尺子：left 用开始时间，width 用片段时长，不能按文件名撑宽。
@@ -111,10 +113,10 @@ export function EditorClipShell({ id, label, timecode, trimming, start, end, dur
   // data-kind使真实音频安排可观察，不需要从封面颜色猜通道类型。
   // 所有通道继续使用相同start/end百分比，音频与视频不各画一把尺子。
   const { t } = useTranslation();
-  return <button type="button" disabled={locked || !onSelect} onClick={onSelect} onPointerDown={onPointerDown} draggable={!locked && !!onDragStart} onDragStart={event => { if ((event.target as HTMLElement).closest('[data-clip-trim]')) event.preventDefault(); else onDragStart?.(event); }} onDragEnd={onDragEnd} onKeyDown={onKeyDown} onContextMenu={onContextMenu} data-editor-kind={kind} data-editor-clip={id} data-editor-start={start} data-editor-end={end} data-editor-trimming={trimming || undefined} data-editor-locked={locked || undefined} aria-label={label} aria-current={selected ? "true" : undefined} aria-pressed={selected} title={label} className={`${styles.timelineClip} ${kind === "audio" ? styles.audioClip : styles.visualClip} ${timecode ? styles.referenceClip : ""}`} style={{ left: `${start / duration * 100}%`, width: `${(end - start) / duration * 100}%` }}>
+  return <HoverTip asChild layer="window" label={(label) ?? ""}><button type="button" disabled={locked || !onSelect} onClick={onSelect} onPointerDown={onPointerDown} draggable={!locked && !!onDragStart} onDragStart={event => { if ((event.target as HTMLElement).closest('[data-clip-trim]')) event.preventDefault(); else onDragStart?.(event); }} onDragEnd={onDragEnd} onKeyDown={onKeyDown} onContextMenu={onContextMenu} data-editor-kind={kind} data-editor-clip={id} data-editor-start={start} data-editor-end={end} data-editor-trimming={trimming || undefined} data-editor-locked={locked || undefined} aria-label={label} aria-current={selected ? "true" : undefined} aria-pressed={selected} className={`${styles.timelineClip} ${kind === "audio" ? styles.audioClip : styles.visualClip} ${timecode ? styles.referenceClip : ""}`} style={{ left: `${start / duration * 100}%`, width: `${(end - start) / duration * 100}%` }}>
     {/* 时间轴片段：标题、连续帧和真实波形仍共享同一按钮与原修剪事件。 */}
     {/* 时间码只改变信息排布，left/width继续来自工程区间，样板不传时保持原样。 */}
     {/* 文件名可收缩省略，时间码不收缩；完整文件名仍由父按钮title保留。 */}
     {children}<span className={styles.clipName}><span>{label}</span>{timecode && <span data-clip-timecode>{timecode}</span>}</span>{onTrimStart && !locked && (["start", "end"] as const).map(edge => <span key={edge} role="slider" tabIndex={0} aria-label={t(edge === "start" ? "toolBox.editorUi.trimStart" : "toolBox.editorUi.trimEnd")} aria-valuenow={edge === "start" ? start : end} aria-valuemin={0} aria-valuemax={duration} data-clip-trim={edge} className={edge === "start" ? styles.trimStart : styles.trimEnd} onClick={event => event.stopPropagation()} onPointerDown={event => onTrimStart(event, edge)} onKeyDown={event => onTrimKey?.(event, edge)}>{edge === "start" ? "<|" : "|>"}</span>)}
-  </button>;
+  </button></HoverTip>;
 }

@@ -553,13 +553,18 @@ export const toolBox = {
     localChoose: "选择本地模型，查看封面及文件版本",
     // 摘要提示删掉“同名”，因为文件改名后仍可能靠已有 JSON 命中。
     // 悬停说明限定为保存过的完整摘要，避免用户误以为浏览列表时重算了模型。
-    localFound: "本地已有相同文件",
-    localMatchHint: "本地来源 JSON 保存的完整 SHA256 与 C站文件一致；此处未重新读取模型校验",
-    // 名称证据单列词条，不能借用摘要提示让同名看起来像内容验证通过。
-    // “前缀”在这里指去除权重扩展名后的完整主干，不指字符串开头部分。
-    // 名称提示保留未校验说明，文件夹和文件都相同仍不能保证字节未被替换。
-    localNameFound: "本地已有同名文件",
-    localNameMatchHint: "本地文件夹名与 C站标题、文件名前缀均完全一致；未校验文件内容",
+    localFound: "已匹配 {versions}",
+    hashStart: "开始计算",
+    hashStop: "停止后续",
+    hashStatus: {
+      waiting: "待处理／已停止", running: "正在计算", saved: "已计算并保存", existing: "已有完整摘要，已跳过",
+      invalid: "文件不可用或不在模型目录", metadataInvalid: "摘要 JSON 损坏或版本不支持，已保留",
+      changed: "文件计算时发生变化，请重试", busy: "目录正在使用，请稍后重试", timeout: "计算超时，请重试", io: "读取或保存失败，请检查权限",
+    },
+    hashLocal: "加载 SHA256",
+    hashFailed: "加载 SHA256 失败",
+    hashLocalHint: "只在本机计算缺少的 SHA256，存为模型旁的 .sha256.json。保留来源资料；停止或关闭后，当前文件完成再停止。",
+    localMatchHint: "与本地文件的 SHA256 一致的版本：{versions}",
     categoryMove: {
       acknowledge: "我已知晓：将移动整个模型文件夹，包含所有版本、封面和其他文件。",
       title: "切换分类", move: "移动到此分类", moving: "正在移动…", done: "模型分类已更新",
@@ -599,7 +604,19 @@ export const toolBox = {
     showAllDescription: "显示全部", collapseDescription: "收起",
     words: "触发词", about: "模型说明", noDescription: "作者未提供说明。",
     download: "下载模型", downloadHint: "保存到设置中的模型目录，可选择分类和更换封面。",
+    visibility: {
+      hide: "隐藏模型", count: "已隐藏 {count} 个模型", restore: "恢复显示", back: "返回本地模型",
+      empty: "暂无隐藏模型", hiddenName: "已隐藏模型", saveFailed: "模型的隐藏设置暂未保存。",
+    },
+    folders: {
+      create: "新建文件夹", name: "文件夹名称", confirm: "创建",
+      deleteTitle: "删除文件夹",
+      deleteDescription: "文件夹「{folder}」及其中的所有文件和子文件夹都将移入系统回收站。",
+      deleteConfirm: "确认删除",
+    },
     transfer: {
+      familyFolder: "直接保存到基础模型文件夹",
+      queued: "等待下载",
       centerTitle: "下载管理", openCenter: "查看下载进度", empty: "暂无下载任务",
       dismiss: "移除下载记录，保留模型及封面文件",
       back: "返回模型详情", start: "开始下载", starting: "正在开始…",

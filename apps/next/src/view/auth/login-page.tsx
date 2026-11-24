@@ -1,4 +1,6 @@
 "use client";
+import { HoverTip } from "@/components/hover-tip";
+
 
 // 界面：全屏插画 + 居中登录卡片；账户连接后端 API，OAuth 保留入口。
 import { useCallback, useEffect, useState } from "react";
@@ -31,10 +33,10 @@ function ProviderIcon({ id }: { id: string }) {
 function SocialLogin() {
   const { t } = useTranslation();
   return <div className="space-y-3"><p className="text-xs text-muted-foreground">{t("auth.social")}</p><div className="flex justify-center gap-3">
-    {AUTH_PROVIDERS.map(provider => <button key={provider.id} type="button" data-auth-provider={provider.id} aria-label={t("auth.provider", { name: provider.name })} title={t("auth.provider", { name: provider.name })}
+    {AUTH_PROVIDERS.map(provider => <HoverTip key={provider.id} asChild layer="window" label={(t("auth.provider", { name: provider.name })) ?? ""}><button key={provider.id} type="button" data-auth-provider={provider.id} aria-label={t("auth.provider", { name: provider.name })}
       onClick={() => useToastStore.getState().show(t("auth.socialPending", { name: provider.name }))} className="flex h-10 w-10 items-center justify-center rounded-full bg-muted/80 text-foreground transition hover:bg-muted hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500">
         <ProviderIcon id={provider.id} />
-      </button>)}
+      </button></HoverTip>)}
   </div></div>;
 }
 function GuestEntry() {

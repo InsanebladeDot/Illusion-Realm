@@ -31,6 +31,11 @@ export const taxonomy = {
   },
   /** 模型系列说明（`MODEL_SERIES[].description`） */
   modelSeries: {
+    moss: {
+      description: "使用 Moss Image 工作流生成图片",
+      tipsTitle: "Moss 使用技巧",
+      tip1: "用自然语言描述主体、构图和光线。",
+    },
     sdxl: {
       description: "基于 SDXL 架构的社区训练模型",
       tipsTitle: "SDXL 使用技巧",

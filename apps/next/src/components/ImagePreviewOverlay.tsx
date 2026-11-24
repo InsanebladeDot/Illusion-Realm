@@ -3,7 +3,6 @@
 import {
   useCallback,
   useEffect,
-  useRef,
   useState,
   type MouseEvent as ReactMouseEvent,
   type WheelEvent as ReactWheelEvent,
@@ -19,6 +18,7 @@ import {
   prefetchLocalImages,
 } from "@/utils/localImageSrcCache";
 import { cn } from "@/utils/cn";
+import { useImagePreviewPan } from "@/hooks/use-image-preview-pan";
 
 const MIN_SCALE = 0.25;
 const MAX_SCALE = 5;
@@ -44,17 +44,6 @@ type ImagePreviewOverlayProps = {
     item: ImagePreviewItem
   ) => void;
 };
-
-type DragState = {
-  pointerId: number;
-  startX: number;
-  startY: number;
-  baseX: number;
-  baseY: number;
-  moved: boolean;
-};
-
-const DRAG_CLICK_THRESHOLD_PX = 6;
 
 function clampScale(value: number): number {
   return Math.min(MAX_SCALE, Math.max(MIN_SCALE, value));
@@ -112,7 +101,8 @@ function PreviewGalleryImage({
       draggable={false}
       className={cn(
         "max-h-full max-w-full select-none object-contain transition-[opacity,transform] duration-150 ease-out",
-        dragging ? "cursor-grabbing" : scale > 1 ? "cursor-grab" : "cursor-zoom-in",
+        dragging ? "cursor-grabbing transition-none" : "cursor-grab",
+        "touch-none",
         !isResolved && fallbackSrc ? "opacity-90" : "opacity-100"
       )}
       style={{
@@ -137,10 +127,8 @@ export function ImagePreviewOverlay({
   const isHydrated = useIsHydrated();
   const [scale, setScale] = useState(1);
   const [translate, setTranslate] = useState({ x: 0, y: 0 });
-  const [dragging, setDragging] = useState(false);
+  const { dragging, handlers: pan, stop: stopPan } = useImagePreviewPan({ offset: translate, onOffsetChange: setTranslate, sessionKey: `${index}|${open}` });
   const [lastResolvedSrc, setLastResolvedSrc] = useState<string | null>(seedSrc);
-  const dragRef = useRef<DragState | null>(null);
-  const suppressBackdropClickRef = useRef(false);
 
   const hasGallery = items.length > 1;
   const currentItem = items[index] ?? items[0];
@@ -190,10 +178,11 @@ export function ImagePreviewOverlay({
   }, []);
 
   /** 双击 / 点击「重置缩放」按钮：复位缩放与平移（事件处理器，非渲染期） */
-  const resetView = useCallback(() => {
+  const resetView = () => {
+    stopPan();
     setScale(1);
     setTranslate({ x: 0, y: 0 });
-  }, []);
+  };
 
   /**
    * 渲染期同步：切换图片或重新打开时把缩放/平移复位（原实现放在 effect 里）。
@@ -257,67 +246,9 @@ export function ImagePreviewOverlay({
     [zoomBy]
   );
 
-  const handlePointerDown = useCallback(
-    (event: React.PointerEvent<HTMLDivElement>) => {
-      if (event.button !== 0) return;
-      event.currentTarget.setPointerCapture(event.pointerId);
-      dragRef.current = {
-        pointerId: event.pointerId,
-        startX: event.clientX,
-        startY: event.clientY,
-        baseX: translate.x,
-        baseY: translate.y,
-        moved: false,
-      };
-      setDragging(true);
-    },
-    [translate.x, translate.y]
-  );
-
-  const handlePointerMove = useCallback(
-    (event: React.PointerEvent<HTMLDivElement>) => {
-      const drag = dragRef.current;
-      if (!drag || drag.pointerId !== event.pointerId) return;
-
-      const deltaX = event.clientX - drag.startX;
-      const deltaY = event.clientY - drag.startY;
-      if (
-        !drag.moved &&
-        Math.hypot(deltaX, deltaY) >= DRAG_CLICK_THRESHOLD_PX
-      ) {
-        drag.moved = true;
-      }
-
-      setTranslate({
-        x: drag.baseX + deltaX,
-        y: drag.baseY + deltaY,
-      });
-    },
-    []
-  );
-
-  const handlePointerUp = useCallback(
-    (event: React.PointerEvent<HTMLDivElement>) => {
-      const drag = dragRef.current;
-      if (!drag || drag.pointerId !== event.pointerId) return;
-
-      if (drag.moved) {
-        suppressBackdropClickRef.current = true;
-        window.setTimeout(() => {
-          suppressBackdropClickRef.current = false;
-        }, 0);
-      }
-
-      dragRef.current = null;
-      setDragging(false);
-      event.currentTarget.releasePointerCapture(event.pointerId);
-    },
-    []
-  );
-
   const closeIfBackdrop = useCallback(
     (event: ReactMouseEvent<HTMLElement>) => {
-      if (suppressBackdropClickRef.current || dragging) return;
+      if (dragging) return;
       if (event.target === event.currentTarget) {
         onOpenChange(false);
       }
@@ -373,10 +304,9 @@ export function ImagePreviewOverlay({
           className="flex h-full w-full cursor-zoom-out items-center justify-center overflow-hidden"
           onClick={closeIfBackdrop}
           onWheel={handleWheel}
-          onPointerDown={handlePointerDown}
-          onPointerMove={handlePointerMove}
-          onPointerUp={handlePointerUp}
-          onPointerCancel={handlePointerUp}
+          data-image-preview-pan
+          data-preview-dragging={dragging}
+          {...pan}
         >
           <div
             className="inline-flex max-h-full max-w-full"

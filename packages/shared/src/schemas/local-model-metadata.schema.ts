@@ -11,6 +11,7 @@ export const LocalModelMetadataSchema = z.object({
 });
 export const LocalModelMetadataEntrySchema = z.object({
   filePath: z.string(),
+  localSha256: z.string().regex(/^([a-f\d]{64})?$/i).optional(),
   status: z.enum(["ready", "missing", "invalid", "unsupported", "unavailable"]),
   metadata: LocalModelMetadataSchema.nullable(),
 });
@@ -52,3 +53,10 @@ export const LocalModelRecoveryResultSchema = z.object({
  * 保持为结构化值，跨 IPC 时无需序列化 Error 实例。
  */
 export type LocalModelRecoveryResult = z.infer<typeof LocalModelRecoveryResultSchema>;
+
+/** 离线补摘要逐文件返回原因；无效 JSON 不可作为空文件覆盖。 */
+export const LocalModelHashResultSchema = z.object({
+  status: z.enum(["saved", "existing", "invalid", "metadataInvalid", "changed", "busy", "timeout", "io"]),
+  sha256: z.string().regex(/^([a-f\d]{64})?$/i),
+});
+export type LocalModelHashResult = z.infer<typeof LocalModelHashResultSchema>;

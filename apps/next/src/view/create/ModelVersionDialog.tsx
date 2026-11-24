@@ -1,4 +1,6 @@
 "use client";
+import { HoverTip } from "@/components/hover-tip";
+
 
 // 分类下的模型卡片沿用原选择逻辑；创建单栏作为栈顶主区页，两栏及以上恢复原版居中弹窗。
 // Portal 避免创建栏裁切，Esc 只关闭版本选择这一层并恢复原分类入口焦点。
@@ -19,6 +21,10 @@ import type { ModelCover } from "@/types/model";
 
 interface ModelOption { key: string; name: string; label: string; cover: ModelCover }
 interface Props {
+  // 多版本页是独立门户，必须显式继承宿主外观，不能依赖外层 DOM。
+  // 原创建页省略此值仍保留原主题，不改变模型选中或多选规则。
+  // 该参数只绘制中性表面，不写入资源JSON或用户工作流。
+  tone?: "neutral";
   title: string; options: ModelOption[]; selectedKeys: string[];
   multiple: boolean;
   onOpenChange: (open: boolean) => void; onSelect: (key: string) => void;
@@ -50,13 +56,16 @@ function ModelOptionCard({ option, selected, choose }: { option: ModelOption; se
   const size = useCreateFormStore((state) => state.resourceDialogFontSize);
   const typography = getResourceDialogTypography(size);
   return <ResourceSelectionCard name={option.name} cover={option.cover} selected={selected} typography={typography}
-    optionId={option.key} onPick={choose} meta={option.label !== option.name ? <span title={option.label} className="block truncate">{option.label}</span> : undefined}>
+    optionId={option.key} onPick={choose} meta={option.label !== option.name ? <HoverTip asChild layer="window" label={(option.label) ?? ""}><span className="block truncate">{option.label}</span></HoverTip> : undefined}>
       <button type="button" data-resource-model-select className={cn("mt-3 inline-flex w-full items-center justify-center rounded-xl px-3 font-medium", typography.action, typography.actionHeight, PRIMARY_BUTTON_CLASS)}>
         {t(selected ? "create.extensionSelectDialog.selected" : "create.extensionSelectDialog.select")}
       </button>
   </ResourceSelectionCard>;
 }
-export function ModelVersionDialog({ title, options, selectedKeys, multiple, onOpenChange, onSelect }: Props) {
+// 分类与版本层使用相同外观参数，进入第二层不会突然切回品牌蓝。
+// 开关不参与资源身份或封面选择，已有按选择队列展示规则继续生效。
+// 嵌套焦点与 Escape 仍使用本组件原有生命周期，不另挂新键盘监听。
+export function ModelVersionDialog({ title, options, selectedKeys, multiple, onOpenChange, onSelect, tone }: Props) {
   const { t } = useTranslation();
   // 分类选择器仍挂载以保留草稿；版本页成为创建主区栈顶，返回后恢复分类筛选。
   // 此组件由 activeGroup 条件挂载，因此 true 表示当前实例在其整个生命周期内都已打开。
@@ -71,7 +80,7 @@ export function ModelVersionDialog({ title, options, selectedKeys, multiple, onO
   // 外层类同时移除 max-w、居中位移和 max-h，否则即使 portal 正确仍会像居中弹窗。
   // 模型卡片网格和底部确认保持原来的 flex/scroll 分区，长版本列表只滚动主体。
   // 原 focus trap 只作用本页 ref；关闭后分类页恢复显示并恢复之前的入口焦点。
-  // 页面返回不重新构造分类选择器，所以其 search、draftVersions 与滚动区域可以原样保留。
+  // 页面返回不重新构造分类选择器，所以其搜索、选择队列与滚动区域可以原样保留。
   // 没有宿主时使用原 z95 遮罩与 z96 对话框，兼容创建页外的既有资源选择场景。
   // 顶栏关闭仍调用同一个 onOpenChange(false)，主区栈不另设一条提交或取消回调。
   // 卡片封面继续由 ResourceSelectionCard 读取，版本页不复制资源图片或另造预览数据。
@@ -81,7 +90,10 @@ export function ModelVersionDialog({ title, options, selectedKeys, multiple, onO
   return createPortal(<>
     {!mainPage.host && <div data-lora-model-backdrop className="fixed inset-0 z-[95] bg-black/50" aria-hidden onClick={() => onOpenChange(false)} />}
     {/* 弹窗：分类内的主模型 / LoRA 卡片，层级高于分类库，窗口标题栏仍在最上方 */}
-    <div ref={ref} role="dialog" aria-modal={mainPage.host ? undefined : true} aria-labelledby="model-version-dialog-title"
+    {/* 版本门户：中性标记只替换语义色，原网格、草稿和确认路径都保留。 */}
+    {/* 缺省不设置标记，避免画布需求影响创建页其他工作区。 */}
+    {/* 多层页面之间只传配置，不能为了颜色复制另一套版本选择 UI。 */}
+    <div ref={ref} data-neutral-surface={tone === "neutral" ? "" : undefined} role="dialog" aria-modal={mainPage.host ? undefined : true} aria-labelledby="model-version-dialog-title"
       data-model-version-main-page={Boolean(mainPage.host) || undefined}
       style={mainPage.host ? undefined : { top: "calc((100dvh + var(--window-chrome-height, 0px)) / 2)" }}
       className={cn(mainPage.host ? "motion-none flex h-full min-h-0 w-full flex-col overflow-hidden bg-background text-foreground" : "fixed left-1/2 z-[96] flex max-h-[calc(100dvh-var(--window-chrome-height,0px)-2rem)] w-[calc(100vw-2rem)] max-w-2xl -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-xl bg-background text-foreground shadow-xl", THIN_BORDER_CLASS)}>
@@ -90,7 +102,7 @@ export function ModelVersionDialog({ title, options, selectedKeys, multiple, onO
       {/* 返回只关闭本层，不清理父分类搜索、多选草稿或滚动位置。 */}
       <div className="flex shrink-0 flex-wrap items-center gap-2 border-b border-border px-4 py-3">
         {mainPage.host && <button type="button" data-resource-model-back aria-label={t("common.close")} onClick={() => onOpenChange(false)} className="inline-flex shrink-0 items-center justify-center rounded text-muted-foreground hover:bg-muted"><ChevronLeft className="h-4 w-4" /></button>}
-        <h2 id="model-version-dialog-title" className="min-w-0 flex-1 truncate text-base font-semibold" title={title}>{title}</h2>
+        <HoverTip asChild layer="window" label={(title) ?? ""}><h2 id="model-version-dialog-title" className="min-w-0 flex-1 truncate text-base font-semibold">{title}</h2></HoverTip>
         {!mainPage.host && <button type="button" aria-label={t("common.close")} onClick={() => onOpenChange(false)} className="shrink-0 rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground"><X className="h-4 w-4" /></button>}
       </div>
       <div data-resource-model-scroll className="min-h-0 flex-1 overflow-y-auto overscroll-contain">

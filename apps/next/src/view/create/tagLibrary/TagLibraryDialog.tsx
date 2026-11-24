@@ -34,7 +34,7 @@ import { filterBackgroundItems, type BackgroundFilters as BackgroundFilterState 
 // 收藏操作存入同一用户文档，不给每个库重复编写持久化实现。
 // 指标从源ID读取，名称搜索不负责猜测画师风格或模型兼容性。
 import { useArtistLibraryStore } from "@/stores/use-artist-library-store";
-import { ARTIST_METADATA, filterArtistItems, type ArtistSort } from "@/utils/artist-library";
+import { ARTIST_ITEMS, ARTIST_METADATA, filterArtistItems, type ArtistSort } from "@/utils/artist-library";
 import { ArtistFilters } from "./artist-filters";
 import { BackgroundFilters } from "@/view/create/tagLibrary/background-filters";
 
@@ -57,10 +57,19 @@ type TagLibraryDialogProps = {
  */
 export function TagLibraryDialog({
   open,
-  library,
+  library: configuration,
   onOpenChange,
   onApply,
 }: TagLibraryDialogProps) {
+  // 仅进入已经按需加载的弹窗后接入完整画师条目，注册按钮不读取大 JSON。
+  // 仍使用原来的 ARTIST_ITEMS 与查询器，四万条搜索、排序与收藏都不缩水。
+  // 配置对象不被原地修改，普通/高级输入区的另一个实例不受影响。
+  // 数组引用保持稳定，关闭时不会反复转换整份画师资料。
+  // 其他库原样通过，动作、表情和背景的分类规则不发生改变。
+  const library = useMemo(() => configuration.id === "artist" ? { ...configuration, items: ARTIST_ITEMS } : configuration, [configuration]);
+  // 注册表中的 artist.items 只是轻量入口，不作为“画师库为空”的业务证据。
+  // 完整条目补入发生在所有计数、筛选与卡片派生之前，分母依旧四万余条。
+  // 查询器与指标 Map 使用同一源 JSON，不为延迟加载维护第二份评分索引。
   const { t } = useTranslation();
   const showToast = useToastStore((state) => state.show);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
@@ -150,6 +159,10 @@ export function TagLibraryDialog({
   // 只看已选在背景分支独立展示，动作与表情的规则不随本轮改变。
   const filtered = useMemo(
     () => {
+      // 关闭的内容可以保留草稿，但不应在收藏变化时排序整个资料库。
+      // 所有 Hook 仍按原顺序调用，只暂停过滤，不在条件分支里调用 Hook。
+      // 重新打开时 open 的变化使查询立即使用最新收藏和完整源数据。
+      if (!open) return [];
       // 单分类输入仍供动作与表情使用，背景另外组合多分类和特征。
       // 使用明确分支调用，防止背景专用参数泄漏到其他库的接口中。
       // 查询与已选状态只定义一次，避免两条路径漏同步某个字段。
@@ -185,7 +198,7 @@ export function TagLibraryDialog({
     // 背景的双层条件参与实际过滤依赖，不能只改侧栏高亮。
     // selected 提供跨页完整草稿，“只看已选”不再被当前分页截断。
     // 其他库仍调用原函数，单分类、关键词和已选的过滤次序保持一致。
-    [favoritesOnly, storedFavorites.data, artist.collections, artistGroup, artistSort, shuffleSeed, backgroundFilters, category, library.id, library.items, query, selected, selectedOnly, sort]
+    [open, favoritesOnly, storedFavorites.data, artist.collections, artistGroup, artistSort, shuffleSeed, backgroundFilters, category, library.id, library.items, query, selected, selectedOnly, sort]
   );
 
   const pages = Math.max(1, Math.ceil(filtered.length / TAG_LIBRARY_PAGE_SIZE));

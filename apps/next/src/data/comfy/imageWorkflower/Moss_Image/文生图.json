@@ -1,0 +1,174 @@
+{
+  "9": {
+    "inputs": {
+      "filename_prefix": "moss_image_t2i",
+      "images": [
+        "18:8",
+        0
+      ]
+    },
+    "class_type": "SaveImage",
+    "_meta": {
+      "title": "保存图像"
+    }
+  },
+  "18:1": {
+    "inputs": {
+      "unet_name": "Moss\\Moss_image\\moss_image_sft_int8_convrot\\moss_image_sft_int8_convrot.safetensors",
+      "weight_dtype": "default"
+    },
+    "class_type": "UNETLoader",
+    "_meta": {
+      "title": "UNet加载器"
+    }
+  },
+  "18:4": {
+    "inputs": {
+      "text": "{\"summary\":{\"caption\":\"Two girls embracing each other,\"},\"items\":[{\"label\":\"object\",\"caption\":\"Alice stands wearing a blue hairband with a large blue bow, a pale blue Alice dress with puffed sleeves, a white apron, a black bowtie, and black-and-white striped stockings; she looks at the viewer with a gentle smile and wraps her arms around her companion in a mutual hug.\",\"bbox\":[-193,-512,353,-31]},{\"label\":\"object\",\"caption\":\"Kochiya Sanae, a girl with long green hair and green eyes, stands in the mutual embrace with her arms around Alice’s waist, her body angled toward the viewer.\",\"bbox\":[-193,0,353,481]},{\"label\":\"object\",\"caption\":\"The background is a long city street receding into the distance, filled with a dense crowd of pedestrians, shopfronts along both sides, streetlights, and vehicles under cool blue-gray ambient light.\",\"bbox\":[-512,-512,512,512]},{\"label\":\"object\",\"caption\":\"A large pink speech bubble carries the dark, rounded handwritten-style Chinese copy \\\"好久不见 爱玲\\\", clearly readable.\",\"bbox\":[-353,-481,0,-352]},{\"label\":\"object\",\"caption\":\"A pink speech bubble carries the dark, rounded handwritten-style copy \\\"好久不见！alice！\\\", clearly readable.\",\"bbox\":[-320,224,97,353]}],\"bbox_coord_space\":\"abs_centralized\",\"bbox_format\":\"yxyx\"}",
+      "clip": [
+        "18:2",
+        0
+      ]
+    },
+    "class_type": "CLIPTextEncode",
+    "_meta": {
+      "title": "Positive Prompt"
+    }
+  },
+  "18:2": {
+    "inputs": {
+      "clip_name": "Moss\\Moss_image\\qwen3.5_9b_int8_convrot\\qwen3.5_9b_int8_convrot.safetensors",
+      "type": "moss_image",
+      "device": "default"
+    },
+    "class_type": "CLIPLoader",
+    "_meta": {
+      "title": "加载CLIP"
+    }
+  },
+  "18:7": {
+    "inputs": {
+      "seed": 610610098354292,
+      "steps": 20,
+      "cfg": 3,
+      "sampler_name": "er_sde",
+      "scheduler": "simple",
+      "denoise": 1,
+      "model": [
+        "18:24",
+        0
+      ],
+      "positive": [
+        "18:4",
+        0
+      ],
+      "negative": [
+        "18:5",
+        0
+      ],
+      "latent_image": [
+        "18:6",
+        0
+      ]
+    },
+    "class_type": "KSampler",
+    "_meta": {
+      "title": "K采样器"
+    }
+  },
+  "18:3": {
+    "inputs": {
+      "vae_name": "Moss\\Moss_image\\flux2-vae.safetensors"
+    },
+    "class_type": "VAELoader",
+    "_meta": {
+      "title": "加载VAE"
+    }
+  },
+  "18:6": {
+    "inputs": {
+      "width": 1024,
+      "height": 1024,
+      "batch_size": 1
+    },
+    "class_type": "EmptyFlux2LatentImage",
+    "_meta": {
+      "title": "空Latent图像（Flux2）"
+    }
+  },
+  "18:5": {
+    "inputs": {
+      "text": "nsfw, worst quality, bad anatomy, watermark, jpeg artifact",
+      "clip": [
+        "18:2",
+        0
+      ]
+    },
+    "class_type": "CLIPTextEncode",
+    "_meta": {
+      "title": "Negative Prompt (empty = reference default)"
+    }
+  },
+  "18:8": {
+    "inputs": {
+      "samples": [
+        "18:7",
+        0
+      ],
+      "vae": [
+        "18:3",
+        0
+      ]
+    },
+    "class_type": "VAEDecode",
+    "_meta": {
+      "title": "VAE解码"
+    }
+  },
+  "18:15": {
+    "inputs": {
+      "double_layers": "",
+      "single_layers": "22",
+      "start_percent": 0,
+      "end_percent": 0.5,
+      "model": [
+        "18:1",
+        0
+      ]
+    },
+    "class_type": "SkipLayerGuidanceDiTSimple",
+    "_meta": {
+      "title": "跳过层引导（DiT简化）"
+    }
+  },
+  "18:24": {
+    "inputs": {
+      "switch": false,
+      "on_false": [
+        "18:27",
+        0
+      ],
+      "on_true": [
+        "18:27",
+        0
+      ]
+    },
+    "class_type": "ComfySwitchNode",
+    "_meta": {
+      "title": "切换"
+    }
+  },
+  "18:27": {
+    "inputs": {
+      "attention": "comfy kitchen attention",
+      "model": [
+        "18:1",
+        0
+      ]
+    },
+    "class_type": "ModelAttentionBackend",
+    "_meta": {
+      "title": "模型注意力后端"
+    }
+  }
+}

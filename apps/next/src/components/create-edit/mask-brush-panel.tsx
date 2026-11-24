@@ -5,6 +5,7 @@
  * 显示透明度与实际强度分开，避免导出与预览含义混淆。
  */
 import { useMaskWorkspaceStore } from '@/stores/use-mask-workspace-store';
+import { useShallow } from 'zustand/react/shallow';
 import { DEFAULT_MASK_BRUSH } from '@/utils/mask-paint';
 import { GenerationParameterControl } from '@/view/create/generation-parameter-control';
 import { OptionSelect } from '@/view/create/OptionSelect';
@@ -45,7 +46,21 @@ export function MaskBrushPanel({ disabled = false }: { disabled?: boolean }) {
   // 油漆桶连通开关禁用但保留说明，用户能看出当前固定行为。
   // active layer 的可选范围与 store 类型一致，原图只有显示开关。
   // 层显隐产生新对象，画布 effect 可以按引用变化及时重画。
-  const state = useMaskWorkspaceStore(), { t } = useTranslation();
+  // 面板只订阅自己展示的参数，不订阅每次笔迹增加的像素 revision。
+  // 像调色盘只在换颜色或笔刷时更新，不跟着画纸的每一笔重新摆放。
+  // patch/action 仍是原 store 的方法，未复制第二份编辑状态或执行逻辑。
+  // visible 与 brush 由 store 不可变替换，浅比较能够发现真实参数修改。
+  // 文档、撤销和导出状态由画布与工具栏负责，面板不靠 revision 判断它们。
+  // 任务锁继续由调用方传入，过滤订阅不会绕过原 fieldset 禁用边界。
+  const state = useMaskWorkspaceStore(useShallow(value => ({ brush: value.brush, patch: value.patch, action: value.action, blurRadius: value.blurRadius, tool: value.tool, tolerance: value.tolerance, contiguous: value.contiguous, color: value.color, displayOpacity: value.displayOpacity, visible: value.visible, layer: value.layer }))), { t } = useTranslation();
+  // layer 决定橡皮擦和填充的目标，即使 brush 完全相同也必须独立订阅。
+  // tool 切换会决定是否显示容差区域，不能只筛 brush 导致面板结构停留旧工具。
+  // visible 控制三个独立复选框，切换原图显示不应同时修改绘画层显隐。
+  // color 是蒙版显示色，而 brush.color 是真实 RGB 笔刷颜色，二者不可合并。
+  // displayOpacity 是观察参数，brush.opacity 是写入覆盖率，更新入口仍分开。
+  // contiguous 是连通区域规则，不因为面板少订阅 revision 就丢失选择状态。
+  // blurRadius 独立于笔刷大小，换 brush.size 不会擅自改变高斯作用半径。
+  // state.patch 在原 store 合并对象，过滤订阅只减少读取，不改变写入的锁和校验。
   const update = (value: Partial<typeof state.brush>) => state.patch({ brush: { ...state.brush, ...value } });
   const controls = [{ name: 'size', min: 1, max: 256, step: 1 }, { name: 'opacity', min: 0.01, max: 1, step: 0.01 }, { name: 'hardness', min: 0, max: 1, step: 0.01 }, { name: 'spacing', min: 0.05, max: 1, step: 0.05 }] as const;
   return <div data-mask-brush-panel className="space-y-4 p-3 text-xs"><div className="flex items-center justify-between gap-2"><strong>{t('create.maskStudio.brushSettings')}</strong><button type="button" className="text-accent-text hover:underline" onClick={() => state.patch({ brush: { ...DEFAULT_MASK_BRUSH } })}>{t('create.maskStudio.reset')}</button></div>

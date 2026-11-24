@@ -47,30 +47,12 @@ const ICON_NAMES = [
 ];
 const IMAGE_PATTERN = /\.(png|jpe?g|webp|gif|bmp)$/i;
 
-// stat 类似查看文件的标签，只读取大小和时间，不把整本书搬进内存。
-// 目录扫描已经在使用同步枚举；此处只补一次轻量文件属性读取。
-// 不在比较函数内访问磁盘，否则排序会对同一文件重复读取很多次。
-// 属性存到版本上，使同目录多文件保持各自准确的大小和修改日期。
-// 扫描与 stat 之间文件可能被外部删除，这不是整个根目录扫描失败。
-// 失败保留空属性，UI 明确按未知数据处理，不能把异常记成零字节。
-// 不打印原始异常或本地路径，避免用户文件信息进入日志。
-// 权限边界仍来自原扫描根，此函数不向渲染层开放任意文件读取。
-// 大小使用文件字节数而不是目录占用，也不进行 MB 或 GB 的提前舍入。
-// UI 若按格式化字符串排序，1 GB 可能错误排在 900 MB 之前。
-// 修改时间保留毫秒精度，同一秒写入的多个版本仍可按其真实次序排列。
-// 跨 IPC 只传普通数字，不传 fs.Stats 实例或依赖其原型的方法。
-// 老扫描消费者只取原有字段，可选属性不会改变模型路径的识别方式。
-// 旧用户文档没有这些数字时仍能恢复，手动扫描后再逐步得到属性。
-// 如果 stat 遇到权限问题，不把错误文本传入渲染层或写到用户路径日志。
-// catch 只覆盖该文件属性，后续同目录权重仍应继续出现在扫描结果中。
-// stat 成功不等于权重合法或架构兼容，不能用它代替 ComfyUI 模型校验。
-// 本次没有新增文件监视器，外部覆盖模型后仍需按原按钮重新扫描。
-// 查阅属性不会触发 SHA-256，更不会以扫描为由调用外部模型网站。
-// 流式哈希依然属于用户明确点击的资料补全事务，不迁移进此助手。
+// stat 像查看书脊标签：只取大小和时间，不读模型内容，也不在排序中重复访问磁盘。
+// 文件被移走或无权读取时保留未知属性，不把整批扫描清空或误记为零字节。
 /** @param {string} filePath 已由扫描枚举得到的模型文件 */
-function fileAttributes(filePath) {
+async function fileAttributes(filePath) {
   try {
-    const stat = fs.statSync(filePath);
+    const stat = await fs.promises.stat(filePath);
     return { bytes: stat.size, modifiedAt: stat.mtimeMs };
   } catch { return {}; }
 }
@@ -78,13 +60,14 @@ function fileAttributes(filePath) {
 /**
  * 在目录里找一个可作封面的图片（优先 logo.png，其次常见命名，最后任意图片）
  * @param {string} dirPath 目录绝对路径
+ * @param {import("fs").Dirent[]} [knownEntries] 扫描刚取得的目录条目，避免再次枚举
  * @returns {string | null} 封面图绝对路径；找不到返回 null
  */
-function findIconInDir(dirPath) {
+function findIconInDir(dirPath, knownEntries) {
   /** @type {import("fs").Dirent[]} */
   let entries;
   try {
-    entries = fs.readdirSync(dirPath, { withFileTypes: true });
+    entries = knownEntries ?? fs.readdirSync(dirPath, { withFileTypes: true });
   } catch {
     return null;
   }
@@ -107,78 +90,41 @@ function findIconInDir(dirPath) {
   return fallbackImage ? path.join(dirPath, fallbackImage) : null;
 }
 
-/**
- * 递归扫描目录下的模型文件，按「所在目录（= 版本）」聚合
- * @param {string} rootDir 扫描根目录
- * @param {"checkpoint" | "lora" | "embedding"} type 模型类型
- * @returns {ScannedModel[]} 按名称排序的模型列表
- */
-function scanModelsInDirectory(rootDir, type) {
-  /** @type {Map<string, ScannedModelVersion[]>} */
-  const folderMap = new Map();
-
-  /**
-   * @param {string} currentDir
-   * @returns {void}
-   */
-  function walk(currentDir) {
-    /** @type {import("fs").Dirent[]} */
-    let entries;
-    try {
-      entries = fs.readdirSync(currentDir, { withFileTypes: true });
-    } catch {
-      return;
-    }
-
-    for (const entry of entries) {
-      const fullPath = path.join(currentDir, entry.name);
-
-      if (entry.isDirectory()) {
-        walk(fullPath);
-        continue;
-      }
-
-      if (!entry.isFile()) continue;
-
-      const ext = path.extname(entry.name).toLowerCase();
-      if (!MODEL_EXTENSIONS.includes(ext)) continue;
-
-      const dirPath = currentDir;
-      if (!folderMap.has(dirPath)) {
-        folderMap.set(dirPath, []);
-      }
-
-      folderMap.get(dirPath)?.push({
-        id: fullPath,
-        name: path.basename(entry.name, ext),
-        filePath: fullPath,
-        // 相同文件的属性随本轮扫描返回，不跟名称或目录分组做猜测。
-        // 不修改版本 id，排序后加载和补全仍使用原来的完整文件路径。
-        ...fileAttributes(fullPath),
-      });
-    }
+// 按目录顺序异步扫描，不并发打开大量句柄；同一次枚举也供封面选择使用。
+// 子目录读失败只跳过这一支，符号链接不跟随，刷新时重新读取而不沿用旧缓存。
+/** @param {string} currentDir @param {ScannedModel['type']} type @param {ScannedModel[]} results */
+async function scanDirectory(currentDir, type, results) {
+  let entries;
+  try { entries = await fs.promises.readdir(currentDir, { withFileTypes: true }); }
+  catch { return; }
+  const versions = /** @type {ScannedModelVersion[]} */ ([]);
+  for (const entry of entries) {
+    const fullPath = path.join(currentDir, entry.name);
+    if (entry.isDirectory()) { await scanDirectory(fullPath, type, results); continue; }
+    const ext = path.extname(entry.name).toLowerCase();
+    if (!entry.isFile() || !MODEL_EXTENSIONS.includes(ext)) continue;
+    versions.push({ id: fullPath, name: path.basename(entry.name, ext), filePath: fullPath, ...await fileAttributes(fullPath) });
   }
+  if (!versions.length) return;
+  versions.sort((a, b) => a.name.localeCompare(b.name, "zh-CN"));
+  results.push({ id: currentDir, name: path.basename(currentDir), filePath: currentDir, iconPath: findIconInDir(currentDir, entries), type, versions });
+}
 
-  walk(rootDir);
+// 只合并正在进行的相同根和类型扫描，完成或失败后移除，下一次刷新重新读盘。
+/** @type {Map<string, Promise<ScannedModel[]>>} */
+const scans = new Map();
 
-  /** @type {ScannedModel[]} */
-  const results = [];
-  for (const [dirPath, versions] of folderMap) {
-    if (versions.length === 0) continue;
-
-    versions.sort((a, b) => a.name.localeCompare(b.name, "zh-CN"));
-
-    results.push({
-      id: dirPath,
-      name: path.basename(dirPath),
-      filePath: dirPath,
-      iconPath: findIconInDir(dirPath),
-      type,
-      versions,
-    });
-  }
-
-  return results.sort((a, b) => a.name.localeCompare(b.name, "zh-CN"));
+/** @param {string} rootDir @param {ScannedModel['type']} type @returns {Promise<ScannedModel[]>} */
+async function scanModelsInDirectory(rootDir, type) {
+  // 去重键保留大小写，返回的共享快照勿原地排序；展示层需要重排时先复制。
+  const key = JSON.stringify([path.resolve(rootDir), type]);
+  const pending = scans.get(key);
+  if (pending) return pending;
+  const results = /** @type {ScannedModel[]} */ ([]);
+  const task = scanDirectory(rootDir, type, results).then(() => results.sort((a, b) => a.name.localeCompare(b.name, "zh-CN")));
+  scans.set(key, task);
+  try { return await task; }
+  finally { scans.delete(key); }
 }
 
 module.exports = {

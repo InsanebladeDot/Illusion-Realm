@@ -1,0 +1,1 @@
+export const r=new Proxy(()=>{}, {get:(_,level)=>(value)=>{window.__serviceEvents??=[];window.__serviceEvents.push({type:'toast',level,message:String(value)})}});

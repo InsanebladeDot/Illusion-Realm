@@ -101,7 +101,7 @@ export function MaskCanvasStage({ locked }: { locked: boolean }) {
   // 固定视口外的反向提示词仍由正常文档流排列，不因放大镜操作向下漂移。
   // 滚轮不会隐式切换当前工具，用户选定的蒙版笔或套索仍保持。
   // 空态滚轮只改变观察偏好，不创建空文档或任何导出结果。
-  // 主画布context每次重新绘制前重置尺寸，旧clip、透明度或路径不会污染新帧。
+  // 主画布只在自然尺寸改变时改宽高，每帧重置context防止旧clip或透明度污染。
   // 预览读取当前revision，输入笔迹刷新后主图和缩略图可观察到同一文档。
   // 图层隐藏仅跳过显示分支，生成输入不会因用户暂时藏起蒙版而消失。
   // readonly通道只读drawMaskChannel，画笔hook会在入口拒绝写入。
@@ -141,7 +141,7 @@ export function MaskCanvasStage({ locked }: { locked: boolean }) {
     node.addEventListener('wheel', wheel, { passive: false }); return () => node.removeEventListener('wheel', wheel);
   }, [zoom]);
   useEffect(() => {
-    // 先设置属性尺寸清空旧缓冲与合成状态，避免前次 globalAlpha 泄漏。
+    // 仅自然尺寸改变时分配缓冲，其余帧重置上下文，避免前次 globalAlpha 泄漏。
     // painted 透明区域透出 original，没有先填背景色污染导出预览。
     // 蒙版临时副本用 source-in 着色，实际 mask canvas 保持白色加 alpha。
     // 最终 context 的 globalAlpha 只作用于叠加层，原图不被整体淡化。
@@ -149,7 +149,22 @@ export function MaskCanvasStage({ locked }: { locked: boolean }) {
     // 所有读写发生在 effect，静态导出阶段不会访问 document 或 Canvas。
     // 预览画布只是合成输出，输入事件写的是文档层而不是这个显示缓冲。
     // 因而重新渲染不会擦掉用户笔迹，清空显示缓冲是安全操作。
-    if (!doc || !canvas.current) return; const target = canvas.current; target.width = doc.original.width; target.height = doc.original.height; const context = maskContext(target);
+    // CSS 缩放不改自然像素，观察尺寸改变时也不用分配更大的原图缓冲。
+    // reset 保留缓冲容量并清空像素，行为等同原来每帧重新设宽高后的干净状态。
+    // 单独比较两个维度，横竖旋转后仍按文档的新宽高重新建立目标。
+    // 选择线继续在主图合成后绘制，不进入任何导出或撤销层。
+    if (!doc || !canvas.current) return;
+    // 原宽高赋值每帧清空并重建缓冲，现在同尺寸时只清内容和状态。
+    // reset 清理 clip、线段和变换，不能把上一帧的虚线变成图像裁切。
+    // 原图和绘画仍按原顺序合成，不为复用缓冲改变图层规则。
+    // doc 与 revision 仍是 effect 依赖，更新笔迹不会因为引用相同漏画。
+    // scale 只控制显示和线宽，不是重新分配自然图像的理由。
+    // 只读通道仍走 drawMaskChannel，不在这里重写透明度与反向规则。
+    const target = canvas.current;
+    if (target.width !== doc.original.width) target.width = doc.original.width;
+    if (target.height !== doc.original.height) target.height = doc.original.height;
+    const context = maskContext(target);
+    context.reset();
     if (state.channel !== 'painting') { drawMaskChannel(target, doc, state.channel); return; }
     if (state.visible.original) context.drawImage(doc.original, 0, 0); if (state.visible.painted) context.drawImage(doc.painted, 0, 0);
     if (state.visible.mask) drawMaskOverlay(target, doc, state.color, state.displayOpacity);

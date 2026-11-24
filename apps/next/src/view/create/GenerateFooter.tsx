@@ -1,4 +1,6 @@
 "use client";
+import { HoverTip } from "@/components/hover-tip";
+
 
 import { RandomSeedButton } from "@/components/random-seed-button";
 import { useCreateFormStore } from "@/stores/useCreateFormStore";
@@ -17,6 +19,13 @@ type GenerateFooterProps = {
   // 数量控件沿用同一实现，quantityLabel 仅更换读屏所用的媒介名称。
   seedControl?: { random: boolean; onEnable: () => void };
   quantityLabel?: string;
+  // 配置宿主禁用的是执行入口，数量和种子仍可编辑；默认值保留创建页原可用状态。
+  // 数量可由节点受控，打开同一表单不会另建一份与页脚倍数脱节的临时值。
+  disabled?: boolean;
+  // 未就绪时连同种子和数量一起锁定；其他业务可只禁用提交。
+  locked?: boolean;
+  disabledReason?: string;
+  countControl?: { value: number; onChange: (count: number) => void; options?: readonly { count: number; label: string }[] };
 };
 
 /**
@@ -54,7 +63,22 @@ type GenerateFooterProps = {
 // 一份视觉实现服务图片与音频：主按钮、数量菜单、骰子均不再复制。
 // seedControl 同时提供当前值和写入口，不能只换显示而仍写回图片 store。
 // 无新 props 的所有调用保持原默认值，避免修改普通图片生成行为。
-export function GenerateFooter({ generating = false, onGenerate, seedControl, quantityLabel }: GenerateFooterProps) {
+// disabled 只锁执行按钮，不让参数配置宿主失去数量和种子设置能力。
+// 原生 disabled 使 Enter、空格和鼠标都无法提交，而不只是把按钮画成灰色。
+// disabledReason 放在真实主按钮 title，用户可以知道为什么现在不能生成。
+// countControl.value 优先用于按钮提交，避免界面显示六张却仍传内部的一张。
+// countControl.onChange 与 value 成对注入，不能只替换显示而把修改留在临时 state。
+// 没有 countControl 时沿用原 imageCount，不改变视频或音频已有调用的状态归属。
+// options 同样随 countControl 进入原下拉组件，宿主不手写一份弹出菜单。
+// 受控数量缺省不是零，宿主必须提供合法的当前值，不能把 undefined 作为清空。
+// seedControl 的原接口保持兼容，不因增加数量注入而改骰子的回调时序。
+// 生成文案仍由 generating 决定，disabled 不是伪造正在生成的状态。
+// 不使用生成失败来代替禁用反馈，未接通执行的宿主从一开始就不能提交。
+// 两个相邻按钮的独立点击范围保留，调整数量不会冒泡成一次生成。
+// 按钮外观仍来自原渐变类，画布只改变数据与可用性，不另造提交区样式。
+// 全局 seed hook 的缺省读取继续服务旧调用，局部宿主必须提供完整 seedControl。
+// 这种兼容读取没有写入副作用，只有未覆盖的原骰子点击才会调用原 setter。
+export function GenerateFooter({ generating = false, onGenerate, seedControl, quantityLabel, disabled = false, locked = false, disabledReason, countControl }: GenerateFooterProps) {
   const { t } = useTranslation();
   const seedMode = useCreateFormStore(state => state.seedMode), setAdvancedSettings = useCreateFormStore(state => state.setAdvancedSettings);
   const [imageCount, setImageCount] = useState(DEFAULT_IMAGE_COUNT);
@@ -62,13 +86,13 @@ export function GenerateFooter({ generating = false, onGenerate, seedControl, qu
   return <div className={cn("create-generate-footer z-20 flex shrink-0 items-center gap-2 border-t border-border bg-background px-3 py-3 sm:px-4", "max-md:pb-[calc(0.5rem+env(safe-area-inset-bottom,0px))]")}>
     {/* 界面：「图标 生成 | × N」共用渐变，左右按钮分别处理提交与数量选择。 */}
     <div data-generate-control role="group" aria-label={label} className="create-generate-button flex flex-1 min-w-0 items-stretch rounded-xl text-white shadow-sm transition-[filter] hover:brightness-110">
-      <button type="button" data-generate-button title={label} onClick={() => onGenerate?.(imageCount)} className="inline-flex min-h-11 min-w-0 flex-1 items-center justify-center gap-2 rounded-l-xl px-3 text-sm font-semibold focus-visible:outline-2 focus-visible:outline-offset-[-4px] focus-visible:outline-white active:scale-[0.99]">
+      <HoverTip asChild layer="window" label={(disabled ? disabledReason : label) ?? ""}><button type="button" data-generate-button disabled={disabled} onClick={() => onGenerate?.(countControl?.value ?? imageCount)} className="inline-flex min-h-11 min-w-0 flex-1 items-center justify-center gap-2 rounded-l-xl px-3 text-sm font-semibold focus-visible:outline-2 focus-visible:outline-offset-[-4px] focus-visible:outline-white active:scale-[0.99]">
         <Sparkles className="h-6 w-6 shrink-0" aria-hidden /><span className="truncate">{label}</span>
-      </button>
+      </button></HoverTip>
       {/* 数量菜单仍真实回传 N，音频宿主也必须消费该值而非只改变外观。 */}
       {/* quantityLabel 是可选可访问名称，不影响数量范围或菜单定位。 */}
       {/* 不在这个展示组件中提交批量任务，执行和快照留给宿主。 */}
-      <ImageCountDropdown value={imageCount} onChange={setImageCount} quantityLabel={quantityLabel} />
+      <ImageCountDropdown value={countControl?.value ?? imageCount} onChange={countControl?.onChange ?? setImageCount} options={countControl?.options} quantityLabel={quantityLabel} disabled={locked} />
     </div>
     {/* 界面：骰子开启当前宿主随机模式，数量和排队仍由主按钮处理。 */}
     {/* aria-pressed 反馈真实状态，重复点击不会切回自定义。 */}
@@ -76,6 +100,6 @@ export function GenerateFooter({ generating = false, onGenerate, seedControl, qu
     {/* 音频受控值优先；图片保留原来 store 中的随机模式和写入口。 */}
     {/* 回调不会生成任务，也不提前采样下一次随机数。 */}
     {/* 单独点击骰子与生成按钮在两种模式下都保持相同的交互语义。 */}
-    <RandomSeedButton random={seedControl?.random ?? seedMode === 'random'} onEnable={seedControl?.onEnable ?? (() => setAdvancedSettings({ seedMode: 'random' }))} />
+    <RandomSeedButton disabled={locked} random={seedControl?.random ?? seedMode === 'random'} onEnable={seedControl?.onEnable ?? (() => setAdvancedSettings({ seedMode: 'random' }))} />
   </div>;
 }

@@ -1,0 +1,85 @@
+{
+  "1": {
+    "inputs": {
+      "gpt": "GPT_SoVITS/pretrained_models/s1v3.ckpt",
+      "sovits": "GPT_SoVITS/pretrained_models/v2Pro/s2Gv2ProPlus.pth",
+      "runtime": "ComfyUI PyTorch",
+      "device": "cuda",
+      "fp16": true
+    },
+    "class_type": "GSVAtomicLoadModel",
+    "_meta": {
+      "title": "加载 GPT-SoVITS 权重"
+    }
+  },
+  "2": {
+    "inputs": {
+      "text": "",
+      "language": "ja",
+      "cut": "按标点切"
+    },
+    "class_type": "GSVAtomicText",
+    "_meta": {
+      "title": "填写要朗读的文本"
+    }
+  },
+  "3": {
+    "inputs": {
+      "audio": "1.flac"
+    },
+    "class_type": "LoadAudio",
+    "_meta": {
+      "title": "选择一段 3 到 10 秒的参考录音"
+    }
+  },
+  "4": {
+    "inputs": {
+      "transcript": "あのね…私、あなたと…したいの。その、そういうこと…したいんです。",
+      "language": "ja",
+      "audio": [
+        "3",
+        0
+      ]
+    },
+    "class_type": "GSVAtomicReference",
+    "_meta": {
+      "title": "填写参考录音的原台词"
+    }
+  },
+  "5": {
+    "inputs": {
+      "speed": 1,
+      "interval": 0.15,
+      "seed": 1480349036,
+      "string_language": "all_zh",
+      "model": [
+        "1",
+        0
+      ],
+      "text": [
+        "2",
+        0
+      ],
+      "reference": [
+        "4",
+        0
+      ]
+    },
+    "class_type": "GSVAtomicSynthesize",
+    "_meta": {
+      "title": "语音合成"
+    }
+  },
+  "6": {
+    "inputs": {
+      "audio": [
+        "5",
+        0
+      ]
+    },
+    "class_type": "PreviewAudio",
+    "_meta": {
+      "title": "试听合成结果"
+    }
+  }
+}

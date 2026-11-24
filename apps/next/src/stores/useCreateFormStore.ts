@@ -18,7 +18,7 @@
  * 该同步就放进 effect 或事件回调。
  * 持久化：用户数据文档 `createForm` 段（默认分类的文案在进 store 时已翻译成当前语言）。
  */
-import { create } from "zustand";
+import { create, createStore, type StateCreator } from "zustand";
 import { persist } from "zustand/middleware";
 import { t } from "@/i18n";
 import { DEFAULT_CFG, DEFAULT_STEPS } from "@/data/createForm";
@@ -52,7 +52,7 @@ import type {
   PromptTabToolId,
   PromptTemplate,
 } from "@/types/promptTabs";
-import type { UserDataCreateForm } from "@/types/userData";
+import type { CreateImageModelSeries, ImageModelVerification, UserDataCreateForm } from "@/types/userData";
 import {
   DEFAULT_RESOURCE_CATEGORY_UI_MODE,
   DEFAULT_RESOURCE_DIALOG_FONT_SIZE,
@@ -62,9 +62,18 @@ import {
 import { generateRandomSeed } from "@/utils/seed";
 import { createUserDataSectionPersistStorage } from "@/utils/userDataStorage";
 
+import { restoreImageModelChoices } from "@/utils/comfy/image-core-models";
+import { restoreImageModelChecks } from "@/utils/comfy/image-model-verification";
+
 type SeedMode = "random" | "custom";
 
-type CreateFormState = {
+export type CreateFormState = {
+  imageSeries: CreateImageModelSeries;
+  imageModelChoices: NonNullable<UserDataCreateForm["imageModelChoices"]>;
+  imageModelChecks: NonNullable<UserDataCreateForm["imageModelChecks"]>;
+  setImageSeries: (value: CreateImageModelSeries) => void;
+  setImageModelChoices: (series: CreateImageModelSeries, choices: Record<string, string>) => void;
+  recordImageModelCheck: (key: string, value: ImageModelVerification) => void;
   /** preset：按比例使用训练友好分辨率；custom：自定义宽高 */
   sizeMode: ImageSizeMode;
   aspectRatio: AspectRatioLabel;
@@ -73,6 +82,8 @@ type CreateFormState = {
   sizeScale: number;
   resourceDialogFontSize: ResourceDialogFontSize;
   resourceCategoryUiMode: ResourceCategoryUiMode;
+  upscale?: import("@/utils/comfy/seedvr2-workflow").UpscaleSettings;
+  setUpscale: (value: import("@/utils/comfy/seedvr2-workflow").UpscaleSettings) => void;
   steps: number;
   cfg: number;
   /** 采样器：null = 未自定义，使用当前系列工作流模板自带值 */
@@ -141,9 +152,27 @@ function localizedDefaultPromptTabs(): PromptTab[] {
   return DEFAULT_PROMPT_TABS.map((tab) => ({ ...tab, label: t(tab.label) }));
 }
 
-export const useCreateFormStore = create<CreateFormState>()(
-  persist<CreateFormState, [], [], UserDataCreateForm>(
-    (set) => ({
+// 原表单初始化与所有动作只保留这一份；局部宿主只换 Zustand 实例。
+// 像同一套空白表格印两份，不能把全局表格里的 setter 借给另一张工作单。
+// 只复制 getInitialState 会让动作仍闭包到原 store，因此需要复用初始化器本身。
+const createFormState: StateCreator<CreateFormState> = (set, get) => ({
+      imageSeries: "anima",
+      imageModelChoices: {},
+      imageModelChecks: {},
+      setImageSeries: imageSeries => set({ imageSeries }),
+      setImageModelChoices: (series, choices) => set(state => ({
+        imageModelChoices: { ...state.imageModelChoices, [series]: choices },
+      })),
+      recordImageModelCheck: (key, value) => {
+        const checks = get().imageModelChecks;
+        if (checks[key] === value) return;
+        // 保留最近 32 组结果，避免频繁更换权重使设置文件持续增长。
+        const entries = Object.entries(checks).filter(([savedKey]) => savedKey !== key);
+        set({ imageModelChecks: Object.fromEntries([...entries.slice(-31), [key, value]]) });
+      },
+      // 超分默认关闭；这是本次会话选项，旧创作草稿没有它时不自动启用。
+      upscale: undefined,
+      setUpscale: upscale => set({ upscale }),
       sizeMode: "preset",
       aspectRatio: DEFAULT_ASPECT_RATIO,
       customWidth: 1024,
@@ -333,11 +362,41 @@ export const useCreateFormStore = create<CreateFormState>()(
               ? patch.sourceImagePath
               : state.sourceImagePath,
         })),
-    }),
-    {
+    });
+
+// 画布实例不安装 persist，不读取或写入 createForm 段，保存仍交回节点事务。
+// 默认动作、尺寸限幅、分类排序和模板行为与创建页完全相同。
+// 每次调用创建独立的闭包，修改尺寸和高级开关不会触碰全局草稿。
+// createStore 与 create 的区别在于返回原 StoreApi，而不是绑定 React 的全局 hook。
+// 独立实例仍可用 Zustand 的 useStore 订阅，不需要额外 Context 或 Redux。
+// 工厂每调用一次都让共享初始化器重新执行，初始数组也不借用全局可变容器。
+// 原 setSizeSelection 的限幅与合法比例规则由同一个初始化器提供。
+// 原 setAdvancedSettings 仍处理同样的采样参数，不在节点适配器再写一次动作。
+// 原 addPromptTab 继续遵守分类上限，自定义分类不会因入口改变失去约束。
+// 原 removePromptTab 保留默认分类保护，局部实例也不能任意删掉内置目标。
+// 原 movePromptTab 与 reorderPromptTab 保持相同排序语义，复用不仅限于字段外观。
+// 原 setPromptTabContent 与 appendToPromptTab 分别表达覆盖和追加，不合并为含糊 setter。
+// 原 savePromptTemplate 快照当前局部分类，不能意外快照全局创建页的内容。
+// 原 applyPromptTemplate 修改的也是该实例分类，不先通过全局 store 中转。
+// 原 setPromptTabQuickWords 保留快捷词和正文的区别，设置按钮不会自动写正文。
+// 所有动作继续使用同一个 set 参数闭包，因此工厂实例间没有写入交叉。
+// 全局持久化 hook 仍在下方加原 persist，工厂自身不启动水合或写盘。
+// 这样不会出现局部 store 读入 createForm 存储段后覆盖节点确认值的情况。
+// 全局 partialize 清单保持原样，不因为增加工厂就偷偷持久化所有采样字段。
+// 原 merge 继续负责旧数据规范化，局部工作单由它自己的业务边界提供初始值。
+// createImageFormStore 不接受节点类型，避免把画布业务反向塞进通用创建状态模块。
+// 显式导出 CreateFormState 供注入点检查形状，不通过 unknown 强转绕过严格类型。
+// 初始化器抽取不改变 getResolvedSeedFromStore 的随机哨兵约定。
+export const createImageFormStore = () => createStore<CreateFormState>()(createFormState);
+
+export const useCreateFormStore = create<CreateFormState>()(
+  persist<CreateFormState, [], [], UserDataCreateForm>(createFormState, {
       name: "illusion-realm-create-form",
       storage: createUserDataSectionPersistStorage<UserDataCreateForm>("createForm"),
       partialize: (state): UserDataCreateForm => ({
+        imageSeries: state.imageSeries,
+        imageModelChoices: state.imageModelChoices,
+        imageModelChecks: state.imageModelChecks,
         aspectRatio: state.aspectRatio,
         sizeMode: state.sizeMode,
         customWidth: state.customWidth,
@@ -355,6 +414,9 @@ export const useCreateFormStore = create<CreateFormState>()(
         return {
           ...current,
           ...saved,
+          imageSeries: saved.imageSeries === "sdxl" || saved.imageSeries === "moss" ? saved.imageSeries : "anima",
+          imageModelChoices: restoreImageModelChoices(saved.imageModelChoices),
+          imageModelChecks: restoreImageModelChecks(saved.imageModelChecks),
           aspectRatio: sanitizeAspectRatio(saved.aspectRatio),
           sizeScale: clampSizeScale(saved.sizeScale),
           // 恢复时沿用图片的无上限规则，不能只放开表单而在重启后截断。

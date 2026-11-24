@@ -15,9 +15,9 @@ import {
   resolveScanRootForType,
 } from "@/utils/localModelCategory";
 
-/** 图像工作流系列（与 imageWorkflow 的 ImageWorkflowSeries 一致，避免循环依赖此处用字面量） */
-type ImageWorkflowSeriesLike = "anima" | "sdxl";
-export type LocalResourceSeries = ImageWorkflowSeriesLike | "minimax";
+// 类型引用不会加载工作流模板，资源筛选仍可独立使用。
+import type { ImageWorkflowSeries } from "@/utils/comfy/imageWorkflow";
+export type LocalResourceSeries = ImageWorkflowSeries | "minimax";
 
 export const LOCAL_CHECKPOINT_PREFIX = "local-checkpoint:";
 export const LOCAL_LORA_PREFIX = "local-lora:";
@@ -133,8 +133,12 @@ function parseLoraFolderLocation(
   folderPath: string
 ): LoraFolderLocation | null {
   const segments = getRelativeFolderSegments(scanRoot, folderPath);
-  if (segments.length === 2 && segments[0].toLowerCase() === "minimax") {
-    return { category: segments[0], series: "minimax" };
+  // MiniMax 内的子分类可能继续分文件夹；像逐层打开抽屉，不能只认固定三层而漏掉模型。
+  if (segments.length >= 2 && segments[0].toLowerCase() === "minimax") {
+    return { category: segments.length === 2 ? segments[0] : segments[1], series: "minimax" };
+  }
+  if (segments.length >= 2 && segments[0].toLowerCase() === "moss_image") {
+    return { category: segments.length === 2 ? segments[0] : segments[1], series: "moss" };
   }
   if (segments.length === 2) {
     return { category: segments[0], series: null };
@@ -146,8 +150,7 @@ function parseLoraFolderLocation(
   return { category: segments[1], series };
 }
 
-function createLoraVersion(model: LocalModel) {
-  const file = model.versions[0];
+function createLoraVersion(model: LocalModel, file: LocalModelVersion | undefined) {
   if (!file) return null;
   return {
     id: makeLocalLoraId(file.filePath),
@@ -159,13 +162,15 @@ function createLoraVersion(model: LocalModel) {
 
 function createLoraCategoryExtension(
   category: string,
-  models: LocalModel[]
+  models: LocalModel[],
+  allVersions: boolean
 ): CreateExtension | null {
   const sorted = [...models].sort((a, b) =>
     a.name.localeCompare(b.name, "zh-CN")
   );
+  // MiniMax 的同目录可能有多个权重文件；每份都交给原版本选择器，不能只留下第一份。
   const versions = sorted
-    .map(createLoraVersion)
+    .flatMap(model => (allVersions ? model.versions : model.versions.slice(0, 1)).map(file => createLoraVersion(model, file)))
     .filter((version): version is NonNullable<typeof version> => version !== null);
   if (versions.length === 0) return null;
 
@@ -188,7 +193,7 @@ function isLoraLocationVisible(
   hasSeriesFolder: boolean
 ): boolean {
   if (!series) return true;
-  if (series === "minimax") return location.series === "minimax";
+  if (series === "minimax" || series === "moss") return location.series === series;
   return hasSeriesFolder
     ? location.series === series
     : location.series === null;
@@ -228,7 +233,7 @@ export function buildCreateExtensionsFromLocal(
   }
 
   return [...grouped.entries()]
-    .map(([category, models]) => createLoraCategoryExtension(category, models))
+    .map(([category, models]) => createLoraCategoryExtension(category, models, !series || series === "minimax"))
     .filter((extension): extension is CreateExtension => extension !== null)
     .sort((a, b) => a.name.localeCompare(b.name, "zh-CN"));
 }
@@ -325,7 +330,7 @@ export function getLocalLoraDisplay(
  */
 export function getDefaultLocalSelectedModel(
   localModels: LocalModel[],
-  series: ImageWorkflowSeriesLike = "anima"
+  series: ImageWorkflowSeries = "anima"
 ): SelectedModel | null {
   const candidates = filterLocalModelsByType(localModels, "checkpoint").filter(
     (model) => !isNonDiffusionModelPath(model.filePath)
@@ -333,9 +338,10 @@ export function getDefaultLocalSelectedModel(
 
   const scoped = candidates.filter((model) => {
     const path = model.filePath.replace(/\\/g, "/").toLowerCase();
-    return series === "anima"
-      ? path.includes("/diffusion_models/")
-      : /\/checkpoints?\//.test(path);
+    const isMoss = /\/diffusion_models\/moss\/moss_image(?:\/|$)/.test(path);
+    if (series === "moss") return isMoss;
+    if (series === "anima") return !isMoss && path.includes("/diffusion_models/");
+    return /\/checkpoints?\//.test(path);
   });
 
   const pool = scoped.length > 0 ? scoped : [];

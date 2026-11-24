@@ -76,6 +76,10 @@ export function View3DScene({
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
   const sceneRef = useRef<THREE.Scene | null>(null);
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
+  // 外部换模型、改球半径与尺寸时请求一帧，静止画面不用持续占用 GPU。
+  // 这个入口不携带场景数据，其他 effect 仍操作各自原有对象。
+  // 卸载后替换为空操作，晚到的异步结果不能重新启动旧的绘制循环。
+  const invalidateRef = useRef<() => void>(() => {});
   const characterRef = useRef<THREE.Object3D | null>(null);
   const builtinMannequinRef = useRef<THREE.Object3D | null>(null);
   /**
@@ -217,8 +221,34 @@ export function View3DScene({
     let frameId = 0;
     let lastSignature = "";
 
+    // 像门铃只登记一次待处理提醒，同一帧多次修改只排一次重绘。
+    // 控制器阻尼还在变化时会发 change，再安排下一帧直到真正停稳。
+    // 不用角度显示的一位小数判断停稳，否则细小运动会被提前截断。
+    // 预览回调仍在真实控制器更新后计算，提示词与相机读取同一姿态。
+    // 只调度绘制，不用动画帧等待文件加载或其他必须有超时的业务。
+    const requestRender = () => {
+      // frameId 在绘制入口先清零，阻尼的 change 才能预约下一帧。
+      // ResizeObserver 改缓冲后需要重绘，否则画面可能停在清空后的黑场。
+      // 模型加载不一定改变相机，加载结束必须显式通知失效。
+      // 切回内置模特也通知，不能继续显示已移除的外部模型旧帧。
+      // 换轨道球几何没有 controls 事件，系列 effect 单独通知。
+      // 快捷视角仍经 controls.update 触发同一 change 调度。
+      // 当前没有自动旋转或模型动画，因此静止后可以停止绘制。
+      // 将来接入动画时应由动画能力持续失效，这里不冒称已支持动画。
+      // 同帧多次改变只登记一帧，避免建立多条相互竞争的 rAF 链。
+      // 监听属于初始化 effect，重开弹窗创建独立场景与调度入口。
+      // 清理先撤入口再 dispose，销毁时触发 change 也不会访问旧渲染器。
+      // 相机提示词仍按签名变化通知，静止换模型不反复写提示词。
+      // 回调依然通过 onViewChangeRef 获取最新目标，不捕获旧分类。
+      // 业务任务与媒体超时不等待 rAF，窗口隐藏不影响那些收尾边界。
+      // DPR 与 CSS 尺寸机制不变，不以降低实际画面分辨率换取速度。
+      // 鼠标、触屏和滚轮统一由 OrbitControls 更新，不另造输入处理。
+      // 控制器阻尼仍能完整结束，停止的是无变化的重复 render。
+      if (!frameId) frameId = window.requestAnimationFrame(renderFrame);
+    };
+
     const renderFrame = () => {
-      frameId = window.requestAnimationFrame(renderFrame);
+      frameId = 0;
       controls.update();
 
       offset.copy(camera.position).sub(controls.target);
@@ -237,7 +267,12 @@ export function View3DScene({
 
       renderer.render(scene, camera);
     };
-    renderFrame();
+    // controls.update 的 change 事件能接续阻尼帧，不需要独立的常驻轮询。
+    // 监听只属于这个场景实例，关闭弹窗后会与渲染器一同释放。
+    // requestRender 捕获本实例的对象，不读取另一个新打开窗口的 refs。
+    controls.addEventListener("change", requestRender);
+    invalidateRef.current = requestRender;
+    requestRender();
 
     const resizeObserver = new ResizeObserver(() => {
       const nextWidth = host.clientWidth || width;
@@ -246,11 +281,17 @@ export function View3DScene({
       camera.updateProjectionMatrix();
       // 也重算像素比：窗口被拖到另一块缩放不同的显示器上时 dpr 会变
       syncCanvasSize(renderer, nextWidth, nextHeight);
+      requestRender();
     });
     resizeObserver.observe(host);
 
     return () => {
       window.cancelAnimationFrame(frameId);
+      // 先撤销调度入口再 dispose，清理过程不能派生新的动画帧。
+      // 移除同一个函数引用，避免重开后一个动作通知多个旧场景。
+      // 外部 effect 读取到空入口时无需再判断已经销毁的 renderer。
+      invalidateRef.current = () => {};
+      controls.removeEventListener("change", requestRender);
       resizeObserver.disconnect();
       controls.dispose();
       renderer.dispose();
@@ -284,6 +325,7 @@ export function View3DScene({
       orbitSphere.geometry.dispose();
       orbitSphere.geometry = new THREE.SphereGeometry(defaultRadius, 24, 16);
     }
+    invalidateRef.current();
   }, [series]);
 
   // 外部请求（快捷视角 / 距离滑块）
@@ -317,6 +359,7 @@ export function View3DScene({
         scene.remove(characterRef.current);
         characterRef.current = null;
       }
+      invalidateRef.current();
     };
 
     if (!characterSource) {
@@ -334,6 +377,7 @@ export function View3DScene({
         if (characterRef.current) scene.remove(characterRef.current);
         characterRef.current = character.object;
         scene.add(character.object);
+        invalidateRef.current();
 
         onModelInfo?.({
           fileName: characterSource.fileName,
@@ -373,6 +417,7 @@ export function View3DScene({
       camera.aspect = width / height;
       camera.updateProjectionMatrix();
       syncCanvasSize(renderer, width, height);
+      invalidateRef.current();
     });
 
     return () => window.cancelAnimationFrame(frame);

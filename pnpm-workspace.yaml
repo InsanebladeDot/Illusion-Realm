@@ -1,6 +1,9 @@
 packages:
   - 'apps/*'
   - 'packages/*'
+patchedDependencies:
+  # Next 16.2.10 开发热更新可能重复清理旧样式，重新安装依赖也必须保留修复。
+  next@16.2.10: patches/next@16.2.10.patch
 allowBuilds:
   # 必须是 true：electron 的 postinstall 负责下载 electron.exe（~100MB）。
   # 留成 "set this to true or false" 会让 `pnpm install` 以 ERR_PNPM_IGNORED_BUILDS 退出 1；

@@ -177,7 +177,14 @@ async function catalog(paths, kinds) {
   // 保留 unknown 与 conflict 是为了提供诊断，不代表生成入口允许这些状态。
   // 此快照无法阻止用户之后在外部改文件，正式加载错误仍由 ComfyUI 返回。
   const roots = rootsFor(paths).filter(item => kinds.includes(item.kind)), seen = new Set();
-  const files = roots.flatMap(item => scanModelsInDirectory(item.root,item.kind === "lora" ? "lora" : "checkpoint").flatMap(group => group.versions.map(version => ({...item,filePath:version.filePath})))).filter(item => !seen.has(item.filePath) && seen.add(item.filePath));
+  // 等待扫描实际结束再展开版本，不能把 Promise 当成模型数组。
+  // 每个根内部受扫描器的顺序 I/O 限制，根的数量只来自固定配置。
+  // 相同根的并发请求由原扫描器合并，Agent 不再另建一份扫描实现。
+  // 来源读取仍在下面按八份一批进行，异步扫描不会放大 JSON 打开数。
+  // 先保留根身份再去重，授权与相对名称仍使用当前类别的真实根。
+  // 失败按原工具异常边界反馈，不用空数组伪装为没有模型。
+  const catalogs = await Promise.all(roots.map(async item => ({ item, models: await scanModelsInDirectory(item.root, item.kind === "lora" ? "lora" : "checkpoint") })));
+  const files = catalogs.flatMap(({ item, models }) => models.flatMap(group => group.versions.map(version => ({ ...item, filePath: version.filePath })))).filter(item => !seen.has(item.filePath) && seen.add(item.filePath));
   const result = /** @type {Model[]} */ ([]);
   for (let offset = 0; offset < files.length; offset += 8) {
     const batch = await Promise.all(files.slice(offset,offset+8).map(async item => {

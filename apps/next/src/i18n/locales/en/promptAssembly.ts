@@ -14,9 +14,6 @@ export const promptAssembly = {
     "advanced": "高级",
     "assemble": "组装",
     "assembleTitle": "提示词组装（分类 Tab + 模板，显示在右侧面板）",
-    "phrases": "片段",
-    "createPhrase": "创建片段",
-    "collapsedHint": "提示词已收起，点击展开",
     "placeholder": "描述你想创作的内容...",
     "placeholderAdvanced": "高级组装模式：内容由右侧「提示词组装」的分类自动拼接"
   },

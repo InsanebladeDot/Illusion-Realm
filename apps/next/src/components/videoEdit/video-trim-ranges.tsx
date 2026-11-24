@@ -1,4 +1,6 @@
 "use client";
+import { HoverTip } from "@/components/hover-tip";
+
 
 /** 同源视频区间切换栏：按处理列表顺序显示，新增区间复用源视频，无需再次导入。 */
 import { Plus } from "lucide-react";
@@ -21,13 +23,13 @@ export function VideoTrimRanges({ ranges, selectedId, disabled, onSelect, onAdd,
     <div className="flex flex-wrap items-center gap-2" aria-label={t("toolBox.video.rangeList")}>
       <span className="text-xs text-muted-foreground">{t("toolBox.video.sourceRanges", { count: ranges.length })}</span>
       {ranges.map((range, index) => (
-        <button key={range.id} type="button" disabled={disabled} onClick={() => onSelect(range.id)}
+        <HoverTip key={range.id} asChild layer="window" label={`${formatTime(range.trim.start, true)} → ${formatTime(range.trim.end, true)}`}><button key={range.id} type="button" disabled={disabled} onClick={() => onSelect(range.id)}
           onContextMenu={event => { if (!disabled) onContextMenu?.(event, range.id); }}
-          aria-pressed={range.id === selectedId} title={`${formatTime(range.trim.start, true)} → ${formatTime(range.trim.end, true)}`}
+          aria-pressed={range.id === selectedId}
           className={`rounded-lg border px-3 py-1.5 text-xs transition-colors disabled:opacity-40 ${range.id === selectedId
             ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground hover:bg-muted"}`}>
           {t("toolBox.video.rangeLabel", { index: index + 1 })}
-        </button>
+        </button></HoverTip>
       ))}
       {/* 界面：「添加剪切区间」按钮 */}
       <button type="button" disabled={disabled} onClick={onAdd}

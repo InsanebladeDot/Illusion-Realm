@@ -1,6 +1,7 @@
+import type { EuzhiImageRequest, EuzhiImageResult } from "../schemas/euzhi-images.schema";
 import type { CanvasImportMediaRequest, CanvasImportMediaResult } from "../schemas/canvas-project.schema";
 import type { UserDataInfiniteCanvas } from "../schemas/infinite-canvas.schema";
-import type { ModelDownloadLocation, ModelDownloadRequest, ModelDownloadTarget, ModelDownloadTask, LocalModelCategoryTarget, MoveModelCategoryRequest } from "./model-download";
+import type { CreateLocalModelFolderRequest, DeleteLocalModelFolderRequest, LocalModelFolderRoot, ModelDownloadLocation, ModelDownloadRequest, ModelDownloadTarget, ModelDownloadTask, LocalModelCategoryTarget, MoveModelCategoryRequest } from "./model-download";
 import type {
   AgentEventMessage,
   AgentHostCall,
@@ -11,6 +12,7 @@ import type {
 } from "./agent";
 import type { LocalModel, LocalModelType } from "./localModel";
 import type { ComfyApiPrompt } from "./comfy";
+import type { CanvasReferenceVoice, GptSovitsWeights } from "./canvas-voice";
 import type { AnimadexSearchParams, AnimadexSearchResult } from "./character";
 import type { OutputFolderEntry } from "./historyFolder";
 import type { IpcResult } from "../ipc-result";
@@ -182,6 +184,15 @@ export type ElectronAPI = {
 // 共享接口只声明能力，具体路径与权限仍由主进程校验。
 // 普通浏览器缺少这些方法时应显示桌面能力错误。
 // 不能通过临时 Blob URL 回落伪装工程已经可跨页面保存。
+  // 图片密钥与 Agent 分区独立；状态只回尾号，生成载荷没有密钥字段。
+  euzhiImageSecretStatus: () => Promise<IpcResult<AgentSecretStatus>>;
+  euzhiImageSecretSet: (key: string) => Promise<IpcResult<AgentSecretStatus>>;
+  euzhiImageSecretClear: () => Promise<IpcResult<AgentSecretStatus>>;
+  euzhiImageGenerate: (request: EuzhiImageRequest) => Promise<IpcResult<EuzhiImageResult>>;
+  euzhiImageCancel: (id: string) => Promise<IpcResult<boolean>>;
+  // 原浏览器编码结果写入当前工程，另存为取消返回 null。
+  canvasCompositionMedia: (request: import("../schemas/video-composition.schema").CompositionMediaRequest) => Promise<IpcResult<import("../schemas/video-composition.schema").CompositionMediaResult | null>>;
+  canvasLibrary: (request: import("../schemas/canvas-library.schema").CanvasLibraryRequest) => Promise<IpcResult<import("../schemas/canvas-library.schema").CanvasLibraryResult>>;
   canvasImportMedia: (request: CanvasImportMediaRequest) => Promise<IpcResult<CanvasImportMediaResult>>;
   canvasExportProject: (document: UserDataInfiniteCanvas) => Promise<IpcResult<string | null>>;
   canvasOpenProject: () => Promise<IpcResult<UserDataInfiniteCanvas | null>>;
@@ -231,7 +242,10 @@ export type ElectronAPI = {
    * 失败原因由 data.status 或 IPC 错误表示，调用方不得忽略。
    */
   recoverLocalModelMetadata: (filePath: string) => Promise<IpcResult<LocalModelRecoveryResult>>;
-  modelDownloadTarget: (location: ModelDownloadLocation) => Promise<IpcResult<ModelDownloadTarget>>;
+  hashLocalModel: (filePath: string) => Promise<IpcResult<import("../schemas/local-model-metadata.schema").LocalModelHashResult>>;
+  modelDownloadTarget: (location: ModelDownloadLocation & { modelName?: string }) => Promise<IpcResult<ModelDownloadTarget>>;
+  checkSetupModels: (ids: import("../schemas/setup-download.schema").SetupDownloadId[], mode: import("../schemas/setup-download.schema").SetupCheckMode) => Promise<IpcResult<import("../schemas/setup-download.schema").SetupCheckResult>>;
+  downloadSetupModels: (ids: import("../schemas/setup-download.schema").SetupDownloadId[]) => Promise<IpcResult<import("../schemas/setup-download.schema").SetupDownloadResult>>;
   startModelDownload: (request: ModelDownloadRequest) => Promise<IpcResult<ModelDownloadTask>>;
   cancelModelDownload: (id: string) => Promise<IpcResult<boolean>>;
   retryModelDownload: (id: string) => Promise<IpcResult<ModelDownloadTask>>;
@@ -239,6 +253,9 @@ export type ElectronAPI = {
   listModelDownloads: () => Promise<IpcResult<ModelDownloadTask[]>>;
   changeModelLogo: (folderPath: string) => Promise<IpcResult<string | null>>;
   localModelCategoryTarget: (folderPath: string) => Promise<IpcResult<LocalModelCategoryTarget>>;
+  listLocalModelFolders: () => Promise<IpcResult<LocalModelFolderRoot[]>>;
+  deleteLocalModelFolder: (request: DeleteLocalModelFolderRequest) => Promise<IpcResult<true>>;
+  createLocalModelFolder: (request: CreateLocalModelFolderRequest) => Promise<IpcResult<string>>;
   moveModelCategory: (request: MoveModelCategoryRequest) => Promise<IpcResult<string>>;
   operateLocalModels: (request: import("./model-download").LocalModelBatchRequest) => Promise<IpcResult<import("./model-download").LocalModelBatchResult>>;
   civitaiKeyStatus: () => Promise<IpcResult<{ configured: boolean; protection: "safeStorage" | "plain" | ""; tail: string }>>;
@@ -256,6 +273,8 @@ export type ElectronAPI = {
   ) => Promise<
     IpcResult<{
       promptId: string;
+      /** ComfyUI 历史消息中的执行毫秒数，旧服务缺失时不提供。 */
+      executionMs?: number;
       images: ComfyRemoteImage[];
       videos: ComfyRemoteVideo[];
     }>
@@ -273,6 +292,9 @@ export type ElectronAPI = {
     serverAddress: string,
     payload: { filename: string; dataBase64: string; subfolder?: string }
   ) => Promise<IpcResult<ComfyUploadedImage>>;
+  comfyGptSovitsWeights: (serverAddress: string) => Promise<IpcResult<GptSovitsWeights>>;
+  canvasReferenceVoices: () => Promise<IpcResult<CanvasReferenceVoice[]>>;
+  canvasAddReferenceVoice: (request: import("../schemas/canvas-voice.schema").CanvasVoiceRequest) => Promise<IpcResult<CanvasReferenceVoice | null>>;
   comfyListModels: (
     serverAddress: string
   ) => Promise<
@@ -402,6 +424,7 @@ export type ElectronAPI = {
   // 旧主进程没有此方法时渲染层显示不可用，不将缺桥接当成静音源。
   // 原videoProbe和videoRun的参数顺序与返回值不受此独立辅助能力影响。
   videoWaveform: (payload: import("../schemas/media.schema").VideoWaveformRequest) => Promise<IpcResult<VideoWaveformResult | null>>;
+  videoUpscale: (payload: import("../schemas/video-upscale.schema").VideoUpscaleRequest) => Promise<IpcResult<import("../schemas/video-upscale.schema").VideoUpscaleResult>>;
   videoRun: (payload: {
     job: VideoEditJob;
     manualFfmpegPath?: string | null;

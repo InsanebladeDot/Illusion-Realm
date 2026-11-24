@@ -26,6 +26,8 @@ type SimpleSelectProps = Omit<ButtonHTMLAttributes<HTMLButtonElement>, "value" |
   options: SimpleSelectOption[];
   onChange: (value: string) => void;
   ariaLabel?: string;
+  /** 旧配置不在当前清单时显示真实值，避免看起来误选了第一项。 */
+  fallbackLabel?: string;
   className?: string;
   triggerClassName?: string;
   optionClassName?: string;
@@ -41,6 +43,7 @@ export function SimpleSelect({
   options,
   onChange,
   ariaLabel,
+  fallbackLabel,
   className,
   triggerClassName,
   optionClassName,
@@ -209,7 +212,8 @@ export function SimpleSelect({
               onClick={() => {
                 // 状态变化只回传真实选项值，不补造 event.target 或调用原生 setter。
                 // 选择后回到当前按钮，长列表 Portal 不留下不可见焦点。
-                if (disabled || option.disabled) return;
+                // 悬浮选项在 fieldset 外，仍须尊重原按钮随表单变成禁用的状态。
+                if (disabled || option.disabled || triggerRef.current?.matches(":disabled")) { setOpen(false); return; }
                 onChange(option.value);
                 setOpen(false);
                 triggerRef.current?.focus();
@@ -269,7 +273,7 @@ export function SimpleSelect({
         )}
       >
         <span className="min-w-0 truncate text-left">
-          {selected?.label ?? options[0]?.label ?? ""}
+          {selected?.label ?? fallbackLabel ?? options[0]?.label ?? ""}
         </span>
         <ChevronDown
           className={cn(

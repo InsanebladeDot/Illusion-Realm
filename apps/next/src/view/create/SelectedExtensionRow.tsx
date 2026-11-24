@@ -1,7 +1,11 @@
 "use client";
+import { HoverTip } from "@/components/hover-tip";
+
 
 import { useEffect, useRef, useState } from "react";
 import { X } from "lucide-react";
+import { parseLocalLoraId } from "@/utils/localModelResources";
+import { isModelNameHidden } from "@/utils/local-model-visibility";
 import { getExtensionDisplay } from "@/data/extensions";
 import { useSettingsStore } from "@/stores/useSettingsStore";
 import { ResourceCoverImage } from "@/components/ResourceCoverImage";
@@ -30,7 +34,11 @@ export function SelectedExtensionRow({
 }: SelectedExtensionRowProps) {
   const { t } = useTranslation();
   const localModels = useSettingsStore((state) => state.models);
-  const extension = display ?? getExtensionDisplay(extensionId, localModels);
+  const hidden = useSettingsStore(state => state.hiddenModelPaths);
+  const path = parseLocalLoraId(extensionId);
+  const extension = path && isModelNameHidden(path, [], hidden)
+    ? { name: t("toolBox.civitai.visibility.hiddenName"), cover: "" }
+    : display ?? getExtensionDisplay(extensionId, localModels);
   const [editingWeight, setEditingWeight] = useState(false);
   const [draftWeight, setDraftWeight] = useState("");
   const weightInputRef = useRef<HTMLInputElement>(null);
@@ -72,12 +80,12 @@ export function SelectedExtensionRow({
         <div className="min-w-0 flex-1">
           <div className="mb-1 flex items-center">
             <div className="mr-2 min-w-0 flex-1">
-              <h3
+              <HoverTip asChild layer="window" label={(extension.name) ?? ""}><h3
                 className="truncate text-sm font-semibold"
-                title={extension.name}
+
               >
                 {extension.name}
-              </h3>
+              </h3></HoverTip>
             </div>
           </div>
 
@@ -109,13 +117,13 @@ export function SelectedExtensionRow({
               />
             ) : (
               <p className="w-12 shrink-0 text-xs text-muted-foreground">
-                <span
+                <HoverTip asChild layer="window" label={(t("create.selectedExtensionRow.editWeightHint")) ?? ""}><span
                   className="font-normal"
                   onDoubleClick={startEditingWeight}
-                  title={t("create.selectedExtensionRow.editWeightHint")}
+
                 >
                   {weight.toFixed(2)}
-                </span>
+                </span></HoverTip>
               </p>
             )}
             <RangeSlider

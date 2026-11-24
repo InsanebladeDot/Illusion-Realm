@@ -1,4 +1,6 @@
 "use client";
+import { HoverTip } from "@/components/hover-tip";
+
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Check, ChevronDown, ChevronRight } from "lucide-react";
@@ -65,7 +67,7 @@ export function VideoWorkflowSelect({
         )}
       >
         <span className="shrink-0 text-muted-foreground">{t("create.videoWorkflowSelect.workflowLabel")}</span>
-<span className="min-w-0 flex-1 truncate text-left font-medium" title={selected.file}>{selected.nameKey ? t(selected.nameKey) : selected.name}</span>
+<HoverTip asChild layer="window" label={(selected.file) ?? ""}><span className="min-w-0 flex-1 truncate text-left font-medium">{selected.nameKey ? t(selected.nameKey) : selected.name}</span></HoverTip>
         <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />
       </button>
 

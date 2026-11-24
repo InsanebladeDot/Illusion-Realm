@@ -1,5 +1,7 @@
 "use client";
 
+import { HoverTip } from "@/components/hover-tip";
+
 import { useCallback, useEffect, useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import { useTranslation } from "@/i18n";
@@ -11,6 +13,7 @@ import { cn } from "@/utils/cn";
 // 设置页与 composer 共用服务商选择，不维护另一份模型配置。
 // 凭据字段随站点重挂载，仅清除尚未保存的原文草稿。
 // API Key 的持久化仍属于主进程，普通设置只记录 provider/model。
+import type { AgentProvider } from "@illusion-realm/shared";
 import { AgentProviderTabs } from "@/components/agent-provider-tabs";
 import { AgentModelPicker } from "@/components/agent-model-picker";
 import { useAgentProviderStore } from "@/stores/use-agent-provider-store";
@@ -124,10 +127,10 @@ function AgentCredentialFields() {
   return (
     <div className="space-y-3">
       {/* 界面：硅基流动官网入口与注册配置指引。 */}
-      {/* Euzhi 令牌必须选可用的 Grok 分组，公开目录不等于账户已获授权。 */}
+      {/* Euzhi 分组控制模型权限和倍率，公开目录不等于账户已获授权。 */}
       {/* 链接固定到服务商提供的站点，不拼入任何 API Key。 */}
       {/* 硅基流动继续保留现有图文配置帮助。 */}
-      {provider === "siliconflow" ? <SiliconFlowSetupHelp /> : <div className="space-y-2 text-xs text-muted-foreground"><p>{t("agent.providers.euzhiHelp")}</p><a data-agent-provider-link href="https://euzhi.vip/console/token" target="_blank" rel="noopener noreferrer" className="text-primary underline">{t("agent.providers.tokenLink")}</a></div>}
+      {provider === "siliconflow" ? <SiliconFlowSetupHelp /> : <div className="space-y-2 text-xs text-muted-foreground"><p>{t(provider === "glm" ? "agent.providers.glmHelp" : "agent.providers.euzhiHelp")}</p><a data-agent-provider-link href={provider === "glm" ? "https://docs.bigmodel.cn/cn/guide/start/api-key" : "https://euzhi.vip/console/token"} target="_blank" rel="noopener noreferrer" className="text-primary underline">{t(provider === "glm" ? "agent.providers.glmKeyLink" : "agent.providers.tokenLink")}</a></div>}
       <div className="flex items-center gap-2">
         <span
           data-agent-key-status={status.configured ? "configured" : "missing"}
@@ -163,15 +166,12 @@ function AgentCredentialFields() {
               INPUT_BORDER_CLASS
             )}
           />
-          <button
+          <HoverTip asChild label={(revealed
+                ? t("settings.agentSection.hide")
+                : t("settings.agentSection.reveal")) ?? ""}><button
             type="button"
             onClick={() => setRevealed((previous) => !previous)}
             aria-label={
-              revealed
-                ? t("settings.agentSection.hide")
-                : t("settings.agentSection.reveal")
-            }
-            title={
               revealed
                 ? t("settings.agentSection.hide")
                 : t("settings.agentSection.reveal")
@@ -183,7 +183,7 @@ function AgentCredentialFields() {
             ) : (
               <Eye className="h-4 w-4" />
             )}
-          </button>
+          </button></HoverTip>
         </div>
 
         <div className="flex flex-wrap gap-2">
@@ -210,7 +210,7 @@ function AgentCredentialFields() {
         <p className="text-xs text-muted-foreground">
           {/* 旧环境变量只作用于硅基流动，不会回落给 Euzhi。 */}
           {/* Euzhi 使用独立本地凭据，用户需要为该站单独填写。 */}
-          {/* 提示随当前服务商变化，不宣称两站令牌互通。 */}
+          {/* 提示随当前服务商变化，不宣称不同站点的密钥互通。 */}
           {provider === "siliconflow" ? t("settings.agentSection.envHint") : t("agent.providers.keyIsolation")}
         </p>
         {status.configured && status.protection === "plain" ? (
@@ -234,7 +234,7 @@ function AgentCredentialFields() {
 export function AgentApiKeySetting() {
   const provider = useAgentProviderStore(state => state.preferences.provider);
   const choose = useAgentProviderStore(state => state.choose); const { t } = useTranslation();
-  const change = (value: "siliconflow" | "euzhi") => {
+  const change = (value: AgentProvider) => {
     void choose(value).catch(() => useToastStore.getState().show(t("agent.providers.saveFailed"), "error"));
   };
   return <div className="space-y-4"><AgentProviderTabs value={provider} onChange={change} /><AgentModelPicker /><AgentCredentialFields key={provider} /></div>;

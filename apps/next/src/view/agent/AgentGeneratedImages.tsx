@@ -1,5 +1,7 @@
 "use client";
 
+import { HoverTip } from "@/components/hover-tip";
+
 import { useMemo, useState } from "react";
 import { ImageOff, Loader2 } from "lucide-react";
 import {
@@ -77,11 +79,10 @@ function GeneratedImageCard({
   const name = imageName(filePath);
 
   return (
-    <button
+    <HoverTip asChild label={(state === "error" ? t("agent.message.imageLoadFailed") : name) ?? ""}><button
       type="button"
       disabled={state === "error"}
       onClick={onOpen}
-      title={state === "error" ? t("agent.message.imageLoadFailed") : name}
       aria-label={t("agent.message.openGeneratedImage", { name })}
       className="group relative aspect-[3/4] w-full max-w-72 overflow-hidden rounded-lg border border-border/60 bg-muted/30 text-muted-foreground disabled:cursor-default"
     >
@@ -95,7 +96,7 @@ function GeneratedImageCard({
         />
       ) : null}
       <ImageCaption name={name} />
-    </button>
+    </button></HoverTip>
   );
 }
 

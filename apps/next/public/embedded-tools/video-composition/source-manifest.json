@@ -1,0 +1,211 @@
+{
+  "source": "用户提供的视频合成本地原组件/public/original",
+  "notes": "适配消息提示与素材选择入口；素材选择复用宿主工程素材／全局资源库，原剪辑、样式、Vue与编码模块保持原件。",
+  "files": [
+    {
+      "name": "ant-design-BErQF9B7.js",
+      "sha256": "a985aeaf2d261b83724b474048e63bdbda744bd46bc8795412f44a8be36945b6",
+      "sourceSha256": "a985aeaf2d261b83724b474048e63bdbda744bd46bc8795412f44a8be36945b6",
+      "adapted": false
+    },
+    {
+      "name": "AssetSelectorDialog-By_Zt8C1.js",
+      "sha256": "2ae5958dc0dd9ef2031795bf312e1b10a0d7f05f1e46bf976fc5b3dca0069643",
+      "sourceSha256": "fc7be08e5d07f6832224cc464c4241a40b31c0db67d116132a14f7f2ccd60e19",
+      "adapted": true,
+      "note": "保留原选择事件，改用宿主工程素材／全局资源库弹窗；原剪辑与编码引擎不变。"
+    },
+    {
+      "name": "chevron-down-2DyYtins.js",
+      "sha256": "bfeabc170e11479d0d01a6bef976e5731e9f862ced9b8958a0613c01b0eb9cc4",
+      "sourceSha256": "bfeabc170e11479d0d01a6bef976e5731e9f862ced9b8958a0613c01b0eb9cc4",
+      "adapted": false
+    },
+    {
+      "name": "copy-Bt6th-PH.js",
+      "sha256": "211f685c22b5d26413a0f1f4c434d29c2f9d43b27ad332aed950d4c5736d9fff",
+      "sourceSha256": "211f685c22b5d26413a0f1f4c434d29c2f9d43b27ad332aed950d4c5736d9fff",
+      "adapted": false
+    },
+    {
+      "name": "download-DSqPX3dq.js",
+      "sha256": "6434aff933c497e17d7fe411f9ea0268e272f98f835c0647458a0a62706174c8",
+      "sourceSha256": "6434aff933c497e17d7fe411f9ea0268e272f98f835c0647458a0a62706174c8",
+      "adapted": false
+    },
+    {
+      "name": "flip-vertical-2-CTJ3yEni.js",
+      "sha256": "35532de1c66eac7d9f38d098d9900836a07836ab2703ccd9f384ac564643d28b",
+      "sourceSha256": "35532de1c66eac7d9f38d098d9900836a07836ab2703ccd9f384ac564643d28b",
+      "adapted": false
+    },
+    {
+      "name": "FloatingWindow-DRY_xWsV.js",
+      "sha256": "c60101e30f3e052b365598ce90903c2975c3402db165ef827db0c6f3d8059bf2",
+      "sourceSha256": "c60101e30f3e052b365598ce90903c2975c3402db165ef827db0c6f3d8059bf2",
+      "adapted": false
+    },
+    {
+      "name": "index-BAZtl7kx.js",
+      "sha256": "7f72a474347c4d2743bfb0fbe5e85851e0d63933d2d8afc49dc305fa528d5d2d",
+      "sourceSha256": "739f5c8f62efa0386a4620017ec11b39cbcb9bf1c53b47d0baa72c42ccdec068",
+      "adapted": true
+    },
+    {
+      "name": "index-BPEz6mOj.css",
+      "sha256": "06f28294f43d132c6c13b27d0fd95f408fda26ec0eb0833bf703ea2dd1bb2439",
+      "sourceSha256": "06f28294f43d132c6c13b27d0fd95f408fda26ec0eb0833bf703ea2dd1bb2439",
+      "adapted": false
+    },
+    {
+      "name": "index.html",
+      "sha256": "0ede3863e6c3e8eabc88a10ffb73c0550969e50004591d75474c876bf279ded5",
+      "sourceSha256": "0ede3863e6c3e8eabc88a10ffb73c0550969e50004591d75474c876bf279ded5",
+      "adapted": false
+    },
+    {
+      "name": "loader-circle-Cc66h3pD.js",
+      "sha256": "f231a3fb0f5258bba17fb3a1530598ac8aae5c5416a510c25096d72e400c6e13",
+      "sourceSha256": "f231a3fb0f5258bba17fb3a1530598ac8aae5c5416a510c25096d72e400c6e13",
+      "adapted": false
+    },
+    {
+      "name": "local-host.css",
+      "sha256": "67f3baf2f72528922bb3fe25f3b685bfa39327755934f6a9b85e71032aa3db2c",
+      "sourceSha256": "67f3baf2f72528922bb3fe25f3b685bfa39327755934f6a9b85e71032aa3db2c",
+      "adapted": false
+    },
+    {
+      "name": "local-host.js",
+      "sha256": "a5a4d03868ea7e3b1f7f7ba769c7c2b04c242a0f039f0acec6920ae5c179d925",
+      "sourceSha256": "a5a4d03868ea7e3b1f7f7ba769c7c2b04c242a0f039f0acec6920ae5c179d925",
+      "adapted": false
+    },
+    {
+      "name": "maximize-2-BrIZE0DL.js",
+      "sha256": "3e0b2aa3efcb4925a22cca5dd9f1ef23e30124115397436379e38467ea68d42e",
+      "sourceSha256": "3e0b2aa3efcb4925a22cca5dd9f1ef23e30124115397436379e38467ea68d42e",
+      "adapted": false
+    },
+    {
+      "name": "music-D63euWtG.js",
+      "sha256": "0edde44963c135079428717664541544581c26230fe1570bfe2ece3fd68fb706",
+      "sourceSha256": "0edde44963c135079428717664541544581c26230fe1570bfe2ece3fd68fb706",
+      "adapted": false
+    },
+    {
+      "name": "oss-DTuNnydc.js",
+      "sha256": "98002dcfa81e19d2c23ac627a84cb720d00ddf8c2ed78fa2f26e7fdb89515d40",
+      "sourceSha256": "98002dcfa81e19d2c23ac627a84cb720d00ddf8c2ed78fa2f26e7fdb89515d40",
+      "adapted": false
+    },
+    {
+      "name": "pause-2UwoucUY.js",
+      "sha256": "2a9965f582dbe45b4c832bf296d8b46d78811b0a52978f0acbcfa0dbfc89f7e0",
+      "sourceSha256": "2a9965f582dbe45b4c832bf296d8b46d78811b0a52978f0acbcfa0dbfc89f7e0",
+      "adapted": false
+    },
+    {
+      "name": "play-CU8Ey5Qp.js",
+      "sha256": "1b62d1575337895a8af155646cf70c33a7c75c14b87951febf36431fb36192b0",
+      "sourceSha256": "1b62d1575337895a8af155646cf70c33a7c75c14b87951febf36431fb36192b0",
+      "adapted": false
+    },
+    {
+      "name": "playcanvas-vendor-BwCDU6fG.js",
+      "sha256": "8f67d624b048733163764090ec75e42b6cfa3aef820e142962ce89d262065ed1",
+      "sourceSha256": "8f67d624b048733163764090ec75e42b6cfa3aef820e142962ce89d262065ed1",
+      "adapted": false
+    },
+    {
+      "name": "rectangle-horizontal-BoHcto8b.js",
+      "sha256": "fa4eee234cb50d6afdc51d1f0b6b3baba77343c20c27577a3d312e436db99e2c",
+      "sourceSha256": "fa4eee234cb50d6afdc51d1f0b6b3baba77343c20c27577a3d312e436db99e2c",
+      "adapted": false
+    },
+    {
+      "name": "redo-2-ChI-IW7z.js",
+      "sha256": "cfb728c13952d6648cb47b3c0a4bea0aa66af27e57101ee29d0d30155a1d29d0",
+      "sourceSha256": "cfb728c13952d6648cb47b3c0a4bea0aa66af27e57101ee29d0d30155a1d29d0",
+      "adapted": false
+    },
+    {
+      "name": "rolldown-runtime-DX5Z4vEV.js",
+      "sha256": "84269bf076978de14e1ec8e16a2b346eab9a135d0f2567489f211d765325311d",
+      "sourceSha256": "84269bf076978de14e1ec8e16a2b346eab9a135d0f2567489f211d765325311d",
+      "adapted": false
+    },
+    {
+      "name": "scissors-BRXi7oKq.js",
+      "sha256": "ce13e85cf84b442d1a544c4430e9298329c0a686f9b34199426d2c95dac3ecee",
+      "sourceSha256": "ce13e85cf84b442d1a544c4430e9298329c0a686f9b34199426d2c95dac3ecee",
+      "adapted": false
+    },
+    {
+      "name": "src-ChZ8Aws8.js",
+      "sha256": "c399424f0be5b52ccb2e8cf42f155b5a65f366d96bddd2f187729c86a3e1fb39",
+      "sourceSha256": "c399424f0be5b52ccb2e8cf42f155b5a65f366d96bddd2f187729c86a3e1fb39",
+      "adapted": false
+    },
+    {
+      "name": "trash-2-BYLaG9Si.js",
+      "sha256": "e37ddf0073a22f76e2feb54028509ad3746ea372e088ab1a94c229776c31c4f9",
+      "sourceSha256": "e37ddf0073a22f76e2feb54028509ad3746ea372e088ab1a94c229776c31c4f9",
+      "adapted": false
+    },
+    {
+      "name": "undo-2-iMkLppW9.js",
+      "sha256": "bf2e3d90ca574fbfae8df078587a99a135761299dccfa7782e503ad14cb1aec3",
+      "sourceSha256": "bf2e3d90ca574fbfae8df078587a99a135761299dccfa7782e503ad14cb1aec3",
+      "adapted": false
+    },
+    {
+      "name": "VideoCompositionDialog-D7cU7lXx.css",
+      "sha256": "e79ba41cb3203f40d558166497fb7469573d326c78579c508316f5795b401275",
+      "sourceSha256": "e79ba41cb3203f40d558166497fb7469573d326c78579c508316f5795b401275",
+      "adapted": false
+    },
+    {
+      "name": "VideoCompositionDialog-DsVMeLLc.js",
+      "sha256": "d4cddc77f63311449671519e89e4f462476a07ca109439c103d64c9969023a1d",
+      "sourceSha256": "d4cddc77f63311449671519e89e4f462476a07ca109439c103d64c9969023a1d",
+      "adapted": false
+    },
+    {
+      "name": "videoProcessing-CgmSu0Rp.js",
+      "sha256": "e50117c48e0a7a1c6853ee878b00af410ce919dbc9ca8dda5a494cc8bc043ee4",
+      "sourceSha256": "e50117c48e0a7a1c6853ee878b00af410ce919dbc9ca8dda5a494cc8bc043ee4",
+      "adapted": false
+    },
+    {
+      "name": "volume-2-Yv4bLOai.js",
+      "sha256": "d9837bf908fccdfd3d16c683a9cd3337aa0b5142f3dd6d64ab1b20098d43e951",
+      "sourceSha256": "d9837bf908fccdfd3d16c683a9cd3337aa0b5142f3dd6d64ab1b20098d43e951",
+      "adapted": false
+    },
+    {
+      "name": "volume-x-B7z_YRXv.js",
+      "sha256": "0087ea2b92abc466a1da56d7a8dd09d2789b79c50699a6065462065227bfc17c",
+      "sourceSha256": "0087ea2b92abc466a1da56d7a8dd09d2789b79c50699a6065462065227bfc17c",
+      "adapted": false
+    },
+    {
+      "name": "vue-vendor-CQe4N-Nh.js",
+      "sha256": "6861873d802859bb615245176619a9f81d68823e069c9ec132e6f3952de84d5e",
+      "sourceSha256": "6861873d802859bb615245176619a9f81d68823e069c9ec132e6f3952de84d5e",
+      "adapted": false
+    },
+    {
+      "name": "zoom-in-nb8tSxjp.js",
+      "sha256": "1e8b8f20a7f6c89114337ea741b87bb3b55d3bd16a6b5ade94e1fa16f7ff0cf0",
+      "sourceSha256": "1e8b8f20a7f6c89114337ea741b87bb3b55d3bd16a6b5ade94e1fa16f7ff0cf0",
+      "adapted": false
+    },
+    {
+      "name": "zoom-out-kW1dA5Y2.js",
+      "sha256": "08052b9072bf34669e8805f7ee085a7235147514a9053d06e5573a7ef880a342",
+      "sourceSha256": "08052b9072bf34669e8805f7ee085a7235147514a9053d06e5573a7ef880a342",
+      "adapted": false
+    }
+  ]
+}

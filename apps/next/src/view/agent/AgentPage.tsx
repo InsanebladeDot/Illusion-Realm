@@ -1,5 +1,7 @@
 "use client";
 
+import { HoverTip } from "@/components/hover-tip";
+
 // 会话栏开合仅为本页展示状态，不新增持久化字段或改变 Agent 会话身份。
 // 默认收起给正文留出截图中的完整阅读宽度，用户仍能随时打开已有会话。
 // 状态不放入全局 store，切换布局不能触发模型请求或中断正在运行的任务。
@@ -304,16 +306,15 @@ function AgentSessionList() {
             >
               <span className="min-w-0 truncate">{session.title}</span>
             </button>
-            <button
+            <HoverTip asChild label={(t("agent.sessions.delete")) ?? ""}><button
               type="button"
               data-agent-session-delete={session.id}
               aria-label={t("agent.sessions.delete")}
-              title={t("agent.sessions.delete")}
               onClick={() => deleteSession(session.id)}
               className="absolute right-1 top-1/2 inline-flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-md text-muted-foreground opacity-0 transition-opacity hover:bg-background hover:text-foreground focus-visible:opacity-100 group-hover:opacity-100"
             >
               <Trash2 className="h-3.5 w-3.5" />
-            </button>
+            </button></HoverTip>
           </li>
         );
       })}
@@ -419,17 +420,16 @@ export function AgentPage() {
             <Bot className="h-4 w-4" />
             {t("agent.title")}
           </span>
-          <button
+          <HoverTip asChild label={(t("agent.newChat")) ?? ""}><button
             type="button"
             data-agent-sidebar-new-chat
             onClick={() => createSession()}
-            title={t("agent.newChat")}
             aria-label={t("agent.newChat")}
             className="inline-flex h-7 items-center gap-1 rounded-lg px-2 text-[11px] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
           >
             <Plus className="h-3.5 w-3.5" />
             {t("agent.newChat")}
-          </button>
+          </button></HoverTip>
         </header>
         <div className="min-h-0 flex-1 overflow-y-auto px-2 pb-2">
           <p className="px-2 pb-1 text-[11px] font-medium text-muted-foreground">
@@ -465,7 +465,7 @@ export function AgentPage() {
             {/* 顶栏不添加假的更多菜单，截图中的操作只复用当前实际存在的能力。 */}
             {/* 消息标题保持单行，超长用户提问不会推高固定输入区域的布局。 */}
             <button data-agent-sessions-toggle type="button" aria-label={t("agent.sessions.title")} aria-expanded={sessionsOpen} onClick={() => setSessionsOpen(value => !value)} className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md hover:bg-muted"><PanelLeft size={15} /></button>
-            <button data-agent-new-chat type="button" aria-label={t("agent.newChat")} title={t("agent.newChat")} onClick={() => createSession()} className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md hover:bg-muted"><Plus size={15} /></button>
+            <HoverTip asChild label={(t("agent.newChat")) ?? ""}><button data-agent-new-chat type="button" aria-label={t("agent.newChat")} onClick={() => createSession()} className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md hover:bg-muted"><Plus size={15} /></button></HoverTip>
             <p className="truncate text-xs font-medium text-foreground">
               {activeSession?.title ?? t("agent.title")}
             </p>
@@ -479,27 +479,25 @@ export function AgentPage() {
                 <Loader2 className="h-3 w-3 animate-spin" />
                 {t("agent.status.generating")}
               </span>
-              <button
+              <HoverTip asChild label={(t("agent.status.stop")) ?? ""}><button
                 type="button"
                 data-agent-stop
                 onClick={() => void cancelRun()}
-                title={t("agent.status.stop")}
                 className="inline-flex h-7 items-center gap-1 rounded-lg px-2 text-[11px] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
               >
                 <Square className="h-3 w-3" />
                 {t("agent.status.stop")}
-              </button>
+              </button></HoverTip>
             </div>
           ) : (
-            <span
+            <HoverTip asChild label={(toolNames.length > 0 ? toolNames.join("、") : undefined) ?? ""}><span
               data-agent-status="idle"
-              title={toolNames.length > 0 ? toolNames.join("、") : undefined}
               className="shrink-0 rounded-full bg-muted px-2 py-1 text-[11px] text-muted-foreground"
             >
               {toolNames.length > 0
                 ? t("agent.status.tools", { count: toolNames.length })
                 : t("agent.status.idle")}
-            </span>
+            </span></HoverTip>
           )}
         </header>
 

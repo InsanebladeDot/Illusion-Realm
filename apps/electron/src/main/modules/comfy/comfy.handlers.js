@@ -6,6 +6,7 @@ const generation = require("./comfy-generation");
 // 校验器与请求函数放在一起，让独立回归也能验证相同的地址边界。
 // registerHandle 继续承担异常收敛，不在服务中重复包装 IPC 结果。
 const { freeComfyMemory, validateFreeMemory } = require("./comfy-memory");
+const { listGptSovitsWeights } = require("./gpt-sovits-weights");
 
 /** @param {unknown} value */
 function validRequestId(value) {
@@ -133,6 +134,7 @@ function registerComfyHandlers() {
     async (_event, serverAddress) =>
       getComfyProxy().listComfyModels(serverAddress || DEFAULT_SERVER)
   );
+  registerHandle(IPC_CHANNELS.COMFY_GSV_WEIGHTS, (_event, server) => listGptSovitsWeights(server), validateFreeMemory);
 }
 
 module.exports = { registerComfyHandlers };

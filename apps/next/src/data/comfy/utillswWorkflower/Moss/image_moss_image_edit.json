@@ -1,0 +1,220 @@
+{
+  "8": {
+    "inputs": {
+      "image": "IR_2026-11-23_222831_d0bf2c37_1_13b6edb5-ecec-41d8-8ca2-d745a419b310.png"
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "加载图像"
+    }
+  },
+  "9": {
+    "inputs": {
+      "filename_prefix": "image_moss_image_edit",
+      "images": [
+        "38",
+        0
+      ]
+    },
+    "class_type": "SaveImage",
+    "_meta": {
+      "title": "保存图像"
+    }
+  },
+  "27": {
+    "inputs": {
+      "image": [
+        "29",
+        0
+      ]
+    },
+    "class_type": "GetImageSize",
+    "_meta": {
+      "title": "获取图像尺寸"
+    }
+  },
+  "28": {
+    "inputs": {
+      "width": [
+        "27",
+        0
+      ],
+      "height": [
+        "27",
+        1
+      ],
+      "batch_size": 1
+    },
+    "class_type": "EmptyFlux2LatentImage",
+    "_meta": {
+      "title": "空Latent图像（Flux2）"
+    }
+  },
+  "29": {
+    "inputs": {
+      "upscale_method": "lanczos",
+      "megapixels": 1,
+      "resolution_steps": 16,
+      "image": [
+        "8",
+        0
+      ]
+    },
+    "class_type": "ImageScaleToTotalPixels",
+    "_meta": {
+      "title": "Image Scale To Total Pixels (reference)"
+    }
+  },
+  "30": {
+    "inputs": {
+      "unet_name": "Moss\\Moss_image\\moss_image_sft_int8_convrot\\moss_image_sft_int8_convrot.safetensors",
+      "weight_dtype": "default"
+    },
+    "class_type": "UNETLoader",
+    "_meta": {
+      "title": "UNet加载器"
+    }
+  },
+  "31": {
+    "inputs": {
+      "lora_name": "Moss_Image\\Edit_编辑\\moss_image_edit_lora_rank_64_bf16\\moss_image_edit_lora_rank_64_bf16.safetensors",
+      "strength_model": 1,
+      "model": [
+        "30",
+        0
+      ]
+    },
+    "class_type": "LoraLoaderModelOnly",
+    "_meta": {
+      "title": "LoRA加载器（仅模型）"
+    }
+  },
+  "32": {
+    "inputs": {
+      "double_layers": "",
+      "single_layers": "22",
+      "start_percent": 0,
+      "end_percent": 1,
+      "model": [
+        "31",
+        0
+      ]
+    },
+    "class_type": "SkipLayerGuidanceDiTSimple",
+    "_meta": {
+      "title": "跳过层引导（DiT简化）"
+    }
+  },
+  "33": {
+    "inputs": {
+      "clip_name": "Moss\\Moss_image\\qwen3.5_9b_int8_convrot\\qwen3.5_9b_int8_convrot.safetensors",
+      "type": "moss_image",
+      "device": "default"
+    },
+    "class_type": "CLIPLoader",
+    "_meta": {
+      "title": "加载CLIP"
+    }
+  },
+  "34": {
+    "inputs": {
+      "vae_name": "Moss\\Moss_image\\flux2-vae.safetensors"
+    },
+    "class_type": "VAELoader",
+    "_meta": {
+      "title": "加载VAE"
+    }
+  },
+  "36": {
+    "inputs": {
+      "prompt": "nsfw, worst quality, bad anatomy, watermark, jpeg artifact",
+      "edit_format": "Moss-Image-Edit",
+      "image_strength": 1,
+      "clip": [
+        "33",
+        0
+      ],
+      "images.image_0": [
+        "29",
+        0
+      ],
+      "vae": [
+        "34",
+        0
+      ]
+    },
+    "class_type": "TextEncodeMOSSImageEdit",
+    "_meta": {
+      "title": "Text Encode MOSS-Image Edit (negative)"
+    }
+  },
+  "37": {
+    "inputs": {
+      "seed": 42,
+      "steps": 30,
+      "cfg": 4,
+      "sampler_name": "euler",
+      "scheduler": "normal",
+      "denoise": 1,
+      "model": [
+        "32",
+        0
+      ],
+      "positive": [
+        "39",
+        0
+      ],
+      "negative": [
+        "36",
+        0
+      ],
+      "latent_image": [
+        "28",
+        0
+      ]
+    },
+    "class_type": "KSampler",
+    "_meta": {
+      "title": "K采样器"
+    }
+  },
+  "38": {
+    "inputs": {
+      "samples": [
+        "37",
+        0
+      ],
+      "vae": [
+        "34",
+        0
+      ]
+    },
+    "class_type": "VAEDecode",
+    "_meta": {
+      "title": "VAE解码"
+    }
+  },
+  "39": {
+    "inputs": {
+      "prompt": "Modify the background. Change the background to a realistic style. The background should be a large tree and grassland, with flowers and light, as well as the Tyndall effect. Maintain all the characteristics of the female character.",
+      "edit_format": "Moss-Image-Edit",
+      "image_strength": 1,
+      "clip": [
+        "33",
+        0
+      ],
+      "images.image_0": [
+        "29",
+        0
+      ],
+      "vae": [
+        "34",
+        0
+      ]
+    },
+    "class_type": "TextEncodeMOSSImageEdit",
+    "_meta": {
+      "title": "Text Encode MOSS-Image Edit (positive)"
+    }
+  }
+}

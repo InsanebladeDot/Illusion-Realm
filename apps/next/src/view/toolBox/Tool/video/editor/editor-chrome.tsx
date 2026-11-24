@@ -1,4 +1,6 @@
 "use client";
+import { HoverTip } from "@/components/hover-tip";
+
 
 // 项目栏、只读信息条与暂未接通的动作共享展示入口，边界不延伸至媒体业务。
 // 同一个禁用按钮服务项目、预览、属性和时间轴，不在各区复制禁用样式。
@@ -57,8 +59,8 @@ export function ProjectToolbar({ editing, onImport, busy = false, onCancelImport
   // 链接使用应用内相对路由，静态导出和 app:// 下都由 Next 负责导航。
   const { t } = useTranslation();
   return <header data-editor-region="R01" className={styles.projectBar}>
-    <Link href="/tools" className={styles.navigation} title={t("toolBox.main.back")}><ArrowLeft size={16} /><span className={styles.optionalText}>{t("toolBox.main.back")}</span></Link>
-    <div className={styles.projectName} title={t(onImport ? "toolBox.editorUi.liveProjectName" : "toolBox.editorUi.projectName")}><FileVideo size={17} /><strong>{t(onImport ? "toolBox.editorUi.liveProjectName" : "toolBox.editorUi.projectName")}</strong><span>{t("toolBox.editorUi.unsaved")}</span></div>
+    <HoverTip asChild layer="window" label={(t("toolBox.main.back")) ?? ""}><Link href="/tools" className={styles.navigation}><ArrowLeft size={16} /><span className={styles.optionalText}>{t("toolBox.main.back")}</span></Link></HoverTip>
+    <HoverTip asChild layer="window" label={(t(onImport ? "toolBox.editorUi.liveProjectName" : "toolBox.editorUi.projectName")) ?? ""}><div className={styles.projectName}><FileVideo size={17} /><strong>{t(onImport ? "toolBox.editorUi.liveProjectName" : "toolBox.editorUi.projectName")}</strong><span>{t("toolBox.editorUi.unsaved")}</span></div></HoverTip>
     <nav className={styles.projectMenus} aria-label={t("toolBox.editorUi.projectActions")}><EditorAction label={t("toolBox.editorUi.file")} /><EditorAction label={t("toolBox.editorUi.edit")} /><EditorAction label={t("toolBox.editorUi.view")} /><EditorAction icon={Undo2} label={t("toolBox.editorUi.undo")} compact onClick={editing?.undo} disabledReason={editing && !editing.canUndo ? t("toolBox.editorUi.noUndo") : undefined} /><EditorAction icon={Redo2} label={t("toolBox.editorUi.redo")} compact onClick={editing?.redo} disabledReason={editing && !editing.canRedo ? t("toolBox.editorUi.noRedo") : undefined} /></nav>
     <Link href="/tools/video/editor/legacy" className={`${styles.navigation} ${styles.legacyLink}`}>{t("toolBox.editorUi.legacy")}<ArrowUpRight size={14} /></Link>
     <Link href="/tools/video/editor/samples" className={styles.navigation}>{t("toolBox.editorUi.samples")}</Link>
@@ -85,5 +87,5 @@ export function ProjectInfoStrip({ project = DEMO_PROJECT }: { project?: { width
   // 不显示文件大小、码率或导出路径，因为这些没有真实媒体或输出证据。
   const { width, height, fps } = project;
   const text = `${width} × ${height} · ${fps}fps · ${formatEditorTimecode(project.duration, fps)}`;
-  return <footer data-editor-region="R10" className={styles.infoStrip} title={text}>{text}</footer>;
+  return <HoverTip asChild layer="window" label={(text) ?? ""}><footer data-editor-region="R10" className={styles.infoStrip}>{text}</footer></HoverTip>;
 }

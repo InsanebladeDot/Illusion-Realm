@@ -1,4 +1,6 @@
 "use client";
+import { HoverTip } from "@/components/hover-tip";
+
 
 /** 创建图片右键菜单的共用行：统一图标、文字、悬停、禁用与危险动作。 */
 // 业务菜单只传标签和动作，不能各自拼一套看起来相似的按钮样式。
@@ -64,12 +66,12 @@ interface ContextMenuItemProps extends Omit<ButtonHTMLAttributes<HTMLButtonEleme
 // 删除源文件与删除工程引用虽然都呈红色，其具体确认逻辑仍归各业务。
 // 菜单行不订阅任何store，因此一个实例的禁用不会影响其他入口。
 // 尾部内容右对齐，在名称长时先让名称省略，快捷键不被压出窗口。
-export function ContextMenuItem({ label, icon: Icon, destructive = false, disabledReason, children, disabled, ...props }: ContextMenuItemProps) {
+export function ContextMenuItem({ label, icon: Icon, destructive = false, disabledReason, children, disabled, title, ...props }: ContextMenuItemProps) {
   const id = useId();
   return <>
-    <button {...props} type="button" role="menuitem" aria-label={props["aria-label"] ?? label} disabled={disabled || !!disabledReason} aria-describedby={disabledReason ? id : props["aria-describedby"]} title={props.title ?? disabledReason ?? label} className={`flex w-full items-center gap-2 px-3 py-2 text-left text-sm outline-none disabled:cursor-not-allowed disabled:opacity-40 ${destructive ? "text-red-600 hover:bg-red-500/10 focus-visible:bg-red-500/10 dark:text-red-400" : "hover:bg-muted/60 focus-visible:bg-muted/60"}`}>
+    <HoverTip asChild layer="window" label={title ?? disabledReason ?? label}><button {...props} type="button" role="menuitem" aria-label={props["aria-label"] ?? label} disabled={disabled || !!disabledReason} aria-describedby={disabledReason ? id : props["aria-describedby"]} className={`flex w-full items-center gap-2 px-3 py-2 text-left text-sm outline-none disabled:cursor-not-allowed disabled:opacity-40 ${destructive ? "text-red-600 hover:bg-red-500/10 focus-visible:bg-red-500/10 dark:text-red-400" : "hover:bg-muted/60 focus-visible:bg-muted/60"}`}>
       {Icon && <Icon className={`h-4 w-4 shrink-0 ${destructive ? "" : "text-muted-foreground"}`} aria-hidden="true" />}<span className="min-w-0 truncate">{label}</span>{children && <span className="ml-auto shrink-0 text-xs text-muted-foreground">{children}</span>}
-    </button>
+    </button></HoverTip>
     {disabledReason && <span id={id} className="sr-only">{disabledReason}</span>}
   </>;
 }
@@ -79,4 +81,4 @@ export function ContextMenuItem({ label, icon: Icon, destructive = false, disabl
 export function ContextMenuSeparator() { return <div role="separator" className="my-1 h-px bg-border" />; }
 // 底部对象名称使用原创建菜单的小字号与省略规则，完整值可悬停查看。
 // 名称是用户内容，保持原值，不拿它决定复制、删除或分离的业务目标。
-export function ContextMenuCaption({ children }: { children: string }) { return <p title={children} className="truncate px-3 pb-1 pt-1 text-[11px] text-muted-foreground">{children}</p>; }
+export function ContextMenuCaption({ children }: { children: string }) { return <HoverTip asChild layer="window" label={(children) ?? ""}><p className="truncate px-3 pb-1 pt-1 text-[11px] text-muted-foreground">{children}</p></HoverTip>; }

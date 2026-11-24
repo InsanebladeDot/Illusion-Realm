@@ -1,4 +1,6 @@
 "use client";
+import { HoverTip } from "@/components/hover-tip";
+
 
 // 提示词标签共用本地模型的表面：每个词是独立按钮，长词只在自身内部换行。
 // 创建页只注入追加/移除回调，模型详情只注入复制，公共标签不读任何业务 store。
@@ -60,7 +62,7 @@ interface PromptTagProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, "
 // 折行只影响排版，label本身仍作为完整参数传给外层回调闭包。
 export function PromptTag({ label, onRemove, removeLabel, ...button }: PromptTagProps) {
   return <span className="inline-flex min-w-0 max-w-full items-start gap-0.5 align-top">
-    <button {...button} type="button" title={button.title ?? label} className="min-h-6 min-w-0 max-w-full whitespace-normal break-all rounded bg-primary/10 px-2 py-1 text-left text-[11px] leading-relaxed text-primary hover:bg-primary/20 disabled:cursor-not-allowed disabled:opacity-50">{label}</button>
+    <HoverTip asChild layer="window" label={(button.title ?? label) ?? ""}><button {...button} type="button" className="min-h-6 min-w-0 max-w-full whitespace-normal break-all rounded bg-primary/10 px-2 py-1 text-left text-[11px] leading-relaxed text-primary hover:bg-primary/20 disabled:cursor-not-allowed disabled:opacity-50">{label}</button></HoverTip>
     {onRemove && <button type="button" disabled={button.disabled} aria-label={removeLabel} onClick={onRemove} className="inline-flex h-6 shrink-0 items-center rounded px-1 text-muted-foreground hover:bg-accent hover:text-foreground disabled:opacity-50"><X size={12} /></button>}
   </span>;
 }

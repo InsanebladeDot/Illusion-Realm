@@ -1,4 +1,6 @@
 "use client";
+import { HoverTip } from "@/components/hover-tip";
+
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -66,12 +68,12 @@ function InspectResultPanel({
                 {t("inspect.result.inspecting")}
               </p>
             ) : source ? (
-              <p
+              <HoverTip asChild layer="window" label={(source.fileName) ?? ""}><p
                 className="truncate text-xs text-muted-foreground"
-                title={source.fileName}
+
               >
                 {source.fileName}
-              </p>
+              </p></HoverTip>
             ) : (
               <p className="text-xs text-muted-foreground">
                 {t("inspect.result.placeholder")}

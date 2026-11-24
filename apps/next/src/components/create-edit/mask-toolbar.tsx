@@ -1,4 +1,6 @@
 "use client";
+import { HoverTip } from "@/components/hover-tip";
+
 
 /**
  * 界面：紧凑蒙版工具条，所有操作带可访问名称和选中状态。
@@ -71,7 +73,7 @@ export function MaskToolbar({ locked }: { locked: boolean }) {
     {/* 没有导入时整组禁用，但按钮依旧存在，用户知道编辑器提供哪些能力。 */}
     {/* 文档回滚统一在 store 中完成，按钮不自行操作 Canvas。 */}
     {/* 界面：文档级操作使用同一个历史栈。 */}
-    {ACTIONS.map(({ name, Icon }) => <button key={name} type="button" data-mask-action={name === 'clear' ? 'clearCanvas' : name} title={t(`create.maskStudio.${name}`)} aria-label={t(`create.maskStudio.${name}`)} disabled={name === 'undo' ? !state.doc?.past.length : name === 'redo' ? !state.doc?.future.length : false} onClick={() => state.action(name)} className={button}><Icon className="h-3.5 w-3.5" /></button>)}
+    {ACTIONS.map(({ name, Icon }) => <HoverTip key={name} asChild layer="window" label={(t(`create.maskStudio.${name}`)) ?? ""}><button key={name} type="button" data-mask-action={name === 'clear' ? 'clearCanvas' : name} aria-label={t(`create.maskStudio.${name}`)} disabled={name === 'undo' ? !state.doc?.past.length : name === 'redo' ? !state.doc?.future.length : false} onClick={() => state.action(name)} className={button}><Icon className="h-3.5 w-3.5" /></button></HoverTip>)}
     </fieldset>
     {/* 顶部共享选区操作：触屏和无右键用户使用同等入口。 */}
     {/* 菜单与此处共用 store 动作，没有另一套 Delete 实现。 */}
@@ -83,7 +85,7 @@ export function MaskToolbar({ locked }: { locked: boolean }) {
     {/* ml-auto 将导出与后续导入靠右组成一组，窄屏允许自然换行。 */}
     {/* 生成仍使用内部 composite，不会因当前观察黑白蒙版而换错输入。 */}
     {/* 无文档时导出禁用，导入保持可用；不增加第二个文件选择器。 */}
-    <button type="button" data-mask-export disabled={locked || state.busy || !state.doc} className={cn(button, 'ml-auto')} title={t('create.maskStudio.exportCurrent')} aria-label={t('create.maskStudio.exportCurrent')} onClick={() => { try { if (!state.doc) return; const exports = exportMaskDocument(state.doc); state.patch({ exports }); downloadMaskImage(exports[state.channel], 'mask_' + state.channel + '.png'); } catch { state.patch({ error: t('create.maskEditor.exportFailed') }); } }}><Download className="h-4 w-4" />{t('create.maskStudio.exportCurrent')}</button>
+    <HoverTip asChild layer="window" label={(t('create.maskStudio.exportCurrent')) ?? ""}><button type="button" data-mask-export disabled={locked || state.busy || !state.doc} className={cn(button, 'ml-auto')} aria-label={t('create.maskStudio.exportCurrent')} onClick={() => { try { if (!state.doc) return; const exports = exportMaskDocument(state.doc); state.patch({ exports }); downloadMaskImage(exports[state.channel], 'mask_' + state.channel + '.png'); } catch { state.patch({ error: t('create.maskEditor.exportFailed') }); } }}><Download className="h-4 w-4" />{t('create.maskStudio.exportCurrent')}</button></HoverTip>
     {/* 界面：导入始终位于工具条末端，空文档时仍可选择单张图片。 */}
     {/* input 不设置 multiple，选图后清值允许重新导入同一个文件。 */}
     {/* 导入与文档操作分开禁用，不能因尚无图片而锁死唯一入口。 */}

@@ -1,0 +1,1 @@
+import{_t as createLucideIcon}from"./index-BAZtl7kx.js";var Redo2=createLucideIcon(`redo-2`,[[`path`,{d:`m15 14 5-5-5-5`,key:`12vg1m`}],[`path`,{d:`M20 9H9.5A5.5 5.5 0 0 0 4 14.5A5.5 5.5 0 0 0 9.5 20H13`,key:`6uklza`}]]);export{Redo2 as t};

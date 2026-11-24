@@ -11,6 +11,10 @@ const eslintConfig = defineConfig([
     ".next/**",
     "out/**",
     "public/vendor/**",
+    // 用户提供的原编译导演台原件不按 React 源码重新格式化或改写。
+    "public/director/original/**",
+    // 原 Vue 编译资源原样分发；自有宿主 embed.js 仍参与检查。
+    "public/embedded-tools/video-composition/original/**",
     "build/**",
     "next-env.d.ts",
     // Electron 主进程 / preload / 脚本必须是 CommonJS（require + module.exports），

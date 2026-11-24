@@ -1,19 +1,21 @@
 /* 本地内容始终被原节点外壳裁切，导入不改变节点的世界尺寸和端口位置。 */
-/* 图片与视频用 contain，竖屏素材保留完整画面，不为了填满而裁掉内容。 */
+/* 图片与视频默认铺满卡片；只裁切展示，不改源文件。 */
 /* 媒体像素不随主题反色；周围状态文字与按钮继续取组件主题色。 */
 .hy-canvas-ui .hy-local-media { position: relative; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; overflow: hidden; color: var(--hy-text); }
 /* 两种视觉媒体共用尺寸规则，显示效果不随图片或视频来源分成两套卡片 CSS。 */
-/* 空白留边来自 contain 的实际比例，不是为了白色主题给画面加白色滤镜。 */
 /* 元素大小受节点父级约束，源分辨率很大也不能撑开整张画布页面。 */
-/* 视频底栏读取所属媒体事件，音频沿用原生控件，不显示脱离播放器的时间。 */
+/* 音视频底栏读取所属媒体事件，不显示脱离播放器的时间。 */
 /* 不设置 autoplay、animation 或假进度，CSS 只负责可见几何。 */
-.hy-canvas-ui .hy-local-media :is(img,video) { width: 100%; height: 100%; object-fit: contain; }
-/* 原生控件需要可用宽度，避免音频条比方形节点更宽而裁掉播放按钮。 */
-/* 保留默认 controls 的时间和音量，不能用静态波形或虚假计时替代。 */
-.hy-canvas-ui .hy-local-media audio { width: calc(100% - 24px); }
+.hy-canvas-ui .hy-local-media :is(img,video) { width: 100%; height: 100%; object-fit: cover; }
+/* 节点网大图完整显示，卡片仍铺满；只改变适配，不重编码源文件。 */
+.hy-canvas-ui .hy-local-media[data-media-fit="contain"] :is(img,video) { object-fit: contain; }
+/* 原 audio 只负责解码和事件，不再占用浏览器原生白色控件的布局空间。 */
+/* 波形和自定义控件没有第二个声音来源，真实播放仍发生在这个元素上。 */
+/* display:none 不卸载元素，切源时仍由原会话 effect 负责暂停与释放。 */
+.hy-canvas-ui .hy-local-media audio { display: none; }
 /* 音频没有可视帧，不把文件名或测试波形铺成伪视频封面。 */
-/* 浏览器负责实际进度、缓冲与音量，控件显示不需要渲染层定时刷新。 */
-/* 宿主 color-scheme 决定原生控件配色，主题文件不会修改音频字节或音色。 */
+/* 浏览器负责实际进度、缓冲与音量，波形不需要渲染层定时推进。 */
+/* 宿主主题变量决定自定义控件配色，主题文件不会修改音频字节或音色。 */
 /* 文件名提示采用卡片主题底板，不把用户绝对路径展示到画布或错误文案中。 */
 /* 标题与更换入口分置上角，避免挡住底部原生视频进度与音量控件。 */
 .hy-canvas-ui .hy-media-caption { position: absolute; top: 8px; left: 10px; right: 90px; padding: 3px 6px; border-radius: 5px; background: var(--hy-panel); font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; pointer-events: none; }
@@ -65,15 +67,75 @@
 /* CSS 不读取当前时间，进度条值只来自 React 的真实媒体快照。 */
 /* 没有循环动画模拟正在播放，暂停画面也不出现假运动效果。 */
 .hy-canvas-ui .hy-video-controls { position:absolute; inset:auto 0 0; display:flex; align-items:center; gap:8px; padding:18px 10px 8px; color:white; background:linear-gradient(transparent,#0009); font-size:11px; }
-.hy-canvas-ui .hy-video-controls button { display:flex; align-items:center; justify-content:center; min-width:24px; min-height:26px; border:0; border-radius:5px; padding:3px; color:inherit; background:transparent; white-space:nowrap; }
-.hy-canvas-ui .hy-video-controls button:hover:not(:disabled) { background:#ffffff25; }
+.hy-canvas-ui :is(.hy-video-controls button,.hy-media-mute) { display:flex; align-items:center; justify-content:center; min-width:24px; min-height:26px; border:0; border-radius:5px; padding:3px; color:inherit; background:transparent; white-space:nowrap; }
+.hy-canvas-ui :is(.hy-video-controls button,.hy-media-mute):hover:not(:disabled) { background:var(--hy-media-control-hover,#ffffff25); }
 /* 键盘位置与鼠标悬停同样可见；选中节点的边框不代替播放器内部焦点。 */
-.hy-canvas-ui .hy-video-controls button:focus-visible:not(:disabled) { background:#ffffff40; }
+.hy-canvas-ui :is(.hy-video-controls button,.hy-media-mute):focus-visible:not(:disabled) { background:var(--hy-media-control-focus,#ffffff40); }
 /* 按住稍加深底色，松开即恢复，不把播放操作误画成持续选中。 */
-.hy-canvas-ui .hy-video-controls button:active:not(:disabled) { background:#ffffff55; }
+.hy-canvas-ui :is(.hy-video-controls button,.hy-media-mute):active:not(:disabled) { background:var(--hy-media-control-active,#ffffff55); }
 .hy-canvas-ui .hy-video-controls input { min-width:24px; width:20%; flex:1; accent-color:white; height:3px; padding:0; }
 .hy-canvas-ui .hy-video-controls span { white-space:nowrap; font-variant-numeric:tabular-nums; }
-.hy-canvas-ui .hy-video-controls button:disabled { opacity:.4; }
+.hy-canvas-ui :is(.hy-video-controls button,.hy-media-mute):disabled { opacity:.4; }
 /* 小卡仍可播放，截帧和全屏不互相挤压；控件行必要时在卡片内独立换行。 */
 .hy-canvas-ui .hy-video-controls { flex-wrap:wrap; }
-.hy-canvas-ui .hy-video-message { position:absolute; inset:40px 8px auto; padding:4px; border-radius:5px; background:var(--hy-panel); font-size:11px; color:var(--hy-text); }
+
+/* 音频波形与底栏共同居中，顶部仍为原来的文件名和更换入口留空间。 */
+/* 固定工具间距，卡片更宽时只扩展波形，不将按钮推到四个边角。 */
+/* 最小宽度归零，长文件名不能把中央播放器撑出节点。 */
+.hy-canvas-ui .hy-audio-player { width: 100%; min-width: 0; padding: 44px 16px 16px; color: var(--hy-text); }
+/* 波形区单独裁切滚动内容，节点外部标题、连接端口和参数面板不受影响。 */
+/* 整段波形使用固定高度，随卡片宽度缩放。 */
+/* 上下留白保持真实声音的对称中心，不能将上半包络误当成完整波形。 */
+.hy-canvas-ui .hy-audio-wave { position: relative; height: 76px; }
+/* 透明范围控件沿用原生拖动与键盘行为，视觉由下面同源波形和细线提供。 */
+/* 透明的是滑条皮肤，不是整个操作区，仍能通过 Tab 到达进度。 */
+/* 禁用时保留正确光标；未解码完成不能把一次点击当成播放成功。 */
+.hy-canvas-ui .hy-audio-wave input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
+/* 键盘进入透明进度字段时使用轻微底色，不能让焦点位置完全不可见。 */
+/* outline 不参与节点选中状态，波形焦点不会给外层再叠一圈粗边框。 */
+/* focus-within 只负责本控件，不永久改变画布或其他卡片的样式。 */
+.hy-canvas-ui .hy-audio-wave:focus-within { background: var(--hy-hover); border-radius: 5px; }
+/* 三列对称布局保证播放按钮位于卡片中心，时间长度变化不会把按钮挤偏。 */
+/* 底栏的数值等宽，进度变化不触发左右跳动。 */
+/* 格式标签保留右侧空间，与左侧时间相互独立而非挤成一排文本。 */
+.hy-canvas-ui .hy-audio-transport { display: grid; grid-template-columns: minmax(0,1fr) 32px minmax(0,1fr); align-items: center; gap: 8px; margin-top: 12px; font-size: 10px; font-variant-numeric: tabular-nums; }
+/* 圆形播放入口采用浅色细线，按下与悬停只改变同色系底色。 */
+/* disabled 使用资料包既有按钮状态，不因新增播放器而恢复默认粗边框。 */
+/* 最小点击尺寸不随 SVG 的小图标缩小，避免播放键难以命中。 */
+.hy-canvas-ui .hy-audio-transport > button { width: 32px; height: 32px; border: 1px solid var(--hy-line); border-radius: 50%; color: var(--hy-text); }
+/* 静音保留在时间旁，用原来的切换回调，不因换成波形布局丢掉声音控制。 */
+/* 小图标不参与中央播放键的宽度分配，按钮中心不会随时间字符改变。 */
+/* 左列可用宽度不足时控件保持紧凑，不向右覆盖中间播放入口。 */
+.hy-canvas-ui .hy-audio-transport > span { display: flex; align-items: center; gap: 4px; white-space: nowrap; }
+/* 音频卡片沿用主题底色，让共用的按钮在浅色卡片上也有可见反馈。 */
+.hy-canvas-ui .hy-audio-transport .hy-media-mute {
+  --hy-media-control-hover: var(--hy-hover);
+  --hy-media-control-focus: var(--hy-hover);
+  --hy-media-control-active: var(--hy-line);
+}
+/* 键盘、悬停与按住都有底色反馈，失焦后仍由真实 playing 状态决定图标。 */
+/* 不用 transform 放大按钮，避免画布缩放时出现额外位移或命中范围变化。 */
+/* 只有可用按钮响应交互色，加载中的禁用播放不能给出可执行的暗示。 */
+.hy-canvas-ui .hy-audio-transport > button:not(:disabled):is(:hover,:focus-visible,:active) { background: var(--hy-hover); }
+/* 文件格式小标签使用已有主题底色，扩展名较长时允许省略而不是撑坏右列。 */
+/* 完整文件名仍留在上方 caption 的 title，不在这里显示用户绝对路径。 */
+/* 标签没有无意义点击事件，读屏和键盘不会停在一个不执行动作的按钮上。 */
+.hy-canvas-ui .hy-audio-transport small { justify-self: end; max-width: 100%; overflow: hidden; text-overflow: ellipsis; padding: 2px 5px; border-radius: 3px; background: var(--hy-raised); color: var(--hy-muted); font-size: 10px; }
+/* 引用标签仍保留原 token 纯文本，用伪元素展示文件主体，避免文件改名污染提示词协议。 */
+/* 零字号只隐藏机器编号的字形，不移除文本，原编辑器的偏移、保存和撤销仍能读取它。 */
+/* 图片和名字不拆行；长名字最多占当前输入宽度，多行提示词不会被横向撑开。 */
+/* 标签的二十像素封面有独立尺寸，字体放大不把横图拉成长条。 */
+/* 左右四像素内边距只扩大可见底色，不改变正文中资源所占的字符数量。 */
+/* 竖向居中对齐同一行对白，不能用绝对定位把标签悬在输入框上方。 */
+/* 限宽跟随当前编辑器而非屏幕，节点放到窄窗口后标签不会覆盖右侧工具。 */
+/* 省略发生在展示层，底层文件名、节点媒体和保存的token都保持完整。 */
+/* 背景仍由原引用类决定，不能为了命名样式给浅色主题强加深色矩形。 */
+/* 普通文本行高保留父输入规则，标签高度来自封面，不增加整段文本的固定高度。 */
+.hy-canvas-ui .hy-reference-name { display:inline-block; max-width:100%; overflow:hidden; vertical-align:middle; white-space:nowrap; text-overflow:ellipsis; font-size:0; padding:2px 4px; }
+/* 名字沿用画布文字颜色，正常、浅深主题和缺图状态继续由原引用选择器控制。 */
+/* 伪元素只有展示文字，不进入 textContent，也不会被当成新的可编辑参数或资源身份。 */
+.hy-canvas-ui .hy-reference-name::after { content:attr(data-reference-label); font-size:12px; vertical-align:middle; }
+/* 无论输入源是横图、竖图或高分辨率，引用中的封面固定二十像素正方形。 */
+/* object-fit 只裁切小标签的封面，不改真实素材、节点完整预览或生成请求中的原图。 */
+/* 不继承原一 em 缩略图尺寸，否则父级为隐藏 token 而设的零字号会让图片也消失。 */
+.hy-canvas-ui .hy-reference-name > img { width:20px; height:20px; margin-right:4px; object-fit:cover; }

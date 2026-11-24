@@ -1,4 +1,6 @@
 "use client";
+import { HoverTip } from "@/components/hover-tip";
+
 
 // 详情打开时在绘制前通知父页保留图库实例，避免缩窄窗口先卸载来源组件。
 // 普通数据读取仍使用原 effect，挂载保活通知不发起文件或网络访问。
@@ -87,6 +89,8 @@ import { importLocalArtwork } from "@/utils/import-local-artwork";
 import { HistoryImageOrderDialog } from "@/view/create/history-image-order-dialog";
 import { applyHistoryImageOrder } from "@/utils/history-image-order";
 import { HistoryPagination } from "@/view/create/history-pagination";
+// 多选操作复用原按钮与回调，浮层外壳只解除父栏宽度和裁切的限制。
+import { HistorySelectionToolbar } from "@/view/create/history-selection-toolbar";
 
 /**
  * 两套版式共用同一份 JSX 与同一份状态，只差类名：
@@ -845,7 +849,7 @@ export function CreateHistorySidebar({
                     {outputMode === "free" ? <Unlock className="h-3.5 w-3.5" /> : <Lock className="h-3.5 w-3.5" />}
                     {t("create.createHistorySidebar.freeOutputMode")}
                   </button>
-                  <button
+                  <HoverTip asChild layer="window" label={(fixedOutputPath || effectiveOutputRoot) ?? ""}><button
                     type="button"
                     disabled={outputMode === "free" || !effectiveOutputRoot}
                     onClick={() => void handlePickFixedOutputPath()}
@@ -856,7 +860,7 @@ export function CreateHistorySidebar({
                         : "text-muted-foreground hover:bg-muted/60 hover:text-foreground",
                       INPUT_BORDER_CLASS
                     )}
-                    title={fixedOutputPath || effectiveOutputRoot}
+
                   >
                     <span className="mr-1 font-medium">
                       {t("create.createHistorySidebar.fixedOutputPath")}
@@ -864,7 +868,7 @@ export function CreateHistorySidebar({
                     <span className="inline-block max-w-[16rem] truncate align-bottom">
                       {fixedOutputPath || t("create.createHistorySidebar.chooseFixedOutput")}
                     </span>
-                  </button>
+                  </button></HoverTip>
                 </div>
               </div>
 
@@ -1078,7 +1082,7 @@ export function CreateHistorySidebar({
                         mediaOpen && "rotate-180"
                       )}
                     />
-                    <span data-history-media-title title={isDefaultHistoryFolder(openedFolderId) ? mediaLabelText : `${mediaLabelText} · ${openedFolderName}`}
+                    <HoverTip asChild layer="window" label={(isDefaultHistoryFolder(openedFolderId) ? mediaLabelText : `${mediaLabelText} · ${openedFolderName}`) ?? ""}><span data-history-media-title
                       className={cn(
                         "block min-w-0 flex-1 truncate text-left font-medium",
                         isPage ? "text-sm font-semibold" : "text-xs"
@@ -1087,7 +1091,7 @@ export function CreateHistorySidebar({
                       {isDefaultHistoryFolder(openedFolderId)
                         ? mediaLabelText
                         : `${mediaLabelText} · ${openedFolderName}`}
-                    </span>
+                    </span></HoverTip>
                   </button>
 
                   {/**
@@ -1173,13 +1177,13 @@ export function CreateHistorySidebar({
                     {/* 入口只占一个小图标，与现有批量选择和搜索按钮使用相同尺寸。 */}
                     {/* 悬停说明与可访问名称相同，不要求用户猜测上下箭头的业务意义。 */}
                     {/* 操作区自身不收缩，目录标题才是允许压缩和省略的区域。 */}
-                    <button ref={imageOrderTrigger} type="button" data-history-order-open
-                      aria-label={t("create.historyOrder.title")} title={t("create.historyOrder.title")}
+                    <HoverTip asChild layer="window" label={(t("create.historyOrder.title")) ?? ""}><button ref={imageOrderTrigger} type="button" data-history-order-open
+                      aria-label={t("create.historyOrder.title")}
                       disabled={movingImages || loadingImages || imagesError || filteredImages.length === 0}
                       onClick={() => setImageOrderOpen(true)}
                       className="flex h-6 w-6 items-center justify-center rounded-lg hover:bg-muted/50 disabled:opacity-40 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent-stroke">
                       <ArrowDownUp className="h-3.5 w-3.5" />
-                    </button>
+                    </button></HoverTip>
                     <button
                       type="button"
                       aria-label={
@@ -1403,15 +1407,7 @@ export function CreateHistorySidebar({
                     )}
                   >
                     {imageSelectionMode ? (
-                      <div
-                        className={cn(
-                          "pointer-events-auto flex flex-wrap items-center justify-center gap-2 bg-white px-3 py-2 dark:bg-muted",
-                          isPage
-                            ? "w-full max-w-[640px] justify-between rounded-2xl shadow-lg"
-                            : "rounded-xl shadow-sm",
-                          INPUT_BORDER_CLASS
-                        )}
-                      >
+                      <HistorySelectionToolbar>
                         <span className="text-xs text-muted-foreground">
                           {t("create.createHistorySidebar.selected")}{" "}
                           {selectedImageCount} / {filteredImages.length}
@@ -1439,16 +1435,16 @@ export function CreateHistorySidebar({
                         {/* 无选择时只禁用移动入口，不隐藏它，用户能在批量模式中发现此能力。 */}
                         {/* 忙碌文案替换同一按钮文字，保留稳定 DOM 焦点而不临时换成另一个控件。 */}
                         {/* 图标来自现有 lucide 集合，语义由可见文本提供，不要求用户只认图形。 */}
-                        {/* flex-wrap 沿用原工具栏，窄栏增加一项后可自然换行，不把删除挤出可点击区域。 */}
+                        {/* 操作条保持单行并浮在父栏外，窄到超出视口时由外壳横滚承接。 */}
                         {/* 成功后工具栏随选择模式退出，失败则仍显示同一批勾选和可重试操作。 */}
                         {/* 删除继续使用原破坏性色，移动沿用浅边框，两种副作用不会共用一个按钮。 */}
-                        {/* 外层 sticky 区负责停靠，按钮不引入 fixed 层遮住图片或窗口控制。 */}
+                        {/* 外层 sticky 留锚点，body 浮层跟随停靠，避免被图库父容器剪掉。 */}
                         {/* 选择器由同一 click 快照传参，按钮渲染后用户继续勾选不会改写旧数组。 */}
                         {/* 不新增第二套 loading 遮罩，原图片列表的滚动和加载状态仍归列表自己管理。 */}
-                        <button type="button" data-history-move title={t("create.createHistorySidebar.moveHint")} disabled={movingImages || selectedImageCount === 0} onClick={() => void handleMoveImages([...selectedImagePaths])} className="inline-flex h-8 items-center gap-1 rounded-md border border-border px-2 text-xs font-medium hover:bg-muted/60 disabled:cursor-not-allowed disabled:opacity-50">
+                        <HoverTip asChild layer="window" label={(t("create.createHistorySidebar.moveHint")) ?? ""}><button type="button" data-history-move disabled={movingImages || selectedImageCount === 0} onClick={() => void handleMoveImages([...selectedImagePaths])} className="inline-flex h-8 items-center gap-1 rounded-md border border-border px-2 text-xs font-medium hover:bg-muted/60 disabled:cursor-not-allowed disabled:opacity-50">
                           <FolderInput className="h-3.5 w-3.5" />
                           {t(movingImages ? "create.createHistorySidebar.moving" : "create.createHistorySidebar.move")}
-                        </button>
+                        </button></HoverTip>
                         <button
                           type="button"
                           disabled={movingImages || selectedImageCount === 0}
@@ -1466,7 +1462,7 @@ export function CreateHistorySidebar({
                           <Trash2 className="h-3.5 w-3.5" />
                           {t("common.delete")}
                         </button>
-                      </div>
+                      </HistorySelectionToolbar>
                     ) : !isPage || isDefaultHistoryFolder(openedFolderId) ? null : (
                     <button
                       type="button"

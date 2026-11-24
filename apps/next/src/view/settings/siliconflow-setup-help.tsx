@@ -1,4 +1,6 @@
 "use client";
+import { HoverTip } from "@/components/hover-tip";
+
 
 import { useEffect, useRef, useState } from "react";
 import { BookOpen, ExternalLink } from "lucide-react";
@@ -41,9 +43,9 @@ export function SiliconFlowSetupHelp() {
     <a data-agent-provider-link href={WEBSITE_URL} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-xs text-primary hover:bg-primary/10 focus-visible:outline-2 focus-visible:outline-primary">
       {t("settings.agentSection.setup.website")}<ExternalLink aria-hidden className="h-3.5 w-3.5" />
     </a>
-    <button type="button" data-agent-setup-guide aria-haspopup="dialog" aria-expanded={open} title={preview} onClick={() => setOpen(true)} className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-xs text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-primary">
+    <HoverTip asChild layer="window" label={(preview) ?? ""}><button type="button" data-agent-setup-guide aria-haspopup="dialog" aria-expanded={open} onClick={() => setOpen(true)} className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-xs text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-primary">
       <BookOpen aria-hidden className="h-3.5 w-3.5" />{t("settings.agentSection.setup.title")}
-    </button>
+    </button></HoverTip>
     {/* 弹窗：硅基流动注册与 API 配置，复用文档型弹框和现有 i18n。 */}
     <DocumentDialog open={open} eyebrow={t("settings.agentSection.title")} title={t("settings.agentSection.setup.title")} titleId="agent-setup-guide-title" onClose={() => setOpen(false)} confirmLabel={t("common.close")}>
       <SetupSteps />

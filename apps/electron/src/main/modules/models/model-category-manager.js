@@ -10,7 +10,7 @@
 const fs = require("fs");
 const path = require("path");
 const { shell } = require("electron");
-const { configuredPaths, childDirectory, isInside, validateLocalFolder } = require("./downloads/model-download-paths");
+const { configuredPaths, childDirectory, isInside, loraFamily, modelFolderName, validateLocalFolder } = require("./downloads/model-download-paths");
 const { safeName } = require("./downloads/model-download-validation");
 const { isModelFolderDownloading } = require("./downloads/model-download-manager");
 const { assertFolderUnlocked, reserveFolders } = require("./model-folder-locks");
@@ -34,6 +34,25 @@ function checkedDescendant(root, folder) {
   if (!fs.existsSync(current)) throw new Error("invalid");
   return current;
 }
+/** 新版直接存到系列下的模型也能移动。逐文件资料用来区分旧的分类聚合目录。
+ * @param {string} folder @param {string} family */
+function isDirectFamilyModel(folder, family) {
+  const entries = fs.readdirSync(folder, { withFileTypes: true });
+  if (entries.some(entry => entry.isDirectory() || entry.isSymbolicLink())) return false;
+  const weights = entries.filter(entry => entry.isFile() && /\.(safetensors|ckpt|pt|pth|gguf)$/i.test(entry.name));
+  if (!weights.length) return false;
+  return weights.every(entry => {
+    try {
+      const sidecar = path.join(folder, entry.name + ".civitai.json");
+      const stat = fs.lstatSync(sidecar);
+      if (!stat.isFile() || stat.size > 2 * 1024 * 1024) return false;
+      const data = JSON.parse(fs.readFileSync(sidecar, "utf8"));
+      return data.loraFamilyArchive === true && data.modelType === "LORA" &&
+        typeof data.baseModel === "string" && loraFamily(data.baseModel).toLowerCase() === family.toLowerCase() &&
+        typeof data.modelName === "string" && modelFolderName(data.modelName) === path.basename(folder);
+    } catch { return false; }
+  });
+}
 /** @param {string} folderPath */
 function categoryTarget(folderPath) {
   const roots = configuredRoots();
@@ -42,11 +61,11 @@ function categoryTarget(folderPath) {
   const folder = checkedDescendant(root.path, folderPath);
   validateLocalFolder(folder);
   const segments = path.relative(root.path, folder).split(path.sep);
-  // A model directly in a root/category is a legacy aggregate, not an individual model folder.
-  if (segments.length < 2 || (/^(anima|sdxl)$/i.test(segments[0]) && segments.length < 3)) throw new Error("layout");
-  const categoryRootPath = path.dirname(path.dirname(folder));
+  const direct = segments.length === 2 && isDirectFamilyModel(folder, segments[0]);
+  if (segments.length < 2 || (!direct && /^(anima|sdxl)$/i.test(segments[0]) && segments.length < 3)) throw new Error("layout");
+  const categoryRootPath = direct ? path.dirname(folder) : path.dirname(path.dirname(folder));
   const categories = fs.readdirSync(categoryRootPath, { withFileTypes: true }).filter((entry) => entry.isDirectory() && safeName(entry.name)).map((entry) => entry.name).sort();
-  return { rootPath: root.path, categoryRootPath, currentCategory: path.basename(path.dirname(folder)), roots, categories };
+  return { rootPath: root.path, categoryRootPath, currentCategory: direct ? "" : path.basename(path.dirname(folder)), roots, categories };
 }
 /** @param {string} folder */
 function assertIdle(folder) {

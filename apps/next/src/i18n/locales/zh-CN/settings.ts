@@ -51,6 +51,7 @@ export const settings = {
     videoTitle: "视频处理设置",
     videoDescription: "视频剪辑、等时长切分和逐帧导出等功能请在工具箱的视频工具中使用。",
   },
+  euzhiImages: {"title": "Euzhi 图片生成", "pricing": "Image2 定价", "description": "仅用于画布图片生成，与 Agent/提示词助手的 Euzhi 密钥独立。保存仅表示本机配置，不会自动发送付费测试请求。"},
   promptKeys: {
     title: "提示词助手",
     description: "GLM、中转站、Agent 和 Civitai 使用各自平台的密钥，互不共用。保存仅表示本机已配置，不代表已通过接口验证。",
@@ -86,7 +87,7 @@ export const settings = {
   },
   userDataSection: {
     title: "用户数据",
-    description: "设置、个人资料、快捷短语等将保存到单一 JSON 文件。",
+    description: "设置和个人资料保存在用户数据 JSON 文件中。",
   },
   userDataPath: {
     updated: "已更新用户数据保存路径，请重启应用以确保路径生效",

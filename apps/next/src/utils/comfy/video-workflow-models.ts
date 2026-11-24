@@ -78,7 +78,7 @@ export function applyVideoModelOverrides(prompt: ComfyApiPrompt, overrides: Vide
     prompt[id].inputs[slot.input] = name;
   }
 }
-function localLoaderRoots(category: LoaderCategory, paths: SettingsPaths): string[] {
+export function localLoaderRoots(category: LoaderCategory, paths: SettingsPaths): string[] {
   const search = paths.searchPath.replace(/[/\\]+$/, "");
   const base = paths.diffusionModelsPath.replace(/[/\\]+$/, "");
   const siblings = base.replace(/[/\\][^/\\]+$/, "");

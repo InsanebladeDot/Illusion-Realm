@@ -1,4 +1,6 @@
 "use client";
+import { HoverTip } from "@/components/hover-tip";
+
 
 /** Prompt credentials share the encrypted IPC facade; changing endpoints resets the key draft. */
 import { useEffect, useState } from "react";
@@ -12,22 +14,28 @@ import { useToastStore } from "@/stores/useToastStore";
 import { assistantError, clearPromptSecret, promptSecretStatus, savePromptSecret } from "@/utils/prompt-assistant";
 import type { PromptConnection, PromptSecretStatus } from "@illusion-realm/shared";
 
+import { euzhiImageKeyStatus, saveEuzhiImageKey, clearEuzhiImageKey } from "@/utils/euzhi-images";
+
+// 图片使用独立凭据动作，字段与错误恢复继续复用原表单，不能读 Agent 的同名站点。
+type CredentialConnection = PromptConnection | { provider: "euzhi-images"; baseUrl: "" };
 const INPUT = "w-full rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:opacity-50";
-function usePromptCredential(connection: PromptConnection) {
+function usePromptCredential(connection: CredentialConnection) {
   const { t } = useTranslation();
   const [status, setStatus] = useState<PromptSecretStatus | null>(null);
   const [draft, setDraft] = useState(""); const [busy, setBusy] = useState(false);
   const { provider, baseUrl } = connection;
   useEffect(() => {
     let active = true;
-    void promptSecretStatus({ provider, baseUrl }).then(value => { if (active) setStatus(value); })
+    void (provider === "euzhi-images" ? euzhiImageKeyStatus() : promptSecretStatus({ provider, baseUrl })).then(value => { if (active) setStatus(value); })
       .catch(error => { if (active) useToastStore.getState().show(assistantError(error)); });
     return () => { active = false; };
   }, [provider, baseUrl]);
   const update = async (clear: boolean) => {
     setBusy(true);
     try {
-      setStatus(clear ? await clearPromptSecret(connection) : await savePromptSecret(connection, draft));
+      setStatus(connection.provider === "euzhi-images"
+        ? clear ? await clearEuzhiImageKey() : await saveEuzhiImageKey(draft)
+        : clear ? await clearPromptSecret(connection) : await savePromptSecret(connection, draft));
       setDraft(""); useToastStore.getState().show(t(clear ? "create.promptAssistant.deletedKey" : "create.promptAssistant.saved"));
     } catch (error) { useToastStore.getState().show(assistantError(error)); }
     finally { setBusy(false); }
@@ -35,11 +43,11 @@ function usePromptCredential(connection: PromptConnection) {
   return { status, draft, setDraft, busy, update };
 }
 
-function PromptCredentialForm({ connection }: { connection: PromptConnection }) {
+function PromptCredentialForm({ connection }: { connection: CredentialConnection }) {
   const { t } = useTranslation(); const desktop = useIsElectronEnvironment();
   const { status, draft, setDraft, busy, update } = usePromptCredential(connection);
   return <div className="space-y-3" data-prompt-key-provider={connection.provider}>
-    <p title={t(status?.configured ? "create.promptAssistant.keyConfigured" : "create.promptAssistant.keyMissing")} data-prompt-key-status={status?.configured ? "configured" : "missing"} className="text-xs text-muted-foreground">{status?.configured ? t("settings.agentSection.statusConfigured", { tail: status.tail }) : t("create.promptAssistant.keyMissing")}</p>
+    <HoverTip asChild layer="window" label={(t(status?.configured ? "create.promptAssistant.keyConfigured" : "create.promptAssistant.keyMissing")) ?? ""}><p data-prompt-key-status={status?.configured ? "configured" : "missing"} className="text-xs text-muted-foreground">{status?.configured ? t("settings.agentSection.statusConfigured", { tail: status.tail }) : t("create.promptAssistant.keyMissing")}</p></HoverTip>
     <form className="flex flex-wrap gap-2" onSubmit={event => { event.preventDefault(); if (desktop && !busy && draft.trim()) void update(false); }}>
       <div className="min-w-0 basis-full sm:basis-auto sm:flex-1"><input data-assistant-api-key aria-label={t("create.promptAssistant.apiKey")} type="password" autoComplete="off" spellCheck={false} maxLength={4096} value={draft} onChange={event => setDraft(event.target.value)} disabled={!desktop || busy} placeholder={t("create.promptAssistant.apiKey")} className={INPUT} /></div>
       <button data-assistant-save type="submit" disabled={!desktop || busy || !draft.trim()} className="rounded-xl bg-accent-fill px-4 py-2 text-sm text-accent-fill-foreground disabled:opacity-50">{t("create.promptAssistant.save")}</button>
@@ -74,40 +82,34 @@ function CustomPromptConnection() {
   </div>;
 }
 
+function LegacyCustomConnection() {
+  const provider = usePromptAssistantStore(state => state.preferences.provider);
+  return provider === "custom" ? <CustomPromptConnection /> : null;
+}
+
 export function PromptApiKeySetting() {
   const { t } = useTranslation(); const ready = usePromptAssistantStore(state => state.ready);
   useEffect(() => { void usePromptAssistantStore.getState().load().catch(error => useToastStore.getState().show(assistantError(error))); }, []);
   if (!ready) return <p className="text-xs text-muted-foreground">{t("create.promptAssistant.busy")}</p>;
   return <div className="space-y-4">
-    <div className="space-y-3 rounded-xl border border-border p-4">
-      <h3 className="text-sm font-medium">GLM</h3>
-      <p className="text-xs text-muted-foreground">{t("settings.promptKeys.glmHint")}</p>
-      <a href="https://docs.bigmodel.cn/cn/guide/start/api-key" target="_blank" rel="noopener noreferrer" className="text-xs text-foreground underline underline-offset-4">{t("create.promptAssistant.docs")}</a>
-      <PromptCredentialForm connection={{ provider: "glm", baseUrl: "" }} />
-      <p className="text-xs text-muted-foreground">{t("create.promptAssistant.freeHint")}</p>
+    {/* 命名供应商统一到 Agent 配置；原自定义端点只为已有配置保留。 */}
+    <p className="text-xs text-muted-foreground">{t("create.promptAssistant.sharedProviders")}</p>
+    <Link href="/settings#agent" className="text-xs text-primary underline">{t("create.promptAssistant.manageProviders")}</Link>
+    <LegacyCustomConnection />
+  </div>;
+}
+
+// 设置页：同一个凭据表单接入图片专用分区，两个表单的草稿和 busy 各自独立。
+// 说明保存仅发生在本机，不把“保存成功”误写成已经远端鉴权通过。
+export function EuzhiImageApiKeySetting() {
+  const { t } = useTranslation();
+  return <div className="space-y-3" data-euzhi-image-key>
+    <p className="text-xs text-muted-foreground">{t("settings.euzhiImages.description")}</p>
+    {/* 图片生成设置：价格由站点和令牌分组决定，直接查看官方定价。 */}
+    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-foreground">
+      <a href="https://euzhi.vip/docs#image2" target="_blank" rel="noopener noreferrer" className="underline underline-offset-4">{t("create.promptAssistant.docs")}</a>
+      <a href="https://euzhi.vip/pricing" target="_blank" rel="noopener noreferrer" className="underline underline-offset-4">{t("settings.euzhiImages.pricing")}</a>
     </div>
-    {/* 提示词助手连接设置：Euzhi 复用原凭据表单，通过参数选择共享的 Agent 分区。 */}
-    {/* 明确告知保存与清除会同步作用于 Agent，避免用户以为只是当前输入框的密钥。 */}
-    {/* Grok 型号沿用 Agent 选择，不把同一供应商配置拆成两份普通用户数据。 */}
-    {/* 与另外两组凭据表单各自挂载 hook：明文草稿、保存中和错误提示不在分区间串用。 */}
-    {/* Agent 中已经填过密钥时，这里会读取同一状态，输入框仍保持空白而不回填原值。 */}
-    {/* 保存只更换本站密钥，不改变当前提示词助手供应商，查看设置不应自动切站。 */}
-    {/* 清除按钮沿用 busy 禁用，不能同时发起保存和清除两种互相覆盖的动作。 */}
-    {/* 清除未配置密钥仍不可用，状态读取失败不能假装远端账户已经退出。 */}
-    {/* 原凭据表单保留明文降级警示，复用 Agent 存储不意味着所有系统都具备加密能力。 */}
-    {/* 链接只携带固定锚点，提示词原稿、预设指令和密钥都不进入 URL。 */}
-    {/* #agent 由既有设置分类切换处理，进入后仍显示原站点切换和模型选择器。 */}
-    {/* 这里只说明共享的 Grok 选择，不另建会与 Agent 分离的模型文本输入框。 */}
-    {/* 相同表单获得明确 euzhi 参数，不能因 Agent 当前是硅基流动就读错凭据。 */}
-    {/* 标题使用 Agent 同一服务商词条，名称和语言更新不用两处手工维护。 */}
-    {/* 外框沿用设置页现有面板样式，深浅主题和窄屏换行均由原组件负责。 */}
-    {/* 新区域不依赖 custom 端点是否有效，错误的自定义地址不会阻止 Euzhi 配置。 */}
-    <div className="space-y-3 rounded-xl border border-border p-4">
-      <h3 className="text-sm font-medium">{t("agent.providers.euzhi")}</h3>
-      <p className="text-xs text-muted-foreground">{t("create.promptAssistant.euzhiShared")}</p>
-      <Link href="/settings#agent" className="text-xs text-primary underline">{t("create.promptAssistant.euzhiManage")}</Link>
-      <PromptCredentialForm connection={{ provider: "euzhi", baseUrl: "" }} />
-    </div>
-    <CustomPromptConnection />
+    <PromptCredentialForm connection={{ provider: "euzhi-images", baseUrl: "" }} />
   </div>;
 }

@@ -11,6 +11,7 @@ export type SamplerOption = {
 export const SAMPLERS: readonly SamplerOption[] = [
   { label: "Euler", value: "euler" },
   { label: "Euler Ancestral", value: "euler_ancestral" },
+  { label: "ER SDE", value: "er_sde" },
   { label: "Heun", value: "heun" },
   { label: "Heunpp2", value: "heunpp2" },
   { label: "DPM 2", value: "dpm_2" },
@@ -39,16 +40,24 @@ export const SAMPLERS: readonly SamplerOption[] = [
 ];
 
 /**
- * 调度器列表（任务规范 2.2）
- * value 原样写入 KSampler.inputs.scheduler。
+ * 调度器按参考菜单的顺序与原始名称展示，创建页和画布共用此清单。
+ * label 与 value 保持一致，避免 Simple 等美化名称掩盖实际工作流参数。
+ * 新增三项只扩展可选值，不改变已有工程已经保存的调度器。
+ * value 原样写入 KSampler.inputs.scheduler，不把显示顺序当作枚举编号。
+ * 默认仍为 simple；真实服务缺少某项时由原请求边界报告兼容错误。
+ * 此表不缓存服务能力，离线配置仍可保存，但不代表当前 ComfyUI 已安装支持。
+ * 菜单、编辑校验和元数据还原共用同一来源，防止界面可选而提交被本机误拒绝。
  */
 export const SCHEDULERS: readonly SamplerOption[] = [
-  { label: "Normal", value: "normal" },
-  { label: "Karras", value: "karras" },
-  { label: "Exponential", value: "exponential" },
-  { label: "SGM Uniform", value: "sgm_uniform" },
-  { label: "Simple", value: "simple" },
-  { label: "DDIM Uniform", value: "ddim_uniform" },
+  { label: "simple", value: "simple" },
+  { label: "sgm_uniform", value: "sgm_uniform" },
+  { label: "karras", value: "karras" },
+  { label: "exponential", value: "exponential" },
+  { label: "ddim_uniform", value: "ddim_uniform" },
+  { label: "beta", value: "beta" },
+  { label: "normal", value: "normal" },
+  { label: "linear_quadratic", value: "linear_quadratic" },
+  { label: "kl_optimal", value: "kl_optimal" },
 ];
 
 export const DEFAULT_SAMPLER = "euler";

@@ -85,8 +85,11 @@ export function useCanvasProject(editor: ReturnType<typeof useCanvasEditor>) {
       const result = operation === "open" ? unwrapIpc(await api.canvasOpenProject()) : unwrapIpc(await api.canvasExportProject(serializeCanvas(editor)));
       if (!alive.current) return;
       if (result && typeof result !== "string") editor.openDocument(parseCanvasDocument(result));
-      editor.setMessage(t(result ? operation === "open" ? "canvas.projectOpened" : "canvas.projectExported" : "canvas.importCancelled"));
-    } catch { if (alive.current) editor.setMessage(t("canvas.projectFailed")); }
+      editor.notify(
+        t(result ? operation === "open" ? "canvas.projectOpened" : "canvas.projectExported" : "canvas.importCancelled"),
+        result ? "success" : "info",
+      );
+    } catch { if (alive.current) editor.notify(t("canvas.projectFailed"), "error"); }
     finally { running.current = false; if (alive.current) setBusy(false); }
   };
   return { busy, open: () => { void run("open"); }, export: () => { void run("export"); } };

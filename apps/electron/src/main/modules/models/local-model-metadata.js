@@ -6,6 +6,7 @@
 const fs = require("node:fs/promises");
 const path = require("node:path");
 const { configuredPaths, isInside } = require("./downloads/model-download-paths");
+const { readCachedHash } = require("./local-model-hash-cache");
 const MAX_BYTES = 2 * 1024 * 1024;
 /** @typedef {import('@illusion-realm/shared').LocalModelMetadata} Metadata */
 /** @typedef {import('@illusion-realm/shared').LocalModelMetadataEntry} Entry */
@@ -66,10 +67,13 @@ async function readBoundedJson(sidecar) {
 }
 /** @param {string} filePath @param {string[]} roots @returns {Promise<Entry>} */
 async function readEntry(filePath, roots) {
+  let localSha256 = /** @type {string | undefined} */ (undefined);
   /** @param {Entry['status']} status @param {Metadata | null} [metadata] */
-  const result = (status, metadata = null) => ({ filePath, status, metadata });
+  const result = (status, metadata = null) => ({ filePath, status, metadata, localSha256 });
   const model = await authorizedModel(filePath, roots);
   if (!model) return result("unavailable");
+  // 离线摘要独立保存，来源损坏或缺失也不妨碍按真实文件识别。
+  localSha256 = await readCachedHash(model);
   try {
     const sidecar = model + ".civitai.json";
     if (await fs.realpath(sidecar) !== sidecar) return result("invalid");

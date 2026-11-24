@@ -1,4 +1,6 @@
 "use client";
+import { HoverTip } from "@/components/hover-tip";
+
 
 // 界面：统一批量导入参考资源，按图片 / 视频 / 音频排序，卡片换行显示；上传仍由生成逻辑负责。
 import { useRef } from "react";
@@ -21,11 +23,11 @@ function ResourceTile({ item, references }: { item: VideoReferenceFile; referenc
       if (file) references.select(item.kind, item.number, file);
       event.target.value = "";
     }} />
-    <button type="button" title={`${token} · ${item.name} · ${t("create.upload.clickToReplace")}`} aria-label={`${token} · ${item.name}`}
+    <HoverTip asChild layer="window" label={`${token} · ${item.name} · ${t("create.upload.clickToReplace")}`}><button type="button" aria-label={`${token} · ${item.name}`}
       onClick={() => input.current?.click()} className="absolute inset-0 block h-full w-full overflow-hidden rounded-md border border-border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
       <MediaThumbnail item={item} className="h-full w-full rounded-none" />
       <span className="absolute inset-x-0 bottom-0 truncate bg-black/55 px-1 py-0.5 text-center text-[10px] text-white">{token}</span>
-    </button>
+    </button></HoverTip>
     <button type="button" data-reference-remove aria-label={t("create.upload.removeLabel", { label: token })} onClick={() => references.remove(item.id)}
       className="absolute right-0.5 top-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-black/55 text-white hover:bg-black/75 focus-visible:ring-2 focus-visible:ring-ring"><X className="h-3 w-3" /></button>
   </div>;

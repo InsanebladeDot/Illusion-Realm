@@ -14,9 +14,10 @@ import { CivitaiSidebar } from "./civitai-sidebar";
 import { useCivitaiModels } from "./use-civitai-models";
 import { LocalModelLibrary } from "./local-model-library";
 import { useSettingsStore } from "@/stores/useSettingsStore";
-// 名称与摘要使用同一纯数据匹配器，所有卡片共享一份本地证据集合。
+// 所有卡片共享同一份摘要集合，名称不参与身份判定。
 // 元数据 hook 已处理每批上限、读取失败和卸载后的过期响应，不在页面复制请求循环。
-import { findLocalCivitaiMatch, hasLocalCivitaiName, localModelHashes, localModelNamePairs } from "@/utils/civitai-local-models";
+import { findLocalCivitaiVersions, localModelHashes } from "@/utils/civitai-local-models";
+import { LocalModelHashButton } from "./local-model-hash-button";
 import { useLocalModelMetadata } from "@/hooks/use-local-model-metadata";
 import { useCatalogScrollLoad } from "./use-catalog-scroll-load";
 import { ModelLibraryWorkspace } from "./model-library-workspace";
@@ -114,53 +115,35 @@ function ModelToolbar({ filters, onChange, view, onView }: ToolbarProps) {
     <ModelLibrarySearch online query={query} onChange={setQuery} label={t("toolBox.civitai.search")} placeholder={t("toolBox.civitai.searchPlaceholder")} onSubmit={submit}
       trailing={<SimpleSelect value={filters.sort} onChange={sort => onChange({ ...filters, sort })} ariaLabel={t("toolBox.civitai.sort")} options={[{ value: "Most Downloaded", label: t("toolBox.civitai.popular") }, { value: "Newest", label: t("toolBox.civitai.newest") }, { value: "Highest Rated", label: t("toolBox.civitai.rated") }]} className="w-32 shrink-0" triggerClassName="!rounded-none !border-0 !border-l !bg-transparent !text-xs" />}
       action={<button type="submit" className="bg-primary text-primary-foreground">{t("toolBox.civitai.search")}</button>} />
-    <div className={styles.actionRow}><ModelLibraryViewModes view={view} onChange={onView} /></div>
+    <div className={styles.actionRow}><LocalModelHashButton /><ModelLibraryViewModes view={view} onChange={onView} /></div>
   </header>;
 }
-function ModelCatalog({ models, selected, select, status, next, load, view }: ReturnType<typeof useCivitaiModels> & { selected: CivitaiModel | null; select: (model: CivitaiModel) => void; view: string }) {
-  const { t } = useTranslation();
+function useCatalogLocalHashes() {
   const localModels = useSettingsStore(state => state.models);
-  // 先用扫描器已有的目录和文件名，不能只比较 basename 误认其他模型。
-  // 标题与文件前缀都满足时立即标为严格同名，不等待摘要来源读取。
-  // 这份集合按本地索引更新复用，切换网格、选中卡片不会重复扫描。
-  const localNames = useMemo(() => localModelNamePairs(localModels), [localModels]);
-  // 只有当前远端结果里存在名称不匹配项，才需要读取已有来源 JSON 做摘要回退。
-  // 没有远端结果时不打开本地来源文件；不为模型列表的骨架阶段付出读取成本。
-  // 所有名称都严格一致时也无需读取 JSON，保留用户要求的名称优先路径。
-  // 已改名模型的来源可能位于任何本地分组，因此摘要回退不能仅限同名目录。
-  const needsHashes = models.some(model => !hasLocalCivitaiName(model, localNames));
-  // 扫描时间在下载或批量补全收尾后变化，同路径下新写的 JSON 也能重新读取。
-  // 不监听每条批量进度去重读全库，避免一个批次变成模型数平方级的来源读取。
-  // 用户手工修改 JSON 后可重新扫描或重新进入在线页，不引入文件监视器。
   const scannedAt = useSettingsStore(state => state.lastScannedAt) || 0;
-  // 这里只传已扫描的真实文件路径，主进程仍会复核目录授权和来源大小。
-  // 文件列表使用权重作为 sidecar 身份，但只读接口不会读取权重内容。
-  // 同路径去重和每批最多 200 项继续由 useLocalModelMetadata 处理。
-  // 不能只读取本页同名文件：哈希回退就是为了识别目录和文件都已改名的模型。
-  // 来源读取与远端列表请求各有生命周期，某个来源不存在不应取消网站搜索。
-  // 多个版本的 sidecar 分别绑定到文件，不能使用目录里的第一份 JSON 代表整组。
-  const metadataPaths = needsHashes ? localModels.flatMap(model => model.versions.map(version => version.filePath)) : [];
+  const metadataPaths = useMemo(() => localModels.flatMap(model => model.versions.map(version => version.filePath)), [localModels]);
   const metadata = useLocalModelMetadata(metadataPaths, scannedAt);
-  // 等待、失败或来源缺失时集合为空，不沿用上一个扫描版本的成功证据。
-  // 远端分页和排序不改变本地路径集合时，hook 的请求键不变，不重复读取。
-  // 摘要集合仅保存字符串，卡片间共享，不为每一张卡片发一次 IPC。
-  // 匹配提示不会触发 recoverLocalModelMetadata，也不会自动补资料或计算 SHA256。
-  // 临时隐藏哈希角标比保留旧角标可靠：用户删除模型后不能还看到上次的拥有状态。
-  // 来源回退只从当前配置读取，切换到另一模型根后旧集合不能继续作为证据。
-  // 这份本地证据没有包含绝对路径的 DOM 属性，卡片只接收判定类型。
-  const localHashes = useMemo(() => localModelHashes(metadata.entries), [metadata.entries]);
+  const hashes = useMemo(() => localModelHashes(metadata.entries), [metadata.entries]);
+  return { hashes, scanned: scannedAt > 0, state: metadata.loading ? "loading" : metadata.failed ? "error" : "ready" };
+}
+
+interface ModelCatalogProps extends ReturnType<typeof useCivitaiModels> {
+  selected: CivitaiModel | null;
+  select: (model: CivitaiModel) => void;
+  view: string;
+  local: ReturnType<typeof useCatalogLocalHashes>;
+}
+
+function ModelCatalog({ models, selected, select, status, next, load, view, local }: ModelCatalogProps) {
+  const { t } = useTranslation();
   const container = useCatalogScrollLoad({ next, status, load });
-  // 本地证据状态独立于远端请求状态，失败不影响浏览或下载。
-  // 等待 JSON 时不显示哈希匹配；自动化也据此避免在结果尚未读取时误判未命中。
-  // 扫描与来源读取是两个阶段；空路径的 ready 不能说明启动扫描已经结束。
-  // 单独保留扫描完成标记，让回归能等到真实本地索引，而不是只看到远端卡片。
-  return <div ref={container} data-civitai-catalog data-civitai-local-scanned={scannedAt > 0} data-civitai-local-state={metadata.loading ? "loading" : metadata.failed ? "error" : "ready"} aria-busy={status === "loading"} className={styles.catalogScroll}>
+  return <div ref={container} data-civitai-catalog data-civitai-local-scanned={local.scanned} data-civitai-local-state={local.state} aria-busy={status === "loading"} className={styles.catalogScroll}>
     {/* 在线结果：相同网格与 Card 保留远端身份，目录没有伪装成本地文件夹。 */}
     {/* 分页仍由原滚动 hook 驱动，换成三面板不应自动遍历整个远端库。 */}
     {models.length === 0 && status === "ready" && <p className="py-12 text-center text-sm text-muted-foreground">{t("toolBox.civitai.empty")}</p>}
-    {/* 在线标记：严格同名与已保存摘要一致分别注入，不把显示状态当作安装或生成动作。 */}
+    {/* 在线标记：只注入完整摘要匹配，不把显示状态当作安装或生成动作。 */}
     {/* 摘要读取失败只隐藏未确认标记，网站结果、详情和下载入口保持可用。 */}
-    <div className={styles.modelGrid} data-model-library-grid data-view={view}>{models.map(model => <CivitaiCard key={model.id} model={model} localMatch={findLocalCivitaiMatch(model, localNames, localHashes)} selected={selected?.id === model.id} onSelect={() => select(model)} />)}</div>
+    <div className={styles.modelGrid} data-model-library-grid data-view={view}>{models.map(model => <CivitaiCard key={model.id} model={model} matchedVersions={findLocalCivitaiVersions(model, local.hashes)} selected={selected?.id === model.id} onSelect={() => select(model)} />)}</div>
     <div data-civitai-pagination role="status" className="flex min-h-12 items-center justify-center gap-2 py-4 text-xs text-muted-foreground">{status === "error" ? <button type="button" onClick={() => { void load(next); }} className="rounded-lg border border-border px-4 py-2 hover:bg-muted">{t("toolBox.civitai.retry")}</button> : status === "loading" ? <><LoaderCircle size={14} className="animate-spin" aria-hidden="true" />{t("toolBox.civitai.loading")}</> : next ? t("toolBox.civitai.scrollMore") : models.length > 0 ? t("toolBox.civitai.allLoaded") : null}</div>
   </div>;
 }
@@ -171,6 +154,9 @@ function OnlineModelLibrary({ switcher, allowNsfw }: { switcher: ReactNode; allo
   const [detailsVisible, setDetailsVisible] = useState(true), [view, setView] = useState("grid");
   const requestFilters = useMemo(() => ({ ...filters, allowNsfw }), [filters, allowNsfw]);
   const catalog = useCivitaiModels(requestFilters);
+  // 目录和详情共用同一份本地摘要，加载 SHA256 后两处一起更新。
+  const local = useCatalogLocalHashes();
+  const matchedVersions = selected ? findLocalCivitaiVersions(selected, local.hashes) : [];
   const bases = useMemo(() => [...new Set([...INITIAL_BASES, filters.base, ...catalog.models.flatMap(model => model.baseModels)])].filter(Boolean).sort(), [catalog.models, filters.base]);
   function updateFilters(next: CivitaiFilters) { setSelected(null); setFilters(next); }
   function select(model: CivitaiModel) { setSelected(model); setDetailsVisible(true); }
@@ -180,11 +166,11 @@ function OnlineModelLibrary({ switcher, allowNsfw }: { switcher: ReactNode; allo
     // 左下角开合按钮与本地同一份实现，不在来源适配器再建另一套开合状态。
     // 请求状态变化只更新文字，不重置侧栏和模型区的滚动位置。
     footer={<>{t("toolBox.civitai.count", { count: catalog.models.length })} · {t(catalog.status === "loading" ? "toolBox.civitai.loading" : catalog.status === "ready" ? "toolBox.civitai.ready" : "toolBox.civitai.requestFailed")}</>}
-    details={selected ? <CivitaiDetails key={selected.id} model={selected} source={filters.source} /> : <p className="px-6 py-12 text-center text-xs text-muted-foreground">{t("toolBox.civitai.choose")}</p>}>
+    details={selected ? <CivitaiDetails key={selected.id} model={selected} source={filters.source} matchedVersions={matchedVersions} /> : <p className="px-6 py-12 text-center text-xs text-muted-foreground">{t("toolBox.civitai.choose")}</p>}>
     {/* 共享宿主只接收已确定的业务插槽，不接管远端请求或下载队列。 */}
     {/* 空详情可以关闭，后续搜索保留关闭状态，直到用户明确点一张卡。 */}
     <ModelToolbar filters={filters} onChange={updateFilters} view={view} onView={setView} />
-    <ModelCatalog {...catalog} selected={selected} select={select} view={view} />
+    <ModelCatalog {...catalog} selected={selected} select={select} view={view} local={local} />
   </ModelLibraryWorkspace>;
 }
 

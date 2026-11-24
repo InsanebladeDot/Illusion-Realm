@@ -15,6 +15,7 @@ const { randomUUID } = require("crypto");
 const { dialog, BrowserWindow } = require("electron");
 const { IPC_CHANNELS } = require("../../../../common/ipc-channels");
 const { resolve: resolveCivitaiKey } = require("../../civitai/secret");
+const { setupFolder } = require("./setup-download-paths");
 const { downloadTarget, modelFolder, validateLocalFolder } = require("./model-download-paths");
 const { fetchDownload, writeModel, saveLogo, remoteLogo } = require("./model-download-transfer");
 const { downloadFetch } = require("./model-download-network");
@@ -235,8 +236,27 @@ function launch(job) {
   // 首次落盘必须先于网络传输，突然退出也至少保留任务身份与临时文件位置。
   // 写入失败走同一个failed/io事件，不能静默开始一个无法恢复的下载。
   // finally仍负责解绑当前owner事件，避免重试多次积累监听器。
-  job.running = persistJobs().then(() => run(job, job.request)).catch(() => update(job, { status: "failed", error: "io", bytesPerSecond: 0 })).finally(() => { job.owner.removeListener("destroyed", onDestroyed); job.running = null; }).catch(() => undefined);
+  job.running = persistJobs().then(() => run(job, job.request)).catch(() => update(job, { status: "failed", error: "io", bytesPerSecond: 0 })).finally(() => { job.owner.removeListener("destroyed", onDestroyed); job.running = null; drainSetupQueue(); }).catch(() => undefined);
 }
+/** 等待项不占下载槽；只给内置安装项排队，原下载入口的并发约定不变。 */
+function activeDownloads() {
+  return [...jobs.values()].filter(job => ["downloading", "saving"].includes(job.task.status) && !job.task.queued);
+}
+
+/** 像叫号窗口，空出一个位置才启动下一项；失败也要继续叫后面的号。 */
+function drainSetupQueue() {
+  if (shuttingDown) return;
+  for (const job of jobs.values()) {
+    if (activeDownloads().length >= 3) break;
+    if (!job.task.queued || job.task.status !== "downloading" || job.removing) continue;
+    try {
+      if (job.owner.isDestroyed()) throw new Error("io");
+      authorizeResume(job.request, job.task.folderPath, job.realFolder);
+      update(job, { queued: false }); launch(job);
+    } catch (error) { update(job, { status: "failed", error: errorCode(error), queued: false }); }
+  }
+}
+
 /** @param {Electron.WebContents} owner @param {Request} request */
 function startDownload(owner, request) {
   try {
@@ -244,18 +264,21 @@ function startDownload(owner, request) {
     // 这不是并发队列调度变化，原有最多三个同时下载的限制保持不变。
     // 新任务只有在正常工作阶段才可以获取文件路径和启动资源。
     if (shuttingDown) throw new Error("io");
-    const active = [...jobs.values()].filter((job) => job.task.status === "downloading" || job.task.status === "saving");
-    if (active.length >= 3) throw new Error("io");
-    const root = downloadTarget(request).rootPath, folderPath = modelFolder(root, request.category, request.modelName);
+    const active = activeDownloads();
+    if (active.length >= 3 && !request.setupId) throw new Error("io");
+    const folderPath = request.setupId ? setupFolder(request.setupId, true) : modelFolder(downloadTarget(request).rootPath, request.category, request.modelName, request.modelType === "LORA");
     assertFolderUnlocked(folderPath);
     const filePath = path.join(folderPath, request.fileName);
-    if (fs.existsSync(filePath) || active.some((job) => job.task.filePath.toLowerCase() === filePath.toLowerCase())) throw new Error("exists");
+    if (fs.existsSync(filePath) || [...jobs.values()].some((job) => ["downloading", "saving"].includes(job.task.status) && job.task.filePath.toLowerCase() === filePath.toLowerCase())) throw new Error("exists");
     const id = randomUUID();
     const job = { owner, request: { ...request }, controller: new AbortController(), lastEmit: 0, sampleTime: Date.now(), sampleBytes: 0,
       temporary: path.join(folderPath, ".download-" + id + ".part"), realFolder: fs.realpathSync(folderPath), validator: "", owned: new Map(), running: /** @type {Promise<void>|null} */ (null), removing: false,
       task: /** @type {Task} */ ({ id, fileName: request.fileName, modelName: request.modelName, status: "downloading", received: 0, total: 0, bytesPerSecond: 0, folderPath, filePath, logoWarning: false, error: null, revision: 0 }) };
     jobs.set(id, job);
-    launch(job);
+    if (request.setupId) job.task.queued = active.length >= 3;
+    if (job.task.queued) update(job, {});
+    else launch(job);
+    if (job.task.queued) void persistJobs().catch(() => update(job, { status: "failed", error: "io", queued: false }));
     return { ...job.task };
   } catch (error) { throw new Error(errorCode(error)); }
 }
@@ -265,7 +288,10 @@ function listDownloads(ownerId) { return [...jobs.values()].filter((job) => job.
 async function cancelDownload(ownerId, id) {
   const job = jobs.get(id);
   if (!job || job.owner.id !== ownerId || job.task.status !== "downloading") return false;
-  job.controller.abort(); await job.running; return true;
+  job.controller.abort();
+  if (job.task.queued) update(job, { status: "cancelled", queued: false });
+  await job.running;
+  await persistJobs(); return true;
 }
 /** @param {number} ownerId @param {string} id */
 async function retryDownload(ownerId, id) {
@@ -278,13 +304,14 @@ async function retryDownload(ownerId, id) {
   if (!["failed", "cancelled"].includes(job.task.status)) throw new Error("invalid");
   await job.running;
   if (job.removing || !["failed", "cancelled"].includes(job.task.status)) throw new Error("invalid");
-  const active = [...jobs.values()].filter((item) => ["downloading", "saving"].includes(item.task.status));
-  if (active.length >= 3) throw new Error("io");
-  if (fs.existsSync(job.task.filePath) || active.some((item) => item.task.filePath.toLowerCase() === job.task.filePath.toLowerCase())) throw new Error("exists");
+  assertFolderUnlocked(job.task.folderPath);
+  const active = activeDownloads();
+  if (active.length >= 3 && !job.request.setupId) throw new Error("io");
+  if (fs.existsSync(job.task.filePath) || [...jobs.values()].some((item) => item !== job && ["downloading", "saving"].includes(item.task.status) && item.task.filePath.toLowerCase() === job.task.filePath.toLowerCase())) throw new Error("exists");
   checkFolder(job.task.folderPath, job.realFolder);
   job.controller = new AbortController(); job.sampleTime = Date.now(); job.sampleBytes = job.task.received;
-  update(job, { status: "downloading", error: null, logoWarning: false, bytesPerSecond: 0 });
-  launch(job);
+  update(job, { status: "downloading", error: null, logoWarning: false, bytesPerSecond: 0, ...(job.request.setupId ? { queued: active.length >= 3 } : {}) });
+  if (!job.task.queued) launch(job);
   return { ...job.task };
 }
 /** @param {number} ownerId @param {string} id */
@@ -312,14 +339,14 @@ async function removeDownload(ownerId, id) {
       authorizeResume(job.request, job.task.folderPath, job.realFolder);
       await deleteArtifacts(job.task.folderPath, job.realFolder, job.temporary, committed ? new Map() : job.owned);
     }
-    update(job, { status: "removed", error: null, bytesPerSecond: 0 });
+    update(job, { status: "removed", error: null, bytesPerSecond: 0, ...(job.request.setupId ? { queued: false } : {}) });
     jobs.delete(id);
     // 移除操作等待队列写入完成后才回复成功，重启不会从旧快照复活任务。
     // 文件清理已完成时写入失败仍返回io，让界面不会误报持久化成功。
     // 重试保存只会减少记录，不重新触碰已完成的模型文件。
     await persistJobs();
     return true;
-  } catch { job.removing = false; update(job, { status: "failed", error: "io", bytesPerSecond: 0 }); throw new Error("io"); }
+  } catch { job.removing = false; update(job, { status: "failed", error: "io", bytesPerSecond: 0, ...(job.request.setupId ? { queued: false } : {}) }); throw new Error("io"); }
 }
 /** @param {Electron.WebContents} owner @param {string} folderPath */
 async function changeLogo(owner, folderPath) {
@@ -337,8 +364,13 @@ async function changeLogo(owner, folderPath) {
   } catch { throw new Error("io"); }
 }
 /** @param {string} folder */
-function isModelFolderDownloading(folder) {
+function isModelFolderDownloading(folder, includeChildren = false) {
   const normalized = path.resolve(folder).toLowerCase();
-  return [...jobs.values()].some((job) => ["downloading", "saving"].includes(job.task.status) && path.resolve(job.task.folderPath).toLowerCase() === normalized);
+  return [...jobs.values()].some(job => {
+    if (!["downloading", "saving"].includes(job.task.status)) return false;
+    const target = path.resolve(job.task.folderPath).toLowerCase();
+    const realTarget = path.resolve(job.realFolder).toLowerCase();
+    return [target, realTarget].some(value => value === normalized || (includeChildren && value.startsWith(normalized + path.sep)));
+  });
 }
 module.exports = { restoreDownloads, suspendDownloads, startDownload, listDownloads, cancelDownload, retryDownload, removeDownload, changeLogo, isModelFolderDownloading };

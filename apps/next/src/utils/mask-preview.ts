@@ -23,8 +23,43 @@ import { maskCanvas, maskContext, type MaskLayers } from './mask-document';
 // 独立导出只在显式点击时进行，平时缩略图不创建大体积 Blob。
 // 蒙版显示透明度用于辅助观察底图，与实际笔刷 opacity 是不同参数。
 // displayOpacity 不应进入导出编码，也不应修改工作流的 mask 强度。
-// 每次叠加创建独立临时层，source-in 不会擦除源文档 mask。
+// 临时层按预览目标复用，source-in 不会擦除源文档 mask。
 export type MaskChannel = 'painting' | 'mask' | 'image' | 'composite';
+
+// 像给每张画桌留一块可擦的调色板，不再每落一笔就买一块新板。
+// WeakMap 的键是显示画布；页面释放画布后不会被这里永久引用。
+// 两个编辑器有各自的目标键，不会把 A 的蒙版涂到 B 的画面。
+// 缓冲只用于显示色，绝不成为撤销快照或提交给工作流的像素来源。
+// 相同宽高直接擦掉重画；旋转或裁剪改变尺寸才重新分配像素。
+// 一张目标最多保留当前尺寸的缓冲，不按历史尺寸累积多块大图。
+// context.reset 同时清除像素、合成模式和颜色，上一帧不会污染下一帧。
+// 不靠降低原图精度节省开销，最终导出依然读取原来的文档层。
+const overlayBuffers = new WeakMap<HTMLCanvasElement, HTMLCanvasElement>();
+
+function overlayFor(target: HTMLCanvasElement): HTMLCanvasElement {
+  // 主图与缩略图拥有独立 context，source-in 不会互相改变合成状态。
+  // 缩略图采用自己的像素尺寸，不能为一个小通道预览分配完整原图。
+  // 活跃期间保留一块缓冲，不随颜色、笔刷移动建立新历史条目。
+  // 尺寸变化后旧缓冲失去引用，可由垃圾回收处理而非继续累计。
+  // reset 在 drawImage 前执行，上一帧的 source-in 不会截掉新内容。
+  // 原 mask alpha 保留软笔刷边缘，不因缓冲复用变成硬边二值图。
+  // opacity 由目标的 save/restore 局部应用，不反复乘进原蒙版。
+  // 多次观察不应改变导出字节，像素回归应独立核对这项不变量。
+  // 值里不保存整个文档，不能让释放的目标间接拖住三层大源图。
+  // CSS zoom 与 DPR 不乘进这个缓冲，仍按目标自然尺寸分配。
+  // 隐藏蒙版时调用方直接跳过，不为不可见层额外编码或绘制。
+  // 反复切颜色覆盖同一缓冲，不为每种显示色保存永久着色副本。
+  // 横竖旋转总像素数相同也要重建，比较总面积无法保证宽高正确。
+  // 新建继续调用原 maskCanvas，不引入不同精度或颜色空间的 context。
+  // 裁剪后的尺寸完全来自文档，不使用首次导入 File 的过期宽高。
+  let overlay = overlayBuffers.get(target);
+  if (!overlay || overlay.width !== target.width || overlay.height !== target.height) {
+    overlay = maskCanvas(target.width, target.height);
+    overlayBuffers.set(target, overlay);
+  }
+  maskContext(overlay).reset();
+  return overlay;
+}
 // 调用前由宿主设置缓冲大小；drawImage 同步缩放三层保持对齐。
 // gray mask 用黑背景加白 alpha，等价于导出灰度覆盖率。
 // destination-out 只在临时预览移除 alpha，不会清除原图 RGB。
@@ -44,7 +79,7 @@ export function drawMaskChannel(target: HTMLCanvasElement, layers: MaskLayers, c
 // mask RGB 保持白色，预览时才通过 source-in 着色。
 // 原始图层的覆盖率不随面板透明度变化，生成结果仍一致。
 export function drawMaskOverlay(target: HTMLCanvasElement, layers: MaskLayers, color: string, opacity: number): void {
-  const overlay = maskCanvas(target.width, target.height), tint = maskContext(overlay), context = maskContext(target);
+  const overlay = overlayFor(target), tint = maskContext(overlay), context = maskContext(target);
   tint.drawImage(layers.mask, 0, 0, target.width, target.height); tint.globalCompositeOperation = 'source-in'; tint.fillStyle = color; tint.fillRect(0, 0, target.width, target.height);
   context.save(); context.globalAlpha = opacity; context.drawImage(overlay, 0, 0); context.restore();
 }

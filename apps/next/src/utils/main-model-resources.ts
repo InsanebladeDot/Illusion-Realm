@@ -13,6 +13,7 @@ function normalizePath(value: string) {
 }
 
 export function getModelSeriesName(series: LocalResourceSeries) {
+  if (series === "moss") return "Moss";
   return series === "sdxl" ? "SDXL" : series === "minimax" ? "Minimax" : "Anima";
 }
 
@@ -21,7 +22,8 @@ function getSeriesRoot(paths: SettingsPaths, series: LocalResourceSeries) {
   const root = explicit?.trim() || (paths.searchPath.trim()
     ? normalizePath(paths.searchPath.trim()) + (series === "sdxl" ? "/checkpoints" : "/diffusion_models")
     : "");
-  return root ? normalizePath(root) + "/" + getModelSeriesName(series) : "";
+  const seriesFolder = series === "moss" ? "Moss/Moss_image" : getModelSeriesName(series);
+  return root ? normalizePath(root) + "/" + seriesFolder : "";
 }
 
 function getCategory(model: LocalModel, root: string, series: LocalResourceSeries) {

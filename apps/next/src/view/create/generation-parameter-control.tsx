@@ -1,4 +1,6 @@
 "use client";
+import { HoverTip } from "@/components/hover-tip";
+
 
 // 图片与视频共用完整参数行；调用方只传标签、范围、数值和更新逻辑。
 import { useId } from "react";
@@ -25,9 +27,9 @@ function ParameterLabel({ id, label, hint }: { id: string; label: string; hint?:
   return (
     <div className="flex items-center gap-2">
       <label htmlFor={id} className="text-sm font-medium">{label}</label>
-      {hint && <button type="button" className="focus:outline-none" aria-label={hint} title={hint}>
+      {hint && <HoverTip asChild layer="window" label={(hint) ?? ""}><button type="button" className="focus:outline-none" aria-label={hint}>
         <Info className="h-4 w-4 cursor-pointer text-muted-foreground opacity-80 hover:text-foreground hover:opacity-100" />
-      </button>}
+      </button></HoverTip>}
     </div>
   );
 }

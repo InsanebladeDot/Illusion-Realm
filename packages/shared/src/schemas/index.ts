@@ -1,6 +1,7 @@
 export * from './common.schema';
 export * from './files.schema';
 export * from './model-download.schema';
+export * from './setup-download.schema';
 export * from './local-model-metadata.schema';
 export * from './comfy.schema';
 export * from './media.schema';
@@ -24,4 +25,13 @@ export * from './agent-messages.schema';
  */
 export * from "./artist-library.schema";
 export * from "./infinite-canvas.schema";
+export * from "./prompt-reference-labels.schema";
+export * from "./director.schema";
 export * from "./canvas-project.schema";
+export * from "./euzhi-images.schema";
+
+export * from "./video-composition.schema";
+
+export * from "./canvas-library.schema";
+export * from "./canvas-voice.schema";
+export * from "./video-upscale.schema";

@@ -1,4 +1,8 @@
 "use client";
+import { WorkflowModelNotice } from "@/components/workflow-model-notice";
+import { useEditModelReadiness } from "@/hooks/use-edit-model-readiness";
+import { HoverTip } from "@/components/hover-tip";
+
 
 /**
  * rail：文字改图输入面板，顺序为原图、修改指令、可选参数与固定操作区。
@@ -7,7 +11,13 @@
 // 编辑与图片生成使用同一输入组件，不再复制 textarea 皮肤。
 // 受控值负责预设同步，助手也写回同一设置字段。
 // 显式 busy 禁用补足 fieldset 不会关闭 contentEditable 的差异。
+import { UpscaleOptions } from "@/components/create/upscale-options";
+import { normalizeVideoReferences } from "@/utils/comfy/video-reference-media";
+import { restoreTranslationReferences } from "@/utils/prompt-translation-references";
+import { imagePromptMedia } from "@/utils/comfy/image-reference-media";
 import { PromptInput } from "@/components/prompt-input";
+import { EditWorkflowSelector, EditReferenceSources } from "./edit-workflow-selector";
+import { MinimaxImageEditSettings } from "./minimax-image-edit-settings";
 import { AnimaEditModels } from "./anima-edit-models";
 import { Sparkles, Square } from "lucide-react";
 import { RandomSeedButton } from "@/components/random-seed-button";
@@ -34,7 +44,7 @@ function EditSource({ editor }: { editor: AnimaEditState }) {
   // 文件名只用作普通 React 文本，不作为 HTML 或脚本解释。
   // 没有原图时传 null，符合共享上传组件的清空契约。
   const { t } = useTranslation(), { source } = editor;
-  return <section data-anima-source className="space-y-2"><div className="flex items-center gap-2"><span className="rounded-md border border-border px-1.5 py-1 text-[10px] text-muted-foreground">01</span><h3 className="text-sm font-semibold">{t("create.animaEdit.source")}</h3></div><VideoImageUpload label={t("create.animaEdit.source")} required imageUrl={source?.url ?? null} onSelect={(file) => { void editor.importFile(file); }} onRemove={editor.clear} /><p className="text-xs text-muted-foreground">{t("create.animaEdit.fileHint")}</p>{source && <p className="truncate text-xs text-muted-foreground" title={source.file.name}>{source.file.name} · {source.width} × {source.height}</p>}</section>;
+  return <section data-anima-source className="space-y-2"><div className="flex items-center gap-2"><span className="rounded-md border border-border px-1.5 py-1 text-[10px] text-muted-foreground">01</span><h3 className="text-sm font-semibold">{t("create.animaEdit.source")}</h3></div><VideoImageUpload label={t("create.animaEdit.source")} required imageUrl={source?.url ?? null} onSelect={(file) => { void editor.importFile(file); }} onRemove={editor.clear} /><p className="text-xs text-muted-foreground">{t("create.animaEdit.fileHint")}</p>{source && <HoverTip asChild layer="window" label={(source.file.name) ?? ""}><p className="truncate text-xs text-muted-foreground">{source.file.name} · {source.width} × {source.height}</p></HoverTip>}</section>;
 }
 
 /**
@@ -55,7 +65,14 @@ export function EditInstruction({ editor, idPrefix = "anima-edit" }: { editor: A
   // 输入组件限高滚动，长指令不会把固定宽度 rail 撑出主展示区。
   // 输入事件更新函数式状态，保留模型与高级参数的当前值。
   const { t } = useTranslation(), { settings, setSettings } = editor;
-  return <section className="space-y-3"><div className="flex items-center gap-2"><span className="rounded-md border border-border px-1.5 py-1 text-[10px] text-muted-foreground">02</span><label htmlFor={idPrefix + "-instruction"} className="text-sm font-semibold">{t("create.animaEdit.instruction")}</label><span className="ml-auto text-[11px] tabular-nums text-muted-foreground">{settings.instruction.length} / 3000</span></div><PromptInput id={idPrefix + "-instruction"} data-anima-instruction maxLength={3000} disabled={editor.busy || editor.importing} data-placeholder={t("create.animaEdit.placeholder")} aria-label={t("create.animaEdit.instruction")} value={settings.instruction} onValueChange={(instruction) => setSettings((previous) => ({ ...previous, instruction }))} /><div className="flex flex-wrap gap-2">{(["background", "expression", "lettering"] as const).map((name) => <button key={name} type="button" data-anima-preset={name} className="rounded-lg border border-border px-2.5 py-1.5 text-xs text-muted-foreground hover:bg-accent hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring" onClick={() => setSettings((previous) => ({ ...previous, instruction: t(`create.animaEdit.presets.${name}.text`) }))}>{t(`create.animaEdit.presets.${name}.label`)}</button>)}</div><p className="text-xs leading-6 text-muted-foreground">{t("create.animaEdit.instructionHint")}</p></section>;
+  // 与上传构图同顺序：主图在前，追加参考在后；Anima 保留原输入规则。
+  const sources = [...(editor.source ? [editor.source] : []), ...editor.references];
+  const media = imagePromptMedia(sources.map(item => item.file.name));
+  const minimax = editor.editWorkflow === "minimax-image-edit";
+  // 回填使用与发送相同的素材表，不把连续编号作为可长期保存的编辑身份。
+  const prepare = minimax ? (text: string) => normalizeVideoReferences(text, media) : undefined;
+  const restore = prepare ? (text: string, input: string) => restoreTranslationReferences(text, input, media, prepare) : undefined;
+  return <section className="space-y-3"><div className="flex items-center gap-2"><span className="rounded-md border border-border px-1.5 py-1 text-[10px] text-muted-foreground">02</span><label htmlFor={idPrefix + "-instruction"} className="text-sm font-semibold">{t("create.animaEdit.instruction")}</label><span className="ml-auto text-[11px] tabular-nums text-muted-foreground">{settings.instruction.length} / 3000</span></div><PromptInput preparePrompt={prepare} restorePrompt={restore} referenceKey={minimax ? JSON.stringify(sources.map(item => item.url)) : undefined} id={idPrefix + "-instruction"} data-anima-instruction maxLength={3000} disabled={editor.busy || editor.importing} data-placeholder={t("create.animaEdit.placeholder")} aria-label={t("create.animaEdit.instruction")} value={settings.instruction} onValueChange={(instruction) => setSettings((previous) => ({ ...previous, instruction }))} /><div className="flex flex-wrap gap-2">{(["background", "expression", "lettering"] as const).map((name) => <button key={name} type="button" data-anima-preset={name} className="rounded-lg border border-border px-2.5 py-1.5 text-xs text-muted-foreground hover:bg-accent hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring" onClick={() => setSettings((previous) => ({ ...previous, instruction: t(`create.animaEdit.presets.${name}.text`) }))}>{t(`create.animaEdit.presets.${name}.label`)}</button>)}</div><p className="text-xs leading-6 text-muted-foreground">{t("create.animaEdit.instructionHint")}</p></section>;
 }
 
 /**
@@ -102,15 +119,26 @@ export function AnimaEditForm({ editor }: { editor: AnimaEditState }) {
   // 主按钮显示 ×1 是当前编辑输出契约，不能从普通图片批量选择状态借用数值。
   // 所有用户可读语句由 create 命名空间提供，错误词条仍接受类型检查。
   const { t } = useTranslation();
+  const readiness = useEditModelReadiness(editor.settings);
   // 文字页只提供文字编辑；蒙版与边缘生成仍归顶部各自工具。
   // 这里删的是重复模式切换和 API 下载入口，不改变公共编辑队列。
   // 生成与骰子是并列控件，只有 submit 主按钮会进入运行入口。
   // 随机模式写入共享会话，文字改图与蒙版来回切换仍保持同一偏好。
   // footer 在内容滚动区外，长参数表单不会使停止入口无法触达。
-  return <form data-anima-form className="flex min-h-0 min-w-0 flex-col overflow-hidden rounded-xl border border-border/80 bg-background" onSubmit={(event) => { event.preventDefault(); void editor.run(); }}>
+  // 界面：「高级设置」共用同一超分控件，写回当前编辑工作流的草稿。
+  const upscale = <UpscaleOptions value={editor.settings.upscale} disabled={editor.busy || editor.importing}
+    onChange={upscale => editor.setSettings(current => ({ ...current, upscale }))} />;
+  return <form data-anima-form className="flex min-h-0 min-w-0 flex-col overflow-hidden rounded-xl border border-border/80 bg-background" onSubmit={(event) => { event.preventDefault(); if (!readiness.blocked) void editor.run(); }}>
+    <WorkflowModelNotice readiness={readiness} />
     {/* rail：只有表单内容滚动，固定 footer 不与侧栏共享滚动条。 */}
-    <div className="min-h-0 flex-1 overflow-y-auto p-4 [scrollbar-width:thin] sm:p-5"><fieldset disabled={editor.busy || editor.importing} className="min-w-0 space-y-6 disabled:opacity-70"><AnimaEditModels editor={editor} /><EditSource editor={editor} /><EditInstruction editor={editor} /><AnimaEditSettings editor={editor} /></fieldset><div className="mt-6"><EditDependencies /></div></div>
-    {/* 界面：真实阶段、运行文字编辑与停止。 */}
-    <footer className="shrink-0 space-y-3 border-t border-border/70 p-4"><p role={editor.error ? "alert" : "status"} data-anima-status className="max-h-28 overflow-y-auto break-words text-xs leading-5 text-muted-foreground" aria-live="polite">{editor.error || (editor.phase === "queued" ? t("create.generationTasks.status.queued") : t(`create.animaEdit.phase.${editor.phase}`))}</p><div className="flex min-w-0 items-center gap-2"><button data-anima-run type="submit" disabled={editor.busy || editor.importing} className="create-generate-button flex h-11 min-w-0 flex-1 items-center justify-center gap-2 rounded-xl px-4 text-sm font-semibold text-white shadow-sm hover:brightness-110 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:cursor-not-allowed disabled:opacity-60"><Sparkles className="h-5 w-5" aria-hidden /><span className="min-w-0 flex-1 truncate">{t("create.animaEdit.run")}</span><span className="border-l border-white/35 pl-3 text-xs">× 1</span></button><RandomSeedButton random={editor.seedMode === 'random'} disabled={editor.busy || editor.importing} onEnable={() => editor.patch({ seedMode: 'random' })} /></div>{editor.busy && <button data-anima-stop type="button" disabled={editor.phase === "saving" || editor.phase === "stopping"} className="inline-flex items-center gap-1 rounded-md py-1 text-destructive disabled:opacity-40" onClick={() => { void editor.stop(); }}><Square className="h-3 w-3" />{t("create.animaEdit.stop")}</button>}</footer>
+    <div className="min-h-0 flex-1 overflow-y-auto p-4 [scrollbar-width:thin] sm:p-5"><fieldset disabled={editor.busy || editor.importing} className="min-w-0 space-y-6 disabled:opacity-70"><EditWorkflowSelector editor={editor} />{editor.editWorkflow === "minimax-image-edit" ? <EditReferenceSources editor={editor} /> : <><AnimaEditModels editor={editor} /><EditSource editor={editor} /></>}<EditInstruction editor={editor} />{editor.editWorkflow === "minimax-image-edit" ? <MinimaxImageEditSettings settings={editor.settings} onChange={editor.setSettings} disabled={editor.busy || editor.importing} seedMode={editor.seedMode} onSeedMode={seedMode => editor.patch({ seedMode })} advancedFields={upscale} /> : <AnimaEditSettings editor={editor} advancedFields={upscale} />}</fieldset><div className="mt-6">{editor.editWorkflow === "anima-edit" && <EditDependencies />}</div></div>
+    {/* 操作区：阶段只向读屏报告，错误仍就地可见；停止按钮与生成保持同一行。 */}
+    <footer className="shrink-0 border-t border-border/70 p-4">
+      <p role={editor.error ? "alert" : "status"} data-anima-status className={editor.error ? "mb-3 max-h-28 overflow-y-auto break-words text-xs leading-5 text-destructive" : "sr-only"} aria-live="polite">{editor.error || (editor.phase === "queued" ? t("create.generationTasks.status.queued") : t(`create.animaEdit.phase.${editor.phase}`))}</p>
+      <div className="flex min-w-0 items-center gap-2">
+        <button data-anima-run type="submit" disabled={editor.busy || editor.importing || readiness.blocked} className="create-generate-button flex h-11 min-w-0 flex-1 items-center justify-center gap-2 rounded-xl px-4 text-sm font-semibold text-white shadow-sm hover:brightness-110 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:cursor-not-allowed disabled:opacity-60"><Sparkles className="h-5 w-5" aria-hidden /><span className="min-w-0 flex-1 truncate">{t("create.animaEdit.run")}</span></button>
+        {editor.busy ? <HoverTip asChild layer="window" label={(t("create.animaEdit.stop")) ?? ""}><button data-anima-stop type="button" aria-label={t("create.animaEdit.stop")} disabled={editor.phase === "saving" || editor.phase === "stopping"} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-destructive hover:bg-accent focus-visible:outline-1 disabled:opacity-40" onClick={() => { void editor.stop(); }}><Square className="h-4 w-4" aria-hidden /></button></HoverTip> : <RandomSeedButton random={editor.seedMode === 'random'} disabled={editor.importing} onEnable={() => editor.patch({ seedMode: 'random' })} />}
+      </div>
+    </footer>
   </form>;
 }

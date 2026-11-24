@@ -1,4 +1,6 @@
 "use client";
+import { HoverTip } from "@/components/hover-tip";
+
 
 /** 各资料库共用收藏入口与 JSON 导出，筛选状态仍从当前弹窗参数注入。 */
 // 查看收藏不等于只看已选，取消整个选择弹窗也不会撤回已保存收藏。
@@ -6,7 +8,6 @@
 import { Download, Heart } from "lucide-react";
 import { useTranslation } from "@/i18n";
 import { useToastStore } from "@/stores/useToastStore";
-import { exportLibraryFavorites } from "@/utils/export-library-favorites";
 import { cn } from "@/utils/cn";
 
 interface LibraryFavoritesControlsProps {
@@ -24,13 +25,18 @@ interface LibraryFavoritesControlsProps {
 export function LibraryFavoritesControls({ prefix, count, active, onToggle }: LibraryFavoritesControlsProps) {
   const { t } = useTranslation();
   const showToast = useToastStore(state => state.show);
-  const handleExport = () => {
-    try { exportLibraryFavorites(); }
+  // 导出点击后才加载完整收藏汇总，普通库按钮不再静态带入画师 JSON。
+  // 动态加载和导出使用同一个错误边界，任一步失败都显示原有错误提示。
+  // 取 store 的时机仍在真正执行导出时，不用打开菜单时的旧快照。
+  // 下载仍由原工具创建与清理 Blob URL，没有新增文件写入或成功反馈。
+  // JSON 内容、字段版本和未解析收藏身份保持原来的统一导出契约。
+  const handleExport = async () => {
+    try { (await import("@/utils/export-library-favorites")).exportLibraryFavorites(); }
     catch { showToast(t("characters.favorites.exportFailed"), "error"); }
   };
   return <div className="flex items-center gap-2">
     {/* modal：收藏与导出在每个资料库相同位置，状态由各自弹窗控制。 */}
     <button type="button" {...{ [`data-${prefix}-favorites`]: true }} aria-pressed={active} onClick={onToggle} className={cn("flex h-8 items-center gap-1 rounded-lg border border-border px-2 text-xs hover:bg-muted focus-visible:ring-1 focus-visible:ring-accent-stroke", active && "bg-accent/40 text-accent-text")}><Heart size={14} />{t("characters.favorites.view", { count })}</button>
-    <button type="button" data-library-favorites-export onClick={handleExport} title={t("characters.favorites.exportHint")} className="flex h-8 items-center gap-1 rounded-lg border border-border px-2 text-xs hover:bg-muted focus-visible:ring-1 focus-visible:ring-accent-stroke"><Download size={14} />{t("characters.favorites.export")}</button>
+    <HoverTip asChild layer="window" label={(t("characters.favorites.exportHint")) ?? ""}><button type="button" data-library-favorites-export onClick={handleExport} className="flex h-8 items-center gap-1 rounded-lg border border-border px-2 text-xs hover:bg-muted focus-visible:ring-1 focus-visible:ring-accent-stroke"><Download size={14} />{t("characters.favorites.export")}</button></HoverTip>
   </div>;
 }

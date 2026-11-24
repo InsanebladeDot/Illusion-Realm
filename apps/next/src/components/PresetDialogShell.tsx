@@ -2,7 +2,6 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
-import NextImage from "next/image";
 import {
   Check,
   ChevronDown,
@@ -11,7 +10,6 @@ import {
   Settings2,
   X,
 } from "lucide-react";
-import type { ImageAsset } from "@/types/common";
 import { SIDEBAR_WIDTH_COLLAPSED, SIDEBAR_WIDTH_EXPANDED } from "@/data/navigation";
 import { useIsHydrated } from "@/hooks/useIsHydrated";
 import { useMediaQueryAfterHydration } from "@/hooks/useMediaQuery";
@@ -26,14 +24,14 @@ export type PresetFieldDef = {
   label: string;
   placeholder: string;
   hint?: string;
-  tone?: "positive" | "negative" | "neutral";
+  tone?: "negative";
 };
 
 /** 预设卡片上展示的一行摘要 */
 export type PresetSummaryRow = {
   label: string;
   value: string;
-  tone?: "positive" | "negative" | "neutral";
+  tone?: "negative";
 };
 
 export type PresetDialogItem = {
@@ -42,20 +40,11 @@ export type PresetDialogItem = {
   isDefault?: boolean;
 };
 
-export type PresetDialogGroup = {
-  id: string;
-  label: string;
-  icon?: ImageAsset;
-  description?: string;
-};
-
 type PresetDialogShellProps<T extends PresetDialogItem> = {
   title: string;
   description: string;
-  groups: PresetDialogGroup[];
-  activeGroupId: string;
-  onActiveGroupChange: (groupId: string) => void;
-  /** 当前分组下的条目（内置 + 自定义） */
+  groupLabel: string;
+  /** 可选择的条目（内置 + 自定义） */
   items: T[];
   selectedId: string;
   onSelectedIdChange: (id: string) => void;
@@ -65,7 +54,6 @@ type PresetDialogShellProps<T extends PresetDialogItem> = {
   fields: PresetFieldDef[];
   /** 新建：由调用方生成 id/持久化；返回新条目用于自动选中 */
   onCreate?: (
-    activeGroupId: string,
     values: Record<string, string>
   ) => { id: string } | void;
   /** 自定义条目上的删除按钮（可选） */
@@ -77,11 +65,7 @@ type PresetDialogShellProps<T extends PresetDialogItem> = {
 };
 
 const toneClass = (tone: PresetSummaryRow["tone"]) =>
-  tone === "positive"
-    ? "text-green-600 dark:text-green-400"
-    : tone === "negative"
-      ? "text-red-600 dark:text-red-400"
-      : "text-muted-foreground";
+  tone === "negative" ? "text-red-600 dark:text-red-400" : "text-muted-foreground";
 
 const textareaClassName = cn(
   "flex min-h-[60px] h-20 w-full rounded-md bg-transparent px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
@@ -89,17 +73,14 @@ const textareaClassName = cn(
 );
 
 /**
- * 预设 选择 / 新建 弹框（预设提示词与反向提示词预设共用）：
- * 只有「字段定义 + 条目数据」不同，交互与样式完全一致。
+ * 选择、新建和删除反向提示词预设的弹框，具体存储由调用方处理。
  * 调用方在关闭时不要渲染本组件（内部状态随卸载重置）。
  * Portal 到 body 以越过创建页 stage / side 的堆叠上下文；弹框在 nav 右侧主区居中。
  */
 export function PresetDialogShell<T extends PresetDialogItem>({
   title,
   description,
-  groups,
-  activeGroupId,
-  onActiveGroupChange,
+  groupLabel,
   items,
   selectedId,
   onSelectedIdChange,
@@ -128,8 +109,6 @@ export function PresetDialogShell<T extends PresetDialogItem>({
   const [draftName, setDraftName] = useState("");
   const [draftValues, setDraftValues] = useState<Record<string, string>>({});
 
-  const activeGroup = groups.find((group) => group.id === activeGroupId) ?? groups[0];
-
   useEffect(() => {
     const handleEscape = (event: KeyboardEvent) => {
       if (event.key !== "Escape") return;
@@ -154,7 +133,7 @@ export function PresetDialogShell<T extends PresetDialogItem>({
 
   const handleCreate = () => {
     if (!canCreate || !onCreate) return;
-    const created = onCreate(activeGroupId, {
+    const created = onCreate({
       name: draftName.trim(),
       ...draftValues,
     });
@@ -233,13 +212,9 @@ export function PresetDialogShell<T extends PresetDialogItem>({
         >
           {creating ? (
             <div>
-              {activeGroup && (
-                <p className="mb-4 text-xs text-muted-foreground">
-                  {t("components.presetShell.creatingFor", {
-                    group: activeGroup.label,
-                  })}
-                </p>
-              )}
+              <p className="text-xs text-muted-foreground">
+                {t("components.presetShell.creatingFor", { group: groupLabel })}
+              </p>
               <div className="space-y-4">
                 <button
                   type="button"
@@ -272,7 +247,6 @@ export function PresetDialogShell<T extends PresetDialogItem>({
                       <label
                         className={cn(
                           "text-sm font-medium leading-none",
-                          field.tone === "positive" && "text-green-600 dark:text-green-400",
                           field.tone === "negative" && "text-red-600 dark:text-red-400"
                         )}
                         htmlFor={`preset-field-${field.key}`}
@@ -301,47 +275,7 @@ export function PresetDialogShell<T extends PresetDialogItem>({
             </div>
           ) : (
             <div>
-              {groups.length > 1 && (
-                <div
-                  role="tablist"
-                  aria-orientation="horizontal"
-                  className="grid h-9 w-full items-center justify-center gap-1 rounded-lg bg-muted p-1 text-muted-foreground"
-                  style={{ gridTemplateColumns: `repeat(${groups.length}, minmax(0, 1fr))` }}
-                >
-                  {groups.map((group) => (
-                    <button
-                      key={group.id}
-                      type="button"
-                      role="tab"
-                      aria-selected={group.id === activeGroupId}
-                      onClick={() => onActiveGroupChange(group.id)}
-                      className={cn(
-                        "inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-md px-3 py-1 text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-                        group.id === activeGroupId
-                          ? "bg-background text-foreground shadow"
-                          : "hover:text-foreground"
-                      )}
-                    >
-                      {group.icon && (
-                        <NextImage
-                          src={group.icon}
-                          alt=""
-                          width={14}
-                          height={14}
-                          className="shrink-0 rounded-sm"
-                        />
-                      )}
-                      {group.label}
-                    </button>
-                  ))}
-                </div>
-              )}
-
-              <div role="tabpanel" className="mt-4 space-y-2">
-                {items.length > 0 && activeGroup?.description && (
-                  <p className="text-xs text-muted-foreground">{activeGroup.description}</p>
-                )}
-
+              <div className="mt-4 space-y-2">
                 {items.length === 0 ? (
                   <p className="py-4 text-center text-sm text-muted-foreground">{emptyTextValue}</p>
                 ) : (

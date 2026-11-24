@@ -1,4 +1,6 @@
 "use client";
+import { HoverTip } from "@/components/hover-tip";
+
 
 // 视频与提示词共用同一拖拽容器；片段卡片的选择、删除仍由本组件负责。
 import { SortableList } from "@/components/sortable-list";
@@ -79,9 +81,9 @@ function SortableClipCard({
         <span className="min-w-0 flex-1">
           <span className="flex items-center gap-1.5">
             <Film className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-            <span className="truncate text-sm font-medium text-foreground" title={clip.path}>
+            <HoverTip asChild layer="window" label={(clip.path) ?? ""}><span className="truncate text-sm font-medium text-foreground">
               {clip.name}
-            </span>
+            </span></HoverTip>
             {rangeIndex !== undefined && (
               <span className="shrink-0 rounded bg-muted px-1.5 py-0.5 text-[11px] text-muted-foreground">
                 {t("toolBox.video.rangeLabel", { index: rangeIndex })}

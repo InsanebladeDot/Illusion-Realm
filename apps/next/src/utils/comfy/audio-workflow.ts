@@ -5,8 +5,8 @@
  * 参考模板文件名和运行时上传名使用英文，避免编码差异。
  * ComfyUI 模型相对路径支持 Unicode，不重命名磁盘模型或翻译对白。
  */
-import textTemplate from '@/data/comfy/audioWorkflower/Audio_Minimax.json';
-import referenceTemplate from '@/data/comfy/audioWorkflower/Audio_Reference_Minimax.json';
+import textTemplate from '@/data/comfy/audioWorkflower/MiniMax_Audio/Audio_Minimax.json';
+import referenceTemplate from '@/data/comfy/audioWorkflower/MiniMax_Audio/Audio_Reference_Minimax.json';
 import type { ComfyApiPrompt } from '@/types/comfy';
 import { t } from '@/i18n';
 import { applyVideoLoras, getVideoLoras, type VideoLora } from './video-workflow-loras';
@@ -53,7 +53,7 @@ import { normalizeAudioReferences } from './audio-prompt-references';
 // 主 UNet 仍使用 unetName 字段，不能从 modelOverrides 借道切换主模型。
 // 输入只记录相对模型名，不记录用户音频字节或本地绝对音频路径。
 // 音频文件上传与参考端口接线由原构建流程负责，辅助设置只改加载值。
-export interface AudioWorkflowInput { prompt: string; seed: number; loras?: VideoLora[]; referenceName?: string; unetName?: string; steps?: number; durationSeconds?: number; modelOverrides?: VideoModelOverrides }
+export interface AudioWorkflowInput { promptReferenceLabels?: import("@/schemas/prompt-reference-labels.schema").PromptReferenceLabels; promptConversion?: boolean; prompt: string; seed: number; loras?: VideoLora[]; referenceName?: string; unetName?: string; steps?: number; durationSeconds?: number; modelOverrides?: VideoModelOverrides }
 
 /**
  * 像沿着水管找阀门：从生成节点的 length 顺着连线找到秒数输入。
@@ -168,7 +168,7 @@ export function buildAudioPrompt(input: AudioWorkflowInput): ComfyApiPrompt {
   // 引用必须指向当前单音频槽；删除参考后旧标签会明确报错。
   // seed 与提示词一起写进本次克隆图，不修改用户正在编辑的原稿。
   // 不转换对白语言，也不按素材名自动生成主观角色描述。
-  core.inputs.prompt = normalizeAudioReferences(input.prompt, input.referenceName); noise.inputs.noise_seed = input.seed;
+  core.inputs.prompt = input.promptConversion === false ? input.prompt : normalizeAudioReferences(input.prompt, input.referenceName, input.promptReferenceLabels); noise.inputs.noise_seed = input.seed;
   if (input.referenceName) for (const node of Object.values(graph)) if (node.class_type === 'LoadAudio') node.inputs.audio = input.referenceName;
   applyVideoLoras(graph, input.loras, 'minimax');
   // 参考与无参考使用不同节点前缀，仅接受当前模板真正存在的辅助槽。

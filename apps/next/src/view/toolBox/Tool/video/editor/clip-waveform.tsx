@@ -3,6 +3,7 @@
 // 时间线声音槽复用源包络，按片段源入点/跨度映射，不生成装饰随机波形。
 // SVG只有实际读取后的振幅轮廓，取消、加载和失败不会冒充静音成功。
 import { useTranslation } from "@/i18n";
+import { memo, useMemo } from "react";
 import type { VideoWaveformResult } from "@/types/electron-api";
 import { useSourceWaveform } from "./source-waveform";
 import styles from "./editor.module.css";
@@ -50,9 +51,12 @@ export function waveformPath(data: VideoWaveformResult, sourceIn: number, span: 
     const x = Math.max(0, Math.min(1000, (index * data.secondsPerPeak - sourceIn) / span * 1000));
     const height = Math.sqrt(data.peaks[index]) * 14;
     upper.push(`${x.toFixed(2)},${(16 - height).toFixed(2)}`);
-    lower.unshift(`${x.toFixed(2)},${(16 + height).toFixed(2)}`);
+    // 先顺序收集，结束后一次反转，避免每个点都搬动已有数组。
+    // 反转的是本次局部字符串数组，不会修改同源片段共享的 peaks。
+    // 输出顺序仍与原来的逐点 unshift 完全相同，SVG 闭合方向不变。
+    lower.push(`${x.toFixed(2)},${(16 + height).toFixed(2)}`);
   }
-  return upper.length ? `M0,16 L${upper.join(" L")} L1000,16 L${lower.join(" L")} Z` : "";
+  return upper.length ? `M0,16 L${upper.join(" L")} L1000,16 L${lower.reverse().join(" L")} Z` : "";
 }
 
 // 例如0.5秒入点、1秒源跨度，数组0.5秒附近的峰值应出现在条带左端。
@@ -99,14 +103,38 @@ export function waveformPath(data: VideoWaveformResult, sourceIn: number, span: 
 // 组件本身不控制播放，也不自动启动声音，扬声器试听仍需另行人工验证。
 // 样板不传sourcePath时不发真实请求，避免静态资产意外触发系统文件能力。
 // 同一组件的源切换由hook的key保护，旧源包络不会闪到新片段上。
-export function ClipWaveform({ sourcePath, hasAudio, sourceIn = 0, span, reversed }: { sourcePath?: string; hasAudio: boolean; sourceIn?: number; span: number; reversed?: boolean }) {
+// 时间线继续使用原片段样式；播放器通过参数复用同一份源包络与绘图逻辑。
+// player 模式仅改变展示，不新开音频元素，也不参与视频编辑器的工程时钟。
+// progress 是当前可见窗口内的百分比，不是整份文件已经下载的比例。
+// sourceIn 和 span 仍以源秒数表示，播放时滑动窗口不修改源文件或片段入点。
+// 不传新参数的已有调用方保持原来高度、方向和状态文案。
+export const ClipWaveform = memo(function ClipWaveform({ sourcePath, hasAudio, sourceIn = 0, span, reversed, presentation = "clip", progress = 0 }: { sourcePath?: string; hasAudio: boolean; sourceIn?: number; span: number; reversed?: boolean; presentation?: "clip" | "player"; progress?: number }) {
   const { t } = useTranslation();
   const data = useSourceWaveform(hasAudio ? sourcePath : undefined);
-  const path = data?.result ? waveformPath(data.result, sourceIn, span) : "";
-  return <span data-clip-waveform data-waveform-source-in={sourceIn} data-waveform-span={span} data-waveform-state={!hasAudio ? "silent" : !data ? "loading" : data.status} className={styles.clipWaveform}>
-    {hasAudio && data?.status === "ready" ? <svg style={{ transform: reversed ? "scaleX(-1)" : undefined }} aria-hidden="true" viewBox="0 0 1000 16" preserveAspectRatio="none"><path d={path} /><path d="M0,16H1000" /></svg> : <small>{t(!hasAudio ? "toolBox.editorUi.noAudioTrack" : data?.status === "error" ? "toolBox.editorUi.waveformError" : "toolBox.editorUi.waveformLoading")}</small>}
+  // 播放头移动不改变源声音，波形无需跟着工程时钟重复构造字符串。
+  // 只有真实采样结果、源入点或源跨度改变时重新计算。
+  // 修剪会改变入点/跨度，因此拖动候选依旧即时显示正确的源区间。
+  // memo 只挡住相同参数的父级刷新，采样 hook 自己完成时照常更新。
+  // 倒放仍通过原 SVG 变换呈现，没有修改包络、声音播放或节目时钟。
+  // 每个片段保留自己的 memo，两个不同源区间不会互相借用路径。
+  const path = useMemo(() => data?.result ? waveformPath(data.result, sourceIn, span) : "", [data?.result, sourceIn, span]);
+  // 没有读到包络时仍显示原加载/失败文案，不拿缓存路径冒充当前源就绪。
+  // 同源多个片段仅共享采样结果，入点和跨度各自参与路径计算。
+  // 更换音源时 hook 的 result 会改变，旧波形不会因 memo 被强行保留。
+  // 改主题只更新 CSS 颜色，无需再计算同一组峰值几何。
+  // 播放器展示完整上下包络，时间线仍使用既有的紧凑声音槽。
+  // 已播区域用相同路径裁出亮色，不重新采样，也不拿随机条形冒充声音。
+  // 像在长胶卷上开一扇小窗：窗口随源时间移动，标记只说明当前看到哪一秒。
+  // 同一封闭路径同时用于两种配色，避免已播和未播轮廓出现不同的声音形状。
+  // 指示线属于播放反馈，不带独立焦点；键盘定位由宿主已有进度字段承担。
+  // 数据失败时保留共享错误提示，不能把一个空 SVG 当成采样成功。
+  // 加载期间没有移动标记，媒体解码和波形读取各自报告真实状态。
+  // CSS 只负责把真实轮廓分隔成细柱，不改变播放音量、峰值或保存数据。
+  return <span data-clip-waveform data-waveform-presentation={presentation} data-waveform-source-in={sourceIn} data-waveform-span={span} data-waveform-state={!hasAudio ? "silent" : !data ? "loading" : data.status} className={presentation === "player" ? styles.waveformPlayer : styles.clipWaveform}>
+    {hasAudio && data?.status === "ready" ? <svg style={{ transform: reversed ? "scaleX(-1)" : undefined }} aria-hidden="true" viewBox={presentation === "player" ? "0 0 1000 32" : "0 0 1000 16"} preserveAspectRatio="none"><path d={path} /><path d="M0,16H1000" />{presentation === "player" && <path d={path} style={{ clipPath: `inset(0 ${100 - progress}% 0 0)` }} />}</svg> : <small>{t(!hasAudio ? "toolBox.editorUi.noAudioTrack" : data?.status === "error" ? "toolBox.editorUi.waveformError" : "toolBox.editorUi.waveformLoading")}</small>}
+    {presentation === "player" && hasAudio && data?.status === "ready" && <i aria-hidden="true" style={{ left: `${progress}%` }} />}
   </span>;
-}
+});
 
 // data-waveform-source-in/span是只读验收信息，不作为未来保存文件的工程结构。
 // ready必须来自有结果的IPC响应，挂一个空SVG本身不能证明采样成功。

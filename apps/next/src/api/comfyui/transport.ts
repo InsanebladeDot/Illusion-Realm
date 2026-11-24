@@ -12,8 +12,12 @@ import type {
 } from "@/types/comfy";
 import type { ComfyUploadedImage } from "@/types/electron-api";
 import { t } from "@/i18n";
+import { assertWorkflowModelsInstalled } from "@/utils/workflow-model-readiness";
 import { isElectronEnvironment } from "@/utils/electronBridge";
 import { unwrapIpc } from "@/utils/ipcResult";
+import { applyModelAttention } from "@/utils/comfy/model-attention";
+import { useSettingsStore } from "@/stores/useSettingsStore";
+import { requestComfyGeneration } from "./generate-request";
 
 //后端Comfyui 服务器地址
 const DEFAULT_COMFY_SERVER = "127.0.0.1:8188";
@@ -114,18 +118,19 @@ export async function generateVideoWithComfy(
   prompt: ComfyApiPrompt,
   options: ComfyGenerateOptions = {}
 ): Promise<{ promptId: string; videos: ComfyGeneratedVideo[] }> {
+  applyModelAttention(prompt, options.modelAttention ?? useSettingsStore.getState().modelAttention);
+  assertWorkflowModelsInstalled(prompt);
   const serverAddress = options.serverAddress ?? DEFAULT_COMFY_SERVER;
 
   if (!isElectronEnvironment() || !window.electronAPI?.comfyGenerate) {
     requireElectronDesktop(t("errors.comfy.featureVideoGenerate"));
   }
 
-  const result = unwrapIpc(
-    await window.electronAPI!.comfyGenerate!(prompt, serverAddress)
-  ) as ComfyRemoteGenerateResult;
+  const result = await requestComfyGeneration(prompt, serverAddress, options.requestId);
   return {
     promptId: result.promptId,
-    videos: (result.videos ?? []).map(convertRemoteVideo),
+    // LoadVideo 的输入预览也随 history 返回，不能作为新生成的视频保存。
+    videos: (result.videos ?? []).filter(video => video.folderType !== "input").map(convertRemoteVideo),
   };
 }
 
@@ -140,6 +145,8 @@ export async function generateWithComfy(
   prompt: ComfyApiPrompt,
   options: ComfyGenerateOptions = {}
 ): Promise<ComfyGenerateResult> {
+  applyModelAttention(prompt, options.modelAttention ?? useSettingsStore.getState().modelAttention);
+  assertWorkflowModelsInstalled(prompt);
   const serverAddress = options.serverAddress ?? DEFAULT_COMFY_SERVER;
 
   if (!isElectronEnvironment() || !window.electronAPI?.comfyGenerate) {
@@ -147,7 +154,7 @@ export async function generateWithComfy(
   }
 
   return convertRemoteGenerateResult(
-    unwrapIpc(await window.electronAPI!.comfyGenerate!(prompt, serverAddress, options.requestId))
+    await requestComfyGeneration(prompt, serverAddress, options.requestId)
   );
 }
 

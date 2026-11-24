@@ -23,7 +23,7 @@ export const NEGATIVE_PROMPT_EDITOR_ID = "negative-prompt-editor";
 /**
  * 反向提示词区域：
  * - 输入框限高 + 可滚动 + 隐藏滚动条
- * - 顶部提供「反向提示词预设」入口（样式与高级设置里的预设提示词卡片一致）
+ * - 顶部提供「反向提示词预设」入口，可将选中预设填入反向提示词输入框
  * - 选择预设后直接写入输入框，仍可手动修改
  */
 // 受控模式供编辑工作区复用；普通文生图保留默认 DOM 读取契约。
@@ -78,7 +78,7 @@ export function NegativePromptSection({ editorId = NEGATIVE_PROMPT_EDITOR_ID, va
 
   return (
     <>
-      <div className="space-y-1.5">
+      <div>
         <div className="flex items-center justify-between gap-2">
           <label className="text-sm font-medium" htmlFor={editorId}>
             {t("create.negativePromptSection.title")}
@@ -90,27 +90,10 @@ export function NegativePromptSection({ editorId = NEGATIVE_PROMPT_EDITOR_ID, va
           />
         </div>
 
-        {/* 收起 / 展开：内容不卸载（反向提示词的预设内容不随 React 状态保存），
-            用 CollapsiblePanel 做自然的高度 + 透明度过渡 */}
-        <CollapsiblePanel
-          open={collapsed}
-          stateAttribute="data-negative-collapsed-hint"
-          durationMs={260}
-        >
-          <button
-            type="button"
-            onClick={() => setCollapsed(false)}
-            className="w-full rounded-lg bg-muted/40 px-3 py-2 text-left text-xs text-muted-foreground transition-colors hover:bg-muted/60"
-          >
-            {t("create.negativePromptSection.collapsedPrefix")}
-            {activePreset?.name ?? t("create.negativePromptSection.none")}
-            {t("create.negativePromptSection.collapsedSuffix")}
-          </button>
-        </CollapsiblePanel>
-
         <CollapsiblePanel
           open={!collapsed}
           stateAttribute="data-negative-editor-panel"
+          contentClassName="pt-1.5"
         >
           <div className="space-y-1.5">
             <div className="w-full min-w-0 space-y-1.5 rounded-md bg-muted/50 p-2 text-left text-[11px] text-muted-foreground">

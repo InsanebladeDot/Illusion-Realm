@@ -1,5 +1,7 @@
 "use client";
 
+import { HoverTip } from "@/components/hover-tip";
+
 import { useMemo, useState } from "react";
 import { X } from "lucide-react";
 import {
@@ -115,10 +117,9 @@ export function AgentImageThumbnails({
     >
       {attachments.map((item, index) => (
         <div key={item.id} className="group relative">
-          <button
+          <HoverTip asChild label={`${item.name} · ${t("agent.composer.attachmentPreview")}`}><button
             type="button"
             data-agent-attachment={item.name}
-            title={`${item.name} · ${t("agent.composer.attachmentPreview")}`}
             aria-label={t("agent.composer.attachmentPreview")}
             onClick={() => setPreviewIndex(index)}
             className="block h-14 w-14 overflow-hidden rounded-lg border border-border/60 bg-muted/30 transition-opacity hover:opacity-90"
@@ -129,18 +130,17 @@ export function AgentImageThumbnails({
               alt={item.name}
               className="h-full w-full object-cover"
             />
-          </button>
+          </button></HoverTip>
           {onRemove ? (
-            <button
+            <HoverTip asChild label={(t("agent.composer.attachmentRemove")) ?? ""}><button
               type="button"
               data-agent-attachment-remove={item.id}
               aria-label={t("agent.composer.attachmentRemove")}
-              title={t("agent.composer.attachmentRemove")}
               onClick={() => onRemove(item.id)}
               className="absolute -right-1.5 -top-1.5 inline-flex h-5 w-5 items-center justify-center rounded-full bg-foreground/80 text-background opacity-0 transition-opacity focus-visible:opacity-100 group-hover:opacity-100"
             >
               <X className="h-3 w-3" />
-            </button>
+            </button></HoverTip>
           ) : null}
         </div>
       ))}

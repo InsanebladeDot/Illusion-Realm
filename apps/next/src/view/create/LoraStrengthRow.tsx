@@ -1,4 +1,6 @@
 "use client";
+import { HoverTip } from "@/components/hover-tip";
+
 
 import { displayModelFileName } from "@/utils/buildGeneratedImageMeta";
 import { getExtensionWeightBarFill } from "@/utils/extensionWeight";
@@ -35,9 +37,9 @@ export function LoraStrengthRow({ name, strength }: LoraStrengthRowProps) {
       ) : null}
 
       <div className="relative flex items-center justify-between gap-3 px-3 py-2">
-        <span className="min-w-0 truncate text-xs font-medium" title={label}>
+        <HoverTip asChild layer="window" label={(label) ?? ""}><span className="min-w-0 truncate text-xs font-medium">
           {label}
-        </span>
+        </span></HoverTip>
         <span
           className={cn(
             "shrink-0 tabular-nums text-xs font-medium",

@@ -1,10 +1,13 @@
 "use client";
+import { HoverTip } from "@/components/hover-tip";
+
 
 // 模型库侧栏按官方类别和实际目录树导航，不执行移动、创建或删除文件。
 // 每个分支自管开合，展开 LoRA 不会改变 Checkpoint 或另一个实例。
 // 目录路径由扫描索引提供，点击只通知父级改变浏览位置。
 // 普通列表加原生按钮保留完整键盘操作，不假装实现 ARIA tree 的全部方向键。
-import { useState } from "react";
+import type { LocalModelFolderRoot } from "@illusion-realm/shared";
+import { useState, type ReactNode, type MouseEvent } from "react";
 import { ChevronDown, ChevronRight, Folder, FolderOpen } from "lucide-react";
 import { modelFolderTree, type LocalLibraryFile, type ModelFolderNode } from "@/utils/local-model-tree";
 import { modelRootLabel } from "./model-library-labels";
@@ -19,14 +22,15 @@ import { ModelLibraryChoices, ModelLibrarySection } from "./model-library-contro
 // 子节点缩进只表达层级，不限制最大目录深度。
 // 分支收起时子节点卸载，不让不可见按钮继续出现在 Tab 顺序。
 // 展开状态不进入用户文档，本轮不新增持久化目录偏好。
-function FolderBranch({ node, current, onOpen }: { node: ModelFolderNode; current: string; onOpen: (path: string) => void }) {
+type FolderMenu = (event: MouseEvent<HTMLButtonElement>, root: string, folder: string) => void;
+function FolderBranch({ node, current, root, onMenu, onOpen }: { node: ModelFolderNode; current: string; root: string; onMenu: FolderMenu; onOpen: (path: string) => void }) {
   // 默认展开当前路径的祖先，中心文件夹导航后侧栏也能看见所在位置。
   // 用户显式开合后尊重本分支选择，不让自动定位阻止手动收起。
   // null 表示还没有手动覆盖，false 与它有不同语义。
   const [override, setOpen] = useState<boolean | null>(null), { t } = useTranslation();
   const open = override ?? (current === node.value || current.startsWith(node.value + "/"));
   const Icon = current === node.value ? FolderOpen : Folder;
-  return <li className="min-w-0"><div className="flex min-w-0 items-center gap-1">{node.children.length > 0 && <button type="button" aria-expanded={open} aria-label={t("toolBox.civitai.toggleFolder", { name: node.name })} onClick={() => setOpen(!open)} className="shrink-0 rounded p-2 hover:bg-muted focus-visible:outline-2 focus-visible:outline-primary">{open ? <ChevronDown size={13} /> : <ChevronRight size={13} />}</button>}<button type="button" data-model-tree-folder={node.value} aria-current={current === node.value ? "page" : undefined} title={node.value} onClick={() => onOpen(node.value)} className={`flex min-w-0 flex-1 items-center gap-2 rounded-md px-2 py-2 text-left text-xs hover:bg-muted focus-visible:outline-2 focus-visible:outline-primary ${current === node.value ? "bg-primary/10 text-primary" : ""}`}><Icon size={14} className="shrink-0" /><span className="min-w-0 flex-1 truncate">{node.name}</span><small className="shrink-0 text-muted-foreground">{node.count}</small></button></div>{open && <ul className="ml-3 border-l border-border pl-1">{node.children.map(child => <FolderBranch key={child.value} node={child} current={current} onOpen={onOpen} />)}</ul>}</li>;
+  return <li className="min-w-0"><div className="flex min-w-0 items-center gap-1">{node.children.length > 0 && <button type="button" aria-expanded={open} aria-label={t("toolBox.civitai.toggleFolder", { name: node.name })} onClick={() => setOpen(!open)} className="shrink-0 rounded p-2 hover:bg-muted focus-visible:outline-2 focus-visible:outline-primary">{open ? <ChevronDown size={13} /> : <ChevronRight size={13} />}</button>}<HoverTip asChild layer="window" label={(node.value) ?? ""}><button type="button" data-model-tree-folder={node.value} onContextMenu={event => onMenu(event, root, node.value)} aria-current={current === node.value ? "page" : undefined} onClick={() => onOpen(node.value)} className={`flex min-w-0 flex-1 items-center gap-2 rounded-md px-2 py-2 text-left text-xs hover:bg-muted focus-visible:outline-2 focus-visible:outline-primary ${current === node.value ? "bg-primary/10 text-primary" : ""}`}><Icon size={14} className="shrink-0" /><span className="min-w-0 flex-1 truncate">{node.name}</span><small className="shrink-0 text-muted-foreground">{node.count}</small></button></HoverTip></div>{open && <ul className="ml-3 border-l border-border pl-1">{node.children.map(child => <FolderBranch key={child.value} node={child} current={current} root={root} onMenu={onMenu} onOpen={onOpen} />)}</ul>}</li>;
 }
 // 进入目录与展开树是两个操作，选中深层文件夹不会自动打开另一个分支。
 // 当前目录高亮使用完整 value，兄弟同名节点不会同时显示 aria-current。
@@ -59,7 +63,7 @@ function FolderBranch({ node, current, onOpen }: { node: ModelFolderNode; curren
 // 额外类别没有可读别名时原样展示，新增目录不要求每次修改代码。
 interface NavigationProps {
   roots: string[]; models: LocalLibraryFile[]; root: string; folder: string; tree: ModelFolderNode[];
-  onRoot: (root: string) => void; onFolder: (folder: string) => void;
+  onRoot: (root: string) => void; onFolder: (folder: string) => void; folders: LocalModelFolderRoot[]; folderAction?: ReactNode; onMenu: FolderMenu;
 }
 /**
  * 分组折叠与目录递归是两层独立状态：
@@ -81,16 +85,22 @@ interface NavigationProps {
  * 修改标题与箭头样式时要核对在线类型区，因为它实际引用相同的公共分组。
  * 如果需要记住跨会话折叠偏好，应单独设计用户文档字段，本轮仅保留会话内状态。
  */
-export function ModelFolderNavigation({ roots, models, root, folder, tree, onRoot, onFolder }: NavigationProps) {
+export function ModelFolderNavigation({ roots, models, root, folder, tree, folders, folderAction, onRoot, onFolder, onMenu }: NavigationProps) {
   const { t } = useTranslation();
-  return <aside data-model-folder-navigation className="min-h-0 min-w-0 flex-1 overflow-auto px-3 py-4"><ModelLibraryChoices label={t("toolBox.civitai.officialModels")} current={root} onChange={onRoot} dataKey="local-model-root" items={[{ value: "", label: t("toolBox.civitai.all"), count: models.length }, ...roots.map(value => ({ value, label: modelRootLabel(value), count: models.filter(model => model.rootCategory === value).length }))]} /><div className="mt-4 border-t border-border pt-4"><ModelLibrarySection label={t("toolBox.civitai.myFolders")} marker="local-folders">{root ? <ul>{tree.map(node => <FolderBranch key={`${root}/${node.value}`} node={node} current={folder} onOpen={onFolder} />)}</ul> : <ul>{roots.map(value => <li key={value}><button type="button" onClick={() => onRoot(value)} className="flex w-full items-center gap-2 rounded-md px-2 py-2 text-left text-xs hover:bg-muted"><Folder size={14} /><span className="truncate">{modelRootLabel(value)}</span></button><ul className="ml-2">{modelFolderTree(models.filter(model => model.rootCategory === value)).map(node => <FolderBranch key={`${value}/${node.value}`} node={node} current="" onOpen={path => {onRoot(value); onFolder(path);}} />)}</ul></li>)}</ul>}</ModelLibrarySection></div></aside>;
+  // 只过滤官方分类的浏览入口，空目录仍可在「我的分类」里管理。
+  const populatedRoots = roots.map(value => ({
+    value,
+    label: modelRootLabel(value),
+    count: models.filter(model => model.rootCategory === value).length,
+  })).filter(item => item.count > 0);
+  return <aside data-model-folder-navigation className="min-h-0 min-w-0 flex-1 overflow-auto px-3 py-4"><ModelLibraryChoices label={t("toolBox.civitai.officialModels")} current={root} onChange={onRoot} dataKey="local-model-root" items={[{ value: "", label: t("toolBox.civitai.all"), count: models.length }, ...populatedRoots]} /><div className="mt-4 border-t border-border pt-4"><ModelLibrarySection label={t("toolBox.civitai.myFolders")} marker="local-folders">{folderAction}{root ? <ul>{tree.map(node => <FolderBranch key={`${root}/${node.value}`} node={node} current={folder} root={root} onMenu={onMenu} onOpen={onFolder} />)}</ul> : <ul>{roots.map(value => <li key={value}><button type="button" onClick={() => onRoot(value)} onContextMenu={event => onMenu(event, value, "")} className="flex w-full items-center gap-2 rounded-md px-2 py-2 text-left text-xs hover:bg-muted"><Folder size={14} /><span className="truncate">{modelRootLabel(value)}</span></button><ul className="ml-2">{modelFolderTree(models.filter(model => model.rootCategory === value), "", folders.find(entry => entry.root === value)?.folders).map(node => <FolderBranch key={`${value}/${node.value}`} node={node} current="" root={value} onMenu={onMenu} onOpen={path => {onRoot(value); onFolder(path);}} />)}</ul></li>)}</ul>}</ModelLibrarySection></div></aside>;
 }
 // 官方分类按钮属于过滤器，使用 aria-pressed 表示当前根选择。
 // 子目录属于浏览位置，使用 aria-current 表示正在查看的位置。
 // “全部”展示全部权重；中间不再用文件夹卡片代替模型。
 // 全部范围下按官方根分组显示目录，路径同名也不会混用所属类别。
 // 这里只读 roots/tree，不把用户在 UI 上的点击作为创建磁盘目录的命令。
-// 未收录空文件夹是扫描契约边界，不能靠前端合成一个存在的目录。
+// 空目录来自磁盘目录索引，与模型文件计数分别读取。
 // 边框和背景沿用全局语义色，深色时不留下写死的白色侧栏。
 // 根名来自真实目录，不翻译成另一种名字后再拿翻译文本拼路径。
 // onFolder 只接收索引相对值，真实文件操作仍由模型管理服务决定。

@@ -14,6 +14,8 @@ import type { VideoModelOverrides } from './video-workflow-models';
 // 控制图与透明蒙版使用用户提供的独立模板，普通文字改图仍保留参考 latent 链。
 // 构建器共用参数校验，导出与队列执行不会走两套分支。
 // 只有显式 controlMode 才选择新流，旧草稿缺字段时行为保持不变。
+import { alignedEditImageSize, isEditImageSize, resizeEditedOutput } from "./image-edit-size";
+import { buildMinimaxImageEditPrompt } from "./minimax-image-edit-workflow";
 import { buildAnimaControlPrompt } from "./anima-control-workflow";
 // 本模块保持纯数据变换，不上传、不读写磁盘，也不主动查询服务器。
 // i18n 的非组件入口只在失败时读取当前语言，不引入 React 运行时状态。
@@ -24,7 +26,7 @@ import { buildAnimaControlPrompt } from "./anima-control-workflow";
 // 编辑链的自定义节点缺失由 ComfyUI 的工作流校验反馈，不能据模型存在断言节点已安装。
 // 本地构建成功只表示结构和输入通过检查，不代表显存或真实生成质量满足要求。
 
-// 这些参数全部有对应节点，不为当前工作流添加无效的宽、高或蒙版字段。
+// 参数只暴露实际节点能力；outputSize 通过显式ImageScale落实，不添加无效宽高。
 // Seed 使用十进制文本编辑，在提交边界再转换，避免输入过程被精度格式化打断。
 // 降噪与 LoRA 默认值来自原流，不能套用文生图的默认值。
 // megapixels 表示百万像素，节点仍按原图比例缩放并对齐到八像素步进。
@@ -40,7 +42,9 @@ import { buildAnimaControlPrompt } from "./anima-control-workflow";
 // 因此控制图覆盖不会先撞上中间基础图里的同名数字 id。
 // 导出 API 图与实际队列调用同一构建器，设置不应只在界面看起来生效。
 // 这不是跨进程新消息格式，Electron 接收的仍是已组装完成的 API 图。
-export interface AnimaEditSettings { instruction: string; negative: string; megapixels: number; seed: string; steps: number; cfg: number; denoise: number; samplerName: string; scheduler: string; checkpointName: string; loras: LoraPromptItem[]; controlMode?: "edge" | "inpaint"; controlStrength?: number; controlStart?: number; controlEnd?: number; modelOverrides?: VideoModelOverrides }
+// outputSize 随已解码的首图入队，缺省值供只读取模板的离线调用。
+// 它只存在本次执行快照里，画布持久化仍使用原size附表，不增加第二份尺寸镜像。
+export interface AnimaEditSettings { promptReferenceLabels?: import("@/schemas/prompt-reference-labels.schema").PromptReferenceLabels; promptConversion?: boolean; upscale?: import("./seedvr2-workflow").UpscaleSettings; editWorkflow?: "minimax-image-edit"; instruction: string; negative: string; megapixels: number; seed: string; steps: number; cfg: number; denoise: number; samplerName: string; scheduler: string; checkpointName: string; loras: LoraPromptItem[]; controlMode?: "edge" | "inpaint"; controlStrength?: number; controlStart?: number; controlEnd?: number; modelOverrides?: VideoModelOverrides; outputSize?: { width: number; height: number } }
 export const ANIMA_EDIT_LORA = template["245"].inputs.lora_name;
 // 模板仅作为编辑默认值来源，不把其中历史指令与图片文件名带入新任务。
 // 用户进入页面时指令为空，避免把示例中的人物修改要求意外提交。
@@ -77,6 +81,7 @@ export function validateAnimaEdit(value: AnimaEditSettings): void {
   // LoRA 的权重允许负数，不能把标准扩展的负向作用错误夹成零。
   // 采样枚举直接使用共享数据表，新增采样器时不维护另一份白名单。
   const ranges = [[value.steps, 1, 100], [value.cfg, 0, 30], [value.denoise, 0, 1]];
+  if (value.outputSize && !isEditImageSize(value.outputSize)) throw Error(t("create.animaEdit.invalidParameters"));
   // 控制时间仅在控制模式校验，原文字编辑不消费这些可选字段。
   // 兼容旧草稿时采用模板的一、零、一，不把显式零值当作缺失。
   // 有限性检查同时拒绝 NaN 和 Infinity，不能让 JSON 序列化成 null。
@@ -105,12 +110,20 @@ export function validateAnimaEdit(value: AnimaEditSettings): void {
  * 去掉不再使用的空 latent 节点，导出的仍是 API prompt 格式。
  * 输出连接也写进 PNG prompt 块，保证提交与保存的数据一致。
  */
-export function buildAnimaEditPrompt(value: AnimaEditSettings, imageName: string): ComfyApiPrompt {
+export function buildAnimaEditPrompt(value: AnimaEditSettings, imageName: string, references: string[] = []): ComfyApiPrompt {
+  // H3 使用原生多图条件，控制工具仍走原 Anima 路径。
+  if (value.editWorkflow === "minimax-image-edit" && !value.controlMode) return buildMinimaxImageEditPrompt(value, [imageName, ...references]);
+  if (references.length) throw Error(t("canvas.remoteInputInvalid"));
   // 新控制链不叠加旧的参考 latent，蒙版和边缘图各自按模板连接。
   // 共用入口确保离线导出、入队前校验和实际提交采用完全相同的参数。
   // 构建前仍拒绝非法 seed、空指令、超范围权重和采样值。
-  if (value.controlMode) { validateAnimaEdit(value); return buildAnimaControlPrompt(value, imageName); }
   validateAnimaEdit(value);
+  const prompt = value.controlMode ? buildAnimaControlPrompt(value, imageName) : buildAnimaReferencePrompt(value, imageName);
+  if (value.outputSize) resizeEditedOutput(prompt, value.outputSize, 8);
+  return prompt;
+}
+
+function buildAnimaReferencePrompt(value: AnimaEditSettings, imageName: string): ComfyApiPrompt {
   // 这里实际调用图片构建器，不能复制其当前生成结果再各自维护两份实现。
   // 图片构建器负责正反向文本、主模型路径、LoRA 链及标准采样字段。
   // 本层只负责参考图所需的输入差异，不接管常规模型选择行为。
@@ -136,6 +149,8 @@ export function buildAnimaEditPrompt(value: AnimaEditSettings, imageName: string
   // 原编辑例的拼接输出不是本产品结果，保持纯解码图供保存与预览使用。
   prompt["edit-source"] = { class_type: "LoadImage", inputs: { image: imageName } };
   prompt["edit-scale"] = { class_type: "ImageScaleToTotalPixels", inputs: { upscale_method: "lanczos", megapixels: value.megapixels, resolution_steps: 8, image: ["edit-source", 0] } };
+  // VAE 先处理对齐后的像素，再从解码结果恢复首图原尺寸。
+  if (value.outputSize) prompt["edit-scale"] = { class_type: "ImageScale", inputs: { image: ["edit-source", 0], upscale_method: "lanczos", ...alignedEditImageSize(value.outputSize, 8), crop: "disabled" } };
   prompt["edit-encode"] = { class_type: "VAEEncode", inputs: { pixels: ["edit-scale", 0], vae: decoder.inputs.vae } };
   prompt["edit-reference"] = { class_type: "ApplyCosmosReferenceLatent", inputs: { model: sampler.inputs.model, "ref_latents.ref_latent_1": ["edit-encode", 0] } };
   sampler.inputs.model = ["edit-reference", 0]; sampler.inputs.latent_image = ["edit-encode", 0];

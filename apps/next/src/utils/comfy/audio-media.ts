@@ -1,9 +1,12 @@
+import { applyModelAttention } from "./model-attention";
+import { requestComfyGeneration } from "@/api/comfyui/generate-request";
 /**
  * 音频传输和保存：复用现有 ComfyUI IPC，不在渲染进程直接访问文件系统。
  * 主进程把非图片历史文件放在 videos 数组；此处按 audio 输出类别筛选。
  * 这个历史字段名不代表内容一定为视频，不能给音频默认添加 mp4 后缀。
  * 不创建播放 URL，URL 所有权由常驻音频草稿负责，避免失败后泄漏。
  */
+import { assertWorkflowModelsInstalled } from "@/utils/workflow-model-readiness";
 import { uploadImageToComfy } from '@/api/comfyui';
 import type { ComfyApiPrompt } from '@/types/comfy';
 import { unwrapIpc } from '@/utils/ipcResult';
@@ -93,9 +96,11 @@ export async function uploadReferenceAudio(file: File, server: string) {
 // 本函数不维护组件状态，离开 Role TTS 面板不会提前结束正在等待的 IPC。
 // dataUrl 只有通过主进程成功回包才可到达这里，失败对象不参与媒体映射。
 // ComfyUI 输出列表存在但没有 audio 类别时也必须给出可解释的失败。
-export async function generateAudio(graph: ComfyApiPrompt, server: string, id: string): Promise<AudioOutput[]> {
+export async function generateAudio(graph: ComfyApiPrompt, server: string, id: string, modelAttention: import("@/types/model-attention").ModelAttentionSettings): Promise<AudioOutput[]> {
+  applyModelAttention(graph, modelAttention);
+  assertWorkflowModelsInstalled(graph);
   if (!window.electronAPI?.comfyGenerate) throw new Error(t('create.audio.desktopOnly'));
-  const result = unwrapIpc(await window.electronAPI.comfyGenerate(graph, server, id));
+  const result = await requestComfyGeneration(graph, server, id);
   const outputs = result.videos.filter(item => /^audios?$/i.test(item.kind));
   if (!outputs.length) throw new Error(t('create.audio.noOutput'));
   return outputs.map(item => {

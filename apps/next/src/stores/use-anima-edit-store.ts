@@ -20,6 +20,7 @@ import type { SetStateAction } from "react";
 import type { SelectedModel } from "@/types/model";
 import type { SelectedExtension } from "@/types/extension";
 import { ANIMA_EDIT_DEFAULTS, type AnimaEditSettings } from "@/utils/comfy/anima-edit-workflow";
+import { MINIMAX_IMAGE_EDIT_DEFAULTS } from "@/utils/comfy/minimax-image-edit-workflow";
 import type { AnimaEditResult } from "@/utils/comfy/run-anima-edit";
 
 // 一个源对象同时承载文件、显示 URL 和解码尺寸，避免混用不同素材的信息。
@@ -42,6 +43,11 @@ export type EditPhase = "idle" | "queued" | "checking" | "uploading" | "generati
 // 默认 custom 保持原模板语义，骰子显式启用 random。
 // 编辑工具共用此模式，切页不会重置随机状态。
 interface EditData {
+  // 模板各自保存参数；切回 Anima 时保留已有草稿和 LoRA。
+  editWorkflow: "minimax-image-edit" | "anima-edit";
+  minimaxSettings: AnimaEditSettings;
+  minimaxSeedMode: "random" | "custom";
+  references: EditSource[];
   seedMode: 'random' | 'custom';
   // null 表示没有已验证素材，运行入口仍需显示缺原图提示。
   // 不存上传后的服务端名称，以便重试时重新上传原始字节。
@@ -101,6 +107,7 @@ interface EditStore extends EditData {
 // source 默认空值仍要求用户选择原图，不能用演示图满足运行前置条件。
 // setResult 仅释放旧展示 URL，不删除已经落盘的生成图片。
 export const useAnimaEditStore = create<EditStore>((set) => ({
+  editWorkflow: "minimax-image-edit", minimaxSettings: structuredClone(MINIMAX_IMAGE_EDIT_DEFAULTS), minimaxSeedMode: "custom", references: [],
   seedMode: 'custom', source: null, settings: { ...ANIMA_EDIT_DEFAULTS }, selectedModel: null, extensions: null,
   result: null, taskId: null, phase: "idle", importing: false, error: "",
   // shallow patch 保留没有变动的草稿字段及动作，不重置模型选择。

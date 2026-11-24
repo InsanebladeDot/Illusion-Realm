@@ -5,7 +5,7 @@ import { ResourceDialogShell } from "@/components/ResourceDialogShell";
 import { useTranslation } from "@/i18n";
 import { usePromptAssistantStore } from "@/stores/usePromptAssistantStore";
 import { useToastStore } from "@/stores/useToastStore";
-import { assistantError } from "@/utils/prompt-assistant";
+import { assistantError, presetSelectionPatch } from "@/utils/prompt-assistant";
 // 新增和编辑共用原输入样式，主题切换不依赖浏览器默认表单配色。
 // 保存后的记录仍采用原有 name/instruction 结构，无需变更用户数据版本。
 // 两个输入都保留原长度上限，管理功能不扩大远端请求的指令容量。
@@ -27,7 +27,7 @@ const INPUT = "w-full rounded-lg border border-border bg-background px-3 py-2 te
  * 内置预设不在 preferences.presets 中，不能由此表单修改或删除。
  * 落盘复用 store.save 的成功提交和失败回滚，不提前关闭失败的表单。
  */
-export function AssistantSettings({ onClose, presetId }: { onClose: () => void; presetId?: string }) {
+export function AssistantSettings({ onClose, presetId, mossPresetScope }: { onClose: () => void; presetId?: string; mossPresetScope: boolean }) {
   const { t } = useTranslation(); const preferences = usePromptAssistantStore(state => state.preferences);
   // 首次挂载从记录恢复草稿，之后外部重绘不能覆盖用户尚未保存的输入。
   // 查找只访问自定义数组，不把 translate/anima 内置文本当作可写记录。
@@ -52,13 +52,15 @@ export function AssistantSettings({ onClose, presetId }: { onClose: () => void; 
       const state = usePromptAssistantStore.getState(), current = state.preferences;
       if (!name.trim() || !instruction.trim() || presetId && !current.presets.some(item => item.id === presetId)) throw new Error("presetInvalid");
       const value = { id: presetId ?? crypto.randomUUID(), name: name.trim(), instruction: instruction.trim() };
-      await state.save(presetId ? { presets: current.presets.map(item => item.id === presetId ? value : item) } : { presetId: value.id, presets: [...current.presets, value] });
+      await state.save(presetId
+        ? { presets: current.presets.map(item => item.id === presetId ? value : item) }
+        : { ...presetSelectionPatch(value.id, mossPresetScope), presets: [...current.presets, value] });
       useToastStore.getState().show(t("create.promptAssistant.presetSaved")); onClose();
     } catch (error) { useToastStore.getState().show(error instanceof Error && error.message === "presetInvalid" ? t("create.promptAssistant.presetInvalid") : assistantError(error)); }
     finally { setBusy(false); }
   };
   // 删除只按原 id 定位，草稿名称即使改过也不会影响目标记录。
-  // 删除当前预设后回退英文翻译，防止保存悬空 presetId。
+  // 删除后两处各回退到自己的默认预设，避免继续引用同一个已删除条目。
   // 删除其他预设保留正在使用的内置或自定义选择。
   // 只删除用户数组中的一项，其余记录的顺序和内容不发生变化。
   // 最后一项删除后空数组合法，不需要伪造一个自定义默认预设。
@@ -76,7 +78,11 @@ export function AssistantSettings({ onClose, presetId }: { onClose: () => void; 
     try {
       const state = usePromptAssistantStore.getState(), current = state.preferences;
       if (!presetId || !current.presets.some(item => item.id === presetId)) throw new Error("presetInvalid");
-      await state.save({ presets: current.presets.filter(item => item.id !== presetId), presetId: current.presetId === presetId ? "translate" : current.presetId });
+      await state.save({
+        presets: current.presets.filter(item => item.id !== presetId),
+        presetId: current.presetId === presetId ? "translate" : current.presetId,
+        mossPresetId: current.mossPresetId === presetId ? undefined : current.mossPresetId,
+      });
       useToastStore.getState().show(t("create.promptAssistant.presetDeleted")); onClose();
     } catch (error) { useToastStore.getState().show(assistantError(error)); }
     finally { setBusy(false); }

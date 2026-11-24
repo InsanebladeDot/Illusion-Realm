@@ -1,4 +1,6 @@
 "use client";
+import { HoverTip } from "@/components/hover-tip";
+
 /** Markdown 围栏代码的公共阅读控件：语言、高亮和复制共用原始代码字符串。 */
 // 现有 react-markdown 负责分块，本组件不重新用正则解析整篇回答。
 // 高亮只产生文字和 span，不执行代码，不把模型的 HTML 插进 DOM。
@@ -125,7 +127,7 @@ export const MarkdownCodeBlock = memo(function MarkdownCodeBlock({ node }: Compo
     {/* 阅读区：语言标签与复制工具栏不跟随代码横向滚动，窄窗口仍可操作。 */}
     <div className="flex min-w-0 items-center justify-between gap-2 border-b border-border px-3 py-1.5 text-xs text-muted-foreground">
       <span className="min-w-0 truncate font-mono">{language}</span>
-      <button data-code-copy type="button" disabled={!source} onClick={() => { void copy(); }} aria-label={t('common.copy')} title={t('common.copy')} className="inline-flex shrink-0 items-center gap-1.5 rounded px-1.5 py-1 hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:opacity-40">{copied ? <Check size={13} /> : <Copy size={13} />}<span aria-live="polite">{t(copied ? 'create.promptAssistant.copied' : 'common.copy')}</span></button>
+      <HoverTip asChild layer="window" label={(t('common.copy')) ?? ""}><button data-code-copy type="button" disabled={!source} onClick={() => { void copy(); }} aria-label={t('common.copy')} className="inline-flex shrink-0 items-center gap-1.5 rounded px-1.5 py-1 hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:opacity-40">{copied ? <Check size={13} /> : <Copy size={13} />}<span aria-live="polite">{t(copied ? 'create.promptAssistant.copied' : 'common.copy')}</span></button></HoverTip>
     </div>
     {/* 代码区：主题色只作用于语法 token，普通文本保留当前主题默认前景色。 */}
     {/* 使用同一套语义颜色的浅深变体，不维护第二个主题开关或固定白色底板。 */}

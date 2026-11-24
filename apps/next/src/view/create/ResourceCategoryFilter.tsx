@@ -1,4 +1,6 @@
 "use client";
+import { HoverTip } from "@/components/hover-tip";
+
 
 import { LayoutList, Rows3 } from "lucide-react";
 import { SimpleSelect } from "@/components/SimpleSelect";
@@ -116,12 +118,12 @@ export function ResourceCategoryFilter({
         aria-label={t("create.resourceCategoryFilter.fontSize")}
       >
         {RESOURCE_DIALOG_FONT_SIZE_OPTIONS.map((option) => (
-          <button
+          <HoverTip key={option.value} asChild layer="window" label={(t("create.resourceCategoryFilter.fontSizeTitle", {
+              label: option.label,
+            })) ?? ""}><button
             key={option.value}
             type="button"
-            title={t("create.resourceCategoryFilter.fontSizeTitle", {
-              label: option.label,
-            })}
+
             aria-pressed={fontSize === option.value}
             onClick={() => onFontSizeChange(option.value)}
             className={cn(
@@ -134,7 +136,7 @@ export function ResourceCategoryFilter({
             )}
           >
             {option.label}
-          </button>
+          </button></HoverTip>
         ))}
       </div>
 
@@ -143,9 +145,9 @@ export function ResourceCategoryFilter({
         role="group"
         aria-label={t("create.resourceCategoryFilter.displayMode")}
       >
-        <button
+        <HoverTip asChild layer="window" label={(t("create.resourceCategoryFilter.tabs")) ?? ""}><button
           type="button"
-          title={t("create.resourceCategoryFilter.tabs")}
+
           aria-pressed={uiMode === "tabs"}
           onClick={() => onUiModeChange("tabs")}
           className={cn(
@@ -156,10 +158,10 @@ export function ResourceCategoryFilter({
           )}
         >
           <Rows3 className="h-3.5 w-3.5" />
-        </button>
-        <button
+        </button></HoverTip>
+        <HoverTip asChild layer="window" label={(t("create.resourceCategoryFilter.dropdown")) ?? ""}><button
           type="button"
-          title={t("create.resourceCategoryFilter.dropdown")}
+
           aria-pressed={uiMode === "dropdown"}
           onClick={() => onUiModeChange("dropdown")}
           className={cn(
@@ -170,7 +172,7 @@ export function ResourceCategoryFilter({
           )}
         >
           <LayoutList className="h-3.5 w-3.5" />
-        </button>
+        </button></HoverTip>
       </div>
     </div>
   );

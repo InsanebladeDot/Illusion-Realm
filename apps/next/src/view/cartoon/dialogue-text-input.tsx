@@ -1,4 +1,6 @@
 "use client";
+import { HoverTip } from "@/components/hover-tip";
+
 
 /** 正文默认只读，双击气泡或此字段后解锁，样式调整无需进入正文编辑。 */
 // 像先选中便签改外观，再双击打开内容，避免拖动时误输入文字。
@@ -38,7 +40,7 @@ export function DialogueTextInput({ value, editing, onEdit, onDone, onChange }: 
     {/* textarea显式readOnly并在事件处再次核查，脚本派发input也不能绕开锁定。 */}
     {/* 完成按钮只结束输入状态，不给出已保存或已导出的假反馈。 */}
     <span className="flex items-center justify-between">{t("dialogue.text")} · {Array.from(value).length}/120{editing && <button type="button" className="text-primary hover:underline" onClick={onDone}>{t("dialogue.finishText")}</button>}</span>
-    <textarea ref={input} data-dialogue-text rows={4} maxLength={120} readOnly={!editing} value={value} title={t("dialogue.editTextHint")} onDoubleClick={onEdit} onChange={event => { if (editing) onChange(event.target.value); }} onKeyDown={event => { if (event.key === "Escape") { event.stopPropagation(); onDone(); } else if (!editing && event.key === "Enter") { event.preventDefault(); onEdit(); } }} className="w-full resize-y rounded-lg border border-input bg-background p-2 outline-none focus:border-primary/30 focus:ring-0" />
+    <HoverTip asChild layer="window" label={(t("dialogue.editTextHint")) ?? ""}><textarea ref={input} data-dialogue-text rows={4} maxLength={120} readOnly={!editing} value={value} onDoubleClick={onEdit} onChange={event => { if (editing) onChange(event.target.value); }} onKeyDown={event => { if (event.key === "Escape") { event.stopPropagation(); onDone(); } else if (!editing && event.key === "Enter") { event.preventDefault(); onEdit(); } }} className="w-full resize-y rounded-lg border border-input bg-background p-2 outline-none focus:border-primary/30 focus:ring-0" /></HoverTip>
     {!editing && <span className="block text-muted-foreground">{t("dialogue.editTextHint")}</span>}
   </label>;
 }

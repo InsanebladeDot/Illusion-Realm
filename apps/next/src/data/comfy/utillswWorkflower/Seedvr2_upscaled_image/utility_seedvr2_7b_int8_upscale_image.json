@@ -1,0 +1,223 @@
+{
+  "1": {
+    "inputs": {
+      "image": "ComfyUI_temp_xsrog_00001_.png [temp]"
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "加载图像",
+      "cnr_id": "comfy-core",
+      "ver": "0.27.0"
+    }
+  },
+  "76": {
+    "inputs": {
+      "images": [
+        "66:59",
+        0
+      ]
+    },
+    "class_type": "PreviewImage",
+    "_meta": {
+      "title": "预览图像"
+    }
+  },
+  "66:48": {
+    "inputs": {
+      "tile_size": 512,
+      "overlap": 128,
+      "temporal_size": 4096,
+      "temporal_overlap": 8,
+      "pixels": [
+        "66:58",
+        0
+      ],
+      "vae": [
+        "66:51",
+        0
+      ]
+    },
+    "class_type": "VAEEncodeTiled",
+    "_meta": {
+      "title": "VAE编码（分块）",
+      "cnr_id": "comfy-core",
+      "ver": "0.27.0"
+    }
+  },
+  "66:50": {
+    "inputs": {
+      "image": [
+        "1",
+        0
+      ],
+      "alpha": [
+        "1",
+        1
+      ]
+    },
+    "class_type": "JoinImageWithAlpha",
+    "_meta": {
+      "title": "合并图像Alpha",
+      "cnr_id": "comfy-core",
+      "ver": "0.27.0"
+    }
+  },
+  "66:51": {
+    "inputs": {
+      "vae_name": "SeedVR2\\seedvr2_ema_vae_fp16\\seedvr2_ema_vae_fp16.safetensors"
+    },
+    "class_type": "VAELoader",
+    "_meta": {
+      "title": "加载VAE",
+      "cnr_id": "comfy-core",
+      "ver": "0.27.0"
+    }
+  },
+  "66:52": {
+    "inputs": {
+      "unet_name": "SeedVR2\\seedvr2_7b_int8_convrot\\seedvr2_7b_int8_convrot.safetensors",
+      "weight_dtype": "default"
+    },
+    "class_type": "UNETLoader",
+    "_meta": {
+      "title": "UNet加载器",
+      "cnr_id": "comfy-core",
+      "ver": "0.27.0"
+    }
+  },
+  "66:54": {
+    "inputs": {
+      "seed": 959948902156062,
+      "steps": 1,
+      "cfg": 1,
+      "sampler_name": "euler",
+      "scheduler": "simple",
+      "denoise": 1,
+      "model": [
+        "66:77",
+        0
+      ],
+      "positive": [
+        "66:61",
+        0
+      ],
+      "negative": [
+        "66:61",
+        1
+      ],
+      "latent_image": [
+        "66:48",
+        0
+      ]
+    },
+    "class_type": "KSampler",
+    "_meta": {
+      "title": "K采样器",
+      "cnr_id": "comfy-core",
+      "ver": "0.27.0"
+    }
+  },
+  "66:55": {
+    "inputs": {
+      "tile_size": 512,
+      "overlap": 128,
+      "temporal_size": 4096,
+      "temporal_overlap": 8,
+      "samples": [
+        "66:54",
+        0
+      ],
+      "vae": [
+        "66:51",
+        0
+      ]
+    },
+    "class_type": "VAEDecodeTiled",
+    "_meta": {
+      "title": "VAE解码（分块）",
+      "cnr_id": "comfy-core",
+      "ver": "0.27.0"
+    }
+  },
+  "66:57": {
+    "inputs": {
+      "resize_type": "scale by multiplier",
+      "resize_type.multiplier": 2,
+      "scale_method": "lanczos",
+      "input": [
+        "66:50",
+        0
+      ]
+    },
+    "class_type": "ResizeImageMaskNode",
+    "_meta": {
+      "title": "调整图像/掩码大小",
+      "cnr_id": "comfy-core",
+      "ver": "0.27.0"
+    }
+  },
+  "66:58": {
+    "inputs": {
+      "resized_images": [
+        "66:57",
+        0
+      ]
+    },
+    "class_type": "SeedVR2Preprocess",
+    "_meta": {
+      "title": "预处理 SeedVR2 输入",
+      "cnr_id": "comfy-core",
+      "ver": "0.27.0"
+    }
+  },
+  "66:59": {
+    "inputs": {
+      "color_correction_method": "none",
+      "images": [
+        "66:55",
+        0
+      ],
+      "original_resized_images": [
+        "66:57",
+        0
+      ]
+    },
+    "class_type": "SeedVR2PostProcessing",
+    "_meta": {
+      "title": "后处理 SeedVR2 输出",
+      "cnr_id": "comfy-core",
+      "ver": "0.27.0"
+    }
+  },
+  "66:61": {
+    "inputs": {
+      "model": [
+        "66:77",
+        0
+      ],
+      "vae_conditioning": [
+        "66:48",
+        0
+      ]
+    },
+    "class_type": "SeedVR2Conditioning",
+    "_meta": {
+      "title": "应用 SeedVR2 条件",
+      "cnr_id": "comfy-core",
+      "ver": "0.27.0"
+    }
+  },
+  "66:77": {
+    "inputs": {
+      "attention": "comfy kitchen attention",
+      "model": [
+        "66:52",
+        0
+      ]
+    },
+    "class_type": "ModelAttentionBackend",
+    "_meta": {
+      "title": "模型注意力后端"
+    }
+  }
+}

@@ -1,4 +1,6 @@
 "use client";
+import { HoverTip } from "@/components/hover-tip";
+
 
 import { useRef } from "react";
 import { Image as ImageIcon, Film, Music, X } from "lucide-react";
@@ -91,7 +93,7 @@ export function VideoImageUpload({
                 alt={t("create.videoImageUpload.previewAlt", { label })}
                 className="absolute inset-0 h-full w-full object-contain p-1"
               />
-              </>) : <div className="flex max-w-full flex-col items-center gap-2 px-3">{kind === "video" ? <Film className="h-6 w-6 text-muted-foreground" /> : <Music className="h-6 w-6 text-muted-foreground" />}<span className="max-w-full truncate text-xs" title={filename}>{filename}</span></div>}
+              </>) : <div className="flex max-w-full flex-col items-center gap-2 px-3">{kind === "video" ? <Film className="h-6 w-6 text-muted-foreground" /> : <Music className="h-6 w-6 text-muted-foreground" />}<HoverTip asChild layer="window" label={(filename) ?? ""}><span className="max-w-full truncate text-xs">{filename}</span></HoverTip></div>}
               <div className="absolute inset-0 flex items-end justify-center bg-black/0 p-2 opacity-0 transition-opacity group-hover:bg-black/40 group-hover:opacity-100">
                 <span className="text-xs font-medium text-white">
                   {t("create.upload.clickToReplace")}

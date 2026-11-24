@@ -1,4 +1,6 @@
 "use client";
+import { HoverTip } from "@/components/hover-tip";
+
 
 /** 属性区：共享编辑器控件通过字段配置绑定气泡参数，导入导出由宿主回调执行。 */
 // 不为字号、宽度和透明度分别手写输入框，统一复用EditorFloatField的草稿确认机制。
@@ -131,7 +133,7 @@ export function DialogueProperties({ editor, templates, onImport, onExport, impo
     <div className="min-h-0 flex-1 overflow-y-auto p-3 [scrollbar-gutter:stable]">
       <EditorGroup title={t("dialogue.canvas")}><SimpleSelect value={editor.doc.width === 1280 && editor.doc.height === 720 ? "landscape" : editor.doc.width === 900 && editor.doc.height === 1200 ? "portrait" : "current"} ariaLabel={t("dialogue.canvas")} options={[{ value: "current", label: `${editor.doc.width} × ${editor.doc.height}` }, { value: "landscape", label: t("dialogue.landscape") }, { value: "portrait", label: t("dialogue.portrait") }]} onChange={value => { if (value === "current") return; editor.change(doc => ({ ...doc, width: value === "portrait" ? 900 : 1280, height: value === "portrait" ? 1200 : 720, layers: doc.layers.map(current => ({ ...current, x: current.x / doc.width * (value === "portrait" ? 900 : 1280), y: current.y / doc.height * (value === "portrait" ? 1200 : 720) })) })); }} portal />{editor.doc.background && <EditorAction label={t("dialogue.clearBackground")} onClick={() => editor.change(doc => ({ ...doc, background: "" }))} />}</EditorGroup>
       <EditorGroup title={t("dialogue.layers", { count: editor.doc.layers.length })}>
-        <div className="space-y-1">{editor.doc.layers.map((current, index) => <button type="button" key={current.id} data-dialogue-select={current.id} aria-pressed={layer?.id === current.id} onClick={() => editor.select(current.id)} title={current.text} className={`block w-full truncate rounded-md border px-2 py-1.5 text-left text-xs focus-visible:ring-2 focus-visible:ring-ring ${layer?.id === current.id ? "border-accent-stroke bg-accent-soft" : "border-border hover:bg-muted"}`}>#{index + 1} {current.text || templateText(templates.find(template => template.id === current.templateId) ?? templates[0], "name")}</button>)}</div>
+        <div className="space-y-1">{editor.doc.layers.map((current, index) => <HoverTip key={current.id} asChild layer="window" label={(current.text) ?? ""}><button type="button" key={current.id} data-dialogue-select={current.id} aria-pressed={layer?.id === current.id} onClick={() => editor.select(current.id)} className={`block w-full truncate rounded-md border px-2 py-1.5 text-left text-xs focus-visible:ring-2 focus-visible:ring-ring ${layer?.id === current.id ? "border-accent-stroke bg-accent-soft" : "border-border hover:bg-muted"}`}>#{index + 1} {current.text || templateText(templates.find(template => template.id === current.templateId) ?? templates[0], "name")}</button></HoverTip>)}</div>
       </EditorGroup>
       {layer && item ? <LayerProperties key={layer.id} layer={layer} item={item} editing={editor.editing} onEdit={() => editor.editText(layer.id)} onDone={() => editor.select(layer.id)} onPatch={patch} onRemove={editor.remove} /> : <EditorPlaceholder state="empty" message={t("dialogue.noSelection")} />}
     </div>

@@ -1,5 +1,5 @@
 /** Move local model folders through validated IPC; persist configured paths first and translate stable native errors. */
-import { LocalModelBatchRequestSchema, MoveModelCategoryRequestSchema, type LocalModelBatchRequest, type MoveModelCategoryRequest } from "@illusion-realm/shared";
+import { DeleteLocalModelFolderRequestSchema, type DeleteLocalModelFolderRequest, CreateLocalModelFolderRequestSchema, type CreateLocalModelFolderRequest, LocalModelBatchRequestSchema, MoveModelCategoryRequestSchema, type LocalModelBatchRequest, type MoveModelCategoryRequest } from "@illusion-realm/shared";
 import { t } from "@/i18n";
 import { getModelDownloadAPI } from "@/utils/electronBridge";
 import { unwrapIpc } from "@/utils/ipcResult";
@@ -36,3 +36,30 @@ export async function operateLocalModels(request: LocalModelBatchRequest) {
   await flushUserDataSave();
   return unwrapIpc(await api.operateLocalModels(request));
 }
+
+/** 读取真实目录，补足模型扫描索引里没有的空文件夹。 */
+export async function listLocalModelFolders() {
+  const api = getModelDownloadAPI();
+  if (typeof api.listLocalModelFolders !== "function") throw new Error("desktop");
+  await flushUserDataSave();
+  return unwrapIpc(await api.listLocalModelFolders());
+}
+export async function createLocalModelFolder(request: CreateLocalModelFolderRequest) {
+  const input = CreateLocalModelFolderRequestSchema.safeParse(request);
+  if (!input.success) throw new Error("invalid");
+  const api = getModelDownloadAPI();
+  if (typeof api.createLocalModelFolder !== "function") throw new Error("desktop");
+  await flushUserDataSave();
+  return unwrapIpc(await api.createLocalModelFolder(input.data));
+}
+
+/** 仅在确认卡片批准后调用，保存最新模型根再交给桌面端。 */
+export async function deleteLocalModelFolder(request: DeleteLocalModelFolderRequest) {
+  const input = DeleteLocalModelFolderRequestSchema.safeParse(request);
+  if (!input.success) throw new Error("invalid");
+  const api = getModelDownloadAPI();
+  if (typeof api.deleteLocalModelFolder !== "function") throw new Error("desktop");
+  await flushUserDataSave();
+  return unwrapIpc(await api.deleteLocalModelFolder(input.data));
+}
+

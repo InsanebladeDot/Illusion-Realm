@@ -1,4 +1,6 @@
 "use client";
+import { HoverTip } from "@/components/hover-tip";
+
 
 import { useEffect, useId, useRef } from "react";
 import { Copy, Maximize2, X } from "lucide-react";
@@ -20,14 +22,14 @@ export function MetaFieldActions({ mode, hasJson, label, onModeChange, onCopy, o
   const buttonClass = "inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-primary";
   return <div className="flex flex-wrap items-center gap-1">
     <div role="group" aria-label={t("inspect.metaField.viewMode")} className="inline-flex rounded-md border border-border p-0.5">
-      {(["raw", "json"] as const).map(value => <button key={value} type="button" data-meta-view={value} aria-pressed={mode === value}
-        disabled={value === "json" && !hasJson} title={value === "json" && !hasJson ? t("inspect.metaField.notJsonHint") : undefined}
+      {(["raw", "json"] as const).map(value => <HoverTip key={value} asChild layer="window" label={(value === "json" && !hasJson ? t("inspect.metaField.notJsonHint") : undefined) ?? ""}><button key={value} type="button" data-meta-view={value} aria-pressed={mode === value}
+        disabled={value === "json" && !hasJson}
         onClick={() => onModeChange(value)} className={cn("rounded px-2 py-1 text-xs focus-visible:outline-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-40", mode === value ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-accent")}>
         {t(value === "raw" ? "inspect.metaField.rawView" : "inspect.metaField.jsonView")}
-      </button>)}
+      </button></HoverTip>)}
     </div>
-    <button type="button" data-meta-copy title={t("inspect.metaField.copyLabel", { key: label })} aria-label={t("inspect.metaField.copyLabel", { key: label })} onClick={onCopy} className={buttonClass}><Copy className="h-3.5 w-3.5" /></button>
-    {onExpand && <button type="button" data-meta-expand title={t("inspect.metaField.expandLabel", { key: label })} aria-label={t("inspect.metaField.expandLabel", { key: label })} onClick={onExpand} className={buttonClass}><Maximize2 className="h-3.5 w-3.5" /></button>}
+    <HoverTip asChild layer="window" label={(t("inspect.metaField.copyLabel", { key: label })) ?? ""}><button type="button" data-meta-copy aria-label={t("inspect.metaField.copyLabel", { key: label })} onClick={onCopy} className={buttonClass}><Copy className="h-3.5 w-3.5" /></button></HoverTip>
+    {onExpand && <HoverTip asChild layer="window" label={(t("inspect.metaField.expandLabel", { key: label })) ?? ""}><button type="button" data-meta-expand aria-label={t("inspect.metaField.expandLabel", { key: label })} onClick={onExpand} className={buttonClass}><Maximize2 className="h-3.5 w-3.5" /></button></HoverTip>}
   </div>;
 }
 
@@ -60,7 +62,7 @@ export function MetaFieldDialog({ text, onClose, ...actions }: MetaFieldDialogPr
       <header className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b border-border p-3 sm:p-4">
         <h2 id={id} className="min-w-0 break-all text-sm font-medium">{actions.label}</h2>
         <div className="flex flex-wrap items-center gap-2"><MetaFieldActions {...actions} />
-          <button type="button" data-meta-close aria-label={t("common.close")} title={t("common.close")} onClick={onClose} className="rounded-md p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground"><X className="h-4 w-4" /></button>
+          <HoverTip asChild layer="window" label={(t("common.close")) ?? ""}><button type="button" data-meta-close aria-label={t("common.close")} onClick={onClose} className="rounded-md p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground"><X className="h-4 w-4" /></button></HoverTip>
         </div>
       </header>
       <div className="flex min-h-0 flex-1 flex-col p-3 sm:p-4"><MetaFieldContent text={text} mode={actions.mode} /></div>

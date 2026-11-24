@@ -20,9 +20,8 @@ const { EXTENSIONS } = require("./project-validation");
 // 不会因为找不到标记就默认该目录可供当前画布接管。
 // 若用户只删某个媒体文件，预览报缺失但其他资产仍可正常读取。
 // 若用户删除整个项目目录，新的导入不会悄悄重建并吞掉错误。
-// 当前没有节点删除后自动清理资产的 GC。
-// 这保护撤销、剪贴板与旧草稿可能仍需要的内容。
-// 因此长期使用可能留下无引用副本，实施记录应说明容量边界。
+// 只登记软件实际创建的副本；普通复用本工程路径不把未知文件升级为可回收资源。
+// 回收由保存关闭后的独立服务处理，当前工作区的撤销与剪贴板仍能使用素材。
 // 工程导出不打包这些孤儿文件，只按当前节点引用收集。
 // 项目包重新导入会创建新归属，旧目录保持不变。
 // 这是用户可安全继续使用的独立副本，不是原目录的快捷方式。
@@ -50,6 +49,8 @@ const DIRECTORIES = { image: "Picture", video: "video", audio: "Audio" };
 // 不把标题内容用进 shell 命令，因此没有命令拼接步骤。
 function safeName(name) {
   const clean = name.replace(/[<>:"/\\|?*\x00-\x1f]/g, "_").replace(/[. ]+$/, "").trim().slice(0, 70);
+  // temp留给资源回收；新工程换安全目录名，不移动用户已有同名目录。
+  if (clean.toLowerCase() === "temp") return "temp-canvas";
   return !clean || /^(con|prn|aux|nul|com[1-9]|lpt[1-9])(\.|$)/i.test(clean) ? "Canvas" : clean;
 }
 
@@ -120,7 +121,7 @@ async function allocateWorkspace(root, request) {
 // 新对象中的 path 指向受管副本，移动外部原文件不破坏这张卡。
 // 受管目录本身若被用户手动删除，卡片仍会显示可重试错误。
 // 普通导入不先计算全文哈希，避免为了看首帧多扫描整个视频。
-// 同一来源再次导入会有新副本，当前没有全局内容去重仓库。
+// 外部来源再次导入仍有新副本；已在本工程目录的来源只复用路径，不扫描内容哈希。
 // 重名不等于重复内容，不能用基本名合并用户的不同版本。
 // 节点复制则只复用受管文件地址，不触发这次磁盘复制。
 // 删除节点不立即回收文件，因为撤销栈可能仍引用它。
@@ -135,6 +136,8 @@ async function copyAsset(directory, media) {
   const targetDirectory = path.join(directory, DIRECTORIES[media.kind]);
   await fs.mkdir(targetDirectory, { recursive: true });
   if ((await fs.lstat(targetDirectory)).isSymbolicLink()) throw new Error("canvas-invalid-directory");
+  // 本工程内已有文件只复用地址；是否受管由调用方的明确来源决定。
+  if (!((await fs.lstat(media.path)).isSymbolicLink()) && path.dirname(source) === await fs.realpath(targetDirectory)) return { ...media, path: source, size: info.size };
   const target = path.join(targetDirectory, `${randomUUID()}-${safeName(path.basename(media.name, path.extname(media.name)))}.${extension}`);
   try { await fs.copyFile(source, target, constants.COPYFILE_EXCL); }
   catch { await fs.rm(target, { force: true }); throw new Error("canvas-copy-failed"); }
@@ -227,7 +230,7 @@ async function isManagedSource(source) {
 /** @param {string} root @param {import('@illusion-realm/shared').CanvasImportMediaRequest} request */
 // 目录归属先检查，失败时不逐项猜测其他目录继续写。
 // 同一批成功与失败分开登记，错误文件不会撤销其他真实复制。
-// media 数组只放已完成复制的结果。
+// media 数组只放已完成复制或已确认本工程原文件的结果。
 // rejected 只回基本名，完整系统路径不进入批量提示。
 // 顺序处理避免二百个大视频同时竞争磁盘与文件句柄。
 // 这不是并行解码队列，预览加载由节点自己的媒体元素负责。
@@ -239,15 +242,36 @@ async function isManagedSource(source) {
 // 导入没有自动上传能力，网络状态不会改变本地复制规则。
 async function importAssets(root, request) {
   const workspace = await allocateWorkspace(root, request);
+  const outputDirectories = await workspaceOutputs(path.join(root, workspace.folder));
   const media = [];
   const rejected = [];
+  const managed = [];
   for (const file of request.files) {
     // 模式缺省永远复制，显式 move 也只迁移视频，其他类型仍保留原文件。
     // 每项完成才登记新地址；被拒绝的移动不会在图上留下一个失效来源。
     // 同批部分成功保留，拒绝项回基本名，由现有反馈明确列出。
-    try { media.push(await (request.mode === "move" && file.kind === "video" ? moveAsset : copyAsset)(path.join(root, workspace.folder), file)); }
+    try {
+      const result = await (request.mode === "move" && file.kind === "video" ? moveAsset : copyAsset)(path.join(root, workspace.folder), file);
+      const key = require('./resource-recycle').key;
+      if (request.origin === 'generated' || key(result.path) !== key(file.path)) managed.push(result);
+      media.push(result);
+    }
     catch { rejected.push(file.name); }
   }
-  return { workspace, media, rejected };
+  await require('./resource-ledger').registerResources(root, workspace, managed, request.origin ?? 'imported');
+  return { workspace, media, rejected, outputDirectories };
+}
+
+/** 为三类媒体准备同一工程内的目录；链接目录拒绝写入，不能借路径重定向到工程外。 */
+/** @param {string} directory */
+async function workspaceOutputs(directory) {
+  const outputDirectories = { image: "", video: "", audio: "" };
+  for (const kind of /** @type {const} */ (["image", "video", "audio"])) {
+    const target = path.join(directory, DIRECTORIES[kind]);
+    await fs.mkdir(target, { recursive: true });
+    if ((await fs.lstat(target)).isSymbolicLink()) throw new Error("canvas-invalid-directory");
+    outputDirectories[kind] = target;
+  }
+  return outputDirectories;
 }
 module.exports = { allocateWorkspace, copyAsset, importAssets, DIRECTORIES };

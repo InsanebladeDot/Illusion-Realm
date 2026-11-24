@@ -1,4 +1,6 @@
 "use client";
+import { HoverTip } from "@/components/hover-tip";
+
 
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode, type RefObject } from "react";
 import { Minus, MoveDiagonal2, MoveHorizontal, MoveVertical, Plus, Scan } from "lucide-react";
@@ -48,9 +50,9 @@ function ResizeHandles({ size, scale, onResize }: Pick<CanvasStageProps, "size" 
   return <>{(["width", "height", "both"] as const).map(axis => {
     const Icon = axis === "width" ? MoveHorizontal : axis === "height" ? MoveVertical : MoveDiagonal2;
     const position = axis === "width" ? "right-0 top-1/2 -translate-y-1/2 cursor-ew-resize" : axis === "height" ? "bottom-0 left-1/2 -translate-x-1/2 cursor-ns-resize" : "bottom-0 right-0 cursor-nwse-resize";
-    return <button key={axis} type="button" data-resize-page={axis} aria-label={t(`toolBox.comic.pageSize.drag.${axis}`)} title={t(`toolBox.comic.pageSize.drag.${axis}`)}
+    return <HoverTip key={axis} asChild layer="window" label={(t(`toolBox.comic.pageSize.drag.${axis}`)) ?? ""}><button key={axis} type="button" data-resize-page={axis} aria-label={t(`toolBox.comic.pageSize.drag.${axis}`)}
       className={`absolute z-30 flex h-7 w-7 touch-none items-center justify-center rounded border border-primary bg-background text-primary shadow-sm ${position}`}
-      onPointerDown={event => begin(event, axis)} onPointerMove={move} onPointerUp={() => { gesture.current = null; }} onPointerCancel={() => { gesture.current = null; }} onLostPointerCapture={() => { gesture.current = null; }}><Icon size={15} /></button>;
+      onPointerDown={event => begin(event, axis)} onPointerMove={move} onPointerUp={() => { gesture.current = null; }} onPointerCancel={() => { gesture.current = null; }} onLostPointerCapture={() => { gesture.current = null; }}><Icon size={15} /></button></HoverTip>;
   })}</>;
 }
 
@@ -59,10 +61,10 @@ function ZoomControls({ scale, fit, onZoom, onFit }: { scale: number; fit: boole
   const buttonClass = "flex h-8 w-8 shrink-0 items-center justify-center rounded border border-border bg-background text-muted-foreground disabled:opacity-40";
   return <div data-comic-zoom className="flex shrink-0 items-center justify-center gap-1 border-t border-border bg-background px-1 py-1">
     <span className="mr-1 text-xs text-muted-foreground">{t("toolBox.comic.zoom.title")}</span>
-    <button type="button" data-zoom-out title={t("toolBox.comic.zoom.out")} aria-label={t("toolBox.comic.zoom.out")} disabled={scale <= 0.01} onClick={() => onZoom(Math.max(0.01, scale / 1.25))} className={buttonClass}><Minus size={16} /></button>
-    <button type="button" data-zoom-actual title={t("toolBox.comic.zoom.actual")} aria-label={t("toolBox.comic.zoom.actual")} onClick={() => onZoom(1)} className="h-8 w-12 shrink-0 rounded text-xs tabular-nums text-foreground hover:bg-muted">{Math.round(scale * 1000) / 10}%</button>
-    <button type="button" data-zoom-in title={t("toolBox.comic.zoom.in")} aria-label={t("toolBox.comic.zoom.in")} disabled={scale >= 4} onClick={() => onZoom(Math.min(4, scale * 1.25))} className={buttonClass}><Plus size={16} /></button>
-    <button type="button" data-zoom-fit title={t("toolBox.comic.pageSize.fit")} aria-label={t("toolBox.comic.pageSize.fit")} aria-pressed={fit} onClick={onFit} className={`${buttonClass} ${fit ? "!border-primary !text-primary" : ""}`}><Scan size={16} /></button>
+    <HoverTip asChild layer="window" label={(t("toolBox.comic.zoom.out")) ?? ""}><button type="button" data-zoom-out aria-label={t("toolBox.comic.zoom.out")} disabled={scale <= 0.01} onClick={() => onZoom(Math.max(0.01, scale / 1.25))} className={buttonClass}><Minus size={16} /></button></HoverTip>
+    <HoverTip asChild layer="window" label={(t("toolBox.comic.zoom.actual")) ?? ""}><button type="button" data-zoom-actual aria-label={t("toolBox.comic.zoom.actual")} onClick={() => onZoom(1)} className="h-8 w-12 shrink-0 rounded text-xs tabular-nums text-foreground hover:bg-muted">{Math.round(scale * 1000) / 10}%</button></HoverTip>
+    <HoverTip asChild layer="window" label={(t("toolBox.comic.zoom.in")) ?? ""}><button type="button" data-zoom-in aria-label={t("toolBox.comic.zoom.in")} disabled={scale >= 4} onClick={() => onZoom(Math.min(4, scale * 1.25))} className={buttonClass}><Plus size={16} /></button></HoverTip>
+    <HoverTip asChild layer="window" label={(t("toolBox.comic.pageSize.fit")) ?? ""}><button type="button" data-zoom-fit aria-label={t("toolBox.comic.pageSize.fit")} aria-pressed={fit} onClick={onFit} className={`${buttonClass} ${fit ? "!border-primary !text-primary" : ""}`}><Scan size={16} /></button></HoverTip>
   </div>;
 }
 

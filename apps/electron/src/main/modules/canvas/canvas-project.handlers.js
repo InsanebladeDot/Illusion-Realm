@@ -7,6 +7,7 @@ const { registerHandle } = require("../../ipc/result");
 const { getDefaultUserDataPath } = require("../../storage/user-data-paths");
 const validation = require("./project-validation");
 const { importAssets } = require("./project-assets");
+const { registerReferenceVoiceHandlers } = require("./reference-voice.handlers");
 const { writeArchive, readArchive } = require("./project-archive");
 
 // 文件异常通常带完整路径；跨边界只返回稳定业务错误，日志不输出用户目录。
@@ -24,7 +25,11 @@ const { writeArchive, readArchive } = require("./project-archive");
 // 不能在这里再次套 success，否则会变成两层 IpcResult。
 async function projectBoundary(action) {
   try { return await action(); }
-  catch { throw new Error("canvas-project-operation-failed"); }
+  catch (error) {
+    // 只保留固定工程/数据库类别供界面解释，原始路径和系统错误仍不跨进程。
+    if (error instanceof Error && ["canvas-resource-in-use", "canvas-resource-identity-changed", "canvas-delete-open-sessions", "canvas-delete-shared-assets", "canvas-delete-files-failed", "canvas-delete-reference-check-failed", "canvas-workspace-unavailable", "SQLITE_CONSTRAINT", "SQLITE_BUSY", "SQLITE_OUTCOME_UNKNOWN"].includes(error.message)) throw error;
+    throw new Error("canvas-project-operation-failed");
+  }
 }
 
 // 不使用渲染层传来的窗口编号，选择框始终归真正的调用窗口。
@@ -81,8 +86,16 @@ function registerCanvasProjectHandlers(options = {}) {
 // 新增通道接入汇总注册后，preload 才能实际 invoke 到 handler。
 // 仅添加类型声明不能算系统能力已经接通。
 // 最终回归必须使用生产 preload、生产协议和静态导出页面。
-  const root = options.root || path.dirname(getDefaultUserDataPath());
-  registerHandle(IPC_CHANNELS.CANVAS_IMPORT_MEDIA, (_event, request) => projectBoundary(() => importAssets(root, request)), args => args.length === 1 && validation.importRequest(args[0]) ? null : "canvas-invalid-import");
+  const base = options.root || path.dirname(getDefaultUserDataPath());
+  const root = path.join(base, "Infinite Canvas");
+  const library = require("./canvas-library").createCanvasLibrary(base, options.root ? undefined : readLegacyCanvas);
+  registerResourceHandlers(library);
+  // 原网页只能递交媒体正文，工程根目录和系统框归属仍由主进程决定。
+  // 取消另存为返回 null，不能被渲染层当成已经导出。
+  // 这里继续用统一参数门卫与错误边界，不暴露通用文件写入能力。
+  registerHandle(IPC_CHANNELS.CANVAS_COMPOSITION_MEDIA, (event, request) => projectBoundary(() => library.run(() => require("./composition-media").saveMedia(root, request, event.sender))), args => args.length === 1 && require("./composition-validation").mediaRequest(args[0]) ? null : "composition-invalid-media");
+  registerHandle(IPC_CHANNELS.CANVAS_IMPORT_MEDIA, (_event, request) => projectBoundary(() => library.run(() => importAssets(root, request))), args => args.length === 1 && validation.importRequest(args[0]) ? null : "canvas-invalid-import");
+  registerReferenceVoiceHandlers(base);
   registerHandle(IPC_CHANNELS.CANVAS_EXPORT_PROJECT, async (event, document) => {
     const owner = BrowserWindow.fromWebContents(event.sender);
     if (!owner) throw new Error("canvas-window-unavailable");
@@ -96,7 +109,26 @@ function registerCanvasProjectHandlers(options = {}) {
     const owner = BrowserWindow.fromWebContents(event.sender);
     if (!owner) throw new Error("canvas-window-unavailable");
     const result = await dialog.showOpenDialog(owner, { properties: ["openFile"], filters: [{ name: "Illusion Realm Canvas", extensions: ["ircanvas"] }] });
-    return result.canceled || !result.filePaths[0] ? null : projectBoundary(() => readArchive(result.filePaths[0], root));
+    return result.canceled || !result.filePaths[0] ? null : projectBoundary(() => library.run(() => readArchive(result.filePaths[0], root)));
   }, args => args.length === 0 ? null : "canvas-invalid-open");
 }
+/** 旧草稿只读一次；校验失败保留旧数据，由现有工程错误边界报告。 */
+async function readLegacyCanvas() {
+  const result = await require("../../storage/sqlite/user-document").readPersistedUserData();
+  const canvas = result.data?.infiniteCanvas;
+  if (canvas !== undefined && !validation.document(canvas)) throw new Error("canvas-invalid-document");
+  return /** @type {import("@illusion-realm/shared").UserDataInfiniteCanvas|undefined} */ (canvas);
+}
+
+/** @param {ReturnType<import('./canvas-library').createCanvasLibrary>} library */
+function registerResourceHandlers(library) {
+  const resources = require('./resource-lifecycle');
+  const bindOwner = resources.bindResourceOwners(library);
+  resources.startResourceCleanup(library);
+  registerHandle(IPC_CHANNELS.CANVAS_LIBRARY, (event, request) => {
+    bindOwner(event.sender);
+    return projectBoundary(() => library.request(request, event.sender.id));
+  }, args => args.length === 1 && require("./library-validation").request(args[0]) ? null : "canvas-invalid-library-request");
+}
+
 module.exports = { registerCanvasProjectHandlers };

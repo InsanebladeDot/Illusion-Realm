@@ -85,12 +85,12 @@ export type VideoGenerateInput = {
   resolution?: VideoResolutionSettings;
 };
 
-export function getVideoWorkflowTemplate(workflowId: string): ComfyApiPrompt {
+export function getVideoWorkflowTemplate(workflowId: string, retainTemplateLoras = false): ComfyApiPrompt {
   const base = VIDEO_WORKFLOWS[workflowId];
   if (!base) throw new Error(t("errors.videoWorkflow.unknownWorkflow", { workflowId }));
   const template = cloneComfyPrompt(base);
   // 视频不替用户预选 LoRA；移除节点时会把调度器和引导器重新接回 UNet。
-  if (isMinimaxWorkflow(workflowId)) applyVideoLoras(template, [], workflowId);
+  if (isMinimaxWorkflow(workflowId) && !retainTemplateLoras) applyVideoLoras(template, [], workflowId);
   return template;
 }
 function requiredNode(prompt: ComfyApiPrompt, classType: string, titleKeyword?: string): NonNullable<NodeRef> {

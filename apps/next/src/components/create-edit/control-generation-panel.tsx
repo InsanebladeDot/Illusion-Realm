@@ -10,6 +10,8 @@ import { Sparkles, Square, Download } from 'lucide-react';
 // 父级选择参数或分类视图，公共生成 footer 始终保留可用。
 // 默认省略插槽时边缘绘画继续呈现原参数区。
 import type { ReactNode } from 'react';
+import { WorkflowModelNotice } from "@/components/workflow-model-notice";
+import { useEditModelReadiness } from "@/hooks/use-edit-model-readiness";
 import { RandomSeedButton } from "@/components/random-seed-button";
 import { useTranslation } from '@/i18n';
 import type { AnimaEditState } from '@/hooks/use-anima-edit';
@@ -57,7 +59,9 @@ export function ControlGenerationPanel({ editor, mode, disabled, onGenerate, wid
   // queued 词条属于公共任务命名空间，其他阶段属于原编辑词条。
   // result 只有正式保存器成功返回才存在，下载不以 busy=false 作为成功条件。
   const { t } = useTranslation(), adapted = { ...editor, settings: { ...editor.settings, controlMode: mode } };
-  return <form data-control-form={mode} className="flex min-h-0 min-w-0 flex-col rounded-xl border border-border/70 bg-background/70" onSubmit={event => { event.preventDefault(); void onGenerate(); }}>
+  const readiness = useEditModelReadiness(adapted.settings);
+  return <form data-control-form={mode} className="flex min-h-0 min-w-0 flex-col rounded-xl border border-border/70 bg-background/70" onSubmit={event => { event.preventDefault(); if (!readiness.blocked) void onGenerate(); }}>
+    <WorkflowModelNotice readiness={readiness} />
     {/* side：滚动范围限于参数内容，桌面按钮始终留在可见 footer。 */}
     {/* 模型弹窗由原组件创建，容器断点不复制第二套模型菜单。 */}
     {/* 指令和负面词复用 PromptInput，保留已有提示词助手操作。 */}
@@ -75,7 +79,7 @@ export function ControlGenerationPanel({ editor, mode, disabled, onGenerate, wid
     {/* 错误以 alert 语义暴露，正常阶段以 status 语义更新。 */}
     {/* 右侧表单不自行上传，所有请求由当前工具准备后交给公共队列。 */}
     {/* 界面：与公共任务卡片一致的阶段、生成和停止。 */}
-    <footer className="space-y-3 border-t border-border/70 p-4"><p data-control-status role={editor.error ? 'alert' : 'status'} className="break-words text-xs text-muted-foreground">{editor.error || (editor.phase === 'queued' ? t('create.generationTasks.status.queued') : t(`create.animaEdit.phase.${editor.phase}`))}</p><div className="flex min-w-0 items-center gap-2"><button data-control-run type="submit" disabled={disabled || editor.busy || editor.importing} className="create-generate-button flex h-11 min-w-0 flex-1 items-center justify-center gap-2 rounded-xl px-4 text-sm font-semibold text-white disabled:opacity-40"><Sparkles className="h-4 w-4" /><span className="flex-1">{t(mode === 'edge' ? 'create.maskStudio.runEdge' : 'create.animaEdit.runInpaint')}</span><span className="border-l border-white/35 pl-3 text-xs">× 1</span></button><RandomSeedButton random={editor.seedMode === 'random'} disabled={editor.busy || editor.importing} onEnable={() => editor.patch({ seedMode: 'random' })} /></div>{editor.busy && <button type="button" data-control-stop disabled={editor.phase === 'saving' || editor.phase === 'stopping'} onClick={() => { void editor.stop(); }} className="flex items-center gap-2 text-xs text-destructive disabled:opacity-40"><Square className="h-3 w-3" />{t('create.animaEdit.stop')}</button>}</footer>
+    <footer className="space-y-3 border-t border-border/70 p-4"><p data-control-status role={editor.error ? 'alert' : 'status'} className="break-words text-xs text-muted-foreground">{editor.error || (editor.phase === 'queued' ? t('create.generationTasks.status.queued') : t(`create.animaEdit.phase.${editor.phase}`))}</p><div className="flex min-w-0 items-center gap-2"><button data-control-run type="submit" disabled={disabled || editor.busy || editor.importing || readiness.blocked} className="create-generate-button flex h-11 min-w-0 flex-1 items-center justify-center gap-2 rounded-xl px-4 text-sm font-semibold text-white disabled:opacity-40"><Sparkles className="h-4 w-4" /><span className="flex-1">{t(mode === 'edge' ? 'create.maskStudio.runEdge' : 'create.animaEdit.runInpaint')}</span></button><RandomSeedButton random={editor.seedMode === 'random'} disabled={editor.busy || editor.importing} onEnable={() => editor.patch({ seedMode: 'random' })} /></div>{editor.busy && <button type="button" data-control-stop disabled={editor.phase === 'saving' || editor.phase === 'stopping'} onClick={() => { void editor.stop(); }} className="flex items-center gap-2 text-xs text-destructive disabled:opacity-40"><Square className="h-3 w-3" />{t('create.animaEdit.stop')}</button>}</footer>
     {/* 结果 URL 由编辑 store 管理，这里不在卸载时释放共享资源。 */}
     {/* 查看原图或蒙版不会改变下载对象，按钮始终下载生成结果。 */}
     {/* 无结果时不放演示缩略图，避免把输入图误认成模型输出。 */}

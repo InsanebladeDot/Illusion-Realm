@@ -1,4 +1,6 @@
 "use client";
+import { HoverTip } from "@/components/hover-tip";
+
 
 // 编辑器的最小控件契约：展示由参数决定，项目保存和媒体处理仍归业务侧。
 // 样例与正式宿主引用相同实现，不为状态展示复制另一套按钮和输入框。
@@ -81,9 +83,9 @@ interface EditorActionProps {
 export function EditorAction({ icon: Icon, glyph, label, compact = false, accent = false, appearance = "outlined", onClick, disabledReason, busy = false, pressed, buttonRef, expanded, controls }: EditorActionProps) {
   const { t } = useTranslation(), descriptionId = useId();
   const reason = disabledReason || (busy ? t("toolBox.editorUi.loading") : !onClick ? t("toolBox.editorUi.unavailable") : "");
-  return <span title={reason ? `${label} · ${reason}` : label} className={styles.actionHint}><button ref={buttonRef} type="button" disabled={!!reason || busy} data-editor-action aria-busy={busy || undefined} aria-expanded={expanded} aria-controls={controls} aria-pressed={pressed} aria-label={label} aria-describedby={reason ? descriptionId : undefined} onClick={onClick} className={`${styles.action} ${compact ? styles.iconAction : ""} ${accent ? styles.accentAction : ""} ${appearance === "plain" ? styles.plainAction : ""}`}>
+  return <HoverTip asChild layer="window" label={(reason ? `${label} · ${reason}` : label) ?? ""}><span className={styles.actionHint}><button ref={buttonRef} type="button" disabled={!!reason || busy} data-editor-action aria-busy={busy || undefined} aria-expanded={expanded} aria-controls={controls} aria-pressed={pressed} aria-label={label} aria-describedby={reason ? descriptionId : undefined} onClick={onClick} className={`${styles.action} ${compact ? styles.iconAction : ""} ${accent ? styles.accentAction : ""} ${appearance === "plain" ? styles.plainAction : ""}`}>
     {busy ? <LoaderCircle size={16} className={styles.spinner} aria-hidden="true" /> : Icon && <Icon size={16} aria-hidden="true" />}{glyph}{!compact && label}
-  </button>{reason && <span id={descriptionId} className="sr-only">{reason}</span>}</span>;
+  </button>{reason && <span id={descriptionId} className="sr-only">{reason}</span>}</span></HoverTip>;
 }
 
 // 同一个反馈外壳服务素材行、预览与组件样板，不把加载误画成缺图。
@@ -317,5 +319,5 @@ export function EditorFloatField({ layout = "inline", label, value, unit = "", m
   // onChange再次检查许可，避免脚本派发input绕过浏览器原生readOnly。
   // 双击直接激活当前输入，不新造一个浮层或复制第二个数值草稿控件。
   // disabled在事件边界仍由onCommit复核，锁定不代表获得业务执行权限。
-  return <label className={`${styles.propertyRow} ${layout === "stacked" ? styles.stackedField : ""}`} data-focus-tone={focusTone} title={!onCommit ? disabledReason || t("toolBox.editorUi.unavailable") : editActivation ? activationHint : undefined}><span>{label}</span><span className={styles.fieldBody}><span className={styles.fieldInput}><input inputMode="decimal" disabled={!onCommit} data-editor-mixed={mixed || undefined} placeholder={mixed ? "—" : undefined} onPointerDown={drag.down} onPointerMove={drag.move} onPointerUp={drag.up} onPointerCancel={drag.cancel} onLostPointerCapture={drag.cancel} data-number-scrub={scrub || undefined} readOnly={readOnly} aria-readonly={readOnly || undefined} value={drag.candidate === null ? text : drag.candidate.toFixed(precision)} aria-invalid={error || undefined} aria-describedby={error || !onCommit ? id : undefined} onDoubleClick={() => { if (onCommit && editActivation) setEditing(true); }} onChange={event => { if (readOnly) return; setDraft({ source, text: event.target.value, dirty: true }); setError(false); }} onBlur={blur} onKeyDown={keyDown} /><small>{unit}</small></span>{error ? <span id={id} role="alert" className={styles.fieldError}>{t("toolBox.editorUi.invalidNumber")}</span> : !onCommit && <span id={id} className="sr-only">{disabledReason || t("toolBox.editorUi.unavailable")}</span>}</span></label>;
+  return <HoverTip asChild layer="window" label={(!onCommit ? disabledReason || t("toolBox.editorUi.unavailable") : editActivation ? activationHint : undefined) ?? ""}><label className={`${styles.propertyRow} ${layout === "stacked" ? styles.stackedField : ""}`} data-focus-tone={focusTone}><span>{label}</span><span className={styles.fieldBody}><span className={styles.fieldInput}><input inputMode="decimal" disabled={!onCommit} data-editor-mixed={mixed || undefined} placeholder={mixed ? "—" : undefined} onPointerDown={drag.down} onPointerMove={drag.move} onPointerUp={drag.up} onPointerCancel={drag.cancel} onLostPointerCapture={drag.cancel} data-number-scrub={scrub || undefined} readOnly={readOnly} aria-readonly={readOnly || undefined} value={drag.candidate === null ? text : drag.candidate.toFixed(precision)} aria-invalid={error || undefined} aria-describedby={error || !onCommit ? id : undefined} onDoubleClick={() => { if (onCommit && editActivation) setEditing(true); }} onChange={event => { if (readOnly) return; setDraft({ source, text: event.target.value, dirty: true }); setError(false); }} onBlur={blur} onKeyDown={keyDown} /><small>{unit}</small></span>{error ? <span id={id} role="alert" className={styles.fieldError}>{t("toolBox.editorUi.invalidNumber")}</span> : !onCommit && <span id={id} className="sr-only">{disabledReason || t("toolBox.editorUi.unavailable")}</span>}</span></label></HoverTip>;
 }

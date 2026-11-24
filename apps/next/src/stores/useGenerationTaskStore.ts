@@ -6,13 +6,14 @@ import { create } from "zustand";
 // 只导入模型类型，不把工作流节点或图像字节放入卡片状态。
 import type { GenerationModel } from "@/schemas/generation-history.schema";
 import { recordGenerationTask } from "./use-generation-history-store";
+import type { GenerationExecution } from "@/utils/generation-execution-time";
 
 export type GenerationTaskStatus = "queued" | "generating" | "saving" | "cancelling" | "cancelled" | "completed" | "failed";
 export interface GenerationTask {
   // 省略表示历史图片任务，避免改变所有已有图片和编辑调用方。
   // 音频卡片不将播放地址当成图片缩略图，也不展示 32×32 的内部画布尺寸。
   // 这里只描述结果媒介，取消、失败和完成仍使用同一任务状态机。
-  mediaKind?: 'image' | 'audio';
+  mediaKind?: 'image' | 'audio' | 'video';
   id: string;
   status: GenerationTaskStatus;
   prompt: string;
@@ -27,6 +28,8 @@ export interface GenerationTask {
   // 老内存夹具没有这些值时展示未知，不按提交时间推算生成耗时。
   startedAt?: number;
   finishedAt?: number;
+  // 仅用于当前任务卡的服务端耗时；本地起止仍保留给任务生命周期和账本。
+  executions?: GenerationExecution[];
   // 由已解析工作流填入；只有对应结果真正保存后才计使用次数。
   // LoRA 为零权重时在提取阶段排除，VAE/CLIP 同样不进入此快照。
   models?: GenerationModel[];
@@ -43,6 +46,7 @@ interface GenerationTaskState {
   tasks: GenerationTask[];
   add: (task: GenerationTask) => void;
   update: (id: string, patch: Partial<GenerationTask>) => void;
+  recordExecution: (id: string, execution: GenerationExecution) => void;
 }
 export function isGenerationTaskActive(task: GenerationTask): boolean {
   return !["completed", "failed", "cancelled"].includes(task.status);
@@ -90,6 +94,12 @@ function patchTask(task: GenerationTask, patch: Partial<GenerationTask>): Genera
 }
 export const useGenerationTaskStore = create<GenerationTaskState>((set) => ({
   tasks: [],
+  recordExecution: (id, execution) => set((state) => ({
+    tasks: state.tasks.map(task => task.id !== id ? task : {
+      ...task,
+      executions: [...(task.executions ?? []).filter(item => item.id !== execution.id), execution],
+    }),
+  })),
   add: (task) => set((state) => {
     const finished = state.tasks.filter((item) => !isGenerationTaskActive(item));
     const removed = new Set(finished.slice(0, Math.max(0, finished.length - 39)));

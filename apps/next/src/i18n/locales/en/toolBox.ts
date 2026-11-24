@@ -535,13 +535,18 @@ export const toolBox = {
     localChoose: "Select a local model to view its cover and file versions",
     // 英文摘要提示也覆盖改名模型，不再沿用“same filename”的旧含义。
     // saved 与 not read again 区分已有记录和本轮重新校验，边界与中文保持一致。
-    localFound: "Matching local file",
-    localMatchHint: "The full SHA256 saved in the local source JSON matches this Civitai file; the model has not been read again for verification",
-    // names 使用复数，指目录标题和文件主干同时满足，不是仅下载文件同名。
-    // stems 强调完整去后缀主干，不能让英文读者把它理解成宽松 prefix 匹配。
-    // 英文同样注明未验证内容，语言切换不能改变用户对证据强弱的理解。
-    localNameFound: "Matching local names",
-    localNameMatchHint: "The local folder matches the Civitai title and the full filename stems match; file contents have not been verified",
+    localFound: "Matched {versions}",
+    hashStart: "Start calculation",
+    hashStop: "Stop remaining",
+    hashStatus: {
+      waiting: "Pending / stopped", running: "Calculating", saved: "Calculated and saved", existing: "Full hash already present; skipped",
+      invalid: "File unavailable or outside model folders", metadataInvalid: "Invalid or unsupported hash JSON; preserved",
+      changed: "File changed during calculation; retry", busy: "Folder in use; retry later", timeout: "Calculation timed out; retry", io: "Read or save failed; check permissions",
+    },
+    hashLocal: "Load SHA256",
+    hashFailed: "Failed to load SHA256",
+    hashLocalHint: "Calculate missing SHA256 locally into a .sha256.json beside each model, keeping source metadata. Stopping or closing finishes the current file first.",
+    localMatchHint: "Versions with a SHA256 match to a local file: {versions}",
     categoryMove: {
       acknowledge: "I understand: the entire model folder, including all versions, covers and other files, will be moved.",
       title: "Change category", move: "Move to this category", moving: "Moving…", done: "Model category updated",
@@ -581,7 +586,19 @@ export const toolBox = {
     "showAllDescription": "Show all", "collapseDescription": "Collapse",
     "words": "Trigger words", "about": "About this model", "noDescription": "No description provided.",
     "download": "Download model", "downloadHint": "Save to your configured model folder, choose a category and change the cover.",
+    visibility: {
+      hide: "Hide models", count: "{count} hidden models", restore: "Show models", back: "Back to local models",
+      empty: "No hidden models", hiddenName: "Hidden model", saveFailed: "The model visibility settings have not been saved yet.",
+    },
+    folders: {
+      create: "New folder", name: "Folder name", confirm: "Create",
+      deleteTitle: "Delete folder",
+      deleteDescription: "The folder “{folder}” and all of its files and subfolders will be moved to the Recycle Bin.",
+      deleteConfirm: "Delete folder",
+    },
     "transfer": {
+      familyFolder: "Save directly in the base model folder",
+      queued: "Waiting for a download slot",
       "centerTitle": "Downloads", "openCenter": "View download progress", "empty": "No downloads yet",
       dismiss: "Remove download record and keep model and cover files",
       "back": "Back to model details", "start": "Start download", "starting": "Starting…",

@@ -57,7 +57,8 @@ function toIpcError(error) {
       : undefined;
 
   let code = CODES.INTERNAL;
-  if (typeof rawCode === "string" && /^COMFY_(CANCELLED|DISCONNECTED|STOP_FAILED|TIMEOUT|EXECUTION_FAILED)$/.test(rawCode)) code = rawCode;
+  // 只放行明确登记的诊断。来自其他服务的任意错误码继续按通用错误返回。
+  if (typeof rawCode === "string" && /^COMFY_(CANCELLED|DISCONNECTED|STOP_FAILED|TIMEOUT|EXECUTION_FAILED|UNET_NOT_FOUND|UNET_LOAD_FAILED)$/.test(rawCode)) code = rawCode;
   else if (rawCode === "ENOENT") code = CODES.NOT_FOUND;
   else if (rawCode === "EACCES" || rawCode === "EPERM") code = CODES.PERMISSION_DENIED;
   else if (typeof rawCode === "string" && /^E[A-Z]+$/.test(rawCode)) code = CODES.IO_ERROR;

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { useAgentProviders } from "@/hooks/use-agent-providers";
 import { usePathname } from "next/navigation";
 import { Sidebar } from "@/components/Sidebar";
 import { MobileBottomNav } from "@/components/MobileBottomNav";
@@ -10,7 +11,6 @@ import { useSettingsStore } from "@/stores/useSettingsStore";
 import { useProfileStore } from "@/stores/useProfileStore";
 import { useCreateFormStore } from "@/stores/useCreateFormStore";
 import { sanitizePersistedFolderIds, useHistoryFolderStore } from "@/stores/useHistoryFolderStore";
-import { useQuickPhraseStore } from "@/stores/useQuickPhraseStore";
 import { useCustomCategoryStore } from "@/stores/useCustomCategoryStore";
 import { useExifToolStore } from "@/stores/useExifToolStore";
 import { useVideoToolStore } from "@/stores/useVideoToolStore";
@@ -127,6 +127,7 @@ export function AppShell({
   children: React.ReactNode;
   fillViewport?: boolean;
 }) {
+  useAgentProviders();
   const expanded = useSidebarStore((state) => state.expanded);
   /**
    * 页面切换动画：用 `pathname` 当 key 让**内容区**重挂一次，入场淡入便自然重播。
@@ -205,11 +206,10 @@ export function AppShell({
        * 面板只订阅已恢复的数据，不持有另一份局部历史副本。
        * 切换个人中心或创建页面不会重新定义账本来源。
        * 初始化失败仍由 AppShell 原有失败边界处理，不在统计段吞掉全局错误。
-       * 新增调用不改变已有收藏、快捷短语或模型扫描的先后关系。
+       * 新增调用不改变已有收藏或模型扫描的先后关系。
        */
       await useGenerationHistoryStore.persist.rehydrate();
       await useHistoryFolderStore.persist.rehydrate();
-      await useQuickPhraseStore.persist.rehydrate();
       await useCreateFormStore.persist.rehydrate();
       await useUpdatesStore.persist.rehydrate();
       await useCustomCategoryStore.persist.rehydrate();

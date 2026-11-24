@@ -10,7 +10,14 @@ function identities(folder) {
   try { return [key(folder), key(fs.realpathSync(folder))]; } catch { return [key(folder)]; }
 }
 /** @param {string} folder */
-function isFolderLocked(folder) { return identities(folder).some((value) => locked.has(value)); }
+function isFolderLocked(folder) {
+  return identities(folder).some(value => [...locked].some(other => foldersOverlap(value, other)));
+}
+/** 父目录操作像封住整层抽屉，任何子目录读写都要等待。 @param {string} a @param {string} b */
+function foldersOverlap(a, b) {
+  const prefix = (/** @type {string} */ value) => value.endsWith(path.sep) ? value : value + path.sep;
+  return a === b || a.startsWith(prefix(b)) || b.startsWith(prefix(a));
+}
 /** @param {string} folder */
 function assertFolderUnlocked(folder) { if (isFolderLocked(folder)) throw new Error("busy"); }
 /** @param {string[]} folders */

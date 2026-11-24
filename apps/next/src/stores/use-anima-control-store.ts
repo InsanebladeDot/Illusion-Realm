@@ -53,7 +53,7 @@ export function getAnimaEditDraft(mode: ControlMode | 'text'): EditDraft {
   // 读取不会写回任一 store，隐藏组件订阅也不会造成更新循环。
   // 默认模型仍保存在各自 settings，空选择不是“选择了文字默认模型”。
   const text = useAnimaEditStore.getState();
-  if (mode === 'text') return text;
+  if (mode === 'text') return text.editWorkflow === 'minimax-image-edit' ? { ...text, settings: text.minimaxSettings, seedMode: text.minimaxSeedMode, selectedModel: null, extensions: [] } : text;
   const draft = useAnimaControlStore.getState().drafts[mode];
   return { ...draft, settings: { ...draft.settings, instruction: text.settings.instruction, negative: text.settings.negative } };
 }
@@ -75,7 +75,16 @@ export function patchAnimaEditDraft(mode: ControlMode | 'text', patch: Partial<E
   // 控制页仅改变采样参数时仍保留同一组文本，不能从历史副本恢复旧指令。
   // 若用户同时输入正负文本，两个字段在同一次文字草稿更新中合并。
   // 手动指定的数字保留原值，模板默认只用于初始化和缺字段兼容。
-  if (mode === 'text') { useAnimaEditStore.getState().patch(patch); return; }
+  if (mode === 'text') {
+    const state = useAnimaEditStore.getState();
+    // H3 参数归自己的草稿；其他运行状态继续共用原会话。
+    if (state.editWorkflow === 'minimax-image-edit') {
+      const { settings, seedMode } = patch;
+      state.patch({ ...(settings ? { minimaxSettings: settings } : {}), ...(seedMode ? { minimaxSeedMode: seedMode } : {}) });
+    }
+    else state.patch(patch);
+    return;
+  }
   useAnimaControlStore.getState().update(mode, patch);
   if (patch.settings) useAnimaEditStore.getState().setSettings(previous => ({ ...previous, instruction: patch.settings!.instruction, negative: patch.settings!.negative }));
 }

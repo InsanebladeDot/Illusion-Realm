@@ -19,6 +19,9 @@
  */
 import { t } from "@/i18n";
 import { useSettingsStore } from "@/stores/useSettingsStore";
+import { useCreateFormStore } from "@/stores/useCreateFormStore";
+import { selectedImageCoreModel, splitImageModelChoices } from "@/utils/comfy/image-core-models";
+import { getImageWorkflowTemplate } from "@/utils/comfy/imageWorkflow";
 import { useImageResourceStore } from "@/stores/use-image-resource-store";
 import { filterAndSortExtensions } from "@/data/extensions";
 import { buildGenerateParams } from "@/utils/comfy/buildGenerateParams";
@@ -132,9 +135,16 @@ export function resourcesFromImageMode(): EditResources {
   // 资源可能已随扫描更新失效，因此每次点击仍需重新校验。
   // 不在这里调用图片模式 setter，编辑加载永远不会反写来源。
   // 空 LoRA 列表是有效选择，可用于替换编辑页额外的风格资源。
-  const current = useImageResourceStore.getState();
-  if (current.seriesId !== "anima") throw new Error(t("create.animaEdit.animaOnly"));
-  return validateResources({ selectedModel: current.selectedModel, extensions: current.selectedExtensions });
+  const { imageSeries, imageModelChoices } = useCreateFormStore.getState();
+  if (imageSeries !== "anima") throw new Error(t("create.animaEdit.animaOnly"));
+  // 主动同步时解析当前保存的槽位，也能找到应用重启后恢复的版本。
+  const { models, paths } = useSettingsStore.getState();
+  const { main, mainSlot } = splitImageModelChoices(getImageWorkflowTemplate("anima"), imageModelChoices.anima);
+  const selectedModel = main && mainSlot && selectedImageCoreModel(mainSlot, main, models, paths);
+  return validateResources({
+    selectedModel: selectedModel || { modelId: "", versionId: "" },
+    extensions: useImageResourceStore.getState().selectedExtensions,
+  });
 }
 
 /**

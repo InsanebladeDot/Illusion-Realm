@@ -36,14 +36,89 @@
   --hy-edge-selected: #dddddf;
   --hy-selection: #ffffff0c;
   --hy-cover: #0f0f0fe8;
+  /* 节点选框接近卡面，只提示当前对象，不沿用其他按钮的高对比选择色。 */
+  /* 独立 token 避免为了淡化卡片而连带降低菜单和参数选项的对比度。 */
+  --hy-node-outline: #303033;
+  /* 深色常态使用与卡面接近的灰，边界存在但不抢媒体内容。 */
+  /* 选中增加少量亮度，不使用原来明显发白的通用 selected token。 */
+  /* 这两个值只用于节点，不降低文字、端口和键盘入口的可辨认程度。 */
+  /* 连线的选择反馈仍使用 edge-selected，浅化卡框不会把选中连线一起藏掉。 */
+  --hy-node-selected-outline: #414145;
 }
 
+/* 细线选框保持卡片原尺寸；不叠第二圈阴影来变相加粗。 */
+/* 键盘焦点由原控件的 focus-visible 单独承担，不把业务选择当作焦点提示。 */
+/* border-box 来自已有基础规则，二像素改为一像素不会扩大节点外部宽高。 */
+/* 卡片内侧多出的一像素属于内容空间，不需要重算工程里的卡片尺寸。 */
+/* 常态和选中宽度相同，点击时不会因为边框变粗而让图片内容缩一下。 */
+/* box-shadow:none 明确移除旧资料的第二圈阴影，不靠更浅的颜色掩盖它。 */
+/* 样式在资料库之后导入，因此可在同一语义域覆盖旧状态，而不用 important。 */
+/* 没有更改全局 button 的 outline，其他工具的焦点反馈继续由原组件维护。 */
+/* 已导入的图片像素不会被降低 opacity，淡化的只是选框，不是作品本身。 */
+/* 不能靠选中时加白色遮罩模拟浅框，否则视频预览颜色也会受到污染。 */
+.hy-canvas-ui .hy-node-card { border: 1px solid var(--hy-node-outline); }
+.hy-canvas-ui .hy-node-shell.is-selected .hy-node-card { border-color: var(--hy-node-selected-outline); box-shadow: none; }
+/* 普通 hover 不增加另一条边线，鼠标经过与业务选中不会叠成两圈轮廓。 */
+/* 错误和缺图文案仍在卡片内容区显示，不靠边框变红冒充错误处理。 */
+/* 选择取消后恢复常态 token，无需 JavaScript 记忆并还原上次颜色。 */
+/* 透明图片原本的 alpha 不受这里影响，边线规则不会为图片新增不透明底片。 */
+/* 主题色值只定义在画布语义域，其他工具箱卡片不会因本次浅框需求被改淡。 */
+/* 高对比系统模式保留原资料的系统焦点规则，本轮没有用透明 outline 覆盖它。 */
+
+/* 画布输入和门户菜单采用中性灰，不继承应用外壳的蓝紫配色。 */
+/* 门户挂在 body，必须带同一标记；只在节点祖先上设变量会漏掉菜单。 */
+/* 沿用现有语义变量名，使公共工具条和级联组件无需复制结构或按钮。 */
+/* 深色表面接近节点黑底，白色主题则用白底；不反转真实媒体像素。 */
+/* muted 同时供选中与悬停使用，薄灰反馈不会突然出现蓝色填充。 */
+/* accent-stroke 只控制细焦点线；业务勾选仍保留公共菜单原来的对勾。 */
+/* 字号、菜单宽度、级联定位都没有在这里覆盖，避免产生第二套菜单规则。 */
+/* 公共资源外壳使用独立中性标记，样式不需要依赖它内部的卡片结构。 */
+/* 只有显式选择此外观的弹窗使用这些值，创建页旧入口不会一起改色。 */
+/* 黑白配色仍随 nativeTheme 的媒体查询切换，不新建额外用户主题状态。 */
+[data-canvas-theme], [data-neutral-surface] {
+  /* 标题和关闭图标直接继承文字色，单改变量无法替换 body 已计算的蓝色。 */
+  /* 在中性入口重新计算前景色，嵌套模型标题也随之使用当前黑白主题。 */
+  /* 仅作用于显式中性表面，创建页原调用方和应用导航保持各自颜色。 */
+  color: var(--foreground);
+  --background: #171719; --foreground: #ededee; --muted: #29292c;
+  --muted-foreground: #a0a0a5; --border: #343438; --accent-stroke: #626268;
+  /* 确认按钮和输入边线也取中性变量，不能只改表面留下蓝色按钮。 */
+  /* 使用原语义令牌让公共模型选择器继续消费同一套按钮类名。 */
+  /* 强调填充与文字配对，深色按钮不会出现白底白字的不可读状态。 */
+  --accent: #29292c; --input: #343438; --ring: #626268; --accent-fill: #dedee1; --accent-fill-foreground: #171719;
+}
+/* 扩展输入高度容纳真实工具条，不把它压到下方的工作流入口上。 */
+/* 仅增加面板内空间，卡片几何、生成比例与画布坐标保持原值。 */
+/* textarea 自己滚动，工具条留在外层定位，不跟正文一起滚走。 */
+/* 这些尺寸是界面 CSS 像素，不会作为作品参数或媒体输出尺寸写盘。 */
+/* 增量高度相同，文本、图片、视频和音频不会有一类漏掉底部操作区。 */
+/* 关闭面板仍由原组件卸载，因此隐藏的工具条不保留键盘站点。 */
+/* 变更位于主题适配之后，沿用资料面板和公共助手原几何，不改全站表单。 */
+.hy-canvas-ui .hy-generation-panel { height: 234px; }
+.hy-canvas-ui .hy-panel-image { height: 230px; }
+.hy-canvas-ui .hy-panel-video { height: 199px; }
+.hy-canvas-ui .hy-panel-audio { height: 192px; }
+/* 正文底部的36px属于工具条；输入字符不会藏在展开按钮后面。 */
+/* 工具条位置仍由公共组件决定，这里仅提供它所需的定位容器。 */
+/* 不重写助手按钮的悬停宽度、动效或禁用，直接继承创建页行为。 */
+.hy-canvas-ui .hy-canvas-prompt { position: relative; padding-bottom: 36px; }
 /* 白色画布需要同时更换卡片、参数与浮层，不能只把点阵底板刷白。 */
 /* 每个灰阶有明确职责：正文、辅助文字、表面、分隔线和选框彼此独立。 */
 /* 保留参考的灰色细线反馈，避免主题切换突然变成粗彩色按钮。 */
 /* 预览的黑色视频像素属于媒体内容，下方规则不会反转图片或滤镜处理视频。 */
 /* 原生媒体控件在白色主题用 light，实际图像仍按原文件颜色显示。 */
 @media (prefers-color-scheme: light) {
+  /* 白色门户仍用同一语义变量，不能因为脱离卡片而变回应用蓝底。 */
+  /* 选择和键盘焦点保留灰阶差异；不依靠粗边框表示当前操作对象。 */
+  /* 只影响带标记的画布控件，不改变创建页、导航或用户颜色偏好。 */
+  [data-canvas-theme], [data-neutral-surface] {
+    --background: #ffffff; --foreground: #27272a; --muted: #f0f0f2;
+    --muted-foreground: #71717a; --border: #e1e1e5; --accent-stroke: #b0b0b7;
+    /* 白色主题的确认入口采用深灰底白字，与创建页按钮结构保持一致。 */
+    /* 输入框边线跟随中性表面，用户改变应用颜色预设也不会让画布串色。 */
+    /* 这些令牌不会进入工程文件，黑白切换不产生数据修改或撤销记录。 */
+    --accent: #f0f0f2; --input: #e1e1e5; --ring: #b0b0b7; --accent-fill: #27272a; --accent-fill-foreground: #ffffff;
+  }
   /* 这里由 nativeTheme.themeSource 影响媒体查询，跟随系统也走同一条决议链。 */
   /* 没有 data-theme 与 class 两份色值，应用切换主题时不用重新挂载画布。 */
   /* 属性草稿、选择、节点坐标和撤销栈都不受 CSS 媒体查询重算影响。 */
@@ -70,6 +145,16 @@
     /* 细分隔线在纯白背景可见，但不把每个按钮都包成明显边框。 */
     /* 节点非选中边线同取此值，形成稳定的空间边界。 */
     --hy-line: #daddE4;
+    /* 白卡选中仍是浅灰细线；鼠标长按不再出现深灰厚框。 */
+    /* 常态比选中再浅一点，参数区与端口继续使用各自可读的文字色。 */
+    --hy-node-outline: #eceef2;
+    /* 浅色选框用实色，透明黑在不同底色上可能呈现不一致的深浅。 */
+    /* 媒体内容可能是黑色，实色细线不会随着视频每帧内容而看起来忽深忽浅。 */
+    /* 用户说“像没有一样”针对鼠标选框，标题与参数依然提供对象选择提示。 */
+    /* 被选中的卡还会出现原工具条，不需要靠重边框独自承担全部状态说明。 */
+    /* 浅色 token 跟随原生主题切换，保存工程时不写入任何具体颜色。 */
+    /* 旧工程重新打开后也立即应用这里的细框，不要求迁移节点数据。 */
+    --hy-node-selected-outline: #dce0e7;
     /* 选中线比常态线深，鼠标焦点离开后仍能看出业务选择。 */
     /* 不把颜色写死到节点数据，保存重开后当前主题仍能决定选框颜色。 */
     --hy-selected: #7e8697;
@@ -101,7 +186,7 @@
   /* 这里不改变字号和字重；不同主题下长文本仍按同一规则截断。 */
   /* 包括合成器属性头与设置标题，防止从未点开的次级面板仍残留白字。 */
   /* 采用组件域下的明确家族，不能全局强制所有 strong 或 span 变黑。 */
-  .hy-canvas-ui :is(.hy-node-label,.hy-typography-sample,.hy-generation-panel textarea,.hy-settings>header strong,.hy-settings-content>strong,.hy-composer>header strong,.hy-materials-title b,.hy-properties>b,.hy-preview footer b) { color: var(--hy-text); }
+  .hy-canvas-ui :is(.hy-node-label,.hy-typography-sample,.hy-generation-panel textarea,.hy-settings>header strong,.hy-settings-content>strong) { color: var(--hy-text); }
   /* 输入光标与 placeholder 分开，失焦不改变已经确认的内容颜色。 */
   /* 光标取正文色，避免输入框获得焦点后只有内容可见而插入位置不可见。 */
   /* placeholder 保持比正文浅；用户输入后自然使用正文 token。 */
@@ -111,19 +196,14 @@
   /* 不改变 disabled 的事件拦截，灰色图标仍需依据真实业务决定是否可点。 */
   /* 图标继承 currentColor，因此不必为浅色重复维护 SVG 路径。 */
   /* 统计数字与加载说明同取辅助色，不把它们误当成可编辑正文。 */
-  .hy-canvas-ui :is(.hy-icon-button,.hy-history-button,.hy-node-empty,.hy-node-empty svg,.hy-node-empty small,.hy-generation-panel,.hy-panel-expand,.hy-reference-add,.hy-panel-tools .hy-chip,.hy-panel-tabs .hy-chip,.hy-zoom-value,.hy-counters,.hy-cost,.hy-menu-heading,.hy-settings,.hy-setting-control small,.hy-material-empty,.hy-preview-empty,.hy-ruler) { color: var(--hy-muted); }
+  .hy-canvas-ui :is(.hy-icon-button,.hy-history-button,.hy-node-empty,.hy-node-empty svg,.hy-node-empty small,.hy-generation-panel,.hy-panel-expand,.hy-reference-add,.hy-panel-tools .hy-chip,.hy-panel-tabs .hy-chip,.hy-zoom-value,.hy-counters,.hy-cost,.hy-menu-heading,.hy-settings,.hy-setting-control small) { color: var(--hy-muted); }
 
   /* 所有浮动容器保持相同白色表面，边缘依靠细线与轻阴影区分层级。 */
   /* 设置、添加菜单和合成器也在同一组件域中，不把浅色支持局限于四类节点。 */
   /* 单独的浮层阴影只提供高度线索，不用粗轮廓圈住整张面板。 */
   /* border-color 只对原本已有边线的控件生效，不凭空为无边框控件加边。 */
   /* 这些规则不接触 position、padding 或 width，所以深浅主题切换不会挪动端口。 */
-  .hy-canvas-ui :is(.hy-node-actions,.hy-add-menu,.hy-more-menu,.hy-canvas-dock,.hy-view-controls,.hy-round-button,.hy-project-header,.hy-counters,.hy-ratio-popup,.hy-settings,.hy-composer) { background: var(--hy-panel); border-color: var(--hy-line); box-shadow: 0 4px 18px #25304a0b; }
-  /* 节点常态与选中分别设边线，hover 清理不会抹掉业务选择。 */
-  /* 选中阴影不是键盘 focus shadow，不受原库移除额外焦点圈的规则影响。 */
-  /* 原有选中边框宽度仍由基础样式决定，本文件不另设更粗的白色主题边框。 */
-  .hy-canvas-ui .hy-node-card { border-color: var(--hy-line); }
-  .hy-canvas-ui .hy-node-shell.is-selected .hy-node-card { border-color: var(--hy-selected); box-shadow: 0 0 0 1px #44547108; }
+  .hy-canvas-ui :is(.hy-node-actions,.hy-add-menu,.hy-more-menu,.hy-canvas-dock,.hy-view-controls,.hy-round-button,.hy-project-header,.hy-counters,.hy-ratio-popup,.hy-settings) { background: var(--hy-panel); border-color: var(--hy-line); box-shadow: 0 4px 18px #25304a0b; }
   /* 端口在白底仍可见，位置与命中面积沿用原图引擎适配，不因换色跳动。 */
   /* 图片和视频原规则有更具体的端口色，因此在同一级家族显式补齐。 */
   /* 不用 opacity 隐藏未选中端口，键盘与鼠标仍能发现可连接的位置。 */
@@ -140,14 +220,14 @@
   /* 次级区块共用 raised 色，不表示它们会触发同一种业务。 */
   /* 原生禁用模型入口仍是禁用，白色底板不会让它假装已经可选择模型。 */
   /* 参数选项有更具体的规则，下面单独接它的色值，防止被原库半透明白底盖回去。 */
-  .hy-canvas-ui :is(.hy-chip,.hy-segmented,.hy-panel-expand,.hy-panel-tools .hy-chip,.hy-panel-tabs .hy-chip,.hy-materials .hy-segmented,.hy-settings nav,.hy-settings-content,.hy-setting-control .hy-segmented,.hy-material-empty,.hy-library-button,.hy-track>div,.hy-track>section,kbd) { background: var(--hy-raised); border-color: var(--hy-line); color: var(--hy-muted); }
+  .hy-canvas-ui :is(.hy-chip,.hy-segmented,.hy-panel-expand,.hy-panel-tools .hy-chip,.hy-panel-tabs .hy-chip,.hy-settings nav,.hy-settings-content,.hy-setting-control .hy-segmented,kbd) { background: var(--hy-raised); border-color: var(--hy-line); color: var(--hy-muted); }
   .hy-canvas-ui .hy-panel-options .hy-chip:not(.hy-model-glow) { background: var(--hy-raised); border-color: var(--hy-line); color: #525c6e; box-shadow: 0 2px 4px #25304a0a; }
   /* 失焦后选中模式继续保留较深底色；不能把 focus 当作 selected 的来源。 */
   /* selected 的文字更深，既能读出值，也能区别旁边未选中的模式。 */
   /* 不增加新的模式 ID，视频与音频仍按各自原有集合渲染。 */
   /* 点阵开关使用 aria-pressed 的真实值，关闭后不能继续保留选中底色。 */
   .hy-canvas-ui :is(.hy-segmented button,.hy-node-actions .hy-icon-button) { color: var(--hy-muted); }
-  .hy-canvas-ui :is(.hy-segmented button.is-active,.hy-materials .hy-segmented button.is-active,.hy-chip.is-active,.hy-icon-button[aria-pressed=true],.hy-settings nav button.is-active) { background: #dce1eb; color: #2f3c55; }
+  .hy-canvas-ui :is(.hy-segmented button.is-active,.hy-chip.is-active,.hy-icon-button[aria-pressed=true],.hy-settings nav button.is-active) { background: #dce1eb; color: #2f3c55; }
   .hy-canvas-ui .hy-view-controls .hy-grid-button[aria-pressed=true] { background: #dce1eb; }
   /* 普通按钮不增加按压缩放；浅色 hover 仍沿用细腻的背景变化。 */
   /* 可用性判断仍取 :disabled，原生禁用项不因鼠标经过而表现得像能执行。 */
@@ -187,12 +267,114 @@
   .hy-canvas-ui .hy-switch.is-on span { background: #fff; }
   /* 这些入口在资料中有比通用胶囊更具体的底色，需同步替换，避免遗留黑色孤岛。 */
   .hy-canvas-ui .hy-settings>header .hy-chip { background: var(--hy-raised); color: var(--hy-muted); }
-  .hy-canvas-ui .hy-composer>header .hy-icon-button:first-child { background: var(--hy-raised); }
   .hy-canvas-ui input[type=range] { background: #d7dce5; accent-color: #61718e; }
   .hy-canvas-ui input[type=range]::-webkit-slider-thumb { background: #61718e; }
-  /* 合成器仍是独立空态，只适配可读性，不因白色外观就宣称多轨播放已接通。 */
-  /* 预览占位底比节点稍灰，空画面仍有清晰区域；真实导入预览不经过这个容器。 */
-  /* 时间线示意换成浅灰背景，但刻度不因此变成真实工程时间模型。 */
-  .hy-canvas-ui .hy-preview { background: #eef0f4; }
-  .hy-canvas-ui .hy-timeline { background: #f3f5f8; }
 }
+
+/* 右侧参数柜停靠在工作区内部，留出参考图中的小圆角与窄边距。 */
+/* 不加全屏遮罩，应用导航与画布背景仍可用，和导演台模态生命周期分开。 */
+/* 宽度限制在可用主区内，窄窗口不会把关闭入口挤到屏幕之外。 */
+/* 绝对定位只控制外壳，不给表单或节点另造世界坐标。 */
+/* 参数柜的阴影用于区分层次，不使用粗选框假装当前对象已经保存。 */
+/* 主背景和前景取中性语义变量，用户换应用主题时原控件自然重算。 */
+/* 内容从顶部往下排列，表单较长时只在自身内容区滚动。 */
+/* 侧栏层级高于节点与底栏，仍低于原资源选择门户。 */
+.hy-image-sidebar {
+  position: absolute; inset: 12px 12px 12px auto; z-index: 45;
+  width: min(352px, calc(100% - 24px)); display: flex; flex-direction: column;
+  overflow: hidden; border: 0; border-radius: 16px;
+  background: var(--background); color: var(--foreground); box-shadow: 0 8px 32px #0003;
+}
+/* 头部保持固定，避免长参数滚动以后用户找不到关闭按钮。 */
+/* min-width 为零允许标题省略，原文保留在 title 中便于识别完整名字。 */
+/* 关闭使用普通图标按钮，外壳不在表单内部按钮上叠额外边框。 */
+/* 左右间距与正文一致，不继承画布节点页脚的胶囊排版。 */
+/* 标题使用小字号中等字重，避免把参数柜变成占很大空间的页面标题。 */
+/* 头部不设置固定字体族，仍沿用应用字体回退与语言处理。 */
+.hy-image-sidebar > header { display: flex; align-items: center; gap: 12px; padding: 10px 12px; flex-shrink: 0; }
+.hy-image-sidebar > header strong { min-width: 0; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; font-weight: 500; }
+/* 外壳只提供剩余高度，原创建表单保留自己的正文滚动和固定生成底栏。 */
+/* 不叠加第二层滚动；侧栏和画布是 DOM 兄弟，表单滚轮不进入图引擎。 */
+/* 细滚动条只是视觉规格，键盘和滚轮仍能到达全部实际字段。 */
+/* 明确 min-height 为零使 flex 容器能缩小，不能靠隐藏溢出掩盖字段。 */
+/* 所有 label 和输入由原创建组件提供，CSS 不用伪元素添假参数。 */
+/* 不新增侧栏出现动画，减少动态效果时无需另写隐藏状态补丁。 */
+.hy-image-sidebar-body { display: flex; flex-direction: column; flex: 1; min-height: 0; overflow: hidden; }
+
+/* 输入参考图：沿用加号入口，缩略图属于输入列表，不复用结果卡片的选中边框。 */
+.hy-reference-inputs { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding-right: 30px; }
+.hy-reference-thumbnail { position: relative; width: 48px; height: 48px; overflow: hidden; border-radius: 10px; display: grid; place-items: center; background: var(--hy-hover); }
+.hy-reference-thumbnail img { width: 100%; height: 100%; object-fit: cover; }
+.hy-canvas-ui .hy-reference-thumbnail button { position: absolute; right: 1px; top: 1px; padding: 2px; border-radius: 50%; background: var(--hy-panel); }
+
+/* 所有节点直接使用音频基准外壳，内容增加时自然长高，不按媒体类型另设高度。 */
+.hy-canvas-ui .hy-prompt-generation-panel { height: auto; min-height: 198px; padding-bottom: 12px; }
+.hy-canvas-ui [data-create-prompt-tools] { margin-bottom: 8px; padding-right: 20px; }
+.hy-canvas-ui .hy-reference-inputs { margin-bottom: 8px; }
+.hy-canvas-ui .hy-reference-inputs .hy-reference-add { width: 48px; height: 48px; margin: 0; }
+
+/* 引用编辑面使用原组件的滚动、补全与工具条，只注入画布的中性主题表面。 */
+/* 音频的80px输入区成为唯一规格，长正文仍在原编辑器内滚动。 */
+.hy-canvas-ui .hy-prompt-generation-panel :is(.hy-reference-prompt,.hy-canvas-prompt textarea) { height: 80px; min-height: 80px; padding: 2px 2px 40px; border: 0; box-shadow: none; color: var(--hy-text); font-size: 13px; line-height: 1.5; }
+
+/* 面板随参考素材和工具内容增高，输入与页脚尺寸由共用外壳统一管理。 */
+/* 工具增加区域不改变图片输出尺寸，页面高度和生成像素不是同一个单位体系。 */
+/* 质量浮层的最大宽度限制字段展开，不能让长错误提示撑开整个参数面板。 */
+/* 内层 hy-more-menu 保留原按钮排版，但移除嵌套菜单的第二圈边框和阴影。 */
+/* 外层 hy-ratio-popup 已拥有表面，内部再画一个盒子会产生粗重的套娃边框。 */
+/* 持续选中用 hy-hover 底色，深色下可区分菜单背景又不会多一圈高饱和线。 */
+/* 文字跟随 hy-text，浅色时不会继承原菜单写死的白字。 */
+/* 像素摘要禁止换行，用户应看到完整的一对宽高与 px 单位。 */
+/* 服务限制说明允许正常换行，避免长中文或英文把菜单水平撑开。 */
+/* 限制说明用 muted 表达辅助信息，不使用模拟失败的红色成功警告。 */
+/* 自定义字段使用 flex-wrap，窄空间不足时确认按钮可以换到下一行。 */
+/* 两个 label 固定九十像素保证数字可读，input 的 min-width 零允许容器收缩。 */
+/* 字段表面使用 raised，与节点输入同色系，不另建明暗主题判断。 */
+/* 一像素线只用于数字字段边界，选项按钮保持无额外粗轮廓。 */
+/* 错误 small 占整行，不能把提示挤在高度数字后面造成含义不清。 */
+/* 错误颜色仍取主题正文，不以低对比灰字掩盖必须修正的输入问题。 */
+/* 没有过渡位移动画，减少动态效果时不会出现菜单抖动或字段飞入。 */
+/* 这些规则限定在画布 UI 根下，不改变创建页原输入框或应用导航按钮。 */
+/* 质量菜单没有固定屏幕 left，原节点与视口缩放仍决定它所在的位置。 */
+/* 样式不使用伪元素补写输出值，读数必须由真实 React 数据渲染。 */
+/* 不设置 pointer-events none 来假禁用选项，真实 disabled 已由按钮参数提供。 */
+/* 菜单选中态持续到参数改变，鼠标离开只取消 hover，不清除已确认档位。 */
+/* 原组件样式仍是基础，本层只补本轮新增内容的几何与语义配色。 */
+/* 画质浮层使用原菜单壳，主题取画布变量；像素草稿与卡片几何互不影响。 */
+.hy-canvas-ui [data-canvas-quality] { max-width: 300px; }
+.hy-canvas-ui [data-canvas-quality] .hy-more-menu { border: 0; box-shadow: none; background: transparent; }
+.hy-canvas-ui [data-canvas-quality] [aria-pressed=true] { background: var(--hy-hover); color: var(--hy-text); }
+.hy-canvas-ui .hy-output-pixels { display: block; padding: 8px 12px; font-size: 12px; color: var(--hy-text); white-space: nowrap; }
+/* 参数和请求共用一行，先省略模型名称；像素说明属于正文下的辅助读数。 */
+.hy-canvas-ui .hy-prompt-generation-panel .hy-panel-footer { position: relative; inset: auto; height: auto; margin-top: 12px; align-items: flex-end; }
+/* 浮层以同一操作行为锚点，底下多一行像素说明时也不会压住按钮。 */
+.hy-canvas-ui .hy-prompt-generation-panel .hy-panel-footer .hy-ratio-popup { bottom: calc(100% + 8px); }
+.hy-canvas-ui .hy-prompt-generation-panel .hy-panel-options { flex: 1; flex-wrap: nowrap; gap: 4px; }
+.hy-canvas-ui .hy-prompt-generation-panel .hy-panel-options > * { flex-shrink: 0; }
+.hy-canvas-ui .hy-prompt-generation-panel .hy-panel-options > [data-canvas-workflow]:first-child { flex: 1; min-width: 0; }
+.hy-canvas-ui .hy-prompt-generation-panel .hy-panel-options > [data-canvas-workflow]:first-child > .hy-chip { width: 100%; }
+.hy-canvas-ui .hy-prompt-generation-panel .hy-panel-options .hy-chip { padding: 4px 9px; }
+.hy-canvas-ui .hy-prompt-generation-panel .hy-panel-submit { gap: 4px; }
+.hy-canvas-ui .hy-panel-submit { flex-shrink: 0; }
+.hy-canvas-ui [data-canvas-video-pixels] { padding: 2px 0 0; color: var(--hy-muted); }
+/* 比例与面积浮层贴近画布底色：深色黑底、浅色白底，不叠灰色菜单面。 */
+.hy-canvas-ui .hy-ratio-popup { background: var(--hy-canvas); border: 0; max-width: calc(100% - 24px); }
+.hy-canvas-ui .hy-megapixel-control { display: grid; gap: 12px; width: 220px; max-width: 100%; padding: 12px; }
+.hy-canvas-ui .hy-megapixel-control > span { display: flex; justify-content: space-between; gap: 12px; }
+.hy-canvas-ui .hy-megapixel-control input { width: 100%; }
+.hy-canvas-ui .hy-megapixel-limits { color: var(--hy-muted); font-size: 11px; }
+.hy-canvas-ui .hy-output-limit { display: block; max-width: 220px; padding: 0 12px 8px; font-size: 11px; color: var(--hy-muted); }
+.hy-canvas-ui .hy-quality-custom { display: flex; gap: 6px; flex-wrap: wrap; align-items: end; padding: 8px; }
+.hy-canvas-ui .hy-quality-custom label { display: grid; gap: 4px; width: 90px; font-size: 11px; color: var(--hy-muted); }
+.hy-canvas-ui .hy-quality-custom input { width: 100%; min-width: 0; padding: 6px; border: 1px solid var(--hy-line); border-radius: 6px; background: var(--hy-raised); color: var(--hy-text); }
+.hy-canvas-ui .hy-quality-custom small { flex-basis: 100%; font-size: 11px; color: var(--hy-text); }
+
+/* 图片与视频仍共用原横向比例条；窄卡片自然折行，八项都可见。 */
+.hy-canvas-ui :is(.hy-ratio-options,.hy-parameter-options) .hy-segmented { flex-direction: row; flex-wrap: wrap; height: auto; max-width: 100%; background: transparent; }
+.hy-canvas-ui :is(.hy-ratio-options,.hy-parameter-options) .hy-segmented button { flex: none; background: transparent; color: var(--hy-muted); }
+.hy-canvas-ui :is(.hy-ratio-options,.hy-parameter-options) .hy-segmented button:is(.is-active,:hover) { background: transparent; color: var(--hy-text); }
+.hy-canvas-ui :is(.hy-ratio-options,.hy-parameter-options) .hy-segmented button.is-active { font-weight: 800; }
+/* 数字草稿复用原校验容器，只保留下边线；不在输入内叠灰底、圆角和应用按钮。 */
+.hy-canvas-ui .hy-number-custom input { width: 100px; padding: 6px 0; border: 0; border-bottom: 1px solid var(--hy-line); border-radius: 0; background: transparent; appearance: textfield; }
+.hy-canvas-ui .hy-number-custom input:focus { border-bottom-color: var(--hy-text); }
+.hy-canvas-ui .hy-number-custom input::-webkit-inner-spin-button { appearance: none; }

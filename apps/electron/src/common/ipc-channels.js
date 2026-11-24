@@ -29,6 +29,9 @@ const IPC_CHANNELS = {
   // 对应 shared 同名常量；模块审计检查两侧值相等。
   // invoke 返回结构化状态，资料仍走既有只读通道。
   MODELS_RECOVER_METADATA: "models:recoverMetadata",
+  MODELS_HASH_LOCAL: "models:hashLocal",
+  MODELS_DOWNLOAD_SETUP: "models:downloadSetup",
+  MODELS_CHECK_SETUP: "models:checkSetup",
   MODELS_DOWNLOAD_TARGET: "models:downloadTarget",
   MODELS_DOWNLOAD_START: "models:downloadStart",
   MODELS_DOWNLOAD_CANCEL: "models:downloadCancel",
@@ -37,6 +40,9 @@ const IPC_CHANNELS = {
   MODELS_DOWNLOAD_LIST: "models:downloadList",
   MODELS_CHANGE_LOGO: "models:changeLogo",
   MODELS_CATEGORY_TARGET: "models:categoryTarget",
+  MODELS_FOLDER_LIST: "models:folderList",
+  MODELS_FOLDER_CREATE: "models:folderCreate",
+  MODELS_FOLDER_DELETE: "models:folderDelete",
   MODELS_MOVE_CATEGORY: "models:moveCategory",
   MODELS_BATCH: "models:batch",
   MODELS_DOWNLOAD_PROGRESS: "models:downloadProgress",
@@ -62,6 +68,9 @@ const IPC_CHANNELS = {
   COMFY_FREE_MEMORY: "comfy:freeMemory",
   COMFY_UPLOAD_IMAGE: "comfy:uploadImage",
   COMFY_LIST_MODELS: "comfy:listModels",
+  COMFY_GSV_WEIGHTS: "comfy:gptSovitsWeights",
+  CANVAS_REFERENCE_VOICES: "canvas:referenceVoices",
+  CANVAS_ADD_REFERENCE_VOICE: "canvas:addReferenceVoice",
   // paths
   PATHS_GET_DEFAULT_OUTPUT: "paths:getDefaultOutput",
   // shell
@@ -83,6 +92,7 @@ const IPC_CHANNELS = {
   // 不向渲染层提供FFmpeg命令、原始音频或任意通道入口。
   // 此值对应shared常量，由模块检查比对，不能各自改名。
   VIDEO_WAVEFORM: "video:waveform",
+  VIDEO_UPSCALE: "video:upscale",
   VIDEO_RUN: "video:run",
   VIDEO_CANCEL: "video:cancel",
   VIDEO_PROGRESS_EVENT: "video:progress",
@@ -125,8 +135,16 @@ const IPC_CHANNELS = {
 // 页面使用的是类型化方法名，不让用户直接传这些通道字符串。
 // 工程服务注册汇总要同步接通，只有常量没有 handler 仍不可用。
 // 最终 Electron 回归检查实际 invoke，不把文本表一致当作全部行为证据。
+  // 原合成器只提交明确的本地媒体，不获得任意文件写入接口。
+  CANVAS_COMPOSITION_MEDIA: "canvas:compositionMedia",
+  CANVAS_LIBRARY: "canvas:library",
   CANVAS_IMPORT_MEDIA: "canvas:importMedia",
   CANVAS_EXPORT_PROJECT: "canvas:exportProject",
+  EUZHI_IMAGE_SECRET_STATUS: "euzhiImage:secretStatus",
+  EUZHI_IMAGE_SECRET_SET: "euzhiImage:secretSet",
+  EUZHI_IMAGE_SECRET_CLEAR: "euzhiImage:secretClear",
+  EUZHI_IMAGE_GENERATE: "euzhiImage:generate",
+  EUZHI_IMAGE_CANCEL: "euzhiImage:cancel",
   CANVAS_OPEN_PROJECT: "canvas:openProject",
   ACCOUNT_LOGIN: "account:login",
   ACCOUNT_ME: "account:me",

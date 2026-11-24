@@ -1,4 +1,6 @@
 "use client";
+import { HoverTip } from "@/components/hover-tip";
+
 
 // 界面：「检测边缘」；上传、大图预览和下载复用现有实现，OpenCV 计算由业务 hook 管理。
 import { ArrowRight, Contrast, Download, Loader2, ScanLine } from "lucide-react";
@@ -29,7 +31,7 @@ function CannySource({ state }: { state: CannyPreviewState }) {
   return <div className="min-w-0 space-y-1.5" data-canny-source aria-busy={state.loading}>
     <VideoImageUpload label={t("create.canny.original")} required imageUrl={source?.url ?? null} onSelect={file => { void state.select(file); }} onRemove={state.remove} />
     {source && <div className="flex min-w-0 items-center justify-between gap-2 text-[11px] text-muted-foreground">
-      <span className="min-w-0 truncate" title={source.name}>{source.name}</span>
+      <HoverTip asChild layer="window" label={(source.name) ?? ""}><span className="min-w-0 truncate">{source.name}</span></HoverTip>
       <button type="button" data-canny-preview onClick={() => setPreview(true)} className="shrink-0 text-accent-text hover:underline">{t("create.canny.preview")}</button>
     </div>}
     {source && <ImagePreviewOverlay items={[{ key: source.url, src: source.url, alt: source.name }]} index={0} open={preview} onOpenChange={setPreview} />}

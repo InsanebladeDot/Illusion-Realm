@@ -1,10 +1,14 @@
-/** Prompt assistant contracts: provider-specific credentials stay in the main process. */
+/** 转译的数据契约；三站共享目录与凭据，模型选择单独保存。 */
 // Euzhi 是命名供应商，主进程固定目的地并复用 Agent 的凭据分区。
 // 不能把它当普通 custom 保存另一份密钥，否则两个入口会显示不同配置状态。
 // 原 GLM 和自定义供应商值保持不变，旧用户文档无需迁移。
-export type PromptProvider = "glm" | "custom" | "euzhi";
+export type PromptProvider = "glm" | "custom" | "euzhi" | "siliconflow";
 export interface PromptConnection { provider: PromptProvider; baseUrl: string }
-export interface PromptTransformRequest extends PromptConnection { model: string; text: string; instruction: string }
+export interface PromptTransformRequest extends PromptConnection {
+  model: string; text: string; instruction: string;
+  // 图片只随本次请求发送；不把本地地址或图片字节存入偏好、历史。
+  images?: string[];
+}
 export interface PromptSecretStatus { configured: boolean; protection: string; tail: string }
 export interface PromptInstructionPreset { id: string; name: string; instruction: string }
 /** 成功转换的本地收据；只保留查看结果需要的信息，不包含连接地址或密钥。 */
@@ -30,7 +34,7 @@ export interface PromptTranslationRecord {
   // 只保留供应商枚举，不记录自定义端点，减少本地文档的连接信息冗余。
   // 切换 Agent 聊天站点不改变此枚举，它描述的是这次文本转换的站点。
   provider: PromptProvider;
-  // 使用真正提交的模型名，Euzhi 的值取自发送时的 Agent 选择。
+  // 使用真正提交的模型名；转译的选择不依赖后来切换的 Agent 配置。
   // 不用 preferences.model 推断所有站点，因为自定义站点另有模型字段。
   model: string;
   // 内置预设存当时可见名称，自定义预设存用户当时保存的名称。
@@ -45,7 +49,11 @@ export interface PromptAssistantPreferences {
   baseUrl: string;
   model: string;
   customModel: string;
+  // 目录和凭据共用，模型偏好按业务与供应商保存，转译选型不改 Agent 当前选择。
+  models?: Partial<Record<import('../schemas/agent-provider.schema').AgentProvider, string>>;
   presetId: string;
+  // Moss 输入框独立记忆预设，旧文档可以没有此字段。
+  mossPresetId?: string;
   presets: PromptInstructionPreset[];
   // 旧文档没有该字段时按空历史读取，不要求用户迁移或重新配置连接。
   // 只保存已成功返回的结果，失败、取消查看或撤销替换不制造新记录。

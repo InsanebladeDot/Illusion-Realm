@@ -43,6 +43,14 @@ export const MODEL_SERIES: LocalizedModelSeries[] = [
     tips: ["taxonomy.modelSeries.anima.tip1"],
     icon: animeIcon,
   },
+  {
+    id: "moss",
+    label: "Moss",
+    description: "taxonomy.modelSeries.moss.description",
+    tipsTitle: "taxonomy.modelSeries.moss.tipsTitle",
+    tips: ["taxonomy.modelSeries.moss.tip1"],
+    icon: animeIcon,
+  },
 ];
 
 export const DEFAULT_MODEL_SERIES_ID = "anima";

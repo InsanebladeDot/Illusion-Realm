@@ -33,7 +33,7 @@ export async function resolveImageWorkflowParams(
 
   try {
     const lists = await fetchComfyModelLists(serverAddress);
-    checkpoints = lists.checkpoints;
+    checkpoints = params.series === "sdxl" ? lists.checkpoints : lists.diffusionModels ?? [];
     loras = lists.loras;
   } catch {
     // 无法拉取列表时仍使用路径推导
@@ -42,14 +42,14 @@ export async function resolveImageWorkflowParams(
   const resolved: ImageWorkflowParams = { ...params };
 
   if (params.checkpointName) {
-    resolved.checkpointName =
-      checkpoints.length > 0
-        ? resolveComfyModelNameFromList(
-            params.checkpointName,
-            checkpoints,
-            checkpointRoots
-          )
-        : toComfyModelName(params.checkpointName, checkpointRoots);
+    const name = params.checkpointName;
+    // 已按分类根目录保存的相对名包含子目录，不能退化成只传文件名。
+    if (!/^(?:[a-z]:|[/\\])/i.test(name)) {
+      const key = name.replaceAll("\\", "/").toLowerCase();
+      resolved.checkpointName = checkpoints.find(item => item.replaceAll("\\", "/").toLowerCase() === key) ?? name;
+    } else {
+      resolved.checkpointName = resolveComfyModelNameFromList(name, checkpoints, checkpointRoots);
+    }
   }
 
   if (params.loras) {

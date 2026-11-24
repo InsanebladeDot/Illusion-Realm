@@ -1,4 +1,6 @@
 "use client";
+import { HoverTip } from "@/components/hover-tip";
+
 
 /**
  * head：释放 ComfyUI 驻留模型的红色垃圾桶，复用现有顶栏尺寸与 Toast。
@@ -88,5 +90,5 @@ export function ComfyFreeMemoryButton() {
   // 数据标记只用于稳定回归定位，不把中文标题作为测试选择器。
   // 没有自定义快捷键，避免与编辑画布或生成页现有按键冲突。
   // 不添加下拉菜单，按钮的所有可见区域都执行同一个释放动作。
-  return <button type="button" data-window-free-memory aria-label={label} title={label} aria-busy={busy} disabled={busy} onClick={release} className="window-caption-action flex h-full w-8 shrink-0 items-center justify-center text-red-500 hover:bg-red-500/10 disabled:cursor-wait disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent-stroke sm:w-[46px]"><Trash2 size={17} aria-hidden="true" /></button>;
+  return <HoverTip asChild layer="window" label={(label) ?? ""}><button type="button" data-window-free-memory aria-label={label} aria-busy={busy} disabled={busy} onClick={release} className="window-caption-action flex h-full w-8 shrink-0 items-center justify-center text-red-500 hover:bg-red-500/10 disabled:cursor-wait disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent-stroke sm:w-[46px]"><Trash2 size={17} aria-hidden="true" /></button></HoverTip>;
 }

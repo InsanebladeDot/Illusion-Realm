@@ -1,4 +1,6 @@
 "use client";
+import { HoverTip } from "@/components/hover-tip";
+
 
 // 正式会话和静态工程复用同一宿主几何，数据由各自调用方提供。
 // 这个外壳不导入真实文件能力，样板不会因为共用外壳而读取用户视频。
@@ -117,7 +119,7 @@ export function EditorWorkspace({ children, project, clips, assets, currentTime,
     {/* R02–R04：临时面板仅覆盖上区；Escape先让字段处理，未消费时才关闭面板。 */}
     <div ref={upper} id={upperId} data-editor-upper data-fitted-preview={!!timeline || undefined} data-open-panel={panels.open ?? undefined} className={styles.upper} onKeyDown={event => { if (event.key === "Escape" && panels.open && !event.defaultPrevented) { event.preventDefault(); panels.close(); } }}>{typeof children === "function" ? children(actions) : children}{panels.open && <div className={styles.panelClose}><EditorAction icon={X} label={t("toolBox.editorUi.closePanel")} compact onClick={panels.close} /></div>}</div>
     {/* R05：布局拖动不改变工程，指针取消与Escape都恢复本次调整前高度。 */}
-    <div data-editor-region="R05" className={styles.splitter} role="separator" tabIndex={0} aria-orientation="horizontal" aria-valuemin={260} aria-valuemax={split.max} aria-valuenow={Math.round(split.value)} aria-label={t("toolBox.editorUi.resize")} title={t("toolBox.editorUi.resizeHint")} onPointerDown={split.down} onPointerMove={split.move} onPointerUp={split.finish} onPointerCancel={split.finish} onKeyDown={split.key}><GripHorizontal size={20} aria-hidden="true" /></div>
+    <HoverTip asChild layer="window" label={(t("toolBox.editorUi.resizeHint")) ?? ""}><div data-editor-region="R05" className={styles.splitter} role="separator" tabIndex={0} aria-orientation="horizontal" aria-valuemin={260} aria-valuemax={split.max} aria-valuenow={Math.round(split.value)} aria-label={t("toolBox.editorUi.resize")} onPointerDown={split.down} onPointerMove={split.move} onPointerUp={split.finish} onPointerCancel={split.finish} onKeyDown={split.key}><GripHorizontal size={20} aria-hidden="true" /></div></HoverTip>
     {/* R06–R10：独立时间轴视口与固定信息条不被上区临时面板覆盖。 */}
     <EditorTimeline clips={clips} assets={assets} project={project} currentTime={currentTime} interaction={timeline} />
     <ProjectInfoStrip project={project} />

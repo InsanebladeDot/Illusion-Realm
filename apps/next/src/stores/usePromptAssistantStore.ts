@@ -41,11 +41,13 @@ function normalize(value: Partial<PromptAssistantPreferences> | undefined): Prom
   // 扩展允许集，防止重新进入创建页后把已选 Euzhi 悄悄恢复成 GLM。
   // 不接收自由站点 id；旧文档缺省和未知值仍回到原默认 GLM。
   // 仅保存供应商选择，Euzhi 模型和密钥继续由 Agent 现有能力管理。
-  return { ...PROMPT_DEFAULTS, provider: value?.provider === "euzhi" ? "euzhi" : value?.provider === "custom" ? "custom" : "glm",
+  return { ...PROMPT_DEFAULTS, provider: value?.provider === "euzhi" ? "euzhi" : value?.provider === "siliconflow" ? "siliconflow" : value?.provider === "custom" ? "custom" : "glm",
     baseUrl: typeof value?.baseUrl === "string" ? value.baseUrl : PROMPT_DEFAULTS.baseUrl,
     model: typeof value?.model === "string" ? value.model : PROMPT_DEFAULTS.model,
     customModel: typeof value?.customModel === "string" ? value.customModel : "",
+    models: Object.fromEntries(Object.entries(value?.models ?? { glm: value?.model ?? PROMPT_DEFAULTS.model }).filter(([id, model]) => ["siliconflow", "euzhi", "glm"].includes(id) && typeof model === "string" && model.length <= 200)),
     presetId: typeof value?.presetId === "string" ? value.presetId : "translate",
+    mossPresetId: typeof value?.mossPresetId === "string" ? value.mossPresetId : undefined,
     presets: Array.isArray(value?.presets) ? value.presets.filter(item => item && typeof item.id === "string" && typeof item.name === "string" && typeof item.instruction === "string").slice(0, 50) : [],
     // 旧文档缺省为空；损坏单项不会妨碍其他偏好和历史正常加载。
     // 归一化只处理本地记录，不根据当前供应商筛掉过去的转换。

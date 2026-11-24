@@ -10,6 +10,9 @@ import {
 } from "@/data/videoForm";
 import { RangeSlider } from "@/view/create/RangeSlider";
 import { VideoWorkflowSelect } from "@/view/create/VideoWorkflowSelect";
+import { useWorkflowReadiness } from "@/hooks/use-workflow-readiness";
+import { WorkflowModelNotice } from "@/components/workflow-model-notice";
+import { workflowModelDraft } from "@/utils/workflow-model-draft";
 import { useComfyVideoGenerate } from "@/hooks/useComfyVideoGenerate";
 import { useToastStore } from "@/stores/useToastStore";
 import { useTranslation } from "@/i18n";
@@ -32,6 +35,7 @@ import { getVideoLoras, type VideoLora } from "@/utils/comfy/video-workflow-lora
 import { getVideoWorkflowTemplate } from "@/utils/comfy/videoWorkflow";
 import { VideoLoraSelect } from "./video-lora-select";
 import { VideoGenerationControls } from "./video-generation-controls";
+import { AdvancedSettingsSection } from "./advanced-settings-section";
 import type { VideoGenerationSettings } from "@/utils/comfy/video-generation-settings";
 import type { VideoResolutionSettings } from "@/utils/comfy/video-resolution";
 import { VideoResolutionControls } from "./video-resolution-controls";
@@ -117,10 +121,13 @@ export function VideoCreatePanel() {
     [workflowId]
   );
 
+  const readinessPrompt = useMemo(() => workflowModelDraft(getVideoWorkflowTemplate(workflowId), { overrides: modelOverrides, loras }), [workflowId, modelOverrides, loras]);
+  const readiness = useWorkflowReadiness(readinessPrompt);
   const { durationMax, durationMin } = VIDEO_WORKFLOW_LIMITS;
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
+    if (readiness.blocked) return;
 
     if (!prompt.trim()) {
       showToast(t("create.videoCreatePanel.promptRequired"));
@@ -242,7 +249,7 @@ export function VideoCreatePanel() {
               </button>
             </label>
             {/* 界面：图片引用只装饰文字，点击使用图库原有预览 */}
-            <ImageReferencePrompt value={prompt} onChange={setPrompt} images={referenceImages} media={referenceMedia} disabled={generating} />
+            <ImageReferencePrompt value={prompt} onChange={setPrompt} images={referenceImages} media={referenceMedia} disabled={generating} assistant={isMinimax} preparePrompt={isMinimax ? text => normalizeVideoReferences(text, referenceMedia) : undefined} />
             {/* 界面：MiniMax 引用转换预览，图片、视频、音频采用技能原格式。 */}
             {/* 直接传实际提交候选，预览重编号与 handleSubmit 使用同一函数。 */}
             {/* 非 H3 模式继续原有提示词规则，不展示不适用的转换结果。 */}
@@ -251,6 +258,7 @@ export function VideoCreatePanel() {
 
           {/* 界面：Minimax 的生成参数，默认读取工作流；与图片高级设置共用输入控件 */}
           {isMinimax && <><VideoResolutionControls workflowId={workflowId} value={resolution} onChange={(value) => setResolutions((current) => ({ ...current, [workflowId]: value }))} disabled={generating} /><VideoGenerationControls key={workflowId} workflowId={workflowId} value={generationSettings} onChange={(value) => setSettingsByWorkflow((current) => ({ ...current, [workflowId]: value }))} disabled={generating} /></>}
+          {!isMinimax && <AdvancedSettingsSection disabled={generating} />}
           {videoUrl && (
             <div
               className={cn(
@@ -266,6 +274,7 @@ export function VideoCreatePanel() {
         </div>
       </div>
 
+      <WorkflowModelNotice readiness={readiness} />
       <div
         className={cn(
           "z-10 shrink-0 bg-background p-2 sm:p-3 md:border-t lg:sticky lg:bottom-0 lg:mt-auto",
@@ -275,7 +284,7 @@ export function VideoCreatePanel() {
       >
         <button
           type="submit"
-          disabled={generating}
+          disabled={generating || readiness.blocked}
           className={cn(
             "inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl px-8 text-base font-semibold shadow transition-colors active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60 sm:h-14",
             PRIMARY_BUTTON_CLASS

@@ -40,7 +40,7 @@ const NEGATIVE_FIELDS: LocalizedPresetFieldDef[] = [
 ];
 
 /**
- * 反向提示词预设弹框：与「预设提示词」共用 PresetDialogShell，
+ * 反向提示词预设弹框负责选中和应用预设，
  * 自定义预设写入用户数据文件（negativePresets 段）长期保存。
  */
 export function NegativePromptPresetDialog({
@@ -78,11 +78,7 @@ export function NegativePromptPresetDialog({
       title={t("create.negativePromptPresetDialog.title")}
       description={NEGATIVE_PRESET_DESCRIPTION}
       titleId="negative-preset-dialog-title"
-      groups={[
-        { id: "negative", label: t("create.negativePromptPresetDialog.groupLabel") },
-      ]}
-      activeGroupId="negative"
-      onActiveGroupChange={() => {}}
+      groupLabel={t("create.negativePromptPresetDialog.groupLabel")}
       items={items}
       selectedId={draftPresetId}
       onSelectedIdChange={setDraftPresetId}
@@ -99,7 +95,7 @@ export function NegativePromptPresetDialog({
         },
       ]}
       fields={localizedFields}
-      onCreate={(_groupId, values) =>
+      onCreate={values =>
         addCustomPreset(values.name ?? "", values.negative ?? "")
       }
       onDeleteItem={removeCustomPreset}

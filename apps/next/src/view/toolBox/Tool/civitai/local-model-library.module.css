@@ -245,13 +245,38 @@
 /* 原目录写入规则由 hook 与主进程负责，换位置并不会放宽权限。 */
 /* 没有任何目录可写时也保留入口位置，禁用状态能够解释操作边界。 */
 .management { min-width: 0; flex: 1; }
-/* 移动、删除共用已有流程，这里只并排组织两个入口。 */
-/* 批量补全和详情不再混入此组，视觉位置对应用户确认的新工具栏。 */
-.managementGrid { display: flex; flex-wrap: wrap; gap: 8px; }
+/* 模型管理按钮保持单行，窄面板只横向滚动这组按钮。 */
+.managementGrid { display: flex; flex-wrap: nowrap; gap: 8px; overflow-x: auto; scrollbar-width: thin; }
 /* 管理按钮与右边密度保持同一命中高度，不因图标不同而上下错位。 */
 /* 细边框使用主题色，删除仅由文字颜色与确认弹窗表达风险。 */
 /* 按钮可随译文变宽，不使用固定百分比把长词截掉。 */
-.managementGrid > button { display: flex; min-height: 32px; align-items: center; justify-content: center; gap: 6px; padding: 6px 9px; border: 1px solid var(--border); border-radius: 7px; font-size: 11px; }
+.managementGrid > button[data-local-model-visibility-view] { border-color: transparent; color: var(--muted-foreground); }
+.managementGrid > button[data-local-model-visibility-view]:hover { color: var(--foreground); text-decoration: underline; }
+.managementGrid > button { display: flex; flex: 0 0 auto; white-space: nowrap; min-height: 32px; align-items: center; justify-content: center; gap: 6px; padding: 6px 9px; border: 1px solid var(--border); border-radius: 7px; font-size: 11px; }
+/* 高亮画在按钮内部，窄栏滚动时也能看见。 */
+.managementGrid > .visibilityConfirm:enabled { cursor: pointer; }
+@media (hover: hover) {
+  .managementGrid > .visibilityConfirm:enabled:hover {
+    background-color: color-mix(in srgb, var(--primary) 12%, transparent);
+    border-color: var(--accent-stroke);
+  }
+}
+.managementGrid > .visibilityConfirm:enabled:active {
+  background-color: color-mix(in srgb, var(--primary) 23%, transparent);
+  border-color: var(--accent-stroke);
+}
+/* 开启减少动态效果时，按下只改变颜色，按钮位置和大小保持不变。 */
+@media (prefers-reduced-motion: no-preference) {
+  .managementGrid > .visibilityConfirm:enabled {
+    transition: background-color 120ms ease-out, border-color 120ms ease-out, scale 120ms ease-out;
+  }
+  .managementGrid > .visibilityConfirm:enabled:active {
+    scale: .96;
+    transition-duration: 60ms;
+  }
+}
+/* 焦点环向内画，避免被滚动区域裁掉。 */
+.management .managementGrid > button:focus-visible { outline-offset: -2px; }
 /* 删除仅使用危险色文字，危险确认和回收站行为继续属于既有业务对话框。 */
 /* 两种主题都清晰但不艳红，不能靠粗边框夸大普通管理动作。 */
 .danger { color: #d84966; }
@@ -308,3 +333,15 @@
 /* 移动和删除允许在左侧内换行，视图三个命中区仍始终在右边。 */
 /* 三面板的业务归属保持不变，详情采用原资源弹窗而非叠盖全局 nav。 */
 @media (max-width: 650px) { .workspace { --library-sidebar-open-width: 135px; --library-sidebar-gap: 4px; grid-template-columns: var(--library-sidebar-width) var(--library-sidebar-gap) minmax(0, 1fr) 0px 0px; padding: 2px; } .catalogHeader, .catalogScroll { padding: 10px; } .catalogTitle { flex-wrap: wrap; gap: 6px; } .catalogTitle h1 { max-width: calc(100% - 30px); } .back { margin-left: 0; } .modelGrid { gap: 8px; } .filters { flex-wrap: wrap; } .searchGroup { flex-basis: 100%; } .managementGrid { gap: 4px; } .managementGrid > button { padding-inline: 6px; } }
+
+/* 模型卡片区原位切换时淡入，避免整个工作区重载。 */
+@media (prefers-reduced-motion: no-preference) {
+  .modelGrid[data-hidden-model-view] {
+    animation: model-visibility-in 160ms ease-out;
+  }
+}
+
+@keyframes model-visibility-in {
+  from { opacity: 0; transform: translateY(3px); }
+  to { opacity: 1; transform: translateY(0); }
+}

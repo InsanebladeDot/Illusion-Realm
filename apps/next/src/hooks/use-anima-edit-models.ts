@@ -17,6 +17,8 @@ import { editDraftSetter, getAnimaEditDraft, patchAnimaEditDraft, useAnimaContro
 import type { SetStateAction } from 'react';
 import type { SelectedExtension } from '@/types/extension';
 import { useSettingsStore } from "@/stores/useSettingsStore";
+import { t } from "@/i18n";
+import { isModelNameHidden } from "@/utils/local-model-visibility";
 import { getSelectedModelDisplay } from "@/data/models";
 import { filterAndSortExtensions } from "@/data/extensions";
 import { buildGenerateParams } from "@/utils/comfy/buildGenerateParams";
@@ -56,6 +58,7 @@ export function useAnimaEditModels(mode: ControlMode | 'text') {
   // 模型元数据、封面和版本分组继续使用原扫描适配器。
   // 用户切换本地模型目录时资源列表更新，已输入的指令不会随列表刷新丢失。
   const localModels = useSettingsStore((state) => state.models), paths = useSettingsStore((state) => state.paths);
+  const hidden = useSettingsStore(state => state.hiddenModelPaths);
   const resources = filterAndSortExtensions("", localModels, paths, null, "anima");
   // 如果扫描已提供编辑文件就复用该版本，不能额外显示同一文件的模板别名。
   // 离线目录未扫描到时才提供可重选的回退项，运行时仍做实时存在性验证。
@@ -74,7 +77,7 @@ export function useAnimaEditModels(mode: ControlMode | 'text') {
   // 隐藏表单各自绑定模式，不能初始化另一个控制模板的资源。
   // null 模型回退本模式 settings，不使用另一模板的默认文件。
   // 修改选择不会自动提交，任务仍只由公共生成按钮触发。
-  useAnimaEditStore(); useAnimaControlStore();
+  const editWorkflow = useAnimaEditStore(state => state.editWorkflow); useAnimaControlStore();
   const draft = getAnimaEditDraft(mode), selectedModel = draft.selectedModel, setSelectedModel = editDraftSetter(mode, 'selectedModel');
   // 只在第一次创建编辑器时预选，后续刷新资源不能撤销用户主动移除。
   // 初始权重为编辑模板的 1，额外 LoRA 则沿用普通图片界面的添加默认值。
@@ -96,11 +99,15 @@ export function useAnimaEditModels(mode: ControlMode | 'text') {
   // effect 再读当前值，StrictMode 重放也不复活已删除的扩展。
   // 使用稳定 store 动作，不将每帧新建 setter 放入 effect 依赖。
   // 资源扫描更新只提供可选项，不覆盖用户已经确认的模型。
-  useEffect(() => { if (mode === 'text' && useAnimaEditStore.getState().extensions === null) useAnimaEditStore.getState().setExtensions([{ extensionId: editVersion?.id ?? EDIT_LORA_ID, weight: 1 }]); }, [editVersion?.id, mode]);
+  useEffect(() => { if (mode === 'text' && useAnimaEditStore.getState().editWorkflow === 'anima-edit' && useAnimaEditStore.getState().extensions === null) useAnimaEditStore.getState().setExtensions([{ extensionId: editVersion?.id ?? EDIT_LORA_ID, weight: 1 }]); }, [editVersion?.id, mode, editWorkflow]);
   // 选择后的封面和名称由统一适配器提供，避免只更新标题而仍提交旧路径。
   // 尚未选择时展示默认 UNet 文件名，用户知道实际运行将尝试加载哪个文件。
-  const display = selectedModel ? getSelectedModelDisplay(selectedModel, localModels) : { name: draft.settings.checkpointName.split(/[/\\]/).pop() ?? "Anima", cover: modelCover };
+  const display = selectedModel && isModelNameHidden(selectedModel.versionId, [], hidden)
+    ? { name: t("toolBox.civitai.visibility.hiddenName"), cover: "" }
+    : selectedModel ? getSelectedModelDisplay(selectedModel, localModels) : { name: draft.settings.checkpointName.split(/[/\\]/).pop() ?? "Anima", cover: modelCover };
   const snapshot = (value: AnimaEditSettings): AnimaEditSettings => {
+    // 原 H3 模型链独立，不注入 Anima 的编辑 LoRA 或主模型。
+    if (value.editWorkflow === "minimax-image-edit") return structuredClone(value);
     // 同一个标准组装器负责模型目录约束、LoRA 路径解析和强度夹取。
     // 空模型 id 不属于本地 checkpoint，组装器会留下 checkpointName 未设置。
     // 本层在未设置时使用编辑默认 UNet，不能回落到任意首个扫描文件。

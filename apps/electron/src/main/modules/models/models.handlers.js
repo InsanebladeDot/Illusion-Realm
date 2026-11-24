@@ -19,6 +19,7 @@ const { readLocalModelMetadata, validateMetadataArgs } = require("./local-model-
 // IPC 入参先做形状检查，异步真实路径检查在服务内部完成。
 // 服务返回稳定的失败状态，避免日志输出包含路径的系统异常。
 const { recoverLocalModel, validateRecoveryArgs } = require("./local-model-recovery");
+const { hashLocalModel } = require("./local-model-hash-service");
 
 /**
  * modelScanner 接受的模型类型（从其签名派生，避免与实现重复声明）。
@@ -68,6 +69,10 @@ function validateScanArgs(args) {
  * @returns {void}
  */
 function registerModelHandlers() {
+  // 只计算指定文件，不查询 C站；授权和目录锁仍在主进程执行。
+  registerHandle(IPC_CHANNELS.MODELS_HASH_LOCAL,
+    /** @param {Electron.IpcMainInvokeEvent} _event @param {string} filePath */
+    async (_event, filePath) => hashLocalModel(filePath), validateRecoveryArgs);
   // 界面：本地模型详情中的「通过 SHA-256 补全资料」。
   // 仅允许单个路径，用户不能指定摘要、查询来源或保存位置。
   // registerHandle 统一封装成功结果和参数验证失败。

@@ -1,4 +1,6 @@
 "use client";
+import { HoverTip } from "@/components/hover-tip";
+
 
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { createPortal } from "react-dom";
@@ -651,28 +653,28 @@ export function View3DPromptDialog({
 
             {/* 全屏按钮 + 快捷键提示（仅作用于 3D 区域） */}
             <div className="absolute right-2 top-2 z-10 flex items-center gap-1">
-              <button
+              <HoverTip asChild layer="window" label={(t("view3d.fullscreen.windowTitle")) ?? ""}><button
                 type="button"
                 data-view3d-fullscreen-window
                 aria-pressed={fullscreen === "window"}
-                title={t("view3d.fullscreen.windowTitle")}
+
                 onClick={enterWindowFullscreen}
                 className="inline-flex h-7 items-center gap-1 rounded-md bg-black/55 px-2 text-[11px] text-white/85 transition-colors hover:bg-black/75"
               >
                 <Maximize2 className="h-3.5 w-3.5" />
                 {t("view3d.fullscreen.window")}
-              </button>
-              <button
+              </button></HoverTip>
+              <HoverTip asChild layer="window" label={(t("view3d.fullscreen.borderlessTitle")) ?? ""}><button
                 type="button"
                 data-view3d-fullscreen-borderless
                 aria-pressed={fullscreen === "borderless"}
-                title={t("view3d.fullscreen.borderlessTitle")}
+
                 onClick={() => void enterBorderlessFullscreen()}
                 className="inline-flex h-7 items-center gap-1 rounded-md bg-black/55 px-2 text-[11px] text-white/85 transition-colors hover:bg-black/75"
               >
                 <Expand className="h-3.5 w-3.5" />
                 {t("view3d.fullscreen.borderless")}
-              </button>
+              </button></HoverTip>
               {fullscreen !== "none" && (
                 <button
                   type="button"
@@ -799,11 +801,11 @@ export function View3DPromptDialog({
                   >
                     {modelHistory.map((item) => (
                       <li key={item.path}>
-                        <button
+                        <HoverTip asChild layer="window" label={(item.path) ?? ""}><button
                           type="button"
                           data-view3d-history-item={item.path}
                           aria-current={storedModelPath === item.path}
-                          title={item.path}
+
                           onClick={() => void applyModelPath(item.path)}
                           className={cn(
                             "flex w-full items-center justify-between gap-2 rounded px-1.5 py-1 text-left text-[11px] transition-colors hover:bg-accent",
@@ -814,7 +816,7 @@ export function View3DPromptDialog({
                           <span className="shrink-0 text-[10px] text-muted-foreground">
                             {formatRelativeTime(item.at)}
                           </span>
-                        </button>
+                        </button></HoverTip>
                       </li>
                     ))}
                   </ul>

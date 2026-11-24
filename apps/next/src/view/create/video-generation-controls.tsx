@@ -15,7 +15,7 @@ export function VideoGenerationControls({ workflowId = "minimax", value, disable
   const frames = getVideoFrameCount(settings);
   const actualDuration = frames / settings.fps;
   const duration = settings.frameCount === undefined ? settings.durationSeconds : Number(actualDuration.toFixed(3));
-  return <AdvancedSettingsSection><fieldset disabled={disabled} data-video-generation-settings className="min-w-0 space-y-3">
+  return <AdvancedSettingsSection disabled={disabled}><fieldset disabled={disabled} data-video-generation-settings className="min-w-0 space-y-3">
     {/* 界面：高级设置中的步数、帧率、时长；帧数只在内部计算，不展示输入项 */}
     <div className="flex items-center justify-between gap-2"><span className="text-sm font-semibold">{t("create.videoSettings.title")}</span><button type="button" data-video-parameters-reset onClick={() => onChange(undefined)} className="text-xs text-muted-foreground hover:text-foreground">{t("create.videoModels.reset")}</button></div>
     {/* 界面：视频参数直接复用图片高级设置的完整参数行 */}

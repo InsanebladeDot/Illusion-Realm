@@ -151,8 +151,15 @@ function HeroActionCard({
     <button
       type="button"
       onClick={onClick}
+      // 首页入口：用主题表面保持深浅底色，不在悬停时切换两套白底和深底。
+      // 原来的父层 drop-shadow 加子层 backdrop-blur 会构成嵌套离屏合成。
+      // 卡片位移又触发该表面重绘，部分 Electron 显卡路径可能短暂暴露白色底层。
+      // 像隔着两层磨砂玻璃移动纸片，合并为普通半透明表面可减少重新合成。
+      // 只过渡背景、阴影和位移，避免 transition-all 顺带动画新出现的 outline。
+      // 保留一像素主题焦点提示，不能用消除键盘反馈来掩盖闪白。
+      // 背景图、入口动作与导航动画都沿用原实现；这里只调整入口的绘制方式。
       className={cn(
-        "group flex items-center gap-3 rounded-2xl bg-white/70 p-4 text-left backdrop-blur transition-all hover:-translate-y-0.5 hover:bg-white/85 hover:shadow-lg dark:bg-zinc-900/50 dark:hover:bg-zinc-900/70",
+        "group flex items-center gap-3 rounded-2xl bg-background/75 p-4 text-left text-foreground transition-[background-color,box-shadow,translate] duration-150 hover:-translate-y-0.5 hover:bg-background/90 hover:shadow-lg motion-reduce:transition-none motion-reduce:hover:translate-y-0",
         THIN_BORDER_CLASS
       )}
     >
@@ -201,8 +208,10 @@ export function HomeHero() {
         </span>
       </div>
 
-      {/** 品牌层：压在图上，白字 + 投影保证任何底色上都读得清 */}
-      <div className="relative z-10 flex min-h-[var(--app-content-height,100dvh)] flex-col items-start justify-center px-8 pb-[16vh] text-left text-white drop-shadow-[0_2px_12px_rgba(15,23,42,0.6)] sm:px-14 lg:px-20">
+      {/* 品牌层：文字阴影只作用于字形，不再给包含所有按钮的整层添加滤镜。 */}
+      {/* 这样悬停按钮无需重新计算祖先的离屏滤镜，背景图仍保持原来明暗遮罩。 */}
+      {/* 文字阴影不改变布局边界，窄窗口的换行和导航占用空间保持原规则。 */}
+      <div className="relative z-10 flex min-h-[var(--app-content-height,100dvh)] flex-col items-start justify-center px-8 pb-[16vh] text-left text-white [text-shadow:0_2px_12px_rgba(15,23,42,0.6)] sm:px-14 lg:px-20">
         <div className="w-full max-w-[560px]">
         <p className="text-[10px] font-medium tracking-[0.28em] text-white/80">
           {t("home.hero.studio")}
@@ -240,7 +249,7 @@ export function HomeHero() {
           data-home-hero-explore
           onClick={() => go("/tools")}
           className={cn(
-            "mt-3 flex w-full items-center justify-between rounded-2xl bg-white/25 px-4 py-3 text-left text-sm font-medium text-white backdrop-blur transition-colors hover:bg-white/35",
+            "mt-3 flex w-full items-center justify-between rounded-2xl bg-white/25 px-4 py-3 text-left text-sm font-medium text-white transition-colors hover:bg-white/35 motion-reduce:transition-none",
             "border border-white/30"
           )}
         >

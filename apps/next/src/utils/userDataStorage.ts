@@ -98,6 +98,23 @@ export function createUserDataSectionPersistStorage<P>(
     },
     setItem: async (_name, value) => {
       const doc = await ensureDocumentLoaded();
+      // persist 也会在仅改变临时界面状态时收到相同的持久化内容。
+      // 先比较当前分段的实际 JSON，避免为了相同设置重写整份用户文档。
+      // 比较遵守 JSON 的保存语义，函数或 undefined 不会被错误当成已落盘字段。
+      // 没有用全局旧签名判断，因此 prime 后、换路径后仍比较当前文档。
+      // settings 的 userDataPath 在分段里，真实换路径仍然会触发保存。
+      // 首次加载失败依旧向上抛出，不用“相同”判断掩盖读盘异常。
+      if (JSON.stringify(doc[section]) === JSON.stringify(value.state)) return;
+      // 比较只针对当前分段，不为一次开关遍历整个 generationHistory 或画布集合。
+      // 设置段本身通常较小；大工程段仍有序列化成本，不能宣称这一步是零开销。
+      // 已经 pending 的另一分段不会在这里被清除，相同设置不能撤销待写的生成记录。
+      // 如果上次写入失败，pendingSave 保持原值；后续显式 flush 仍可重试。
+      // setItem 返回值仍是 Promise，调用方原来的水合等待关系没有变化。
+      // 旧 doc[section] 未定义时与正常对象不同，首次新增分段不会被误判无变化。
+      // JSON 的属性序不同可能造成一次额外写入，但不会错误跳过不同内容。
+      // 不为去重排序或修改原对象的键，避免未知字段顺序被优化逻辑重排。
+      // 不使用概率哈希判断相同，避免碰撞导致真实设置修改永远无法保存。
+      // 相同分段返回前没有重置节流计时器，别的有效修改仍按原时间保存。
       documentCache = {
         ...doc,
         [section]: value.state,

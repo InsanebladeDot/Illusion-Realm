@@ -31,7 +31,7 @@ const { validateMessageImages } = require("./input-messages");
  * undefined 只用于旧客户端兼容，不代表允许 null 或空字符串。
  * @param {unknown} value
  */
-function validProvider(value) { return value === undefined || value === 'siliconflow' || value === 'euzhi'; }
+function validProvider(value) { return value === undefined || value === 'siliconflow' || value === 'euzhi' || value === 'glm'; }
 // provider validator 只检查允许集，具体默认行为由每个 handler 明确提供。
 // 状态接口允许省略不代表目录接口允许省略，目录仍要求明确 provider。
 // validation error 文案固定，不插值输入，避免把错误参数里的令牌泄露到页面。
@@ -73,7 +73,7 @@ function validateRunArgs(args) {
     // 内部 runner 仍由 Python 限幅，不能绕过此处依赖 UI 自律。
     if (c.maxSteps !== undefined && (typeof c.maxSteps !== 'number' || !Number.isInteger(c.maxSteps) || c.maxSteps < 1 || c.maxSteps > 6)) return 'Invalid Agent round limit';
     if (!validProvider(c.provider)) return 'Invalid Agent provider';
-    if (c.baseUrl !== undefined && c.baseUrl !== ENDPOINTS[c.provider === 'euzhi' ? 'euzhi' : 'siliconflow']) return 'Invalid Agent endpoint';
+    if (c.baseUrl !== undefined && c.baseUrl !== ENDPOINTS[c.provider === 'glm' ? 'glm' : c.provider === 'euzhi' ? 'euzhi' : 'siliconflow']) return 'Invalid Agent endpoint';
     if (c.model !== undefined && (typeof c.model !== 'string' || !c.model.trim() || c.model.length > 200)) return 'Invalid Agent model';
   }
   return null;

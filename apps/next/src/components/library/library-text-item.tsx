@@ -1,4 +1,6 @@
 "use client";
+import { HoverTip } from "@/components/hover-tip";
+
 
 /** 唯一的资料库文本卡片，把源数据差异留给角色与标签适配器。 */
 // 主操作、收藏和详情是并列按钮，点心形不能顺便选中一个角色。
@@ -29,11 +31,11 @@ export function LibraryTextItem(props: LibraryCardProps) {
   const { prefix, id, title, text, subtitle, selected, favorite, onSelect, onFavorite, onDetail } = props;
   return <article data-library-text {...{ [`data-${prefix}-card`]: id, [`data-${prefix}-selected`]: String(selected) }} className={cn("inline-flex max-w-full items-center rounded-lg border bg-background text-xs", selected ? "border-accent-stroke bg-accent-soft ring-1 ring-accent-stroke" : "border-border")}>
     {/* modal：文字卡片主操作不包住心形和详情，避免嵌套交互控件。 */}
-    <button type="button" aria-label={t("characters.card.select", { name: title })} aria-pressed={selected} title={`${title} ${text ?? subtitle ?? ""}`} onClick={onSelect} className="flex min-h-9 min-w-0 items-center gap-1.5 rounded-lg px-3 py-1.5 text-left hover:bg-muted focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent-stroke">
+    <HoverTip asChild layer="window" label={`${title} ${text ?? subtitle ?? ""}`}><button type="button" aria-label={t("characters.card.select", { name: title })} aria-pressed={selected} onClick={onSelect} className="flex min-h-9 min-w-0 items-center gap-1.5 rounded-lg px-3 py-1.5 text-left hover:bg-muted focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent-stroke">
       <span aria-hidden className="h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: textTagColor(props.colorKey ?? id) }} />
       <span className="max-w-[14rem] truncate font-semibold text-foreground">{title}</span>
       <span className="max-w-[18rem] truncate text-muted-foreground">{text ?? subtitle}</span>
-    </button>
+    </button></HoverTip>
     {onDetail && <button type="button" {...{ [`data-${prefix}-detail`]: id }} aria-label={t("characters.card.viewDetail", { name: title })} onClick={onDetail} className="shrink-0 rounded p-1.5 text-muted-foreground hover:bg-muted focus-visible:ring-1 focus-visible:ring-accent-stroke"><Info size={14} /></button>}
     {onFavorite && <button type="button" {...{ [`data-${prefix}-favorite`]: id }} aria-pressed={!!favorite} aria-label={t(favorite ? "characters.card.unfavorite" : "characters.card.favorite", { name: title })} onClick={onFavorite} className="mr-1 shrink-0 rounded p-1.5 text-muted-foreground hover:bg-muted focus-visible:ring-1 focus-visible:ring-accent-stroke"><Heart size={14} className={favorite ? "fill-accent-fill text-accent-fill" : ""} /></button>}
   </article>;

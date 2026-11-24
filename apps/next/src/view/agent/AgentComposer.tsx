@@ -1,5 +1,7 @@
 "use client";
 
+import { HoverTip } from "@/components/hover-tip";
+
 import { useEffect, useRef } from "react";
 // 发送入口使用向上箭头，对齐参考图底部右侧的小圆形按钮。
 // 图标只改变外观，点击与 Enter 仍调用同一个 sendDraft。
@@ -48,9 +50,8 @@ function AgentContextChips() {
   const workspace = outputPath?.trim() ?? "";
 
   return (
-    <div
+    <HoverTip asChild label={(t("agent.composer.context")) ?? ""}><div
       data-agent-context
-      title={t("agent.composer.context")}
       // 上下文继续保留在可访问内容中，视觉上不再以三枚胶囊占用正文输入高度。
       // 输出目录仍从正式设置读取，布局修改不改变工具访问根目录或会话权限。
       // 原有 data-agent-workspace 继续指向真实目录内容，避免丢失上下文说明。
@@ -60,15 +61,14 @@ function AgentContextChips() {
       <span className="rounded-full bg-muted px-2 py-0.5">
         {t("agent.composer.modeLocal")}
       </span>
-      <span
+      <HoverTip asChild label={(workspace || t("agent.composer.workspaceUnset")) ?? ""}><span
         data-agent-workspace
         aria-label={t("agent.composer.workspace")}
-        title={workspace || t("agent.composer.workspaceUnset")}
         className="max-w-[240px] truncate rounded-full bg-muted px-2 py-0.5"
       >
         {workspace || t("agent.composer.workspaceUnset")}
-      </span>
-    </div>
+      </span></HoverTip>
+    </div></HoverTip>
   );
 }
 
@@ -115,7 +115,8 @@ function AgentComposerInput() {
       // 输入区预留约两行视觉高度，单行提问也保持参考图的舒适留白。
       // 高度增长仍受原来的 148px 上限约束，长草稿通过输入框内部滚动。
       // min-w-0 避免长英文草稿把模型、权限和发送按钮挤出 main。
-      className="min-h-[52px] w-full min-w-0 resize-none bg-transparent px-1 py-2 text-sm outline-none placeholder:text-muted-foreground/65"
+      // 聚焦时只显示输入光标，覆盖全局输入框的焦点轮廓。
+      className="min-h-[52px] w-full min-w-0 resize-none bg-transparent px-1 py-2 text-sm outline-none! placeholder:text-muted-foreground/65"
     />
   );
 }
@@ -175,11 +176,11 @@ function AgentSendButton() {
   const running = useAgentStore((state) => state.activeAssistantMessageId !== null);
   const label = t(running ? "agent.status.stop" : "agent.composer.send");
   return (
-    <button type="button" data-agent-send data-agent-composer-stop={running || undefined}
-      onClick={() => void (running ? cancelRun() : sendDraft())} title={label} aria-label={label}
+    <HoverTip asChild label={(label) ?? ""}><button type="button" data-agent-send data-agent-composer-stop={running || undefined}
+      onClick={() => void (running ? cancelRun() : sendDraft())} aria-label={label}
       className={cn("inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full", PRIMARY_BUTTON_CLASS)}>
       {running ? <Square className="h-3 w-3 fill-current" /> : <ArrowUp className="h-4 w-4" />}
-    </button>
+    </button></HoverTip>
   );
 }
 

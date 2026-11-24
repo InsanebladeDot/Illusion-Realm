@@ -1,4 +1,6 @@
 "use client";
+import { HoverTip } from "@/components/hover-tip";
+
 
 import { AlertCircle, CheckCircle2, FolderSearch, RefreshCw } from "lucide-react";
 import { useTranslation, type MessageKey } from "@/i18n";
@@ -60,10 +62,10 @@ export function FfmpegStatusBar({
                 : t("toolBox.videoEdit.ffmpeg.unknownSource")}
               ）
             </p>
-            <p className="truncate text-xs opacity-80" title={status?.ffmpegPath ?? ""}>
+            <HoverTip asChild layer="window" label={(status?.ffmpegPath ?? "") ?? ""}><p className="truncate text-xs opacity-80">
               {status?.ffmpegPath}
               {status?.version ? ` · ${status.version}` : ""}
-            </p>
+            </p></HoverTip>
           </>
         ) : (
           <>

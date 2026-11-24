@@ -1,4 +1,6 @@
 "use client";
+import { HoverTip } from "@/components/hover-tip";
+
 
 import { Check, Monitor, Moon, Sun } from "lucide-react";
 import type { ReactNode } from "react";
@@ -44,7 +46,7 @@ export function ThemeChoices() {
 export function ColorChoices() {
   const { t } = useTranslation();
   const selected = useSettingsStore(state => state.colorPreset);
-  return <AppearanceSection title={t("settings.appearance.colorsTitle")} hint={t("settings.appearance.colorsHint")}><div className="grid grid-cols-4 gap-2">{COLOR_PRESETS.map(preset => <button key={preset} type="button" data-color-preset={preset} aria-pressed={selected === preset} onClick={() => useSettingsStore.getState().setColorPreset(preset)} className={cn(CHOICE, selected === preset && "border-accent-stroke ring-1 ring-accent-stroke")}><span aria-hidden="true" className="block h-8 rounded-lg" style={{ background: ACCENT_PALETTES[preset].swatch }} /><span className="block truncate px-0.5 pb-0.5 pt-1.5 text-center text-[10px]" title={t(`settings.appearance.colors.${preset}`)}>{t(`settings.appearance.colors.${preset}`)}</span><SelectionMark active={selected === preset} /></button>)}</div></AppearanceSection>;
+  return <AppearanceSection title={t("settings.appearance.colorsTitle")} hint={t("settings.appearance.colorsHint")}><div className="grid grid-cols-4 gap-2">{COLOR_PRESETS.map(preset => <button key={preset} type="button" data-color-preset={preset} aria-pressed={selected === preset} onClick={() => useSettingsStore.getState().setColorPreset(preset)} className={cn(CHOICE, selected === preset && "border-accent-stroke ring-1 ring-accent-stroke")}><span aria-hidden="true" className="block h-8 rounded-lg" style={{ background: ACCENT_PALETTES[preset].swatch }} /><HoverTip asChild layer="window" label={(t(`settings.appearance.colors.${preset}`)) ?? ""}><span className="block truncate px-0.5 pb-0.5 pt-1.5 text-center text-[10px]">{t(`settings.appearance.colors.${preset}`)}</span></HoverTip><SelectionMark active={selected === preset} /></button>)}</div></AppearanceSection>;
 }
 
 export function FontChoices() {

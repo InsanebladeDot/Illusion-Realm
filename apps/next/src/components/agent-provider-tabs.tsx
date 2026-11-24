@@ -10,7 +10,7 @@
 // 显式词条映射让运行期枚举与未引用词条检查使用同一组键。
 // 只改显示文案选择，不把翻译结果当作 provider 或 model 运行参数。
 // 固定来源链接不包含 API Key，用户可独立核对站点公开价格。
-import { AGENT_PROVIDER_LABELS } from '@/data/agent-providers';
+import { AGENT_PROVIDERS, AGENT_PROVIDER_LABELS } from '@/data/agent-providers';
 import type { AgentProvider } from '@illusion-realm/shared';
 import { useTranslation } from '@/i18n';
 import { cn } from '@/utils/cn';
@@ -42,7 +42,7 @@ export function AgentProviderTabs({ value, onChange, disabled }: Props) {
   // onChange 只传允许集值，不把 click event 或 DOM 节点写入配置。
   // 组件没有副作用，外层打开弹窗也不会自动触发一次“选择”。
   const { t } = useTranslation();
-  return <div className="flex flex-wrap gap-2">{(['siliconflow', 'euzhi'] as const).map(provider =>
+  return <div className="flex flex-wrap gap-2">{AGENT_PROVIDERS.map(provider =>
     <button key={provider} type="button" data-agent-provider={provider} aria-pressed={value === provider} disabled={disabled} onClick={() => onChange(provider)}
       className={cn('rounded-xl border px-4 py-2 text-sm transition-colors disabled:opacity-50', value === provider ? 'border-primary/40 bg-primary/10 text-primary' : 'border-border/50 hover:bg-muted')}>
       {t(AGENT_PROVIDER_LABELS[provider])}

@@ -53,6 +53,8 @@
 /* 创建页也使用不透明的外层背景，避免透明规则抹掉与展示区之间的色差。 */
 /* 其他主题回退到 shell 底色，边框和尺寸保持原有布局契约。 */
 [data-app-shell] [data-app-main] { border: 1px solid var(--border); padding: 4px; background: var(--workspace-background, var(--shell-background)); }
+/* 画布全幅面板和 main 是分开的 DOM；面板打开时一起收起 main 的边框和留白。 */
+body:has(:is([data-canvas-network-preview], [data-composition-root])) [data-app-shell] [data-app-main][data-page-transition="/canvas"] { border: 0; padding: 0; }
 /* 展示层的 12px padding 与外层缝隙独立，让横幅、标签栏和工具内容不贴边。 */
 /* 圆角继承 main 的实际值，桌面 8px 与窄屏 9px 同步，避免内层出现直角缺口。 */
 /* 整屏高度须扣掉底部 40px、外框 10px 和展示层上下 24px，避免底部被裁切。 */
@@ -198,16 +200,27 @@ body:has([data-app-main][data-page-transition="/agent"]) { position: fixed; inse
 /* 原型的淡底色仅作用于选中按钮，不将整条标签渲染成实心色块。 */
 /* 图标固定15px，与原型 SVG 尺寸一致，业务 nav 的16px不受影响。 */
 [data-create-mode-tabs] button[aria-selected="true"] { background: var(--muted); color: var(--accent-text); font-weight: 600; }
+/* 悬停只改变文字与继承 currentColor 的图标，不给未选标签新增填充或边框。 */
+/* 选择仍由 aria-selected 表达，移开鼠标不会取消当前业务模式。 */
+/* 该规则限定创建页，素材分类与其他公共标签继续使用各自交互。 */
+/* 图标使用currentColor，和文字一同变化，不需再写一份SVG悬停颜色。 */
+/* 没有改变边框宽度或padding，鼠标经过不会使一排标签发生位移。 */
+/* 已选项继续用同一accent文字，移出鼠标后仍保留原选中填充和条底下划线。 */
+/* 此处不清理focus-visible轮廓，鼠标hover和键盘focus是两种不同状态。 */
+/* 过渡仍沿用公共标签的transition-colors，减少动态设置由项目原机制处理。 */
+/* label来自原i18n，CSS不依据图片、视频等中文文案定位。 */
+[data-create-mode-tabs] button:hover { color: var(--accent-text); }
 [data-create-mode-tabs] button > svg { width: 15px; height: 15px; }
 /* 下划线距按钮底部12px，位于55px条的底边，与原型 active:after 一致。 */
 /* 使用伪元素而非布局边框，不会在选中前后改变按钮占用高度。 */
 /* 窄屏可以横向滚动整条，禁止换行产生第二行或垂直占位。 */
 [data-create-mode-tabs] button[aria-selected="true"]::after { content: ""; position: absolute; bottom: -12px; left: 10px; right: 10px; height: 2px; background: var(--accent-text); }
-[data-create-model-section] { border-bottom: 1px solid var(--border); padding-bottom: 16px; }
-[data-create-form-sections] > :not([data-create-model-section]) { padding-bottom: 16px; border-bottom: 1px solid var(--border); }
+[data-create-form-sections] > * { padding-bottom: 4px; border-bottom: 1px solid var(--border); }
 [data-model-cover-select] { height: 87px; padding: 16px; border-radius: 9px; }
 [data-model-cover-select] > div > span:first-child { font-size: 15px; }
-[data-create-prompt-tools] { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+/* 首行折叠的工具用实际宽度排栏，旧版固定列数只用于完整工具列表。 */
+[data-create-prompt-tools] { gap: 6px; }
+[data-create-prompt-tools]:not([data-prompt-tools-first-row]) { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 [data-create-prompt-tools] button { background: var(--muted); color: var(--muted-foreground); font-size: 11px; }
 .create-generate-footer { padding: 8px 13px 20px; border-top: 0; gap: 9px; }
 .create-generate-footer [data-generate-button] { min-height: 55px; font-size: 18px; }
@@ -230,7 +243,7 @@ body:has([data-app-main][data-page-transition="/agent"]) { position: fixed; inse
 [data-create-form-sections] :is(label[for="prompt-editor"], label[for="negative-prompt-editor"]) { font-size: 16px; font-weight: 650; }
 [data-create-size] { border: 0; border-radius: 0; padding: 0; }
 [data-model-series] > div { padding: 16px 16px 0; }
-[data-model-series] button { border-color: transparent; background: var(--muted); }
+[data-model-series] button[aria-haspopup="listbox"] { border-color: transparent; background: var(--muted); }
 [data-model-series] > div > div > button { height: 26px; padding-block: 3px; }
 [data-create-model-section] [data-selected-extensions] { flex: 1; min-width: 110px; }
 [data-create-model-section] [data-selected-extensions] > button { min-height: 24px; padding: 2px 6px; border-radius: 6px; }
@@ -269,8 +282,8 @@ body:has([data-app-main][data-page-transition="/agent"]) { position: fixed; inse
 [data-history-grid="stack"] > button > [data-file-caption] { display: block; min-width: 0; }
 [data-file-caption] { display: none; }
 @media (min-width: 1450px) {
-  [data-create-prompt-tools] { grid-template-columns: repeat(7, minmax(0, 1fr)); }
-  [data-create-prompt-tools] button { padding-inline: 2px; gap: 3px; font-size: 10px; }
+  [data-create-prompt-tools]:not([data-prompt-tools-first-row]) { grid-template-columns: repeat(7, minmax(0, 1fr)); }
+  [data-create-prompt-tools]:not([data-prompt-tools-first-row]) button { padding-inline: 2px; gap: 3px; font-size: 10px; }
 }
 @media (min-width: 821px) and (max-width: 1449px) {
   /* 此断点只压缩创建表单和 side，不再强制覆盖 nav 的展开偏好。 */
@@ -303,7 +316,7 @@ body:has([data-app-main][data-page-transition="/agent"]) { position: fixed; inse
   [data-caption-account] button { padding-inline: 2px; }
   [data-caption-account] button > :not(:first-child) { display: none; }
   [data-app-shell] [data-app-main] { border-radius: 9px; }
-  [data-create-prompt-tools] { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  [data-create-prompt-tools]:not([data-prompt-tools-first-row]) { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 [data-file-search]:focus-visible { outline: 2px solid var(--accent-stroke); outline-offset: 2px; }
 [data-create-form-sections] [data-create-prompt] button[role="switch"] { width: 29px; height: 17px; padding: 0; border-width: 2px; box-shadow: none; }
@@ -316,6 +329,16 @@ body:has([data-app-main][data-page-transition="/agent"]) { position: fixed; inse
 }
 @media (max-width: 600px) {
   .window-titlebar > div:first-child > span { display: none; }
+}
+/* head：窄窗优先保留历史按钮与当前页面，祖先路径仍可在宽窗查看。 */
+@media (max-width: 639px) {
+  .window-titlebar > div[data-window-route-navigation] { padding-left: 4px; gap: 0; }
+  [data-window-route-navigation] [data-window-route-segment]:not(:last-child),
+  [data-window-route-navigation] [data-route-separator],
+  [data-window-route-navigation] [data-model-library-location] { display: none; }
+}
+@media (max-width: 359px) {
+  [data-window-route-navigation] [data-window-titlebar-content] { display: none; }
 }
 
 /* 模型库明确选择 workspace 宿主，外壳只取消这一条路由的重复 12px 留白。 */

@@ -4,8 +4,16 @@
  */
 /** ComfyUI 代理：提交、轮询及下载共用有界请求，可取消生成由会话管理器关联服务端任务。 */
 const { randomUUID } = require("crypto");
+const { readExecutionMs } = require("./execution-time");
 const { setTimeout: delay } = require("node:timers/promises");
 const { comfyError, requestComfy, readComfyJson, normalizeComfyError } = require("./comfy-request");
+const { unetValidationCode, unetExecutionCode } = require("./unet-errors");
+
+/** @param {object} prompt @param {unknown} nodeErrors @param {string} fallback */
+function promptValidationError(prompt, nodeErrors, fallback) {
+  const code = unetValidationCode(prompt, nodeErrors);
+  return code ? comfyError(code, "ComfyUI could not find the selected UNet") : comfyError("COMFY_EXECUTION_FAILED", fallback);
+}
 
 const POLL_INTERVAL_MS = 800;
 const MAX_WAIT_MS = 10 * 60 * 1000;
@@ -72,10 +80,9 @@ async function queuePrompt(serverAddress, prompt, clientId) {
   });
 
   if (!response.ok) {
-    const detail = await response.text().catch(() => "");
-    throw comfyError("COMFY_EXECUTION_FAILED",
-      `ComfyUI 提交失败 (${response.status})${detail ? `: ${detail}` : ""}`
-    );
+    const detail = await response.json().catch(() => null);
+    // 非 400 的服务或代理故障不能诊断为缺少权重，也不回传原始响应正文。
+    throw promptValidationError(prompt, response.status === 400 ? detail?.node_errors : null, `ComfyUI 提交失败 (${response.status})`);
   }
 
   return response.json();
@@ -272,40 +279,39 @@ function collectOutputFiles(entry) {
     for (const [kind, value] of Object.entries(output ?? {})) {
       if (!Array.isArray(value)) continue;
       for (const item of value) {
-        if (
-          item &&
-          typeof item === "object" &&
-          typeof (/** @type {{ filename?: unknown }} */ (item).filename) === "string" &&
-          typeof (/** @type {{ type?: unknown }} */ (item).type) === "string"
-        ) {
-          const file = /** @type {{ filename: string, type: string, subfolder?: unknown }} */ (
-            item
-          );
-          files.push({
-            nodeId,
-            kind,
-            filename: file.filename,
-            subfolder: typeof file.subfolder === "string" ? file.subfolder : "",
-            // ComfyUI 的文件夹类型（output / temp / input）：下载时必须原样带上，
-            // PreviewImage 存的是 temp、SaveImage 存的是 output，弄错就是 404
-            type: file.type,
-            folderType: file.type,
-          });
-        }
+        const file = normalizeOutputFile(nodeId, kind, item);
+        if (file) files.push(file);
       }
     }
   }
   return files;
 }
 
+/** images 像一个信封标签，里面也可能装 MP4；媒体按文件后缀分流，下载目录保持原值。 */
+/** @param {string} nodeId @param {string} kind @param {unknown} item @returns {OutputFile | null} */
+function normalizeOutputFile(nodeId, kind, item) {
+  if (!item || typeof item !== "object") return null;
+  const file = /** @type {{ filename?: unknown, type?: unknown, subfolder?: unknown }} */ (item);
+  if (typeof file.filename !== "string" || typeof file.type !== "string") return null;
+  return {
+    nodeId,
+    kind: kind === "images" && /\.(mp4|webm|mov|mkv|m4v|avi)$/i.test(file.filename) ? "videos" : kind,
+    filename: file.filename,
+    subfolder: typeof file.subfolder === "string" ? file.subfolder : "",
+    type: file.type,
+    folderType: file.type,
+  };
+}
+
 /**
  * 轮询等待任务产出结果
  * @param {string} serverAddress
  * @param {string} promptId
+ * @param {object} prompt
  * @param {AbortSignal} [abortSignal]
  * @returns {Promise<Record<string, unknown>>} 已有输出的 history 条目
  */
-async function waitForHistory(serverAddress, promptId, abortSignal) {
+async function waitForHistory(serverAddress, promptId, prompt, abortSignal) {
   const deadline = AbortSignal.timeout(MAX_WAIT_MS);
   const signal = abortSignal ? AbortSignal.any([abortSignal, deadline]) : deadline;
 
@@ -315,9 +321,14 @@ async function waitForHistory(serverAddress, promptId, abortSignal) {
     const entry = /** @type {Record<string, unknown> | undefined} */ (
       history?.[promptId]
     );
-    const status = /** @type {{ status_str?: string, completed?: boolean } | undefined} */ (entry?.status);
-    if (status?.status_str === "error") throw comfyError("COMFY_EXECUTION_FAILED", "ComfyUI workflow execution failed");
-    if (entry && collectOutputFiles(entry).length > 0) {
+    const status = /** @type {{ status_str?: string, completed?: boolean, messages?: unknown } | undefined} */ (entry?.status);
+    if (status?.status_str === "error") {
+      const code = unetExecutionCode(prompt, status.messages);
+      if (code) throw comfyError(code, "ComfyUI failed to load the selected UNet");
+      throw comfyError("COMFY_EXECUTION_FAILED", "ComfyUI workflow execution failed");
+    }
+    // 有预览且明确未完成时继续等；旧服务省略状态时仍可取回结果。
+    if (entry && status?.completed !== false && collectOutputFiles(entry).length > 0) {
       return entry;
     }
     if (status?.completed) throw comfyError("COMFY_EXECUTION_FAILED", "ComfyUI completed without outputs");
@@ -372,7 +383,7 @@ async function listComfyModels(serverAddress) {
  * @param {string} serverAddress
  * @param {object} prompt ComfyUI API 格式工作流
  * @param {{ signal?: AbortSignal, onQueued?: (id: string) => void }} [options]
- * @returns {Promise<{ promptId: string, images: ComfyOutputRecord[], videos: ComfyOutputRecord[] }>}
+ * @returns {Promise<{ promptId: string, executionMs?: number, images: ComfyOutputRecord[], videos: ComfyOutputRecord[] }>}
  */
 async function generateWithComfy(serverAddress, prompt, options = {}) {
   if (!serverAddress) {
@@ -383,16 +394,14 @@ async function generateWithComfy(serverAddress, prompt, options = {}) {
   const queued = await queuePrompt(serverAddress, prompt, clientId);
 
   if (queued.node_errors && Object.keys(queued.node_errors).length > 0) {
-    throw comfyError("COMFY_EXECUTION_FAILED",
-      `ComfyUI 工作流校验失败: ${JSON.stringify(queued.node_errors)}`
-    );
+    throw promptValidationError(prompt, queued.node_errors, "ComfyUI 工作流校验失败");
   }
 
   const promptId = queued.prompt_id;
   if (typeof promptId !== "string" || !promptId) throw comfyError("COMFY_EXECUTION_FAILED", "ComfyUI returned no prompt ID");
   options.onQueued?.(promptId);
   options.signal?.throwIfAborted();
-  const entry = await waitForHistory(serverAddress, promptId, options.signal);
+  const entry = await waitForHistory(serverAddress, promptId, prompt, options.signal);
 
   /** @type {ComfyOutputRecord[]} */
   const images = [];
@@ -422,7 +431,7 @@ async function generateWithComfy(serverAddress, prompt, options = {}) {
   }
 
   options.signal?.throwIfAborted();
-  return { promptId, images, videos };
+  return { promptId, images, videos, executionMs: readExecutionMs(entry, promptId) };
 }
 
 module.exports = {

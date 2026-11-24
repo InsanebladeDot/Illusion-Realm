@@ -1,4 +1,6 @@
 "use client";
+import { HoverTip } from "@/components/hover-tip";
+
 
 // 下拉选项沿用原业务值，菜单外观、滚动与键盘操作统一复用采样器组件。
 import { SimpleSelect } from "@/components/SimpleSelect";
@@ -19,13 +21,14 @@ import { SimpleSelect } from "@/components/SimpleSelect";
 // copyText 沿用角色库等已有剪贴板能力，失败有明确反馈而非假复制成功。
 // 关闭以后只卸载本视图，没有播放器、临时 URL 或网络监听需要保留。
 // 不提供删除或应用历史的额外业务，本轮只实现查看、时间排序与复制。
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { PromptTranslationRecord } from "@illusion-realm/shared";
 import { ResourceDialogShell } from "@/components/ResourceDialogShell";
 import { usePromptAssistantStore } from "@/stores/usePromptAssistantStore";
 import { useToastStore } from "@/stores/useToastStore";
 import { useTranslation } from "@/i18n";
 import { copyText } from "@/utils/charactersFormat";
+import { PromptSpeechText } from "@/components/prompt-speech-text";
 
 /** 加载失败保留重试入口；成功和空历史都来自真正的用户文档。 */
 // 父工具栏会预加载偏好，但从此处独立重试可以恢复首次读取失败。
@@ -72,6 +75,26 @@ export function AssistantHistory({ onClose }: { onClose: () => void }) {
   // 组件卸载不会删除成功结果，因为记录的保存发生在请求完成边界而非视图关闭时。
   // 记录来自过去真实成功的请求，但本页面不承诺这些模型今天仍然可用。
   const { t } = useTranslation();
+  const list = useRef<HTMLDivElement>(null);
+  const copy = useCallback(async (text: string) => {
+    const copied = await copyText(text);
+    useToastStore.getState().show(t(copied ? "create.promptAssistant.copied" : "create.promptAssistant.history.copyFailed"));
+  }, [t]);
+  useEffect(() => {
+    const handleCopy = (event: KeyboardEvent) => {
+      if (event.defaultPrevented || !(event.ctrlKey || event.metaKey) || event.altKey || event.shiftKey || event.key.toLowerCase() !== "c") return;
+      if (event.target instanceof Element && event.target.closest("input, textarea, [contenteditable=true]")) return;
+      const selection = window.getSelection();
+      const text = selection?.toString();
+      // 鼠标选中普通段落时，按键可能送到页面本身。选区的两端都在历史里才接手复制。
+      if (!text || !list.current?.contains(selection?.anchorNode ?? null) || !list.current.contains(selection?.focusNode ?? null)) return;
+      event.preventDefault();
+      event.stopPropagation();
+      void copy(text);
+    };
+    document.addEventListener("keydown", handleCopy, true);
+    return () => document.removeEventListener("keydown", handleCopy, true);
+  }, [copy]);
   const { preferences, ready } = usePromptAssistantStore();
   const [oldestFirst, setOldestFirst] = useState(false);
   const [failed, setFailed] = useState(false);
@@ -98,7 +121,7 @@ export function AssistantHistory({ onClose }: { onClose: () => void }) {
     {failed ? <div role="alert" className="p-6 text-sm"><p>{t("create.promptAssistant.history.loadFailed")}</p><button type="button" onClick={() => { setFailed(false); setAttempt(value => value + 1); }} className="mt-3 rounded border border-border px-3 py-2 focus-visible:ring-2 focus-visible:ring-accent-stroke">{t("create.promptAssistant.history.retry")}</button></div>
       : !ready ? <p role="status" className="p-6 text-sm text-muted-foreground">{t("common.loading")}</p>
       : records.length === 0 ? <p data-translation-history-empty className="p-6 text-center text-sm text-muted-foreground">{t("create.promptAssistant.history.empty")}</p>
-      : <div data-translation-history-list className="mx-auto w-full max-w-5xl space-y-3">{records.map((record, index) => <TranslationRecord key={record.id} record={record} initiallyOpen={index === 0} />)}</div>}
+      : <div ref={list} data-translation-history-list className="mx-auto w-full max-w-5xl space-y-3">{records.map((record, index) => <TranslationRecord key={record.id} record={record} initiallyOpen={index === 0} onCopy={copy} />)}</div>}
   </ResourceDialogShell>;
 }
 
@@ -118,7 +141,7 @@ export function AssistantHistory({ onClose }: { onClose: () => void }) {
 // 摘要 snippet 是译文预览，用户按 Enter 或 Space 可展开查看完整内容。
 // 复制按钮位于展开内容中，不嵌套在 summary 里，避免点击复制同时切换展开。
 // 正文最大高度限制局部阅读滚动，弹窗主体仍负责在记录之间滚动。
-function TranslationRecord({ record, initiallyOpen }: { record: PromptTranslationRecord; initiallyOpen: boolean }) {
+function TranslationRecord({ record, initiallyOpen, onCopy }: { record: PromptTranslationRecord; initiallyOpen: boolean; onCopy: (text: string) => Promise<void> }) {
   // 阅读顺序的例子：先完成 A、后完成 B，首次打开 B 展开、A 折叠。
   // 用户展开 A 后切成最早在前，A 移到第一位，但仍是同一张展开的收据。
   // 这要求 key 使用 id，不能使用 map 下标，否则展开状态会跟着位置走。
@@ -153,17 +176,16 @@ function TranslationRecord({ record, initiallyOpen }: { record: PromptTranslatio
   // 多条记录允许同时打开，用户能够对照两次模型响应，而非强制单项手风琴。
   const { t, locale } = useTranslation();
   const [open, setOpen] = useState(initiallyOpen);
-  const provider = record.provider === "glm" ? "GLM" : t(record.provider === "euzhi" ? "agent.providers.euzhi" : "create.promptAssistant.customProvider");
-  const copy = async () => useToastStore.getState().show(t(await copyText(record.after) ? "create.promptAssistant.copied" : "create.promptAssistant.history.copyFailed"));
+  const provider = record.provider === "glm" ? "GLM" : t(record.provider === "euzhi" ? "agent.providers.euzhi" : record.provider === "siliconflow" ? "agent.providers.siliconflow" : "create.promptAssistant.customProvider");
   return <details data-translation-record={record.id} data-translation-time={record.createdAt} open={open} onToggle={event => setOpen(event.currentTarget.open)} className="min-w-0 rounded-xl border border-border bg-background">
     <summary className="cursor-pointer rounded-xl p-3 text-sm outline-none hover:bg-muted/50 focus-visible:ring-2 focus-visible:ring-accent-stroke">
       <time dateTime={new Date(record.createdAt).toISOString()}>{new Date(record.createdAt).toLocaleString(locale)}</time>
-      <span title={`${provider} · ${record.model}`} className="mt-1 block truncate text-xs text-muted-foreground">{provider} · {record.model}</span>
-      <span title={record.presetName} className="mt-1 block truncate text-xs text-muted-foreground">{record.presetName}</span>
+      <HoverTip asChild layer="window" label={`${provider} · ${record.model}`}><span className="mt-1 block truncate text-xs text-muted-foreground">{provider} · {record.model}</span></HoverTip>
+      <HoverTip asChild layer="window" label={(record.presetName) ?? ""}><span className="mt-1 block truncate text-xs text-muted-foreground">{record.presetName}</span></HoverTip>
       <span className="mt-1 block truncate">{record.after}</span>
     </summary>
     {/* 对照区：原文和译文共用标题、滚动和换行规则，不创建第二套文本卡片。 */}
-    <div className="grid min-w-0 gap-3 border-t border-border p-3 sm:grid-cols-2">{([["create.promptAssistant.history.original", record.before], ["create.promptAssistant.history.translated", record.after]] as const).map(([label, content]) => <section key={label} className="min-w-0"><h3 className="mb-2 text-xs font-medium text-muted-foreground">{t(label)}</h3><p className="max-h-64 overflow-auto whitespace-pre-wrap break-words rounded-lg bg-muted/40 p-3 text-sm [overflow-wrap:anywhere]">{content}</p></section>)}</div>
-    <div className="flex justify-end px-3 pb-3"><button data-translation-copy type="button" onClick={() => void copy()} className="rounded-lg border border-border px-3 py-1.5 text-xs hover:bg-muted focus-visible:ring-2 focus-visible:ring-accent-stroke">{t("create.promptAssistant.history.copy")}</button></div>
+    <div className="grid min-w-0 gap-3 border-t border-border p-3 sm:grid-cols-2">{([["create.promptAssistant.history.original", record.before], ["create.promptAssistant.history.translated", record.after]] as const).map(([label, content]) => <section key={label} className="min-w-0"><h3 className="mb-2 text-xs font-medium text-muted-foreground">{t(label)}</h3><p className="max-h-64 overflow-auto whitespace-pre-wrap break-words rounded-lg bg-muted/40 p-3 text-sm select-text [overflow-wrap:anywhere]"><PromptSpeechText text={content} /></p></section>)}</div>
+    <div className="flex justify-end px-3 pb-3"><button data-translation-copy type="button" onClick={() => void onCopy(record.after)} className="rounded-lg border border-border px-3 py-1.5 text-xs hover:bg-muted focus-visible:ring-2 focus-visible:ring-accent-stroke">{t("create.promptAssistant.history.copy")}</button></div>
   </details>;
 }

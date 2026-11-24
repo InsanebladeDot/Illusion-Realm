@@ -1,5 +1,7 @@
 "use client";
 
+import { HoverTip } from "@/components/hover-tip";
+
 /**
  * composer 和设置页共用远端聊天模型入口。
  * 标签显示持久化站点和模型，点击才挂载弹窗，避免首帧宽窄形态闪烁。
@@ -15,7 +17,6 @@ import { AGENT_PROVIDER_LABELS } from '@/data/agent-providers';
 import { useCallback, useState } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { useTranslation } from '@/i18n';
-import { useAgentProviders } from '@/hooks/use-agent-providers';
 import { useAgentProviderStore } from '@/stores/use-agent-provider-store';
 import { AgentModelDialog } from '@/components/agent-model-dialog';
 // 模型名仅作显示裁切，完整 ID 仍放 data 属性和 title 供验证与读取。
@@ -52,12 +53,12 @@ export function AgentModelPicker() {
   // 切换模型不自动新建会话，历史上下文仍由既有 Agent store 维护。
   // 已运行任务的模型快照不会重新从此组件读取，因此切换不会串用密钥。
   // 当前入口没有原生下拉 select，搜索和卡片选择都在复用的资源弹窗完成。
-  useAgentProviders(); const { t } = useTranslation(); const [open, setOpen] = useState(false); const close = useCallback(() => setOpen(false), []);
+  const { t } = useTranslation(); const [open, setOpen] = useState(false); const close = useCallback(() => setOpen(false), []);
   const { preferences, catalogs } = useAgentProviderStore(); const provider = preferences.provider;
   const model = preferences.models[provider] || catalogs[provider]?.recommended || ''; const name = model.slice(model.lastIndexOf('/') + 1);
-  return <><button type="button" data-agent-model={model} aria-haspopup="dialog" aria-expanded={open} onClick={() => setOpen(true)} title={`${t(AGENT_PROVIDER_LABELS[provider])} · ${model}\n${t('agent.composer.modelTitle')}`}
+  return <><HoverTip asChild label={`${t(AGENT_PROVIDER_LABELS[provider])} · ${model}\n${t('agent.composer.modelTitle')}`}><button type="button" data-agent-model={model} aria-haspopup="dialog" aria-expanded={open} onClick={() => setOpen(true)}
     className="inline-flex min-w-0 max-w-[125px] items-center gap-1 rounded-lg px-1.5 py-1 text-[11px] text-muted-foreground hover:bg-muted sm:max-w-[260px]">
-    <span className="truncate">{t(AGENT_PROVIDER_LABELS[provider])} · {name || t('agent.composer.model')}</span><ChevronDown aria-hidden className="h-3 w-3 shrink-0" /></button>
+    <span className="truncate">{t(AGENT_PROVIDER_LABELS[provider])} · {name || t('agent.composer.model')}</span><ChevronDown aria-hidden className="h-3 w-3 shrink-0" /></button></HoverTip>
     {open && <AgentModelDialog provider={provider} onClose={close} />}
   </>;
 }

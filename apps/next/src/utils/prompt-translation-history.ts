@@ -28,7 +28,7 @@ function isTranslationRecord(value: unknown): value is PromptTranslationRecord {
   const item = value as Record<string, unknown>;
   return [item.id, item.before, item.after, item.model, item.presetName, item.contextId].every(text => typeof text === "string" && text.length > 0 && text.length <= 100000)
     && typeof item.createdAt === "number" && Number.isFinite(item.createdAt) && item.createdAt > 0 && item.createdAt <= 8640000000000000
-    && (item.provider === "glm" || item.provider === "custom" || item.provider === "euzhi");
+    && (item.provider === "glm" || item.provider === "custom" || item.provider === "euzhi" || item.provider === "siliconflow");
 }
 
 /** 保存顺序以最新完成在前为准；用户的查看方向只影响 UI，不改写历史。 */

@@ -14,6 +14,7 @@
  * 持久化：用户数据文档 `settings` 段。
  */
 import { create } from "zustand";
+import { DEFAULT_MODEL_ATTENTION, resolveModelAttention, type ModelAttentionSettings } from "@/types/model-attention";
 import { persist } from "zustand/middleware";
 import type { LocalModel } from "@/types/localModel";
 import {
@@ -46,10 +47,16 @@ import {
   type ThemePreference,
 } from "@/utils/themeResolution";
 
+import { modelPathKey } from "@/utils/local-model-visibility";
+
 type SettingsState = {
+  hiddenModelPaths: string[];
+  setModelsHidden: (files: string[], hidden: boolean) => void;
   paths: SettingsPaths;
   outputPath: string;
   comfyServerUrl: string;
+  modelAttention: ModelAttentionSettings;
+  setModelAttention: (value: ModelAttentionSettings) => void;
   userDataPath: string;
   /** 主题偏好：system / light / dark（见 utils/themeResolution 的真值表） */
   theme: ThemePreference;
@@ -180,6 +187,17 @@ export const useSettingsStore = create<SettingsState>()(
       paths: EMPTY_SETTINGS_PATHS,
       outputPath: "",
       comfyServerUrl: DEFAULT_COMFY_SERVER_URL,
+      hiddenModelPaths: [],
+      setModelsHidden: (files, hidden) => set(state => {
+        const paths = new Set(state.hiddenModelPaths);
+        for (const file of files) {
+          const key = modelPathKey(file);
+          if (hidden) paths.add(key); else paths.delete(key);
+        }
+        return { hiddenModelPaths: [...paths] };
+      }),
+      modelAttention: { ...DEFAULT_MODEL_ATTENTION },
+      setModelAttention: value => set({ modelAttention: resolveModelAttention(value) }),
       userDataPath: "",
       theme: DEFAULT_THEME_PREFERENCE,
       colorPreset: "default",
@@ -250,6 +268,8 @@ export const useSettingsStore = create<SettingsState>()(
         paths: state.paths,
         outputPath: state.outputPath,
         comfyServerUrl: state.comfyServerUrl,
+        hiddenModelPaths: state.hiddenModelPaths,
+        modelAttention: state.modelAttention,
         userDataPath: state.userDataPath,
         theme: state.theme,
         colorPreset: state.colorPreset,
@@ -264,6 +284,10 @@ export const useSettingsStore = create<SettingsState>()(
           ...saved,
           /** 文档是外部输入：脏值（手改、旧版本写的）在这里就会被决议回 system */
           theme: resolveThemePreference(saved.theme).preference,
+          hiddenModelPaths: Array.isArray(saved.hiddenModelPaths)
+            ? [...new Set(saved.hiddenModelPaths.filter(path => typeof path === "string" && path.trim()).map(modelPathKey))]
+            : [],
+          modelAttention: resolveModelAttention(saved.modelAttention),
           colorPreset: resolveColorPreset(saved.colorPreset),
           uiFont: resolveUiFont(saved.uiFont),
           civitaiContentAccess: resolveCivitaiContentAccess(saved.civitaiContentAccess),

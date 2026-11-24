@@ -1,4 +1,6 @@
 "use client";
+import { HoverTip } from "@/components/hover-tip";
+
 
 // 属性外壳、分组和数值字段是正式工作区与样板的同一实现。
 // 这里组合展示模型，媒体效果、工程提交与持久化均由外部决定。
@@ -188,7 +190,7 @@ export function ClipInspector({ asset = DEMO_ASSETS[1], clipId, targets, project
   const fields = inspectorFields(selected), groups = [...new Set(fields.map(field => propertyGroup(field.key)))];
   const name = selected.length > 1 ? t("toolBox.editorUi.selectedCount", { count: selected.length }) : selected[0]?.asset.name;
   return <aside data-editor-region="R04" data-editor-inspector-clip={selected[0]?.id} data-editor-inspector-count={selected.length} className={styles.inspector} aria-label={t("toolBox.editorUi.inspector")}><h2 className={styles.panelTitle}>{t("toolBox.editorUi.inspector")}</h2>
-    {selected.length ? <><div className={styles.selectedClip}><strong title={name}>{name}</strong></div><p className={styles.propertyNotice}>{t(live ? "toolBox.editorUi.transformLive" : onCommit ? "toolBox.editorUi.propertySampleOnly" : "toolBox.editorUi.propertyDefaults")}</p><div className={styles.propertyBody}>
+    {selected.length ? <><div className={styles.selectedClip}><HoverTip asChild layer="window" label={(name) ?? ""}><strong>{name}</strong></HoverTip></div><p className={styles.propertyNotice}>{t(live ? "toolBox.editorUi.transformLive" : onCommit ? "toolBox.editorUi.propertySampleOnly" : "toolBox.editorUi.propertyDefaults")}</p><div className={styles.propertyBody}>
       {groups.map(group => <InspectorSection key={group} fields={fields.filter(field => propertyGroup(field.key) === group)} targets={selected} project={project} onCommit={onCommit} onReset={onReset} editableKeys={editableKeys} locked={locked} currentFrame={currentFrame} onToggleKeyframe={onToggleKeyframe} />)}
       {!fields.length && <EditorPlaceholder state="empty" message={t("toolBox.editorUi.noCommonProperties")} />}
     </div></> : <div className={styles.propertyBody}><ProjectProperties project={project} /></div>}

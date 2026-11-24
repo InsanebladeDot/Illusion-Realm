@@ -16,6 +16,8 @@ export type UserDataSettings = {
   paths: SettingsPaths;
   outputPath: string;
   comfyServerUrl: string;
+  hiddenModelPaths?: string[];
+  modelAttention?: import("./model-attention").ModelAttentionSettings;
   userDataPath: string;
   /**
    * 界面语言（`"zh-CN"` / `"en"`）。
@@ -64,7 +66,15 @@ export type UserDataUpdates = {
   lastSeenChangelogSectionId: string | null;
 };
 
+export type CreateImageModelSeries = "anima" | "sdxl" | "moss";
+export type ImageModelVerification = "verified" | "unsupported";
+
 export type UserDataCreateForm = {
+  /** 按工作流和加载节点保存分类目录内的相对模型名。 */
+  imageSeries?: CreateImageModelSeries;
+  imageModelChoices?: Partial<Record<CreateImageModelSeries, Record<string, string>>>;
+  /** 键是工作流、模型文件和 ComfyUI 目标的摘要。 */
+  imageModelChecks?: Record<string, ImageModelVerification>;
   aspectRatio: AspectRatioLabel;
   /** 图片尺寸模式：preset=按比例训练友好分辨率，custom=自定义宽高 */
   sizeMode?: ImageSizeMode;
@@ -246,5 +256,5 @@ export const DEFAULT_USER_DATA_DOCUMENT: UserDataDocument = {
 export const USER_DATA_SETTING = {
   label: "用户数据文件",
   description:
-    "所有设置、个人资料、快捷短语等用户数据保存在一个 JSON 文件中。留空则使用默认路径：与软件目录同级的 user/illusion-realm.json。",
+    "设置和个人资料保存在用户数据 JSON 文件中。留空则使用默认路径：与软件目录同级的 user/illusion-realm.json。",
 } as const;

@@ -1,4 +1,6 @@
 "use client";
+import { HoverTip } from "@/components/hover-tip";
+
 
 // 下拉选项沿用原业务值，菜单外观、滚动与键盘操作统一复用采样器组件。
 import { SimpleSelect } from "@/components/SimpleSelect";
@@ -7,8 +9,9 @@ import { SimpleSelect } from "@/components/SimpleSelect";
 import { PromptTag } from "@/components/prompt-tag";
 import { removeQuickWord, splitQuickWords } from "@/utils/prompt-quick-words";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 // 排序编辑态复用原拖拽容器，普通标签栏继续只负责选择分组。
+import { PromptCategoryButton } from "../prompt-category-button";
 import { PromptGroupOrderEditor } from "./prompt-group-order-editor";
 // StoreApi 注入只改变数据来源，既有组装 UI 与各功能弹窗继续共用。
 // 无注入时图片页行为保持原样，编辑页不再回写 #prompt-editor。
@@ -44,8 +47,28 @@ import { useCreateFormStore } from "@/stores/useCreateFormStore";
 import { useToastStore } from "@/stores/useToastStore";
 import { useTranslation } from "@/i18n";
 import { CharacterPickerDialog } from "@/view/create/CharacterPickerDialog";
-import { TagLibraryDialog } from "@/view/create/tagLibrary/TagLibraryDialog";
-import { View3DPromptDialog } from "@/view/create/view3d/View3DPromptDialog";
+import dynamic from "next/dynamic";
+import { DeferredDialog } from "@/components/deferred-dialog";
+// 未打开的资料库和3D工具不进入创建页的首屏执行路径。
+// 两个入口共用同一动态模块，保留各自的参数、选择和写入目标。
+// DeferredDialog 在首次使用后保持原实例，关闭时仍交给原组件清理。
+// 不以动态加载为由重新建立弹窗、卡片或数据查询实现。
+// 高级组装与普通提示词区共用动态模块，组件状态仍分别归各自宿主。
+// toolTargetTabId 继续在原回调里决定目标，加载行为不改变写入时机。
+// 默认分类与用户自定义分类不在动态导入边界合并。
+// 快捷工具的 enabled 与打开状态仍来自原配置，不为减包删除任何入口。
+// 相同库从两个入口打开时各有独立的搜索、分页和已选草稿。
+// 共享收藏本来就是全局数据，资料库不会把临时选择当作收藏保存。
+// library key 位于保留边界上，多个静态库不能复用错误的内部状态。
+// onOpenChange 仍用原 openLibrary 状态关闭，模块完成加载不触发假应用。
+// applyToolResult 沿用原覆盖规则，不把异步加载当成一次生成请求。
+// 3D 的 series 和 writeMode 仍显式注入，切换系列不加载第二套场景实现。
+// 关闭后的模块可以被运行时缓存，但关闭的场景 DOM 与监听仍由原组件释放。
+// 已访问实例保留原关闭协议，不粗暴卸载仍需恢复焦点或保留草稿的宿主。
+// 动态拆分需要所有入口都参与，只改普通输入区仍会被高级区静态导入拖回。
+// 构建后应核对实际 HTML 引用与异步 chunk，不能只看出现 dynamic 就算成功。
+const TagLibraryDialog = dynamic(() => import("@/view/create/tagLibrary/TagLibraryDialog").then(module => module.TagLibraryDialog));
+const View3DPromptDialog = dynamic(() => import("@/view/create/view3d/View3DPromptDialog").then(module => module.View3DPromptDialog));
 import { copyText } from "@/utils/charactersFormat";
 import { assemblePrompt, countFilledTabs, isTabFilled } from "@/utils/promptTabs";
 import { setEditableText } from "@/utils/promptEditor";
@@ -196,6 +219,21 @@ export function PromptAssemblyPanel({
   // 返回按钮仍采用原有尺寸和图标，新增调用方不复制头部布局。
   backLabel?: string;
 }) {
+  // 同屏多个局部组装面板的助手历史必须独立，不能都以分类名称作为全局键。
+  // 实例前缀只用于助手会话，不修改保存的分类身份和模板格式。
+  // 分类 id 在不同实例中可以相同，例如两份默认分类都有 quality。
+  // 助手若只按该 id 保存翻译和撤销记录，会把两份不同正文当成同一编辑上下文。
+  // useId 前缀在本次挂载稳定，切换活动分类时仍能回到本实例对应的助手历史。
+  // 默认全局调用继续使用原分类 id，避免无理由改变创建页现有助手历史键。
+  // 注入 store 的蒙版与画布实例才附加前缀，两种业务都不共享局部上下文。
+  // 前缀不加入 promptTabs 的 id，因此原工具注册表和模板匹配规则不会失效。
+  // 也不加入工程序列化，重新打开页面可以创建新的临时助手会话。
+  // 这个编号不是节点身份，不能用于保存、复制或撤销工程对象。
+  // 输入读写仍使用传入的 assemblyStore，不因上下文键改变而退回全局 store。
+  // read 在执行时读取当前分类正文，异步助手返回仍由原工具检查可写边界。
+  // 本次只隔离助手历史键，未重做分类列表、排序或工具窗口。
+  // 两个实例样式共用同一组件，状态隔离不能通过复制 JSX 来实现。
+  const instanceId = useId();
   const { t } = useTranslation();
   const showToast = useToastStore((state) => state.show);
   // 注入独立草稿时复用同一套分类、工具、模板和助手界面。
@@ -411,16 +449,16 @@ export function PromptAssemblyPanel({
             {filled}/{tabs.length} {t("promptAssembly.filled")}
           </span>
         </div>
-        <button
+        <HoverTip asChild layer="window" label={(backLabel ?? (variant === "panel" ? t("promptAssembly.close.title") : t("promptAssembly.close.inlineTitle"))) ?? ""}><button
           type="button"
           data-prompt-assembly-close
           onClick={onClose}
-          title={backLabel ?? (variant === "panel" ? t("promptAssembly.close.title") : t("promptAssembly.close.inlineTitle"))}
+
           className="inline-flex h-7 shrink-0 items-center gap-1 rounded-md px-2 text-[11px] text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
         >
           <RotateCcw className="h-3.5 w-3.5" />
           {backLabel ?? (variant === "panel" ? t("promptAssembly.close.back") : t("promptAssembly.close.collapse"))}
-        </button>
+        </button></HoverTip>
       </header>
 
       {/* side：排序模式替换普通分组区，顶栏固定的返回图库仍由原宿主管理。 */}
@@ -450,18 +488,11 @@ export function PromptAssemblyPanel({
           const active = tab.id === activeTab?.id;
           return (
             <span key={tab.id} className="inline-flex min-w-0 items-center">
-              <button
-                type="button"
+              <PromptCategoryButton
+                attached={tab.custom}
                 data-prompt-tab={tab.id}
                 aria-pressed={active}
                 onClick={() => setActiveTab(tab.id)}
-                className={cn(
-                  "inline-flex h-7 items-center gap-1 rounded-l-md px-2 text-[11px] transition-colors",
-                  tab.custom && "rounded-l-md",
-                  active
-                    ? cn("bg-background shadow-sm", ACCENT_SELECTED_SOFT_CLASS)
-                    : "text-muted-foreground hover:bg-accent"
-                )}
               >
                 {tab.label}
                 {isTabFilled(tab) ? (
@@ -470,7 +501,7 @@ export function PromptAssemblyPanel({
                     className="h-1.5 w-1.5 rounded-full bg-[#A78BFA]"
                   />
                 ) : null}
-              </button>
+              </PromptCategoryButton>
               {tab.custom ? (
                 <button
                   type="button"
@@ -532,7 +563,7 @@ export function PromptAssemblyPanel({
           {/* 界面：当前分类内的提示词助手，写回该分类而非合并结果 */}
           {/* 蒙版助手使用独立上下文，避免撤销记录与图片页同名分类串用。 */}
           {/* 忙碌时卸载助手入口；已打开结果的写入仍由草稿动作再次检查锁。 */}
-          {activeTab && !disabled && <PromptAssistantToolbar contextId={assemblyStore ? `mask-${activeTab.id}` : activeTab.id} read={() => (assemblyStore ?? useCreateFormStore).getState().promptTabs.find(tab => tab.id === activeTab.id)?.content ?? ""} write={value => setTabContent(activeTab.id, value)} />}
+          {activeTab && !disabled && <PromptAssistantToolbar contextId={assemblyStore ? `${instanceId}-${activeTab.id}` : activeTab.id} read={() => (assemblyStore ?? useCreateFormStore).getState().promptTabs.find(tab => tab.id === activeTab.id)?.content ?? ""} write={value => setTabContent(activeTab.id, value)} />}
           </div>
         </div>
 
@@ -560,11 +591,11 @@ export function PromptAssemblyPanel({
             {tabTools.map((tool) => {
               const Icon = TOOL_ICONS[tool.id];
               return (
-                <button
+                <HoverTip key={tool.id} asChild layer="window" label={(t(tool.panelTitle)) ?? ""}><button
                   key={tool.id}
                   type="button"
                   data-prompt-tool={tool.panelTestId}
-                  title={t(tool.panelTitle)}
+
                   onClick={() => {
                     setToolTargetTabId(null);
                     openToolDialog(tool.id);
@@ -576,7 +607,7 @@ export function PromptAssemblyPanel({
                 >
                   <Icon className="h-3.5 w-3.5" />
                   {t(tool.label)}
-                </button>
+                </button></HoverTip>
               );
             })}
             <span className="text-[10px] text-muted-foreground">
@@ -798,6 +829,7 @@ export function PromptAssemblyPanel({
       </div>
 
       {/* 复用创作页既有的 3D 视角生成器：高级模式下覆盖「镜头视图」分类 */}
+      <DeferredDialog open={view3DOpen}>
       <View3DPromptDialog
         open={view3DOpen}
         series={series}
@@ -808,6 +840,7 @@ export function PromptAssemblyPanel({
         })}
         onInsert={(prompt) => applyToolResult("view3d", prompt)}
       />
+      </DeferredDialog>
 
       {/* 复用创作页既有的角色选择器：高级模式下覆盖「角色」分类 */}
       <CharacterPickerDialog
@@ -821,6 +854,7 @@ export function PromptAssemblyPanel({
        * 有几个库、叫什么、数据从哪来、确认后写进哪个分类，全由声明表决定。
        */}
       {TAG_LIBRARY_LIST.map((library) => (
+        <DeferredDialog key={library.id} open={openLibrary === library.id}>
         <TagLibraryDialog
           key={library.id}
           open={openLibrary === library.id}
@@ -828,6 +862,7 @@ export function PromptAssemblyPanel({
           onOpenChange={(next) => setOpenLibrary(next ? library.id : null)}
           onApply={(text) => applyToolResult(library.tool, text)}
         />
+        </DeferredDialog>
       ))}
     </div>
   );

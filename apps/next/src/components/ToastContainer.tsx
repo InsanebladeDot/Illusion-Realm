@@ -45,6 +45,7 @@ export function ToastContainer() {
       {message && (
         <div
           key={message}
+          data-app-toast={variant}
           className={cn(
             "toast-pop flex items-center gap-2 rounded-xl border px-4 py-2.5 text-sm shadow-lg",
             style.container

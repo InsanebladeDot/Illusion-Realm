@@ -1,0 +1,37 @@
+/* 工程库与编辑器共享主题；库只滚动卡片区，不把导航或批量操作条一起卷走。 */
+.library { position: relative; display: flex; width: 100%; height: 100%; min-height: 0; color: var(--hy-text); background: var(--hy-canvas); }
+.library[hidden] { display: none; }
+.folders { display: flex; flex-direction: column; width: 190px; flex-shrink: 0; gap: 8px; padding: 25px 14px; background: var(--hy-panel); overflow-y: auto; }
+.folders h2 { font-size: 16px; margin: 0 8px 18px; }
+.folders button { display: flex; align-items: center; gap: 8px; padding: 10px 8px; border-radius: 8px; min-width: 0; }
+.folders button[aria-pressed="true"] { background: var(--hy-hover); color: var(--hy-text); }
+.folders small { margin-left: auto; color: var(--hy-muted); }
+.folderHeading, .folderRow { display: flex; align-items: center; min-width: 0; }
+.folderHeading { justify-content: space-between; margin-top: 16px; color: var(--hy-muted); font-size: 12px; }
+.folderRow > button:first-child { flex: 1; overflow: hidden; }
+.folderRow span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.folders .storage { margin: auto 0 0; padding: 20px 8px 0; font-size: 10px; overflow-wrap: anywhere; }
+.main { min-width: 0; min-height: 0; flex: 1; padding: 28px; display: flex; flex-direction: column; background-image: radial-gradient(var(--hy-dot) .7px, transparent .7px); background-size: 20px 20px; }
+.main > header { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; }
+.main h1 { font-size: 20px; font-weight: 600; margin-right: auto; }
+.actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.actions > button:last-child { padding: 7px; }
+.actions :global(.hy-chip) > span, .selection :global(.hy-chip) > span { display: inline-flex; align-items: center; gap: 5px; }
+.search { display: flex; align-items: center; gap: 8px; margin: 22px 0; color: var(--hy-muted); }
+.search input { min-width: 0; max-width: 280px; width: 100%; padding: 9px; border-radius: 8px; background: var(--hy-panel) !important; }
+.search > small { margin-left: auto; white-space: nowrap; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(190px,1fr)); gap: 22px; overflow-y: auto; align-content: start; padding: 3px; }
+.grid > button { display: flex; flex-direction: column; align-items: stretch; justify-content: start; position: relative; min-width: 0; max-width: 320px; text-align: left; border-radius: 12px; padding: 10px; background: var(--hy-panel) !important; }
+.grid > button[aria-pressed="true"] { outline: 1px solid var(--hy-text); outline-offset: -1px; }
+.grid > .newCard { min-height: 182px; align-items: center; justify-content: center; gap: 15px; border: 1px dashed var(--hy-line); color: var(--hy-muted); }
+.thumbnail { position: relative; height: 125px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 9px; border-radius: 8px; background: var(--hy-canvas); color: var(--hy-muted); }
+.thumbnail > span { position: absolute; top: 6px; right: 6px; font-size: 10px; padding: 3px 6px; border-radius: 5px; background: var(--hy-hover); }
+.card > strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-top: 12px; font-size: 13px; font-weight: 500; }
+.card > small { margin-top: 5px; color: var(--hy-muted); font-size: 10px; }
+.check { position: absolute; top: 15px; left: 15px; color: var(--hy-text); }
+.empty { margin: 25px 0; color: var(--hy-muted); font-size: 13px; }
+.selection { margin-top: auto; padding: 16px 0 0; display: flex; flex-wrap: wrap; align-items: center; gap: 12px; font-size: 12px; }
+.mobileSessions { display: none; }
+@media(max-width: 800px) { .folders { width: 150px; padding: 18px 10px; } .main { padding: 20px 14px; } .search > small { display: none; } }
+@media(max-width: 767px) { .mobileSessions { display: block; } }
+@media(max-width: 540px) { .folders { width: 115px; } .grid { grid-template-columns: minmax(140px,1fr); } .actions { gap: 4px; } .main h1 { font-size: 16px; } }

@@ -1,0 +1,45 @@
+/* 像在卡片四角打挂钩：边距与短杆都是十二像素，随画布一起缩放。 */
+.list { position: absolute; inset: 0; z-index: 2; pointer-events: none; }
+.list .tag { position: absolute; display: flex; align-items: center; gap: 8px; width: max-content; max-width: 200px; min-height: 32px; padding: 6px 11px; border: 0; border-radius: 9px; font-size: 12px; line-height: 20px; box-shadow: 0 2px 4px #0002; cursor: pointer; pointer-events: auto; }
+.tag::before { content: ""; position: absolute; background: var(--annotation-color); opacity: .65; pointer-events: none; }
+.tag::after { content: ""; position: absolute; width: 7px; height: 7px; border-radius: 50%; background: var(--annotation-color); pointer-events: none; }
+/* 一至八：右上、下右、左下、上左、右下、下左、左上、上右；绕开两侧中点端口。 */
+.tag:is([data-annotation-position="1"], [data-annotation-position="5"]) { left: calc(100% + 12px); transform: translateY(-50%); }
+.tag:is([data-annotation-position="3"], [data-annotation-position="7"]) { right: calc(100% + 12px); transform: translateY(-50%); }
+.tag:is([data-annotation-position="1"], [data-annotation-position="7"]) { top: 12px; }
+.tag:is([data-annotation-position="3"], [data-annotation-position="5"]) { top: calc(100% - 12px); }
+.tag:is([data-annotation-position="1"], [data-annotation-position="5"])::before { right: 100%; top: 50%; width: 12px; height: 1px; }
+.tag:is([data-annotation-position="3"], [data-annotation-position="7"])::before { left: 100%; top: 50%; width: 12px; height: 1px; }
+.tag:is([data-annotation-position="1"], [data-annotation-position="5"])::after { right: calc(100% + 8.5px); top: calc(50% - 3.5px); }
+.tag:is([data-annotation-position="3"], [data-annotation-position="7"])::after { left: calc(100% + 8.5px); top: calc(50% - 3.5px); }
+.tag:is([data-annotation-position="2"], [data-annotation-position="6"]) { top: calc(100% + 12px); max-width: min(200px, 40%); }
+.tag:is([data-annotation-position="4"], [data-annotation-position="8"]) { bottom: calc(100% + 12px); max-width: min(200px, 40%); }
+.tag:is([data-annotation-position="4"], [data-annotation-position="6"]) { left: 0; --annotation-anchor: 12px; }
+.tag:is([data-annotation-position="2"], [data-annotation-position="8"]) { right: 0; --annotation-anchor: calc(100% - 12px); }
+.tag:is([data-annotation-position="2"], [data-annotation-position="6"])::before { bottom: 100%; left: var(--annotation-anchor); width: 1px; height: 12px; }
+.tag:is([data-annotation-position="4"], [data-annotation-position="8"])::before { top: 100%; left: var(--annotation-anchor); width: 1px; height: 12px; }
+.tag:is([data-annotation-position="2"], [data-annotation-position="6"])::after { bottom: calc(100% + 8.5px); left: calc(var(--annotation-anchor) - 3px); }
+.tag:is([data-annotation-position="4"], [data-annotation-position="8"])::after { top: calc(100% + 8.5px); left: calc(var(--annotation-anchor) - 3px); }
+.tag svg { flex-shrink: 0; opacity: .75; }
+.tag span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tag:hover { filter: brightness(1.05); }
+.editor { z-index: 1110; width: 240px; padding: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; }
+/* 浮层也消费画布原有主题色，聚焦只显示光标，不叠加输入框描边。 */
+.editor form { padding-left: 16px; }
+.inputRow { position: relative; display: flex; align-items: center; gap: 7px; min-height: 40px; padding: 0 10px; border-radius: 13px; background: var(--hy-hover); color: var(--hy-text); box-shadow: 0 3px 12px #0002; }
+.inputRow::before { content: ""; position: absolute; right: 100%; top: 20px; width: 12px; height: 1px; background: var(--hy-muted); pointer-events: none; }
+.inputRow::after { content: ""; position: absolute; right: calc(100% + 8.5px); top: 16.5px; width: 7px; height: 7px; border-radius: 50%; background: var(--hy-text); pointer-events: none; }
+.inputRow > svg { flex-shrink: 0; color: var(--hy-muted); }
+.inputRow input { width: 100%; min-width: 0; height: 40px; padding: 5px 0; border: 0; background: transparent; font-size: 13px; }
+.inputRow input:focus-visible { outline: none !important; box-shadow: none; }
+.colorPanel { width: 188px; margin-top: 8px; padding: 8px; border-radius: 10px; background: var(--hy-line); box-shadow: 0 3px 12px #0002; }
+.palette { display: grid; grid-template-columns: repeat(6, 22px); justify-content: space-between; gap: 7px; }
+.editor .swatch { width: 22px; height: 22px; border: 1px solid #8885; border-radius: 50%; cursor: pointer; }
+.editor .swatch[aria-pressed="true"] { box-shadow: 0 0 0 2px var(--hy-line), 0 0 0 4px var(--hy-text); }
+.editor .custom { display: block; margin: 6px 0 0 auto; padding: 0; font-size: 10px; color: var(--hy-muted); }
+.editor .custom:hover { color: var(--hy-text); }
+.customPanel { margin-top: 8px; padding: 10px; border-radius: 10px; background: var(--hy-panel); }
+.editor .save { display: grid; place-items: center; flex-shrink: 0; width: 23px; height: 26px; color: var(--hy-text); }
+.editor .save:hover { color: var(--foreground); }
+.editor .remove { display: grid; place-items: center; width: 26px; height: 26px; flex-shrink: 0; color: var(--destructive); border-radius: 6px; }
+.remove:hover { background: var(--accent); }

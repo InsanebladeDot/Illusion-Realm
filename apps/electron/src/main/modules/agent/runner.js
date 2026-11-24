@@ -21,6 +21,7 @@ const { findHostTool, hostToolSpecs } = require("./host-tools");
 // 不将密钥选择委托给页面，也不因下一次切换而改变正在运行的任务。
 // 无 provider 的内部假模型脚本继续保留旧 baseUrl 兼容路径。
 const { providerRunConfig } = require("./provider-run-config");
+const { agentModelAttempt } = require('./provider-model-availability');
 
 /**
  * 单次运行上限（毫秒）；模型 + 工具来回跑满也要能被兜住。
@@ -246,12 +247,15 @@ function startAgentRun({ sender, options, manualPath }) {
     return { ok: false, error: `启动 Agent 失败：${error instanceof Error ? error.message : String(error)}` };
   }
 
+  const modelResult = agentModelAttempt(payloadLine);
   /** @param {import("@illusion-realm/shared").AgentEvent} event */
   const emit = (event) => {
     // 停止时同步撤销转发资格，不等待系统完成进程树清理。
     // 覆盖 token、工具状态、final 与 exit 错误，旧运行不能复活。
     // 正常结束在 finish 删除前仍可发送最后一帧。
     if (!activeRuns.has(runId)) return;
+    if (event.type === 'error') modelResult(false, event.message);
+    if (event.type === 'final') modelResult(true);
     try {
       sender.send(IPC_CHANNELS.AGENT_EVENT, { runId, ...event });
     } catch {

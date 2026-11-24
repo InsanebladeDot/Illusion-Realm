@@ -1,4 +1,6 @@
 "use client";
+import { HoverTip } from "@/components/hover-tip";
+
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Edit3, ImagePlus, LayoutTemplate, Minus, Plus, Undo2 } from "lucide-react";
@@ -233,7 +235,7 @@ export default function ComicGeneratorPage() {
       <div data-comic-toolbar className="grid shrink-0 grid-cols-1 items-center gap-2 bg-background xl:grid-cols-[minmax(0,1fr)_360px_minmax(0,1fr)]">
         <div className="hidden items-center gap-2 justify-self-start xl:flex">
         <button type="button" data-open-templates onClick={() => setTemplateDialogOpen(true)} className="inline-flex items-center gap-2 rounded-md border border-border bg-background px-3 py-2 text-sm"><LayoutTemplate size={16} />{t("toolBox.comic.templates.open")}</button>
-        <button type="button" onClick={undoTemplate} disabled={!templateHistory.length} title={t("toolBox.comic.templates.undo")} aria-label={t("toolBox.comic.templates.undo")} className="flex h-9 w-9 items-center justify-center rounded border border-border bg-background disabled:opacity-40"><Undo2 size={16} /></button>
+        <HoverTip asChild layer="window" label={(t("toolBox.comic.templates.undo")) ?? ""}><button type="button" onClick={undoTemplate} disabled={!templateHistory.length} aria-label={t("toolBox.comic.templates.undo")} className="flex h-9 w-9 items-center justify-center rounded border border-border bg-background disabled:opacity-40"><Undo2 size={16} /></button></HoverTip>
         </div>
         {/* 界面：顶部白色工具栏中的画布宽高、锁定与按比例显示 */}
         <ComicPageSizeControls size={pageSize} fit={fitCanvas} onChange={updatePageDimension} onToggleLock={togglePageSizeLock} onToggleFit={() => setFitCanvas(current => !current)} />

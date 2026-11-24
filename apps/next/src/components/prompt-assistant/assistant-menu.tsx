@@ -1,50 +1,95 @@
 "use client";
 
-import { type RefObject } from "react";
+/** 转译菜单复用级联菜单；三站进入同一个模型弹窗，预设和历史保留原操作。 */
+
+import { useId, useState, type RefObject } from "react";
 import { useTranslation } from "@/i18n";
 import { usePromptAssistantStore } from "@/stores/usePromptAssistantStore";
 import { useToastStore } from "@/stores/useToastStore";
-import { GLM_MODELS } from "@/utils/prompt-assistant";
-// 这里只组装翻译业务，列布局、悬停展开和边缘换向由共用级联菜单维护。
-// 视频右键也调用相同组件，不能在两个入口分别修补菜单外观。
+import type { AgentProvider } from "@illusion-realm/shared";
+import { AGENT_PROVIDERS, AGENT_PROVIDER_LABELS } from "@/data/agent-providers";
 import { CascadeMenu, type CascadeMenuItem } from "@/components/cascade-menu";
-// 可选 id 将既有添加表单定位到当前记录；连接设置无需提供目标。
-// 菜单不直接修改或删除数据，持久化和错误反馈由编辑表单统一处理。
-// 保持外层关闭回调，菜单 Escape 与点击外部仍沿用原实现。
-// 历史只通知外层打开查看页，菜单不持有记录或直接覆盖任何输入框。
-// 沿用同一列菜单的按钮与键盘焦点样式，不新增悬浮按钮挤占正文。
-interface MenuProps { anchor: RefObject<HTMLDivElement | null>; onClose: () => void; onHistory: () => void; onConfigure: (mode: "connection" | "preset", presetId?: string) => void }
-export function AssistantMenu({ anchor, onClose, onConfigure, onHistory }: MenuProps) {
+import { PresetReader, PresetViewButton, type PresetReading } from "./preset-reader";
+import { AssistantImages, type AssistantImageOptions } from "./assistant-images";
+import { HoverTip } from "@/components/hover-tip";
+import { PROMPT_PRESETS, PROMPT_PRESET_GROUPS, builtInPresetInstruction, preferencesForPrompt, presetName, presetSelectionPatch } from "@/utils/prompt-assistant";
+import { MOSS_COMPOSITION_PRESET } from "@/data/moss-composition-instruction";
+interface MenuProps { supportsComposition: boolean; mossPresetScope: boolean; images?: AssistantImageOptions; appearance?: "neutral"; anchor: RefObject<HTMLDivElement | null>; onClose: () => void; onHistory: () => void; onModels: (provider: AgentProvider) => void; onConfigure: (mode: "connection" | "preset", presetId?: string) => void }
+export function AssistantMenu({ images, appearance, supportsComposition, mossPresetScope, anchor, onClose, onConfigure, onHistory, onModels }: MenuProps) {
   const { t } = useTranslation();
-  const preferences = usePromptAssistantStore(state => state.preferences); const save = usePromptAssistantStore(state => state.save);
+  const readerId = useId();
+  const [reading, setReading] = useState<PresetReading | null>(null);
+  const storedPreferences = usePromptAssistantStore(state => state.preferences);
+  const preferences = preferencesForPrompt(storedPreferences, supportsComposition, mossPresetScope);
+  const save = usePromptAssistantStore(state => state.save);
   const choose = (patch: Parameters<typeof save>[0]) => { void save(patch).then(onClose).catch(() => useToastStore.getState().show(t("create.promptAssistant.failed"))); };
+  const dismissReading = (restoreFocus: boolean) => {
+    setReading(null);
+    if (!restoreFocus || !reading) return;
+    const trigger = reading.anchor.isConnected ? reading.anchor : anchor.current?.querySelector<HTMLButtonElement>("[data-assistant-options]");
+    const restore = () => trigger?.focus({ preventScroll: true });
+    // 大阅读页关闭后，菜单先解除不可交互状态，再把焦点交回原入口。
+    if (reading.expanded) requestAnimationFrame(restore);
+    else restore();
+  };
+  const toggleReadingSize = () => {
+    if (!reading) return;
+    const expanded = !reading.expanded;
+    if (expanded && !document.querySelector("[data-app-main]")) return;
+    const text = document.getElementById(readerId)?.querySelector<HTMLElement>("[data-preset-reader-text]");
+    const travel = text ? text.scrollHeight - text.clientHeight : 0;
+    // 两种宽度会重新折行，按已读比例恢复位置。
+    const progress = text && travel > 0 ? text.scrollTop / travel : reading.progress;
+    setReading({ ...reading, expanded, progress });
+  };
+  // 分类和自定义预设都从实际点到的「查看」定位，并读取同一份完整正文。
+  const choosePreset = (id: string) => choose(presetSelectionPatch(id, mossPresetScope));
+  const presetItem = (id: string, label: string, instruction: string): CascadeMenuItem => ({
+    id,
+    label,
+    selected: preferences.presetId === id,
+    action: () => choosePreset(id),
+    hideTooltip: true,
+    trailing: <PresetViewButton label={label} readerId={readerId} expandedTrigger={reading?.triggerId}
+      onView={(anchor, triggerId) => setReading({ anchor, triggerId, label, instruction, presetId: id })} />,
+  });
+  const modelName = preferences.provider === "custom" ? preferences.customModel || t("create.promptAssistant.customProvider")
+    : preferences.models?.[preferences.provider] || (preferences.provider === "glm" ? preferences.model : t(AGENT_PROVIDER_LABELS[preferences.provider]));
+  const presetGroups = PROMPT_PRESET_GROUPS.map(group => ({
+    id: `presets-${group.id}`,
+    label: t(group.label),
+    children: PROMPT_PRESETS.filter(preset => preset.group === group.id
+      && (supportsComposition || preset.id !== MOSS_COMPOSITION_PRESET))
+      .map(preset => presetItem(preset.id, t(preset.label), builtInPresetInstruction(preset))),
+  }));
   const items: CascadeMenuItem[] = [
-    { id: "provider", label: t("create.promptAssistant.provider"), children: [
-      { id: "glm", label: "GLM", selected: preferences.provider === "glm", children: GLM_MODELS.map(model => ({ id: model, label: model.toUpperCase(), selected: preferences.provider === "glm" && preferences.model === model, action: () => choose({ provider: "glm", model }) })) },
-      // 供应商列表：直接沿用同一个菜单项、选中态和保存回调，不增加第二套弹窗。
-      // 说明明确模型与凭据来自 Agent，点击只选站，不自动提交翻译或产生推理费用。
-      // 原 custom 入口仍可用于其他中转地址，已有用户连接不会被覆盖。
-      { id: "euzhi", label: t("agent.providers.euzhi"), description: t("create.promptAssistant.euzhiShared"), selected: preferences.provider === "euzhi", action: () => choose({ provider: "euzhi" }) },
-      { id: "custom", label: t("create.promptAssistant.customProvider"), selected: preferences.provider === "custom", action: () => { void save({ provider: "custom" }).then(() => onConfigure("connection")).catch(() => useToastStore.getState().show(t("create.promptAssistant.failed"))); } },
-    ] },
-    { id: "presets", label: t("create.promptAssistant.presets"), children: [
-      { id: "translate", label: t("create.promptAssistant.translation"), description: t("create.promptAssistant.translationInstruction"), selected: preferences.presetId === "translate", action: () => choose({ presetId: "translate" }) },
-      { id: "anima", label: t("create.promptAssistant.anima"), description: t("create.promptAssistant.animaInstruction"), selected: preferences.presetId === "anima", action: () => choose({ presetId: "anima" }) },
-      // 选择保留原点击语义，铅笔另行打开同一预设的编辑与删除表单。
-      // 名称可以重复，回调始终捕获稳定 id，避免误改其他同名记录。
-      // 编辑动作不调用 choose，因此未保存之前不会改变当前使用的预设。
-      ...preferences.presets.map(preset => ({ id: preset.id, label: preset.name, description: preset.instruction, selected: preferences.presetId === preset.id, action: () => choose({ presetId: preset.id }), edit: () => onConfigure("preset", preset.id), editLabel: t("create.promptAssistant.editNamedPreset", { name: preset.name }), editTitle: t("create.promptAssistant.editPreset") })),
+    { id: "provider", label: t("create.promptAssistant.providerModel"), description: t("create.promptAssistant.provider"), summary: modelName, children: AGENT_PROVIDERS.map(provider => ({
+      id: provider, label: t(AGENT_PROVIDER_LABELS[provider]), selected: preferences.provider === provider,
+      action: () => onModels(provider),
+    })) },
+    { id: "presets", label: t("create.promptAssistant.presets"), summary: presetName(preferences), children: [
+      ...presetGroups,
+      ...preferences.presets.map(preset => ({
+        ...presetItem(preset.id, preset.name, preset.instruction),
+        edit: () => onConfigure("preset", preset.id),
+        editLabel: t("create.promptAssistant.editNamedPreset", { name: preset.name }),
+        editTitle: t("create.promptAssistant.editPreset"),
+      })),
       { id: "add", label: t("create.promptAssistant.addPreset"), action: () => onConfigure("preset") },
     ] },
-    // 历史属于一级动作，不放到供应商或预设子菜单，切站以后仍能找到所有结果。
-    // 直接使用原 MenuItem 的 action，因此鼠标、触屏与键盘走同一个打开回调。
-    // 不设置 selected：打开历史不是修改正在使用的供应商或系统指令。
-    // 入口始终可见，即使尚未翻译，也能在空态了解何时开始记录。
-    // 不在菜单里显示正文片段，避免长结果撑大截图中已经紧凑的菜单宽度。
-    // 也不在 hover 时加载详情，用户必须明确点击才会进入历史资源页。
-    { id: "history", label: t("create.promptAssistant.history.title"), action: onHistory },
-    { id: "settings", label: t("create.promptAssistant.configure"), action: () => onConfigure("connection") },
+    ...(images ? [{ id: "images", label: t("create.promptAssistant.useImages"), content: <AssistantImages {...images} /> }] : []),
   ];
-  // 菜单关闭和预设保存仍属于创建页，公共展示不持有任何供应商密钥。
-  return <CascadeMenu anchor={anchor} items={items} label={t("create.promptAssistant.title")} backLabel={t("create.promptAssistant.back")} onClose={onClose} attributes={{ "data-prompt-assistant-menu": true }} />;
+  const footerClass = "rounded-md py-1 text-[11px] text-muted-foreground hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring";
+  return <CascadeMenu anchor={anchor} items={items} appearance="compact" descriptionMode="tooltip" label={t("create.promptAssistant.title")} backLabel={t("create.promptAssistant.back")} onClose={onClose}
+    detail={reading ? {
+      expanded: reading.expanded, onEscape: reading.expanded ? toggleReadingSize : undefined, onClose: dismissReading,
+      content: <PresetReader id={readerId} reading={reading} onToggleSize={toggleReadingSize}
+        onClose={() => dismissReading(true)} onUse={() => choosePreset(reading.presetId)} />,
+    } : undefined}
+    heading={<div className="flex items-center justify-between text-xs"><span>{t("create.promptAssistant.menuTitle")}</span>{images && <span className="text-[10px] text-muted-foreground">{t("create.promptAssistant.currentNode")}</span>}</div>}
+    footer={<div className="flex items-center justify-between border-t border-border px-2.5 pb-1 pt-2">
+      <HoverTip asChild layer="window" label={t("create.promptAssistant.history.title")}><button type="button" role="menuitem" data-assistant-item="history" className={footerClass} onClick={onHistory}>{t("create.promptAssistant.transcreationHistory")}</button></HoverTip>
+      <HoverTip asChild layer="window" label={t("create.promptAssistant.configure")}><button type="button" role="menuitem" data-assistant-item="settings" className={footerClass} onClick={() => onConfigure("connection")}>{t("create.promptAssistant.configure")}</button></HoverTip>
+    </div>}
+    attributes={{ "data-prompt-assistant-menu": true, ...(appearance === "neutral" ? { "data-canvas-theme": true } : {}) }} />;
 }

@@ -73,6 +73,7 @@ const REGISTRATIONS = [
 // 该域不替换旧视频工具服务，截帧仍调用既有 FFmpeg handler。
 // 模块名称用于诊断注册来源，不是可以由网页指定的动态模块路径。
 // 注册失败应由原启动检查暴露，不能在页面里悄悄补一个空成功处理器。
+  ["euzhiImages", () => require("../modules/euzhi-images/euzhi-images.handlers").registerEuzhiImageHandlers()],
   ["canvasProject", () => require("../modules/canvas/canvas-project.handlers").registerCanvasProjectHandlers()],
   ["window", registerWindowHandlers],
   ["theme", registerThemeHandlers],

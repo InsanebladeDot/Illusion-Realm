@@ -26,6 +26,11 @@ export const taxonomy = {
     }
   },
   "modelSeries": {
+    "moss": {
+      "description": "Generate images with the Moss Image workflow",
+      "tipsTitle": "Moss tips",
+      "tip1": "Describe the subject, composition, and lighting in natural language."
+    },
     "sdxl": {
       "description": "基于 SDXL 架构的社区训练模型",
       "tipsTitle": "SDXL 使用技巧",

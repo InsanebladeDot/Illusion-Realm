@@ -1,22 +1,4 @@
 {
-  "151": {
-    "inputs": {
-      "image": "坠落之间5_回头看.png"
-    },
-    "class_type": "LoadImage",
-    "_meta": {
-      "title": "参考图1"
-    }
-  },
-  "152": {
-    "inputs": {
-      "image": "坠落之间5_回头看-死去的骑士.png"
-    },
-    "class_type": "LoadImage",
-    "_meta": {
-      "title": "参考图2"
-    }
-  },
   "153": {
     "inputs": {
       "filename_prefix": "video/MINIMAX",
@@ -33,46 +15,6 @@
       "title": "保存视频"
     }
   },
-  "154": {
-    "inputs": {
-      "image": "坠落之间参考全景图.png"
-    },
-    "class_type": "LoadImage",
-    "_meta": {
-      "title": "参考图3"
-    }
-  },
-  "157": {
-    "inputs": {
-      "file": "ComfyUI_00010_.mp4",
-      "video-preview": ""
-    },
-    "class_type": "LoadVideo",
-    "_meta": {
-      "title": "参考视频1"
-    }
-  },
-  "158": {
-    "inputs": {
-      "video": [
-        "157",
-        0
-      ]
-    },
-    "class_type": "GetVideoComponents",
-    "_meta": {
-      "title": "获取视频元素"
-    }
-  },
-  "160": {
-    "inputs": {
-      "audio": "ComfyUI_00010_.mp4"
-    },
-    "class_type": "LoadAudio",
-    "_meta": {
-      "title": "参考音频"
-    }
-  },
   "147:127": {
     "inputs": {
       "unet_name": "Minimax\\minimax_h3_fl2va_pruned_int8_convrot\\minimax_h3_fl2va_pruned_int8_convrot.safetensors",
@@ -80,7 +22,9 @@
     },
     "class_type": "UNETLoader",
     "_meta": {
-      "title": "UNet加载器"
+      "title": "UNet加载器",
+      "cnr_id": "comfy-core",
+      "ver": "0.33.0"
     }
   },
   "147:128": {
@@ -91,21 +35,25 @@
     },
     "class_type": "CLIPLoader",
     "_meta": {
-      "title": "加载CLIP"
+      "title": "加载CLIP",
+      "cnr_id": "comfy-core",
+      "ver": "0.33.0"
     }
   },
   "147:145": {
     "inputs": {
-      "lora_name": "Minimax\\加速lora\\minimax_h3_fl2v_turbo_8step_v1.0_comfyui_bf16.safetensors",
+      "lora_name": "Minimax\\MiniMax_h3_video\\加速lora\\minimax_h3_fl2v_turbo_8step_v1.0_comfyui_bf16.safetensors",
       "strength_model": 1,
       "model": [
-        "147:127",
+        "147:219",
         0
       ]
     },
     "class_type": "LoraLoaderModelOnly",
     "_meta": {
-      "title": "LoRA加载器（仅模型）"
+      "title": "LoRA加载器（仅模型）",
+      "cnr_id": "comfy-core",
+      "ver": "0.33.0"
     }
   },
   "147:119": {
@@ -114,7 +62,9 @@
     },
     "class_type": "VAELoader",
     "_meta": {
-      "title": "加载VAE"
+      "title": "加载VAE",
+      "cnr_id": "comfy-core",
+      "ver": "0.33.0"
     }
   },
   "147:120": {
@@ -123,14 +73,16 @@
     },
     "class_type": "VAELoader",
     "_meta": {
-      "title": "加载VAE"
+      "title": "加载VAE",
+      "cnr_id": "comfy-core",
+      "ver": "0.33.0"
     }
   },
   "147:136": {
     "inputs": {
-      "prompt": "integrated_multimodal_description: [Shot 1] 2D anime style. a low rear POV  perspective, looking down at a young woman wearing a pulled up blue and gold pleated skirt and blue and gold long thigh high boots. Her bare buttocks, anus and vagina are visible. The man grabs his penis and inserts it into her vagina as she moans. The man's penis penetrates her vagina and he thrusts his hips into her buttocks repeatedly.[Shot 2] The camera pans up to show the woman with blue hair in a pony tail from behind as the man puts his hands on her hips. Her hair sways from the the motion and she turns her head slightly back to the viewer. The lighting is warm and dim, highlighting the smooth texture of her skin. The background consists of a red patterned surface of a bed. She (S1) says <d>[Japanese] mou gaman shi nakute ii yo </d>. \n\noverall_soundscape: The woman moans, plopping sounds are heard from the man's thrusts\n\nnon_diegetic_music: soft jazz bgm",
-      "width": 1152,
-      "height": 960,
+      "prompt": "How the reference pictures align with the target video — Picture 1 (from Shot 1) aligns with the 0.00-second mark of the target video; Picture 2 (from Shot 1) aligns with the 5.00-second mark of the target video.\n\nintegrated_multimodal_description: [Shot 1] 2D-animated, using the visual style of Mushoku Tensei: delicate outlines, softly painted backgrounds, restrained colors, and natural shaded lighting. Use <Picture 3> only as a visual-style reference. Its depicted scene, characters, and composition must never appear.\n\nBegin with the exact composition, character position, and environment established by <Picture 1>. The girl's face remains concealed throughout the entire shot.\n\nFrom 0.00 to 4.00 seconds, the camera pushes in at slow speed while the girl gradually turns toward the viewer. Her hair and clothing follow the turn with a small natural delay. Keep her facial features hidden behind the back of her head, her hair, and the turning angle. Never reveal her eyes, nose, mouth, or an identifiable facial profile, including through gaps in her hair.\n\nFrom 4.00 to 5.00 seconds, as her face begins to orient toward the camera, dense opaque black hatching already covers the entire facial area before any facial feature could become visible. The irregular black lines remain attached to the face, following its position and perspective without drifting or flickering. Leave no gaps through which her facial features can be seen. Continue the slow push-in and settle into the exact framing and pose established by <Picture 2> at 5.00 seconds.\n\nOne continuous shot with no cuts. Maintain consistent character proportions, clothing, background geometry, lighting, and exposure. Keep her face fully concealed in every frame. No subtitles or additional on-screen text.\n\noverall_soundscape: Quiet natural ambience appropriate to the environment shown in <Picture 1>, with subtle clothing rustles synchronized to her turn. No dialogue, artificial transition sounds, or dramatic sound effects.\n\nnon_diegetic_music: N/A",
+      "width": 1344,
+      "height": 768,
       "length": [
         "147:150",
         1
@@ -147,31 +99,13 @@
       "audio_vae": [
         "147:120",
         0
-      ],
-      "ref_images.ref_image_0": [
-        "151",
-        0
-      ],
-      "ref_images.ref_image_1": [
-        "152",
-        0
-      ],
-      "ref_images.ref_image_2": [
-        "154",
-        0
-      ],
-      "ref_videos.ref_video_0": [
-        "158",
-        0
-      ],
-      "ref_audios.ref_audio_0": [
-        "160",
-        0
       ]
     },
     "class_type": "MiniMaxH3ReferenceToVideo",
     "_meta": {
-      "title": "MiniMax H3 参考转视频"
+      "title": "MiniMax H3 参考转视频",
+      "cnr_id": "comfy-core",
+      "ver": "0.33.0"
     }
   },
   "147:121": {
@@ -187,23 +121,9 @@
     },
     "class_type": "VAEDecodeAudio",
     "_meta": {
-      "title": "VAE解码（音频）"
-    }
-  },
-  "147:122": {
-    "inputs": {
-      "samples": [
-        "147:125",
-        0
-      ],
-      "vae": [
-        "147:119",
-        0
-      ]
-    },
-    "class_type": "VAEDecode",
-    "_meta": {
-      "title": "VAE解码"
+      "title": "VAE解码（音频）",
+      "cnr_id": "comfy-core",
+      "ver": "0.33.0"
     }
   },
   "147:123": {
@@ -212,13 +132,15 @@
     },
     "class_type": "KSamplerSelect",
     "_meta": {
-      "title": "K采样器选择"
+      "title": "K采样器选择",
+      "cnr_id": "comfy-core",
+      "ver": "0.33.0"
     }
   },
   "147:124": {
     "inputs": {
       "scheduler": "simple",
-      "steps": 6,
+      "steps": 4,
       "denoise": 1,
       "model": [
         "147:145",
@@ -227,7 +149,9 @@
     },
     "class_type": "BasicScheduler",
     "_meta": {
-      "title": "基本调度器"
+      "title": "基本调度器",
+      "cnr_id": "comfy-core",
+      "ver": "0.33.0"
     }
   },
   "147:126": {
@@ -243,26 +167,31 @@
     },
     "class_type": "BasicGuider",
     "_meta": {
-      "title": "基本引导器"
+      "title": "基本引导器",
+      "cnr_id": "comfy-core",
+      "ver": "0.33.0"
     }
   },
   "147:129": {
     "inputs": {
-      "noise_seed": 259898266532844
+      "noise_seed": 958271077044529
     },
     "class_type": "RandomNoise",
     "_meta": {
-      "title": "随机噪波"
+      "title": "随机噪波",
+      "cnr_id": "comfy-core",
+      "ver": "0.33.0"
     }
   },
   "147:130": {
     "inputs": {
-      "fps": 24,
+      "fps": 22,
       "bit_depth": 8,
       "color_space": "sRGB",
+      "chroma_subsampling": "none",
       "codec": "none",
       "images": [
-        "147:122",
+        "147:185",
         0
       ],
       "audio": [
@@ -272,7 +201,9 @@
     },
     "class_type": "CreateVideo",
     "_meta": {
-      "title": "创建视频"
+      "title": "创建视频",
+      "cnr_id": "comfy-core",
+      "ver": "0.33.0"
     }
   },
   "147:125": {
@@ -300,7 +231,9 @@
     },
     "class_type": "SamplerCustomAdvanced",
     "_meta": {
-      "title": "自定义采样器（高级）"
+      "title": "自定义采样器（高级）",
+      "cnr_id": "comfy-core",
+      "ver": "0.33.0"
     }
   },
   "147:149": {
@@ -309,7 +242,9 @@
     },
     "class_type": "PrimitiveFloat",
     "_meta": {
-      "title": "Float (duration)"
+      "title": "Float (duration)",
+      "cnr_id": "comfy-core",
+      "ver": "0.33.0"
     }
   },
   "147:150": {
@@ -322,7 +257,42 @@
     },
     "class_type": "ComfyMathExpression",
     "_meta": {
-      "title": "数学表达式"
+      "title": "数学表达式",
+      "cnr_id": "comfy-core",
+      "ver": "0.33.0"
+    }
+  },
+  "147:185": {
+    "inputs": {
+      "tile_size": 512,
+      "overlap": 64,
+      "temporal_size": 64,
+      "temporal_overlap": 8,
+      "samples": [
+        "147:125",
+        0
+      ],
+      "vae": [
+        "147:119",
+        0
+      ]
+    },
+    "class_type": "VAEDecodeTiled",
+    "_meta": {
+      "title": "VAE解码（分块）"
+    }
+  },
+  "147:219": {
+    "inputs": {
+      "attention": "comfy kitchen attention",
+      "model": [
+        "147:127",
+        0
+      ]
+    },
+    "class_type": "ModelAttentionBackend",
+    "_meta": {
+      "title": "模型注意力后端"
     }
   }
 }

@@ -1,3 +1,4 @@
+import { director } from "./director";
 // 无限画布只登记独立文案，不改变创建页的参数与生成状态。
 import { canvas } from "./canvas";
 // 漫画对话框仅增加自己的词条，不恢复已删除的旧素材设置页文案。
@@ -32,6 +33,7 @@ import { view3d } from "./view3d";
  * 横向域 `common` / `nav` / `components` / `errors` / `taxonomy`。
  */
 export const zhCN = {
+  director,
   canvas,
   dialogue,
   agent,

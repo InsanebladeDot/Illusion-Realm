@@ -1,4 +1,6 @@
 "use client";
+import { HoverTip } from "@/components/hover-tip";
+
 
 // R02–R04 只负责上区的独立展示，不导入 useClipEditor 或 FFmpeg 服务。
 // 旧 PreviewStage 绑定真实源视频事件和 trim，本轮不改它与 GIF 共用的契约。
@@ -127,7 +129,7 @@ export function MediaItem({ layout = "list", asset, selected = false, onSelect, 
   const displayState = state === "ready" && missingCover ? "missing" : state === "cancelled" ? "missing" : state;
   const metadata = asset.metadata;
   const Icon = asset.kind === "audio" ? AudioLines : asset.kind === "image" ? ImageIcon : Video;
-  return <li><button type="button" disabled={!onSelect || state === "loading" || state === "error" || state === "cancelled"} onClick={onSelect} draggable={state === "ready" && !!onDragStart} onDragStart={onDragStart} onDragEnd={onDragEnd} data-editor-asset={asset.id} aria-current={selected ? "true" : undefined} aria-busy={state === "loading" || undefined} title={asset.name} className={`${styles.mediaItem} ${layout === "cards" ? styles.mediaCard : ""}`}>
+  return <li><HoverTip asChild layer="window" label={(asset.name) ?? ""}><button type="button" disabled={!onSelect || state === "loading" || state === "error" || state === "cancelled"} onClick={onSelect} draggable={state === "ready" && !!onDragStart} onDragStart={onDragStart} onDragEnd={onDragEnd} data-editor-asset={asset.id} aria-current={selected ? "true" : undefined} aria-busy={state === "loading" || undefined} className={`${styles.mediaItem} ${layout === "cards" ? styles.mediaCard : ""}`}>
     {/* 素材封面：cards与list共用同一个图片和失败状态，不为紧凑卡片另建播放器。 */}
     {/* 源首帧已由导入层读取，选中或播放素材不会重新截图替换封面。 */}
     {/* cards保留完整横竖画幅并留边，list继续沿用原行缩略图裁切。 */}
@@ -141,7 +143,7 @@ export function MediaItem({ layout = "list", asset, selected = false, onSelect, 
     {/* 列表版式继续展示原详情，两处共享同一份字段映射，避免以后增加字段时漏改一套。 */}
     {/* 错误原因保留原占位与notice；隐藏的只是卡片正常辅助信息，不屏蔽失败反馈。 */}
     <span className={styles.mediaDescription}><strong>{asset.name}</strong><span className={layout === "cards" ? "sr-only" : undefined}><small><Icon size={14} />{t(`toolBox.editorUi.${asset.kind}`)}{asset.duration !== null && ` · ${metadata ? asset.duration.toFixed(2) : asset.duration}s`}</small>{metadata && <small className={styles.mediaMetadata}>{metadata.width}×{metadata.height} · {metadata.fps}fps · {metadata.hasAudio ? t("toolBox.editorUi.audioTrack") : t("toolBox.editorUi.noAudioTrack")}</small>}{asset.notice && <small className={styles.mediaNotice}>{asset.notice}</small>}</span></span>
-  </button></li>;
+  </button></HoverTip></li>;
 }
 // 封面失败按 src 记录，调用方换成另一张图片时不会继承上一张的缺图状态。
 // 失败只改变当前素材行，不能使另外四份资源一起显示不可用。
@@ -523,7 +525,7 @@ export function ProgramPreview({ clip, assets = DEMO_ASSETS, project = DEMO_PROJ
     {/* 返回是查看层动作，不能把它绑到素材库选中或时间轴片段写入。 */}
     {/* 画布标题保持可见，长文件名只消费标题与返回之后剩余的宽度。 */}
     {/* R03：标题、返回、名称与局部动作同排分配空间，名称优先省略。 */}
-    <header className={styles.previewHeading}><h2 className={styles.panelTitle}>{title}</h2>{mode === "source" && <EditorAction label={t("toolBox.editorUi.backToProgram")} onClick={onBack} />}<span className={styles.previewName} title={(liveAsset ?? asset)?.name}>{(liveAsset ?? asset)?.name}</span>{headerActions}</header>
+    <header className={styles.previewHeading}><h2 className={styles.panelTitle}>{title}</h2>{mode === "source" && <EditorAction label={t("toolBox.editorUi.backToProgram")} onClick={onBack} />}<HoverTip asChild layer="window" label={((liveAsset ?? asset)?.name) ?? ""}><span className={styles.previewName}>{(liveAsset ?? asset)?.name}</span></HoverTip>{headerActions}</header>
     <div className={styles.previewSurface} data-editor-preview-surface>
       {/* surface 测量可用空间，frame 保留项目比例，图片在 frame 内完整放入。 */}
       {/* 占位也放进同一 frame，不能在缺图时把节目画布变成不同比例。 */}

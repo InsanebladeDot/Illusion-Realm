@@ -22,20 +22,21 @@ function DownloadLogo({ src, name, custom, onChange, onReset }: LogoProps) {
     <p className="text-[10px] leading-relaxed text-muted-foreground">{t("toolBox.civitai.transfer.logoHint")}</p>
   </section>;
 }
-function useDownloadTarget(modelType: string, baseModel: string) {
+function useDownloadTarget(modelType: string, baseModel: string, modelName: string) {
   const [target, setTarget] = useState<ModelDownloadTarget | null>(null);
   const [error, setError] = useState("");
   useEffect(() => {
     let active = true;
-    getModelDownloadTarget({ modelType: modelType as DownloadModelType, baseModel }).then((value) => { if (active) setTarget(value); }).catch((reason: unknown) => { if (active) setError(downloadErrorMessage(reason)); });
+    getModelDownloadTarget({ modelType: modelType as DownloadModelType, baseModel, modelName }).then((value) => { if (active) setTarget(value); }).catch((reason: unknown) => { if (active) setError(downloadErrorMessage(reason)); });
     return () => { active = false; };
-  }, [modelType, baseModel]);
+  }, [modelType, baseModel, modelName]);
   return { target, targetError: error };
 }
 export function ModelDownloadForm({ model, version, file, source, previewUrl, onBack }: FormProps) {
   const { t } = useTranslation();
-  const { target, targetError } = useDownloadTarget(model.type, version.baseModel);
-  const [category, setCategory] = useState("Uncategorized");
+  const lora = model.type === "LORA";
+  const { target, targetError } = useDownloadTarget(model.type, version.baseModel, model.name);
+  const [category, setCategory] = useState(lora ? "" : "Uncategorized");
   const [custom, setCustom] = useState(false);
   const [logo, setLogo] = useState("");
   const [busy, setBusy] = useState(false);
@@ -57,8 +58,8 @@ export function ModelDownloadForm({ model, version, file, source, previewUrl, on
   }
   return <div data-model-download-form className="flex min-h-0 flex-1 flex-col"><div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-3"><button type="button" disabled={busy} onClick={onBack} className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"><ChevronLeft size={14} />{t("toolBox.civitai.transfer.back")}</button>
     <p className="break-all text-xs font-medium">{file.name}</p>
-    <ModelCategoryPicker id="model-download-category" category={category} custom={custom} categories={target?.categories || []} valid={valid} hint={t("toolBox.civitai.transfer.categoryHint")} onSelect={(value) => { setCustom(value === "/custom"); setCategory(value === "/custom" ? "" : value); }} onInput={setCategory} />
-    <section className="space-y-1"><p className="text-xs font-medium">{t("toolBox.civitai.transfer.destination")}</p><p className="break-all rounded-lg border border-border bg-muted/40 p-2 text-[10px] text-muted-foreground">{target ? `${target.rootPath}/${category.trim() || "Uncategorized"}/${model.name.replace(/[<>:"/\\|?*\x00-\x1f]/g, "_").replace(/[. ]+$/, "").slice(0, 100)}/${file.name}` : targetError || t("toolBox.civitai.loading")}</p><Link href="/settings" className="text-xs text-sky-600 dark:text-sky-300">{t("toolBox.civitai.configure")}</Link></section>
+    <ModelCategoryPicker id="model-download-category" category={category} custom={custom} categories={target?.categories || []} allowRoot={lora} valid={valid} hint={lora ? undefined : t("toolBox.civitai.transfer.categoryHint")} onSelect={(value) => { setCustom(value === "/custom"); setCategory(value === "/custom" ? "" : value); }} onInput={setCategory} />
+    <section className="space-y-1"><p className="text-xs font-medium">{t("toolBox.civitai.transfer.destination")}</p><p data-model-download-destination className="break-all rounded-lg border border-border bg-muted/40 p-2 text-[10px] text-muted-foreground">{target ? `${[target.rootPath, category.trim() || (lora ? "" : "Uncategorized"), target.modelFolderName ?? model.name, file.name].filter(Boolean).join(target.rootPath.includes("\\") ? "\\" : "/")}` : targetError || t("toolBox.civitai.loading")}</p><Link href="/settings" className="text-xs text-sky-600 dark:text-sky-300">{t("toolBox.civitai.configure")}</Link></section>
     {/* 界面：默认采用详情当前预览图，也可自行选择封面。 */}
     <DownloadLogo src={logo || previewUrl} name={file.name} custom={!!logo} onChange={(file) => { void selectLogo(file); }} onReset={() => setLogo("")} />
     {error && <p role="alert" className="text-xs text-red-600 dark:text-red-400">{error}</p>}

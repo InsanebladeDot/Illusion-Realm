@@ -1,4 +1,6 @@
 "use client";
+import { HoverTip } from "@/components/hover-tip";
+
 
 // 模型库统一搜索输入和密度入口，通过插槽保留在线提交、本地即时过滤差异。
 // 这里只表达界面操作，不内置请求、防抖或文件扫描。
@@ -99,5 +101,5 @@ export function ModelLibrarySection({ label, marker, children }: { label: string
   </section>;
 }
 export function ModelLibraryChoices({ label, items, current, onChange, dataKey }: ChoiceProps) {
-  return <ModelLibrarySection label={label} marker={dataKey}><nav aria-label={label} className="space-y-1">{items.map(item => <button key={item.value} {...{[`data-${dataKey}`]: item.value}} type="button" aria-pressed={current === item.value} onClick={() => onChange(item.value)} className={`flex w-full min-w-0 items-center gap-2 rounded-md px-2 py-2 text-left text-xs hover:bg-muted focus-visible:outline-2 focus-visible:outline-primary ${current === item.value ? "bg-primary/10 text-primary" : ""}`}><Folder size={14} className="shrink-0" /><span className="min-w-0 flex-1 truncate" title={item.label}>{item.label}</span>{item.count !== undefined && <small className="shrink-0 text-muted-foreground">{item.count}</small>}</button>)}</nav></ModelLibrarySection>;
+  return <ModelLibrarySection label={label} marker={dataKey}><nav aria-label={label} className="space-y-1">{items.map(item => <button key={item.value} {...{[`data-${dataKey}`]: item.value}} type="button" aria-pressed={current === item.value} onClick={() => onChange(item.value)} className={`flex w-full min-w-0 items-center gap-2 rounded-md px-2 py-2 text-left text-xs hover:bg-muted focus-visible:outline-2 focus-visible:outline-primary ${current === item.value ? "bg-primary/10 text-primary" : ""}`}><Folder size={14} className="shrink-0" /><HoverTip asChild layer="window" label={(item.label) ?? ""}><span className="min-w-0 flex-1 truncate">{item.label}</span></HoverTip>{item.count !== undefined && <small className="shrink-0 text-muted-foreground">{item.count}</small>}</button>)}</nav></ModelLibrarySection>;
 }

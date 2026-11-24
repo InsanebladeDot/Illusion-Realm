@@ -1,4 +1,6 @@
 "use client";
+import { HoverTip } from "@/components/hover-tip";
+
 
 import { useState, type ReactNode } from "react";
 import type { CloudImage } from "@illusion-realm/shared";
@@ -20,7 +22,7 @@ export function CloudImageGallery({ images, actions }: { images: CloudImage[]; a
           <img src={image.sourceUrl} alt={image.title} loading="lazy" referrerPolicy="no-referrer" className="aspect-[4/3] w-full object-cover transition-transform duration-200 motion-reduce:transition-none group-hover:scale-[1.02]" />
         </button>
         <div className="mt-2 space-y-1.5 text-xs text-muted-foreground">
-          <h4 className="truncate text-base font-medium text-foreground" title={image.title}>{image.title}</h4>
+          <HoverTip asChild layer="window" label={(image.title) ?? ""}><h4 className="truncate text-base font-medium text-foreground">{image.title}</h4></HoverTip>
           <p className="text-sm">PNG · {t(image.visibility === "private" ? "profile.cloud.private" : "profile.cloud.public")}</p>
           <p className="select-text break-all text-[11px]">{t("profile.cloud.id", { id: image.id })} · {t("profile.cloud.dimensions", { width: image.width, height: image.height })}</p>
           {actions && <div className="flex flex-wrap gap-x-3 gap-y-2 pt-1">{actions(image)}</div>}

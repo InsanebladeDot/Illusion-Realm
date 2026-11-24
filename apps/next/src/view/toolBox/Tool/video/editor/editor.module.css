@@ -853,6 +853,28 @@
 .clipWaveform > svg { display: block; width: 100%; height: 100%; fill: currentColor; stroke: currentColor; stroke-width: .5px; }
 .clipWaveform > small { display: block; padding: 0 4px; font-size: 9px; line-height: 16px; color: #b2d5d6; white-space: nowrap; }
 
+/* 播放器复用同一声音槽，只改为独立占位，不继承片段底部的绝对定位。 */
+/* 宽高由音频卡片提供，未知时长不会凭空撑大画布节点。 */
+/* 颜色继承宿主主题，时间线原有的青色声音槽不受这个展示参数影响。 */
+.waveformPlayer { position: relative; display: block; width: 100%; height: 100%; overflow: hidden; color: inherit; }
+/* 波形的上下半部来自同一源包络，细柱间隙只是遮罩，不是额外的随机采样。 */
+/* 遮罩按显示像素分隔，节点宽度变化时柱子仍保持细小，不无限拉粗。 */
+/* 峰值路径本身仍按源时间计算，滚动不改变音高或播放速率。 */
+.waveformPlayer > svg { display: block; width: 100%; height: 100%; fill: currentColor; opacity: .9; mask-image: repeating-linear-gradient(to right, #000 0 4px, transparent 4px 6px); }
+/* 未播放部分保留淡色，已播覆盖层只裁同一条轮廓，避免两种颜色产生形状错位。 */
+/* transparent 的分隔由上方遮罩完成，不往音频文件内写入任何空白。 */
+/* 使用 CSS currentColor 让浅色与深色主题分别由其卡片控制对比。 */
+.waveformPlayer > svg > path:first-child { opacity: .3; }
+.waveformPlayer > svg > path:nth-child(2) { display: none; }
+/* 指示线单独位于 SVG 外，不能被波形的条形遮罩切成看不清的小段。 */
+/* 百分比来自真实媒体时间映射，不通过 CSS animation 推算速度。 */
+/* 细橙线只提示播放位置，没有新增粗按钮边框或选中装饰。 */
+.waveformPlayer > i { position: absolute; top: 0; bottom: 0; width: 1px; transform: translateX(-50%); background: #dba45c; pointer-events: none; }
+/* 采样加载和失败继续显示共享状态文案，窄节点允许换行，不隐藏错误冒充成功。 */
+/* 提示占位只影响辅助图，不盖住宿主底部真实播放按钮。 */
+/* 字体继承当前卡片，不固定深色文字导致白主题下状态不可读。 */
+.waveformPlayer > small { display: grid; height: 100%; place-content: center; padding: 4px; color: inherit; text-align: center; font-size: 11px; }
+
 /* 修剪光标由黑芯白边的箭头与竖线组成，明暗视频画面上都能看清。 */
 /* 数据SVG随CSS分发，不依赖网络或用户机器有没有安装某套光标。 */
 /* 热点固定在12×12，视觉箭头改变不会让实际抓取边界偏移。 */

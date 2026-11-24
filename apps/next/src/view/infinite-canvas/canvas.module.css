@@ -7,6 +7,10 @@
 /* 框选背景保持半透明，框选只反馈 UI 状态，不修改媒体像素。 */
 /* 这些变量在 CSS 层传播，主题变化不会触发作品 restore 或清空撤销栈。 */
 .workspace { position: relative; height: 100%; overflow: hidden; isolation: isolate; background: var(--hy-canvas); --xy-background-color: transparent; --xy-background-pattern-dots-color: var(--hy-dot); --xy-edge-stroke: var(--hy-edge); --xy-edge-stroke-selected: var(--hy-edge-selected); --xy-connectionline-stroke: var(--hy-edge-selected); --xy-selection-background-color: var(--hy-selection); --xy-selection-border: 1px solid #777; --xy-node-boxshadow-hover: none; }
+/* 普通选择显示箭头；显式手掌或按住空格才显示 grab，真正平移时显示 grabbing。 */
+.workspace[data-canvas-hand="false"] :global(.react-flow__pane.draggable:not(.dragging)) { cursor: default; }
+.workspace[data-canvas-hand="true"] :global(.react-flow__pane:not(.dragging)) { cursor: grab; }
+.workspace :global(.react-flow__pane.dragging) { cursor: grabbing; }
 /* 标题栏按可用主区限制上限，不再由固定总宽度把画布名挤成几像素。 */
 /* 导航开合改变的是父容器，最大宽度跟父容器走，不重新拼导航偏移。 */
 /* 保存状态仍在标题栏下方，名称增宽不会覆盖主区的右边界。 */
@@ -22,13 +26,14 @@
 .empty > span { display: grid; place-items: center; width: 64px; height: 64px; border-radius: 50%; border: 1px dashed var(--hy-line); }
 .empty strong { font-size: 15px; font-weight: 500; color: var(--hy-text); }
 .empty small { font-size: 11px; }
-.message { position: absolute; top: 75px; left: 50%; transform: translateX(-50%); max-width: calc(100% - 32px); font-size: 12px; color: var(--hy-muted); pointer-events: none; text-align: center; }
 /* 导入错误不占主布局高度，长名称在可用宽度中换行，不把节点和底栏推离位置。 */
 /* 消息不吃鼠标，用户仍能点击它后方的节点继续修复错误。 */
-.message:empty { display: none; }
 .menu { position: absolute; z-index: 5; max-height: calc(100% - 36px); overflow-y: auto; border-radius: 16px; }
 .node { position: relative; width: 284px; }
-.node[data-kind="video"] { width: 502px; }
+/* 图片与视频的宿主同宽，图引擎才能按实际外壳测量选择区和连接端口。 */
+/* 未配置尺寸的旧图片也使用该默认值，无需写盘迁移或改动媒体比例。 */
+/* 已确认的方形或自定义宽度仍由节点内联值优先，其他类型保持原尺寸。 */
+.node[data-kind="image"], .node[data-kind="video"] { width: 502px; }
 /* 自定义卡片仍用原外壳，端口跟随卡片中心，不再保留旧方形的固定高度。 */
 /* data-card 是明确的尺寸方案标记，只对已配置卡片启用覆盖。 */
 /* 旧卡继续走资料库的默认宽高，不被全局强制改成方形。 */
@@ -48,9 +53,46 @@
 /* 用户可选择长方形减少留边，但不会改变源文件内容。 */
 .node[data-card] :global(.hy-node-shell) { width: 100%; height: var(--canvas-card-height); }
 .node[data-card] :global(.hy-node-port) { top: calc(var(--canvas-card-height) / 2 - 9px); }
+/* 首帧只提供默认比例；手动缩放优先，“固定所有”仍使用共有默认尺寸。 */
+.workspace:not([data-fixed-size="true"]) .node[data-auto-video="true"] { width: var(--canvas-auto-video-width); }
+.workspace:not([data-fixed-size="true"]) .node[data-auto-video="true"] :global(.hy-node-shell) { width: 100%; height: var(--canvas-auto-video-height); }
+.workspace:not([data-fixed-size="true"]) .node[data-auto-video="true"] :global(.hy-node-port) { top: calc(var(--canvas-auto-video-height) / 2 - 9px); }
 /* 库 Handle 默认使用中心变换；资料端口使用左上定位，转换只在这个适配边界做一次。 */
 .node .handle { transform: none; display: flex; align-items: center; justify-content: center; }
 .node .handle:global(.react-flow__handle-right) { left: auto; }
+/* 端口的透明壳不动，内层圆圈跟随；连线锚点和卡片世界坐标因此保持稳定。 */
+/* 外扩区域按屏幕像素换算，远离端口时不抢卡片和参数的操作。 */
+/* 伪元素也属于 Handle，命中它仍由图引擎处理连接，不另建假端口按钮。 */
+/* 原库端口有两像素边框，此处移走边框，让它成为固定的透明承载壳。 */
+/* 新的一像素边线属于 portFace，外圈和加号能作为一个整体轻移。 */
+/* 没有修改 Handle 的宽高，图引擎读取的端口中心仍是原来的中心。 */
+/* inset 使用反向倍率：画布缩到一半时，局部四十像素才是屏幕二十像素。 */
+/* 默认倍率为一，初次 Effect 尚未安装时也有可用的正常命中区。 */
+/* 伪元素不添加文字，它只是透明范围，不给读屏增加第二个按钮名称。 */
+/* border-radius 让附近区域跟随圆形意象，不绘制一个可见的方形热区。 */
+/* 视觉层的背景用于遮住后面的点阵，圆圈移动后内部不会露出一个灰点。 */
+/* currentColor 从原端口继承，不复制图片、视频、文字三套颜色分支。 */
+/* 主题文件改变端口文字色时，圆圈与加号自然同步切换。 */
+/* pointer-events:none 避免内部视觉层偏出去后把事件目标从真实端口换掉。 */
+/* 过渡只针对 transform，不让主题换色触发端口慢慢变色或边线闪烁。 */
+/* 一百毫秒用于柔化跟随，不保存前一帧位置，快速移开仍走零偏移恢复。 */
+.node .handle { border: 0; background: transparent; }
+.node .handle::before { content: ""; position: absolute; inset: calc(-20px / var(--port-zoom, 1)); border-radius: 50%; }
+.portFace { position: absolute; inset: 0; display: grid; place-items: center; border: 1px solid currentColor; border-radius: inherit; background: var(--hy-canvas); transform: translate(var(--port-x, 0px), var(--port-y, 0px)); transition: transform 100ms ease-out; pointer-events: none; }
+/* 倾斜只改变内部媒体板，标题、选中工具和真实 Handle 都留在原来的平面。 */
+/* 透视原点固定在卡片中心，恢复时不会积累上次位移或改写节点尺寸。 */
+/* 不给每张节点常驻 will-change，避免大量卡片长期占用独立合成层。 */
+/* perspective 放在内容板自身的变换中，不给整个工作台建立新的三维透视环境。 */
+/* 这避免一张卡片靠近另一张时，两张卡被错误地当作同一个立体场景排列。 */
+/* 默认零度时内容板仍在自己的二维位置，图引擎无需重新布局节点。 */
+/* 卡片原有 overflow 继续裁切媒体，倾斜不改变圆角内实际的视频内容。 */
+/* 选中工具条和输入面板是内容板的兄弟，不能被本条选择器一起转动。 */
+/* 真实播放器没有被替换或卸载，所以过渡中仍保留浏览器解码进度。 */
+/* 使用旋转而非缩放伪装倾斜，鼠标靠近时保留轻微的远近透视差。 */
+/* 一百五十毫秒比圆圈追随略慢，使卡片看起来受到微弱力量而不是跟手抽动。 */
+/* 过渡不会阻塞连接判断，鼠标放下时图引擎仍按当下真实命中处理。 */
+/* 空卡和已有内容卡都消费同一条规则，不需要媒体加载后再替换外壳。 */
+.node :global(.hy-node-card) { transform: perspective(900px) rotateX(var(--node-tilt-x, 0deg)) rotateY(var(--node-tilt-y, 0deg)); transition: transform 150ms ease-out; }
 .node :global(.hy-node-label) { max-width: 100%; }
 .node :global(.hy-node-label strong) { overflow: hidden; white-space: nowrap; cursor: grab; }
 /* 重命名用主题表面与正文色，不能在白卡上保留原先的半透明白底白字。 */
@@ -58,8 +100,45 @@
 .node :global(.hy-node-label input) { width: 180px; max-width: 320px; padding: 3px 8px; border-radius: 6px; border: 0; background: var(--hy-raised); color: var(--hy-text); font-size: 13px; font-weight: 600; }
 .node :global(.hy-node-card textarea) { width: 100%; height: 100%; padding: 20px; background: transparent; resize: none; font-size: 13px; }
 /* 面板仍在节点世界坐标中，缩放不会改写参数或位置；选中才挂载，避免隐藏 Tab 目标。 */
-.parameters { position: relative; width: 600px; left: 50%; transform: translateX(-50%); margin-top: 10px; }
+.parameters { position: absolute; top: 100%; width: 600px; left: 50%; transform: translateX(-50%); margin-top: 10px; }
+/* 书写框与所属卡片同宽，简单文字无需占用媒体参数面板的六百像素。 */
+.writingParameters { position: absolute; top: 100%; left: 0; width: 100%; margin-top: 10px; }
+/* 有下方或上方标注时给牌子留一行，参数、标题和工具条仍可分别点击。 */
+.node:has([data-annotation-position="2"]) :is(.parameters, .writingParameters) { margin-top: 56px; }
+.node:has([data-annotation-position="4"]) :global(.hy-node-label) { top: -70px; }
+.node:has([data-annotation-position="4"]) :global(.hy-node-actions) { top: -108px; }
+.node:has([data-annotation-position="4"]) .panelToggle { top: -68px; }
+/* 四边保持透明命中区，不增粗选框；右下角提供对角拖动。 */
+.resizers { position: absolute; inset: 0; pointer-events: none; z-index: 2; }
+.resizers :global(.react-flow__resize-control) { pointer-events: auto; border: 0; background: transparent; }
+.resizers .resizeEdge { border-width: 0; }
+.resizers .resizeEdge:global(.left), .resizers .resizeEdge:global(.right) { width: 10px; }
+.resizers .resizeEdge:global(.top), .resizers .resizeEdge:global(.bottom) { height: 10px; }
+.resizers .resizeCorner { width: 12px; height: 12px; border: 0; border-radius: 0; }
+/* 连线端口靠近边缘时优先命中端口，避免透明缩放热区吞掉原有跟随与连接。 */
+.node .handle { z-index: 3; }
 .panelToggle { position: absolute; top: -22px; right: 2px; color: var(--hy-muted); width: 20px; height: 20px; }
+/* 箭头常态向右，展开时顺时针转九十度，和 aria-expanded 的真实面板状态一致。 */
+/* 只转图标，不转按钮命中区；键盘 Enter 和鼠标点击共享同一个开关。 */
+/* 资料库的 chevron 路径本来朝右，所以常态是零度，不先做负九十度旋转。 */
+/* 展开值为 true 时才朝下，收起不会留下上一轮动画的最终角度。 */
+/* aria-expanded 同时服务读屏与 CSS，避免视觉展开但辅助技术仍读收起。 */
+/* 图标中心是默认旋转原点，旋转不改变右上角按钮的可点击位置。 */
+/* 一百六十毫秒内完成转向，用户连续切换会从当前绘制角度平滑转回。 */
+/* 不给按钮添加彩色粗描边，悬停背景继续沿用画布已有图标规则。 */
+.panelToggle svg { transform: rotate(0deg); transition: transform 160ms ease; }
+.panelToggle[aria-expanded="true"] svg { transform: rotate(90deg); }
+/* 按钮自身没有 translate，因此箭头动画不会把上方标题挤向左侧。 */
+/* 同时存在多个节点时，属性选择器只读取各自按钮状态，不依赖全局“当前展开节点”。 */
+/* 选中其他卡片会卸载旧按钮，新按钮按本实例面板状态直接绘制，不继承旧角度。 */
+/* 参数宽度依旧由原 parameters 布局决定，旋转角度不成为布局断点或卡片尺寸参数。 */
+/* 局部类限制避免资料库其他下拉箭头被一并转向，模型选择胶囊保留原交互。 */
+/* 旋转是状态过渡，不循环播放；停留在展开态不会持续消耗动画帧。 */
+/* 系统要求减少动态时不保留追随或倾斜；静态选框和可用端口仍完整显示。 */
+/* CSS 负责移除过渡，Hook 负责取消实际位移，两个层面缺一不可。 */
+/* 箭头保留最终朝向以表达展开状态，只取消旋转过程，不抹掉状态差异。 */
+/* 这条媒体查询不改变用户画布偏好，也不把操作系统设置存进工程文件。 */
+@media (prefers-reduced-motion: reduce) { .portFace, .node :global(.hy-node-card), .panelToggle svg { transition: none; } }
 .overlay { position: absolute; inset: 0; z-index: 10; display: flex; align-items: center; justify-content: center; padding: 18px; overflow: auto; background: #0007; }
 .overlayContent { max-width: 100%; max-height: 100%; overflow: auto; flex-shrink: 0; }
 /* 确认与改名对话框读取和设置面板相同的表面色，不各自维护黑白分支。 */
@@ -76,3 +155,53 @@
 /* 窄窗口改为两排浮动控件，不缩小资料组件内部的字号、按钮和间距。 */
 @media (max-width: 1180px) { .toolbar { bottom: 68px; } }
 @media (max-width: 600px) { .identity { left: 12px; top: 12px; } .viewTools { left: 12px; } .counter { right: 12px; } }
+
+/* 边缘仍保留命中区和方向光标，移除图库默认的蓝线与小方块。 */
+.workspace[data-fixed-size="true"] .resizers { display: none; }
+.workspace :global(.react-flow__node.selected), .workspace :global(.react-flow__node:focus) { outline: none; }
+.resizers :global(.react-flow__resize-control) { border-color: transparent !important; background: transparent !important; }
+
+/* 正在生成只隔离画布编辑，项目挂起入口仍可操作。 */
+.identity { z-index: 10; }
+
+/* 卡内进度层不改变节点尺寸；CSS扫光没有业务计时，完成与取消由真实任务驱动。 */
+.node :global(.hy-node-card) { position: relative; }
+.nodeLoading { position: absolute; inset: 0; z-index: 4; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; overflow: hidden; border-radius: inherit; background: color-mix(in srgb, var(--hy-panel) 88%, transparent); color: var(--hy-text); font-size: 12px; }
+.nodeLoading::before { content: ""; position: absolute; inset: -100%; background: linear-gradient(115deg, transparent 35%, color-mix(in srgb, var(--hy-text) 12%, transparent) 50%, transparent 65%); animation: canvas-shimmer 2.8s ease-in-out infinite; pointer-events: none; }
+.nodeLoading > * { position: relative; }
+@keyframes canvas-shimmer { from { transform: translateX(-35%); } to { transform: translateX(35%); } }
+@media (prefers-reduced-motion: reduce) { .nodeLoading::before { animation: none; } }
+
+/* 独立超分的模型、预览和操作都留在卡内；媒体控件不被底部按钮遮住。 */
+.upscaleCard { position: relative; display: flex; flex-direction: column; width: 100%; height: 100%; min-height: 0; border-radius: inherit; color: var(--hy-text); }
+.upscaleModel { position: relative; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 14px 6px; font-size: 12px; flex-shrink: 0; }
+.upscaleModel > div:first-child { display: flex; gap: 12px; }
+.upscaleModel span { color: var(--hy-muted); }
+.upscalePreview { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+.upscaleHint { padding: 12px; color: var(--hy-muted); font-size: 12px; }
+.upscaleAction { padding: 6px 14px 12px; flex-shrink: 0; }
+/* 有成片时像普通媒体卡一样铺到底；模型与启用按钮浮在画面上，不再挤出上下白条。 */
+.upscaleCard[data-has-media="true"] .upscalePreview { position: absolute; inset: 0; border-radius: inherit; }
+.upscaleCard[data-has-media="true"] .upscaleModel { position: absolute; inset: 0 0 auto; z-index: 1; border-radius: var(--hy-radius-node) var(--hy-radius-node) 0 0; color: white; background: linear-gradient(#0008, transparent); }
+.upscaleCard[data-has-media="true"] .upscaleModel > div:first-child { text-shadow: 0 1px 3px #000; }
+.upscaleCard[data-has-media="true"] .upscaleModel > div:first-child > span { color: #ddd; }
+.upscaleCard[data-has-media="true"] .upscaleModel :global(.hy-parameter-icon) { color: white; background: #0006; }
+.upscaleCard[data-has-media="true"] .upscaleAction { position: absolute; bottom: 0; left: 0; z-index: 2; }
+.upscaleCard[data-has-media="true"][data-video="true"] .upscaleAction { bottom: 44px; }
+.upscaleCard[data-has-media="true"] :global(.hy-media-replace) { top: 48px; }
+
+/* 节点网打开时只虚化原工作区；不用嵌套backdrop采样，避免GPU层级导致背景仍清晰。 */
+.workspace[data-network-open="true"] > [inert] { filter: blur(8px); }
+
+/* 超分设置沿用参数浮层，入口固定为正方形；内部数字菜单仍由原限位器防止裁切。 */
+.upscaleModel :global(.hy-parameter-icon) { width: 28px; height: 28px; padding: 0; justify-content: center; }
+.upscaleModel :global(.hy-parameter-icon > span) { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+.upscaleModel :global(.hy-parameter-icon svg) { flex-shrink: 0; }
+.upscaleModel :global([data-canvas-parameter="upscale-settings"] > .hy-ratio-popup) { top: calc(100% + 4px); bottom: auto; right: 8px; width: 340px; z-index: 5; }
+.upscaleModel :global(.hy-upscale-settings) { display: grid; gap: 6px; padding: 10px; font-size: 12px; }
+.upscaleModel :global(.hy-upscale-settings > label) { color: var(--hy-muted); padding-top: 4px; }
+.upscaleModel :global(.hy-upscale-settings > small) { color: var(--hy-muted); line-height: 1.5; }
+.upscaleModel :global(.hy-upscale-setting-row) { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+
+.node:has(:global([data-canvas-parameter="upscale-settings"][data-canvas-popover])) :global(.hy-node-card) { overflow: visible; }
+.workspace :global(.react-flow__node:has([data-canvas-parameter="upscale-settings"][data-canvas-popover])) { z-index: 10 !important; }

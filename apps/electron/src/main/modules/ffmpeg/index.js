@@ -17,6 +17,7 @@ const { probeVideo } = require("./probe");
 // 不混入导出任务表，避免辅助预览影响原视频/GIF作业的进度或取消。
 // 注册仍由现有视频工具入口触发，打包与回归无需第二套启动路径。
 const { registerWaveformIpc } = require("./waveform");
+const { registerUpscaleIpc } = require("./upscale.handlers");
 const { startEditJob } = require("./jobs");
 const { validateClipEffects } = require("./edit-validation");
 const { ensureDirectory, ensureUniqueFilePath } = require("../../storage/output-paths");
@@ -103,6 +104,7 @@ function registerVideoToolIpc() {
   // 单独注册会先替换同名handler，重复注册不会叠加请求处理器。
   // 其他视频接口继续由本函数原有逻辑注册，不迁移或改变参数契约。
   registerWaveformIpc();
+  registerUpscaleIpc();
   /** 探测 ffmpeg/ffprobe：手动指定 → 系统 PATH → 常见位置 → 内置 */
   registerHandle(IPC_CHANNELS.VIDEO_FFMPEG_STATUS, async (_event, manualFfmpegPath) => {
     const tools = resolveTools(manualFfmpegPath);

@@ -12,16 +12,9 @@
     },
     "class_type": "SaveVideo",
     "_meta": {
-      "title": "保存视频"
-    }
-  },
-  "114": {
-    "inputs": {
-      "image": "IR_2026-10-13_123628_419c68ee_1.png"
-    },
-    "class_type": "LoadImage",
-    "_meta": {
-      "title": "首帧"
+      "title": "保存视频",
+      "cnr_id": "comfy-core",
+      "ver": "0.33.0"
     }
   },
   "105:11": {
@@ -30,7 +23,9 @@
     },
     "class_type": "VAELoader",
     "_meta": {
-      "title": "加载VAE"
+      "title": "加载VAE",
+      "cnr_id": "comfy-core",
+      "ver": "0.33.0"
     }
   },
   "105:24": {
@@ -39,39 +34,9 @@
     },
     "class_type": "VAELoader",
     "_meta": {
-      "title": "加载VAE"
-    }
-  },
-  "105:23": {
-    "inputs": {
-      "samples": [
-        "105:14",
-        0
-      ],
-      "vae": [
-        "105:24",
-        0
-      ]
-    },
-    "class_type": "VAEDecodeAudio",
-    "_meta": {
-      "title": "VAE解码（音频）"
-    }
-  },
-  "105:10": {
-    "inputs": {
-      "samples": [
-        "105:14",
-        0
-      ],
-      "vae": [
-        "105:11",
-        0
-      ]
-    },
-    "class_type": "VAEDecode",
-    "_meta": {
-      "title": "VAE解码"
+      "title": "加载VAE",
+      "cnr_id": "comfy-core",
+      "ver": "0.33.0"
     }
   },
   "105:17": {
@@ -80,22 +45,26 @@
     },
     "class_type": "KSamplerSelect",
     "_meta": {
-      "title": "K采样器选择"
+      "title": "K采样器选择",
+      "cnr_id": "comfy-core",
+      "ver": "0.33.0"
     }
   },
   "105:9": {
     "inputs": {
       "scheduler": "simple",
-      "steps": 4,
+      "steps": 6,
       "denoise": 1,
       "model": [
-        "105:133",
+        "105:121",
         0
       ]
     },
     "class_type": "BasicScheduler",
     "_meta": {
-      "title": "基本调度器"
+      "title": "基本调度器",
+      "cnr_id": "comfy-core",
+      "ver": "0.33.0"
     }
   },
   "105:14": {
@@ -123,13 +92,15 @@
     },
     "class_type": "SamplerCustomAdvanced",
     "_meta": {
-      "title": "自定义采样器（高级）"
+      "title": "自定义采样器（高级）",
+      "cnr_id": "comfy-core",
+      "ver": "0.33.0"
     }
   },
   "105:16": {
     "inputs": {
       "model": [
-        "105:133",
+        "105:121",
         0
       ],
       "conditioning": [
@@ -139,7 +110,9 @@
     },
     "class_type": "BasicGuider",
     "_meta": {
-      "title": "基本引导器"
+      "title": "基本引导器",
+      "cnr_id": "comfy-core",
+      "ver": "0.33.0"
     }
   },
   "105:6": {
@@ -149,7 +122,9 @@
     },
     "class_type": "UNETLoader",
     "_meta": {
-      "title": "UNet加载器"
+      "title": "UNet加载器",
+      "cnr_id": "comfy-core",
+      "ver": "0.33.0"
     }
   },
   "105:13": {
@@ -160,43 +135,50 @@
     },
     "class_type": "CLIPLoader",
     "_meta": {
-      "title": "加载CLIP"
+      "title": "加载CLIP",
+      "cnr_id": "comfy-core",
+      "ver": "0.33.0"
     }
   },
   "105:15": {
     "inputs": {
-      "noise_seed": 757358688076805
+      "noise_seed": 234932436348081
     },
     "class_type": "RandomNoise",
     "_meta": {
-      "title": "随机噪波"
+      "title": "随机噪波",
+      "cnr_id": "comfy-core",
+      "ver": "0.33.0"
     }
   },
   "105:91": {
     "inputs": {
-      "fps": 24,
+      "fps": 25,
       "bit_depth": 8,
       "color_space": "sRGB",
+      "chroma_subsampling": "none",
       "codec": "none",
       "images": [
-        "105:10",
+        "105:139",
         0
       ],
       "audio": [
-        "105:23",
+        "105:141",
         0
       ]
     },
     "class_type": "CreateVideo",
     "_meta": {
-      "title": "创建视频"
+      "title": "创建视频",
+      "cnr_id": "comfy-core",
+      "ver": "0.33.0"
     }
   },
   "105:104": {
     "inputs": {
-      "prompt": "For the target video, at 0.00 seconds into the target video, <Picture 1> (from [Shot 1]) is fully referenced.\n\nintegrated_multimodal_description: [Shot 1] 2D-animated anime style, the exact scene from <Picture 1> is fully preserved at the start: the blonde girl with long hair and a large blue ribbon lies on her back on pink pillows, wearing an open blue-and-white maid outfit that exposes her large bare breasts, white apron pushed up, black-and-white striped thigh-highs, purple eyes looking upward with a soft smile, both hands raised beside her head. A man’s hands grip her thighs and his erect penis is already buried deep inside her vagina in missionary position. From this opening frame the man begins strong, steady upward thrusts, driving his hips forward so his penis fully plunges into her vagina on every stroke. Her breasts bounce and sway heavily with each impact. She keeps her legs spread wide, body rocking against the pillows as the thrusting grows more forceful. Her expression gradually shifts from the initial soft smile into a clear, intensifying orgasm face—eyes half-lidding, cheeks flushing deeper, mouth opening slightly. The camera holds a static high-angle shot matching <Picture 1>, keeping her face, bouncing breasts, and the continuous penetration fully visible for the entire five seconds.\n\nchest grab, breast grab, breast squeeze, breast press, breast crushing, squeezing breasts, fondling breasts, grabbing breasts, hand on breasts, breast grabbing, breast squeezing,\n\noverall_soundscape: Wet, rhythmic penetration sounds and soft skin-slapping impacts continue throughout, mixed with her light gasps and the man’s heavier breathing.\nnon_diegetic_music: N/A",
-      "width": 1344,
-      "height": 768,
+      "prompt": "",
+      "width": 416,
+      "height": 416,
       "length": [
         "105:107",
         1
@@ -208,15 +190,13 @@
       "vae": [
         "105:11",
         0
-      ],
-      "first_frame": [
-        "114",
-        0
       ]
     },
     "class_type": "MiniMaxH3ImageToVideo",
     "_meta": {
-      "title": "MiniMax H3 图像转视频"
+      "title": "MiniMax H3 图像转视频",
+      "cnr_id": "comfy-core",
+      "ver": "0.33.0"
     }
   },
   "105:107": {
@@ -229,7 +209,9 @@
     },
     "class_type": "ComfyMathExpression",
     "_meta": {
-      "title": "数学表达式"
+      "title": "数学表达式",
+      "cnr_id": "comfy-core",
+      "ver": "0.33.0"
     }
   },
   "105:111": {
@@ -238,35 +220,74 @@
     },
     "class_type": "PrimitiveFloat",
     "_meta": {
-      "title": "Float (duration)"
+      "title": "Float (duration)",
+      "cnr_id": "comfy-core",
+      "ver": "0.33.0"
     }
   },
   "105:121": {
     "inputs": {
-      "lora_name": "Minimax\\加速lora\\minimax_h3_fl2v_turbo_8step_v1.0_comfyui_bf16.safetensors",
+      "lora_name": "Minimax\\MiniMax_h3_video\\加速lora\\minimax_h3_fl2v_turbo_8step_v1.0_comfyui_bf16.safetensors",
       "strength_model": 1,
+      "model": [
+        "105:152",
+        0
+      ]
+    },
+    "class_type": "LoraLoaderModelOnly",
+    "_meta": {
+      "title": "LoRA加载器（仅模型）",
+      "cnr_id": "comfy-core",
+      "ver": "0.33.0"
+    }
+  },
+  "105:139": {
+    "inputs": {
+      "tile_size": 512,
+      "overlap": 64,
+      "temporal_size": 64,
+      "temporal_overlap": 8,
+      "samples": [
+        "105:14",
+        0
+      ],
+      "vae": [
+        "105:11",
+        0
+      ]
+    },
+    "class_type": "VAEDecodeTiled",
+    "_meta": {
+      "title": "VAE解码（分块）"
+    }
+  },
+  "105:141": {
+    "inputs": {
+      "samples": [
+        "105:14",
+        0
+      ],
+      "vae": [
+        "105:24",
+        0
+      ]
+    },
+    "class_type": "VAEDecodeAudio",
+    "_meta": {
+      "title": "VAE解码（音频）"
+    }
+  },
+  "105:152": {
+    "inputs": {
+      "attention": "comfy kitchen attention",
       "model": [
         "105:6",
         0
       ]
     },
-    "class_type": "LoraLoaderModelOnly",
+    "class_type": "ModelAttentionBackend",
     "_meta": {
-      "title": "LoRA加载器（仅模型）"
-    }
-  },
-  "105:133": {
-    "inputs": {
-      "lora_name": "Minimax\\风格\\NSFW_ANIME_H3_V16-step00002250\\NSFW_ANIME_H3_V16-step00002250.safetensors",
-      "strength_model": 1,
-      "model": [
-        "105:121",
-        0
-      ]
-    },
-    "class_type": "LoraLoaderModelOnly",
-    "_meta": {
-      "title": "LoRA加载器（仅模型）"
+      "title": "模型注意力后端"
     }
   }
 }

@@ -8,7 +8,8 @@ const MAX_REDIRECTS = 8;
 function allowedUrl(value) {
   try {
     const url = new URL(value);
-    const hosts = ["civitai.com", "civitai.red", "civitai.green", "civitai.blue", "backblazeb2.com", "r2.cloudflarestorage.com", "r2.dev", "amazonaws.com"];
+    // 官方权重会重定向到 Hugging Face 的文件 CDN；C 站 Key 仍只发给 C 站。
+    const hosts = ["civitai.com", "civitai.red", "civitai.green", "civitai.blue", "backblazeb2.com", "r2.cloudflarestorage.com", "r2.dev", "amazonaws.com", "huggingface.co", "hf.co", "xethub.hf.co"];
     return url.protocol === "https:" && !url.username && !url.password && (!url.port || url.port === "443") && hosts.some((host) => url.hostname === host || url.hostname.endsWith("." + host));
   } catch { return false; }
 }

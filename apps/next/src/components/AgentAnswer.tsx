@@ -1,4 +1,6 @@
 "use client";
+import { HoverTip } from "@/components/hover-tip";
+
 
 /**
  * 界面：Agent 回复正文与复制入口；附件、工具过程和错误仍由消息行负责。
@@ -59,6 +61,6 @@ export function AgentAnswer({ text, streaming }: AgentAnswerProps) {
     {/* 界面：回答尾部的小复制图标，去掉文字按钮对正文的视觉干扰。 */}
     {/* title 与 aria-label 保留完整名称，鼠标悬停和辅助阅读仍可识别。 */}
     {/* 点击仍复制完整原文，布局优化不改变剪贴板内容和失败提示。 */}
-    <button data-agent-copy type="button" disabled={streaming} title={t("common.copy")} aria-label={t("common.copy")} onClick={() => { void copy(); }} className="mt-3 inline-flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground/70 hover:bg-muted hover:text-foreground disabled:opacity-40"><Copy size={13} /></button>
+    <HoverTip asChild layer="window" label={(t("common.copy")) ?? ""}><button data-agent-copy type="button" disabled={streaming} aria-label={t("common.copy")} onClick={() => { void copy(); }} className="mt-3 inline-flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground/70 hover:bg-muted hover:text-foreground disabled:opacity-40"><Copy size={13} /></button></HoverTip>
   </>;
 }

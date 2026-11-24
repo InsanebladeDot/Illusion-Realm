@@ -1,8 +1,9 @@
 "use client";
-// 资料包独立绘制的图标，按原路径复用；不是原应用的图标资源。
+// 画布共用图标入口：保留资料包路径，设置图标复用项目现有的标准齿轮。
 import type React from "react";
-export type IconName = 'text'|'image'|'video'|'audio'|'composition'|'plus'|'close'|'arrow'|'expand'|'history'|'copy'|'target'|'eye'|'pin'|'settings'|'layers'|'palette'|'crop'|'file'|'folder'|'upload'|'cube'|'world'|'comment'|'chevron'|'menu'|'play'|'pause'|'undo'|'redo'|'scissors'|'trash'|'volume'|'headphones'|'library'|'download'|'panel'|'link'|'help'|'minus'|'smile'|'pen'|'check'|'clapper'|'refresh'|'checkcircle'|'tack'|'grid'|'minimap'|'search'|'warning';
-const paths: Record<IconName, React.ReactNode> = {
+import { Settings } from "lucide-react";
+export type IconName = 'text'|'image'|'video'|'audio'|'composition'|'plus'|'close'|'arrow'|'expand'|'history'|'copy'|'target'|'eye'|'pin'|'settings'|'layers'|'palette'|'crop'|'file'|'folder'|'upload'|'cube'|'world'|'comment'|'chevron'|'menu'|'play'|'pause'|'undo'|'redo'|'scissors'|'trash'|'volume'|'volume-off'|'headphones'|'library'|'download'|'panel'|'link'|'help'|'minus'|'smile'|'pen'|'check'|'clapper'|'refresh'|'checkcircle'|'tack'|'grid'|'minimap'|'search'|'warning';
+const paths: Record<Exclude<IconName, "settings">, React.ReactNode> = {
  warning:<path d="m12 3 10 18H2ZM12 9v5m0 3v.1"/>,
  refresh:<><path d="M21 4v6h-6M3 20v-6h6M20 10A8 8 0 0 0 6 5M4 14a8 8 0 0 0 14 5"/></>,
  checkcircle:<><circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/></>,
@@ -22,7 +23,7 @@ const paths: Record<IconName, React.ReactNode> = {
  copy:<><rect x="8" y="8" width="12" height="12" rx="1"/><path d="M16 4H4v12"/></>,
  target:<><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/><path d="M12 1v3m0 16v3M1 12h3m16 0h3"/></>,
  eye:<><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></>,
- pin:<circle cx="12" cy="12" r="8"/>, settings:<><path d="m9 3-1 3-3 1 1 3-2 2 2 2-1 3 3 1 1 3 3-1 3 1 1-3 3-1-1-3 2-2-2-2 1-3-3-1-1-3-3 1Z"/><circle cx="12" cy="12" r="3"/></>,
+ pin:<circle cx="12" cy="12" r="8"/>,
  layers:<><path d="m2 8 10-6 10 6-10 6Zm0 5 10 6 10-6M2 18l10 6 10-6"/></>,
  palette:<><path d="M12 3a9 9 0 1 0 0 18h2c2 0 2-3 0-4s-1-3 1-3h3c6 0 3-11-6-11Z"/><circle cx="8" cy="8" r=".7"/><circle cx="14" cy="7" r=".7"/><circle cx="6" cy="13" r=".7"/></>,
  crop:<path d="M6 2v16h16M2 6h16v16"/>, file:<><path d="M5 2h9l5 5v15H5Zm9 0v6h5M8 12h8m-8 4h8"/></>,
@@ -36,6 +37,8 @@ const paths: Record<IconName, React.ReactNode> = {
  scissors:<><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="m8 8 13 13M8 16 21 3"/></>,
  trash:<><path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7"/></>,
  volume:<><path d="M3 9h4l5-5v16l-5-5H3ZM16 8q5 4 0 8m3-11q8 7 0 14"/></>,
+ // 静音去掉声波并加斜线，避免只靠按钮底色区分声音状态。
+ 'volume-off':<><path d="M3 9h4l5-5v16l-5-5H3Z"/><path d="m3 3 18 18"/></>,
  headphones:<path d="M3 14v-3a9 9 0 0 1 18 0v9h-5v-9h5M3 11h5v9H3Z"/>,
  library:<path d="M4 3v18M9 3v18m5-18 6 17M13 3l6 17"/>,
  download:<><path d="M12 2v14m-5-5 5 5 5-5M3 16v6h18v-6"/></>,
@@ -45,5 +48,9 @@ const paths: Record<IconName, React.ReactNode> = {
  minus:<path d="M5 12h14"/>, smile:<><circle cx="12" cy="12" r="9"/><path d="M8 9h.1M16 9h.1M8 15q4 5 8 0"/></>,
  pen:<path d="m3 17 12-13 5 5L7 21H3Zm11-12 5 5"/>,check:<path d="m4 12 5 5L20 6"/>,
 };
-export function CanvasIcon({name,size=16,...props}:{name:IconName;size?:number}&React.SVGProps<SVGSVGElement>){return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.65" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" {...props}>{paths[name]}</svg>}
+export function CanvasIcon({ name, size = 16, ...props }: { name: IconName; size?: number } & React.SVGProps<SVGSVGElement>) {
+  // 旧齿轮轮廓为16×18，缩在方形按钮里仍显窄；标准图标保持两轴比例与原线宽。
+  if (name === "settings") return <Settings size={size} strokeWidth={1.65} aria-hidden="true" {...props} />;
+  return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.65" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" {...props}>{paths[name]}</svg>;
+}
 

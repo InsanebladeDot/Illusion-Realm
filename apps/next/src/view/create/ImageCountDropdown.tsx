@@ -9,19 +9,38 @@ import { cn } from "@/utils/cn";
 
 type ImageCountDropdownProps = {
   value: number;
+  disabled?: boolean;
   onChange: (count: number) => void;
   // 音频复用数量菜单时只更换媒介名称，选项仍使用原有 ×N。
   // 未传入时继续使用图片词条，旧调用不改变可访问名称。
   // 参数不参与菜单状态或生成执行，避免把展示控件耦合到某个 store。
   quantityLabel?: string;
+  // 只注入合法数量目录；列表定位、选中、关闭和原菜单按钮均不复制。
+  // 创建页仍用原1/2/3/4，画布用自身契约的1/2/4/6，不能只过滤回调却展示不可保存选项。
+  options?: readonly { count: number; label: string }[];
 };
 
 // 公开可选媒介标签，使同一数量菜单能用于图片和音频生成。
 // 标签按当前语言从宿主传入，不根据任务数据猜测媒体类型。
 // 当前数量、展开位置、关闭机制和回传值均保持原实现。
-export function ImageCountDropdown({ value, onChange, quantityLabel }: ImageCountDropdownProps) {
+// options 用于表达当前业务允许的数量，不是根据媒体名自动猜的范围。
+// 普通创建页仍保留一二三四，不能因画布有六张就扩大全局合法选项。
+// 画布只允许一二四六，不能展示三张后再在确认回调静默拒绝保存。
+// label 是已准备的显示内容，count 才是交回宿主的业务数值。
+// readonly 表示本菜单不能通过排序或插入修改调用方共享的选项目录。
+// 菜单继续使用原 count 作为稳定项身份，文案切换不会错用上一项选中态。
+// 当前 value 不在目录时不能自动写回第一项，读取不是一次用户确认。
+// 原定位函数仍按真实触发器与菜单几何决定上下展开，不复制画布专属坐标。
+// 父级原生成底栏不裁剪溢出，向上展开的菜单不会被按钮圆角截掉。
+// 外部点击和 Escape 的关闭机制沿用同一实现，不增加全局重复监听。
+// 本组件只回传选择，不触发生成请求，也不创建一张空结果卡。
+// 数量文字不作为文件名或工作流身份，展示和运行参数保持分离。
+export function ImageCountDropdown({ value, onChange, quantityLabel, options = IMAGE_COUNT_OPTIONS, disabled = false }: ImageCountDropdownProps) {
   const { t } = useTranslation();
-  const [open, setOpen] = useState(false);
+  const [expanded, setOpen] = useState(false);
+  // 锁定时立即撤下已打开的选项，解锁后仍需由用户重新打开。
+  if (disabled && expanded) setOpen(false);
+  const open = expanded && !disabled;
   const [placement, setPlacement] = useState<"bottom" | "top">("bottom");
   const containerRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -82,6 +101,7 @@ export function ImageCountDropdown({ value, onChange, quantityLabel }: ImageCoun
     <div ref={containerRef} data-image-count-control className="relative flex shrink-0 self-stretch before:pointer-events-none before:absolute before:left-0 before:top-1/2 before:h-5 before:w-px before:-translate-y-1/2 before:bg-white/35 before:content-['']">
       <button
         type="button"
+        disabled={disabled}
         aria-haspopup="menu"
         aria-expanded={open}
         // 视觉只保留×N，读屏使用宿主媒介名，默认保持原有“图片”词条。
@@ -101,7 +121,7 @@ export function ImageCountDropdown({ value, onChange, quantityLabel }: ImageCoun
         // 右段继承公共渐变，不再绘制原胶囊描边、独立底色或“图片”标签。
         // 独立焦点轮廓留在组内，键盘能够区分生成和数量这两个动作。
         // 保持足够的水平点击余量，同时让左侧生成文案使用剩余宽度。
-        className="flex items-center justify-center gap-1 rounded-r-xl px-4 text-sm font-semibold text-white focus-visible:outline-2 focus-visible:outline-offset-[-4px] focus-visible:outline-white"
+        className="flex items-center justify-center gap-1 rounded-r-xl px-4 text-sm disabled:opacity-50 font-semibold text-white focus-visible:outline-2 focus-visible:outline-offset-[-4px] focus-visible:outline-white"
       >
         {/* 界面：右段「× N」保留数量选择功能；乘号不是关闭按钮。 */}
         <span className="whitespace-nowrap tabular-nums">× {value}</span>
@@ -127,7 +147,7 @@ export function ImageCountDropdown({ value, onChange, quantityLabel }: ImageCoun
             placement === "bottom" ? "top-full mt-1" : "bottom-full mb-1"
           )}
         >
-          {IMAGE_COUNT_OPTIONS.map((option) => {
+          {options.map((option) => {
             const selected = option.count === value;
 
             return (

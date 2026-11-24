@@ -10,13 +10,14 @@
 const { IPC_CHANNELS: C } = require("../../../common/ipc-channels");
 const { registerHandle } = require("../../ipc/result");
 const assistant = require("./service");
+const { validateMessageImages } = require("../agent/input-messages");
 /** @param {unknown} value @returns {value is import('@illusion-realm/shared').PromptConnection} */
 function validConnection(value) {
   if (!value || typeof value !== "object" || !("provider" in value) || !("baseUrl" in value)) return false;
   // 与 shared 允许集同步，未知供应商不能被当作自定义地址获得凭据。
   // endpoint 继续核对地址协议；命名 Euzhi 只会返回固定官方中转地址。
   // 不新增可传入任意 Agent 配置的接口，转换仍是一个文本请求。
-  if (!["glm", "custom", "euzhi"].includes(String(value.provider)) || typeof value.baseUrl !== "string" || value.baseUrl.length > 2048) return false;
+  if (!["glm", "custom", "euzhi", "siliconflow"].includes(String(value.provider)) || typeof value.baseUrl !== "string" || value.baseUrl.length > 2048) return false;
   try { assistant.endpoint(/** @type {import('@illusion-realm/shared').PromptConnection} */ (value)); return true; } catch { return false; }
 }
 /** @param {unknown} value @param {number} limit */
@@ -26,10 +27,18 @@ function validRequest(args) {
   const value = args[0];
   return args.length === 1 && validConnection(value) && "model" in value && "text" in value && "instruction" in value
     // 先确认 model 是文本再执行正则，不让任意 IPC 值触发类型异常。
-    // Grok 图片、视频和音频模型不能作为提示词翻译聊天模型提交。
+    // 图片、视频、音频和向量模型不能用于文本转译。
     // 形状与系列校验失败统一由 registerHandle 返回 INVALID_ARGUMENT。
-    && validText(value.model, 200) && (value.provider !== "euzhi" || /^grok-/i.test(String(value.model)) && !/image|imagine|video|audio/i.test(String(value.model)))
-    && validText(value.text, 16000) && validText(value.instruction, 8000) ? null : "invalid";
+    && validText(value.model, 200) && (value.provider === "custom" || !/image|imagine|video|audio|embedding|rerank|whisper|tts|dall-e/i.test(String(value.model)))
+    && typeof value.text === "string" && value.text.trim().length <= 16000
+    // 对齐渲染端的指令上限，让完整的 Moss 内置预设通过。
+    && validText(value.instruction, 10000) && validImages(value) ? null : "invalid";
+}
+/** 图片预算复用 Agent 校验；空正文必须有图，不能把无效附件当作纯文字放行。 */
+/** @param {object & { text: unknown, images?: unknown }} value */
+function validImages(value) {
+  return validateMessageImages({ images: value.images }) === null
+    && typeof value.text === "string" && Boolean(value.text.trim() || Array.isArray(value.images) && value.images.length);
 }
 /** @param {unknown[]} args */
 const connectionArgs = (args) => args.length === 1 && validConnection(args[0]) ? null : "invalid";

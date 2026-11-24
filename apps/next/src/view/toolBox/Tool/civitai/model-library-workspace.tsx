@@ -1,4 +1,6 @@
 "use client";
+import { HoverTip } from "@/components/hover-tip";
+
 
 // 在线与本地库共用几何和滚动边界，数据、选择和写操作留在各自页面。
 // 类比三格书架：关掉右边资料格后，中间书架直接使用空出来的宽度。
@@ -122,7 +124,7 @@ export function ModelLibraryWorkspace({ sidebar, children, details, footer, visi
     <section ref={catalogRef} tabIndex={-1} className={styles.catalog} data-model-library-catalog data-local-model-catalog={local || undefined}>
       {children}
       <footer className={styles.catalogFooter} data-model-library-footer>
-        <button type="button" data-model-sidebar-toggle aria-label={sidebarLabel} title={sidebarLabel} aria-expanded={sidebarExpanded} onClick={() => setSidebarExpanded(value => !value)} className={styles.sidebarToggle}>{sidebarExpanded ? <ChevronsLeft size={15} aria-hidden="true" /> : <ChevronsRight size={15} aria-hidden="true" />}</button>
+        <HoverTip asChild layer="window" label={(sidebarLabel) ?? ""}><button type="button" data-model-sidebar-toggle aria-label={sidebarLabel} aria-expanded={sidebarExpanded} onClick={() => setSidebarExpanded(value => !value)} className={styles.sidebarToggle}>{sidebarExpanded ? <ChevronsLeft size={15} aria-hidden="true" /> : <ChevronsRight size={15} aria-hidden="true" />}</button></HoverTip>
         <span role="status" className="min-w-0 truncate text-right">{footer}</span>
       </footer>
     </section>

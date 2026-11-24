@@ -6,9 +6,10 @@
 import { useEffect, useReducer, useRef, type Dispatch, type KeyboardEvent } from "react";
 import { useStoreApi, type Connection, type NodeChange, type EdgeChange, type XYPosition } from "@xyflow/react";
 import { t } from "@/i18n";
+import { useToastStore } from "@/stores/useToastStore";
 import { useCanvasPersistence } from "./use-canvas-persistence";
 import { canvasReducer, INITIAL_CANVAS_STATE, type CanvasAction } from "./canvas-reducer";
-import { NODE_LABELS, type CanvasData, type CanvasNode, type NodeKind, type CanvasDocument } from "./canvas-model";
+import { NODE_LABELS, type CanvasData, type CanvasNode, type CanvasAddKind, type CanvasDocument } from "./canvas-model";
 
 // 按键只在当前画布根元素生效，输入框的Delete不能冒泡成删除节点。
 // 菜单通过Portal挂在外面，它的Escape和方向键继续由公共菜单处理。
@@ -22,7 +23,10 @@ function handleKey(event: KeyboardEvent<HTMLElement>, dispatch: Dispatch<CanvasA
   // 视频时间条的方向键属于原生媒体，不应变成移动节点或切换画布模式。
   // 更换和重试按钮同样隔离，按 Delete 操作按钮不会误删当前选中卡。
   // 隔离仅限这些后代，画布根的 Delete、复制与撤销继续保持原有行为。
-  if (event.target instanceof HTMLElement && event.target.closest("input,textarea,select,video,audio,[data-canvas-media-control],[contenteditable=true],[role=menu],[role=listbox],[data-canvas-popover]")) return;
+  // 配置页及翻译历史通过 Portal 冒泡到画布，关闭按钮也必须保留自己的按键。
+  // 检查实际 dialog 祖先，而非只排除输入框；在按钮上按 Delete 同样不能删节点。
+  // 离开浮层后画布快捷键恢复，不另建全局“当前弹窗”状态。
+  if (event.target instanceof HTMLElement && event.target.closest("input,textarea,select,video,audio,[data-canvas-media-control],[contenteditable=true],[role=menu],[role=listbox],[role=dialog],[data-canvas-popover]")) return;
 // 快捷键分派必须先经过上方输入控件隔离。
 // 否则在提示词里剪切一段文字会误删整张卡片。
 // 媒体进度条也拥有 Ctrl 或方向键语义，不应被图操作截走。
@@ -50,6 +54,12 @@ function handleKey(event: KeyboardEvent<HTMLElement>, dispatch: Dispatch<CanvasA
 }
 
 // hook只做React和命令模型的接线，不在事件中复制整个工程处理流程。
+// add增加可选源ID，但普通底栏与右键的两参数调用保持原含义。
+// 传源ID的调用将创建和连接一起dispatch，不先后发送两条可被打断的命令。
+// 新节点ID仍由原事件入口创建，渲染和纯reducer都不运行随机生成。
+// 撤销、重做与自动保存继续读取同一个state，不额外建立连接菜单历史。
+// 此入口不持有媒体字节，参考解析按已有图边寻找源文件。
+// 菜单关闭与取消只修改操作意图，不能在这里自动删除用户已有连线。
 // cancelConnection使用库自己的取消入口，删除临时橡皮筋而非伪造一条边。
 // 点击连线的起点也一起清空，Escape后下次点击不会接续上一次未完成的边。
 // 保存由独立适配器调用统一分段存储，本 hook 不直接读写文件或整份用户文档。
@@ -64,7 +74,7 @@ function usePortConnections(dispatch: Dispatch<CanvasAction>) {
   const connectPort = (id: string, type: "source" | "target") => {
     if (type === "source") {
       pendingPort.current = { id, type };
-      dispatch({ type: "message", message: t("canvas.connectHint") });
+      useToastStore.getState().show(t("canvas.connectHint"));
       return;
     }
     const source = pendingPort.current;
@@ -97,8 +107,16 @@ function bindCanvasCommands(dispatch: Dispatch<CanvasAction>) {
     clipboardAction: (operation: "copy" | "cut" | "paste") => dispatch({ type: "clipboard", operation, id: crypto.randomUUID() }),
     setWorkspace: (workspace: NonNullable<CanvasDocument["workspace"]>) => dispatch({ type: "workspace", workspace }),
     openDocument: (document: import("@/types/infinite-canvas").UserDataInfiniteCanvas) => dispatch({ type: "restore", document }),
-    add: (kind: NodeKind, position: XYPosition) => dispatch({ type: "add", kind, position, title: t(NODE_LABELS[kind]), id: crypto.randomUUID(), createdAt: Date.now() }),
+    // 可选sourceId只用于图片输出拖线的新建意图，普通添加仍不建立任何隐式边。
+    // ID与时间在事件入口生成，reducer保持可重复求值，不在历史回放时随机换身份。
+    // 新建节点和入边共用同一add命令，键盘撤销无需维护第二套连接历史。
+    add: (kind: CanvasAddKind, position: XYPosition, sourceId?: string) => dispatch({ type: "add", kind, position, title: t(kind === "compare" ? "canvas.compareImage" : kind === "upscale" ? "canvas.upscale" : NODE_LABELS[kind]), id: crypto.randomUUID(), createdAt: Date.now(), sourceId }),
     duplicate: () => dispatch({ type: "duplicate", id: crypto.randomUUID() }),
+    applyDocument: (document: CanvasDocument) => dispatch({ type: "applyDocument", document }),
+    // 与文件改名服务共享稳定结果形状，不在卡片内逐个发出多笔更新。
+    // 一次分派修正全部引用，避免半数节点还指向旧文件。
+    // 此动作不创造新的磁盘撤销协议，原位置和参数历史仍按原规则回放。
+    relinkMedia: (result: import("@/utils/generatedImages").RenameGeneratedImageResult) => dispatch({ type: "relinkMedia", result }),
     updateNodeData: (id: string, patch: Partial<CanvasData>) => dispatch({ type: "updateData", id, patch }),
     remove: () => dispatch({ type: "remove" }),
     changeNodes: (changes: NodeChange<CanvasNode>[]) => dispatch({ type: "nodes", changes }),
@@ -106,7 +124,9 @@ function bindCanvasCommands(dispatch: Dispatch<CanvasAction>) {
     startDrag: () => dispatch({ type: "dragStart" }),
     stopDrag: () => dispatch({ type: "dragStop" }),
     history: (redo: boolean) => dispatch({ type: "history", redo }),
-    setMessage: (message: string) => dispatch({ type: "message", message }),
+    setFixedSize: (value: boolean) => dispatch({ type: "fixedSize", value }),
+    lockSize: (value: boolean) => dispatch({ type: "lockSize", value }),
+    resizeCards: (card: NonNullable<CanvasData["card"]>) => dispatch({ type: "resizeCards", card }),
     rename: (name: string) => dispatch({ type: "rename", name }),
     // 导入与重复节点是不同意图；前者保留真实来源，后者继续沿用已有复制规则。
     // 新节点已由统一导入边界校验类型和路径，绑定层不再自己读 File。
@@ -156,15 +176,24 @@ function useCancelledDrag(cancelled: boolean, dispatch: Dispatch<CanvasAction>) 
 // 卡片尺寸在 data 中，因此改大小确实会让作品变成未保存。
 // 导出工程直接读同一 editor 的 serializeCanvas，没有另一份影子工程。
 // 相同媒体多个节点仍各有自己的 id 与参数，文件路径只说明来源。
-export function useCanvasEditor() {
+export function useCanvasEditor(projectId?: string) {
   const [state, dispatch] = useReducer(canvasReducer, INITIAL_CANVAS_STATE);
-  const persistence = useCanvasPersistence(state, dispatch);
+  const persistence = useCanvasPersistence(state, dispatch, projectId);
   const connections = usePortConnections(dispatch);
   useCancelledDrag(state.cancelled, dispatch);
+  const { feedback } = state;
+  const announced = useRef<typeof feedback>(null);
+  // 命令先提交再弹提示。每次结果像一张新回执，拖动和重渲染不会重复播报原回执。
+  useEffect(() => {
+    if (!feedback || announced.current === feedback) return;
+    announced.current = feedback;
+    useToastStore.getState().show(feedback.message, feedback.variant);
+  }, [feedback]);
   return {
     ...state,
     ...bindCanvasCommands(dispatch),
     ...connections,
+    notify: useToastStore.getState().show,
     keyDown: (event: KeyboardEvent<HTMLElement>) => { if (persistence.editable) handleKey(event, dispatch, connections.cancelConnection); },
     canUndo: state.past.length > 0,
     canRedo: state.future.length > 0,

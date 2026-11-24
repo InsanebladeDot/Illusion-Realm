@@ -1,4 +1,6 @@
 "use client";
+import { HoverTip } from "@/components/hover-tip";
+
 
 // 界面：账户、设置、工具箱、更新与语言入口；外观设置继续位于全局顶栏。
 // 设置使用 BOTTOM_NAV_ITEMS 的同一配置，导航配置改名时菜单也会同步。
@@ -136,7 +138,7 @@ export function SidebarAccountMenu({ expanded, caption = false }: { expanded: bo
   const account = useAccountStore(state => state.profile), localName = useProfileStore(state => state.username), avatar = useProfileStore(state => state.avatarDataUrl);
   const name = account?.displayName ?? localName;
   return <div data-caption-account={caption || undefined} className={caption ? "window-caption-action flex w-32 max-w-[26vw] items-center" : "w-full"}>
-    <button ref={anchor} type="button" data-account-menu-trigger aria-label={t("auth.accountMenu")} title={name} aria-expanded={open} aria-haspopup="dialog" aria-controls={open ? "sidebar-account-menu" : undefined} onClick={() => setOpen(value => !value)} className={cn("flex min-h-10 w-full items-center gap-2 rounded-xl px-1.5 py-1.5 text-left hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-stroke", !expanded && "justify-center", open && "bg-muted")}><AccountAvatar name={name} source={avatar} />{expanded && <><span className="min-w-0 flex-1"><span className="block truncate text-sm">{name}</span>{account && <span className="block truncate text-[11px] text-muted-foreground">{account.email}</span>}</span><ChevronRight size={14} className="shrink-0 text-muted-foreground" /></>}</button>
+    <HoverTip asChild layer="window" label={(name) ?? ""}><button ref={anchor} type="button" data-account-menu-trigger aria-label={t("auth.accountMenu")} aria-expanded={open} aria-haspopup="dialog" aria-controls={open ? "sidebar-account-menu" : undefined} onClick={() => setOpen(value => !value)} className={cn("flex min-h-10 w-full items-center gap-2 rounded-xl px-1.5 py-1.5 text-left hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-stroke", !expanded && "justify-center", open && "bg-muted")}><AccountAvatar name={name} source={avatar} />{expanded && <><span className="min-w-0 flex-1"><span className="block truncate text-sm">{name}</span>{account && <span className="block truncate text-[11px] text-muted-foreground">{account.email}</span>}</span><ChevronRight size={14} className="shrink-0 text-muted-foreground" /></>}</button></HoverTip>
     {/* 弹窗：账户菜单通过 Portal 显示，侧栏收起时也不会被裁掉。 */}
     {open && <AccountMenu anchor={anchor} expanded={expanded} onClose={close} />}
   </div>;

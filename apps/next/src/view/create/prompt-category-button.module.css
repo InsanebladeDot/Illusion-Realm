@@ -1,0 +1,42 @@
+/* 画布重置了按钮字体和内边距；用标记缩小覆盖范围。 */
+.label[data-prompt-category-control],
+span.label {
+  display: inline-flex;
+  align-items: center;
+  height: 28px;
+  padding-inline: 8px;
+  white-space: nowrap;
+  font-size: 11px;
+  color: var(--muted-foreground);
+}
+
+.control[data-prompt-category-control] {
+  border-radius: 6px;
+  gap: 4px;
+  background: transparent;
+  transition: background-color 120ms ease, color 120ms ease;
+}
+
+.control.attached[data-prompt-category-control] {
+  border-start-end-radius: 0;
+  border-end-end-radius: 0;
+}
+
+.control[data-prompt-category-control]:is(:hover, :focus-visible, [aria-pressed="true"]) {
+  color: var(--foreground);
+  background-color: var(--accent);
+}
+
+.control[data-prompt-category-control]:active {
+  background-color: color-mix(in srgb, var(--accent), var(--foreground) 10%);
+}
+
+.control[aria-pressed="true"] {
+  box-shadow: var(--shadow-sm);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .control[data-prompt-category-control] {
+    transition: none;
+  }
+}

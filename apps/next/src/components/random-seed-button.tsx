@@ -1,4 +1,6 @@
 "use client";
+import { HoverTip } from "@/components/hover-tip";
+
 /**
  * 生成按钮右侧共用的骰子入口，只切换随机模式，不提交生成任务。
  * 值在每次实际提交时产生，点击反馈来自真实受控 seedMode。
@@ -26,5 +28,5 @@ import { cn } from '@/utils/cn';
 // 使用title和aria-label提供相同动作名称，不把骰子图案当作唯一说明。
 export function RandomSeedButton({ random, disabled = false, onEnable }: { random: boolean; disabled?: boolean; onEnable: () => void }) {
   const { t } = useTranslation(), label = t('create.animaEdit.randomSeed');
-  return <button type="button" data-random-seed aria-label={label} title={label} aria-pressed={random} disabled={disabled} onClick={onEnable} className={cn('flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-border bg-background text-muted-foreground hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-40', random && 'border-primary/40 text-accent-text')}><Dices className="h-5 w-5" /></button>;
+  return <HoverTip asChild layer="window" label={(label) ?? ""}><button type="button" data-random-seed aria-label={label} aria-pressed={random} disabled={disabled} onClick={onEnable} className={cn('flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-border bg-background text-muted-foreground hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-40', random && 'border-primary/40 text-accent-text')}><Dices className="h-5 w-5" /></button></HoverTip>;
 }

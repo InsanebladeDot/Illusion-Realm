@@ -1,4 +1,6 @@
 "use client";
+import { HoverTip } from "@/components/hover-tip";
+
 
 // 侧栏父级与其他库共用，字母和分类只是其内部可组合内容。
 // 统一宽度和主题边界，避免同一个modal里出现两套浅色背景。
@@ -156,9 +158,9 @@ export function CharacterFilterSidebar({
 
 function SectionTitle({ children, hint }: { children: React.ReactNode; hint?: string }) {
   return (
-    <p className="px-2 text-xs font-medium tracking-wide text-muted-foreground" title={hint}>
+    <HoverTip asChild layer="window" label={(hint) ?? ""}><p className="px-2 text-xs font-medium tracking-wide text-muted-foreground">
       {children}
-    </p>
+    </p></HoverTip>
   );
 }
 

@@ -1,0 +1,8 @@
+/* 自绘黑色说明与主题表面共用生命周期；移动只影响说明，不挤动按钮或文字。 */
+.anchor { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.tip { position: fixed; z-index: 150; pointer-events: none; width: max-content; max-width: min(240px, calc(100vw - 16px)); padding: 6px 10px; border-radius: 4px; background: #050505; color: #eee; font-size: 11px; line-height: 1.5; opacity: 0; transform: translateX(-4px); transition: opacity .15s, transform .15s; box-shadow: 0 3px 12px #0003; }
+.tip[data-visible=true] { opacity: 1; transform: translateX(0); }
+.theme { background: var(--popover); color: var(--popover-foreground); border: 1px solid var(--border); }
+/* 标题栏的提示要高于窗口栏，不能让说明上半截被 head 遮住。 */
+.windowLayer { z-index: 1200; }
+@media(prefers-reduced-motion:reduce) { .tip { transition: none; transform: none; } }

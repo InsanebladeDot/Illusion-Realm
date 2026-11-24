@@ -1,13 +1,16 @@
 "use client";
+import { HoverTip } from "@/components/hover-tip";
+
 
 import { useMemo, useState } from "react";
 import { useSettingsStore } from "@/stores/useSettingsStore";
 import { useToastStore } from "@/stores/useToastStore";
 import { useTranslation } from "@/i18n";
 import { isMinimaxWorkflow } from "@/data/videoForm";
+import { isModelNameHidden } from "@/utils/local-model-visibility";
 import { fetchComfyModelLists } from "@/api/comfyui";
 import { getVideoWorkflowTemplate } from "@/utils/comfy/videoWorkflow";
-import { getVideoModelDisplay, getVideoModelSlots, selectedVideoModelName, type VideoModelOverrides } from "@/utils/comfy/video-workflow-models";
+import { getVideoModelDisplay, getVideoModelSlots, localLoaderRoots, selectedVideoModelName, type VideoModelOverrides } from "@/utils/comfy/video-workflow-models";
 import type { SelectedModel } from "@/types/model";
 import { ModelCoverSelect } from "./model-cover-select";
 import { ModelSelectDialog } from "./ModelSelectDialog";
@@ -32,6 +35,7 @@ interface VideoModelSelectProps {
 export function VideoModelSelect({ workflowId, overrides, onChange, disabled, templateOverride }: VideoModelSelectProps) {
   const { t } = useTranslation();
   const models = useSettingsStore((state) => state.models);
+  const hidden = useSettingsStore(state => state.hiddenModelPaths);
   const paths = useSettingsStore((state) => state.paths);
   const server = useSettingsStore((state) => state.comfyServerUrl);
   const [open, setOpen] = useState(false);
@@ -41,7 +45,9 @@ export function VideoModelSelect({ workflowId, overrides, onChange, disabled, te
   // 用户选择的模型名由宿主按业务字段保存，不绑定某个模板前缀。
   const slot = useMemo(() => getVideoModelSlots(templateOverride ?? getVideoWorkflowTemplate(workflowId)).find((item) => item.category === "diffusionModels"), [workflowId, templateOverride]);
   if (!isMinimaxWorkflow(workflowId) || !slot) return null;
-  const display = getVideoModelDisplay(slot, overrides[slot.id] || slot.defaultName, models, paths);
+  const name = overrides[slot.id] || slot.defaultName;
+  const display = getVideoModelDisplay(slot, name, models, paths);
+  const hiddenModel = isModelNameHidden(display.selected.versionId || name, localLoaderRoots(slot.category, paths), hidden);
   async function select(model: SelectedModel) {
     if (!slot || !model.versionId) return;
     setSelecting(true);
@@ -51,9 +57,9 @@ export function VideoModelSelect({ workflowId, overrides, onChange, disabled, te
     } catch { useToastStore.getState().show(t("create.videoModels.invalid")); }
     finally { setSelecting(false); }
   }
-  return <div data-video-local-unet className="min-w-0" title={t("create.videoModels.selectLocal")}>
+  return <HoverTip asChild layer="window" label={(t("create.videoModels.selectLocal")) ?? ""}><div data-video-local-unet className="min-w-0">
     {/* 界面：MiniMax「模型」卡片，视频与音频都只展示该系列本地模型 */}
-    <ModelCoverSelect name={display.name} cover={display.cover} label={t("create.page.model")} onClick={() => setOpen(true)} disabled={disabled || selecting} />
+    <ModelCoverSelect name={hiddenModel ? t("toolBox.civitai.visibility.hiddenName") : display.name} cover={hiddenModel ? "" : display.cover} label={t("create.page.model")} onClick={() => setOpen(true)} disabled={disabled || selecting} />
     {open && <ModelSelectDialog open selected={display.selected} series="minimax" onOpenChange={setOpen} onSelect={(model) => { void select(model); }} />}
-  </div>;
+  </div></HoverTip>;
 }

@@ -1,4 +1,6 @@
 "use client";
+import { HoverTip } from "@/components/hover-tip";
+
 
 // 本地模型库只改浏览与选择适配，不另建扫描服务或改变创建页模型列表。
 // 官方根是 ComfyUI 分类；其下所有真实目录组成“我的分类”。
@@ -10,8 +12,8 @@
 // 外部文件管理器的修改需要重新扫描，不伪造实时文件监视能力。
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import Link from "next/link";
-import { ArrowLeft, Boxes, ChevronRight, FolderInput, ImagePlus, RefreshCw, Trash2 } from "lucide-react";
-import type { LocalModelBatchResult } from "@illusion-realm/shared";
+import { ArrowLeft, Boxes, ChevronRight, Eye, EyeOff, FolderInput, ImagePlus, RefreshCw, Trash2 } from "lucide-react";
+import type { LocalModelBatchResult, LocalModelFolderRoot } from "@illusion-realm/shared";
 import { ResourceCoverImage } from "@/components/ResourceCoverImage";
 import { useAppMainInset } from "@/hooks/use-app-main-inset";
 import { useSettingsStore } from "@/stores/useSettingsStore";
@@ -29,11 +31,16 @@ import { getModelDisplayName } from "@/utils/localModelScanner";
 import { formatBytes } from "@/utils/format";
 import { formatShortDateTime } from "@/utils/dateTimeFormat";
 import { modelDownloadApi, downloadErrorMessage } from "@/utils/model-downloads";
+import { modelPathKey } from "@/utils/local-model-visibility";
+import { flushUserDataSave } from "@/utils/userDataStorage";
 import { unwrapIpc } from "@/utils/ipcResult";
 import { invalidateLocalImageSrc } from "@/utils/localImageSrcCache";
 import { useToastStore } from "@/stores/useToastStore";
 import { localLibraryFiles, modelFolderTree, type LocalLibraryFile } from "@/utils/local-model-tree";
 import { ModelFolderNavigation } from "./model-folder-navigation";
+import { listLocalModelFolders } from "@/utils/model-categories";
+import { useModelFolderActions } from "./use-model-folder-actions";
+import { LocalModelFolderEditor } from "./local-model-folder-editor";
 import { LocalModelCategoryEditor } from "./local-model-category-editor";
 import { LocalModelBatchDialog } from "./local-model-batch-dialog";
 import { LocalModelMetadataDetails } from "./local-model-metadata-details";
@@ -104,11 +111,14 @@ type LocalLibraryModel = LocalLibraryFile;
 // tree 与 filtered 读取相同的 rootModels，导航计数不会来自另一个扫描时间点。
 // 目录树不受关键词影响，搜索无结果时用户仍可直接选择其他文件夹。
 // 空关键词去掉过滤但不清目录，查找失败后仍能知道当前所在范围。
-function useLocalLibraryFilters(models: LocalLibraryModel[]) {
-  const roots = useMemo(() => [...new Set(models.map(model => model.rootCategory))].sort(), [models]);
+function useLocalLibraryFilters(models: LocalLibraryModel[], folders: LocalModelFolderRoot[]) {
+  const roots = useMemo(() => [...new Set([...models.map(model => model.rootCategory), ...folders.map(entry => entry.root)])].sort(), [models, folders]);
   const [rootCategory, setRootCategory] = useState(""), [query, setQuery] = useState(""), [category, setCategory] = useState("");
-  const rootModels = models.filter(model => !rootCategory || model.rootCategory === rootCategory);
-  const tree = modelFolderTree(rootCategory ? rootModels : []);
+  // 点击详情不改变模型索引或目录，复用原来的筛选结果和目录树。
+  // 像书架位置不变时只翻所选书页，不重新整理整座书架。
+  // 依赖仍包含根分类，切换官方目录不会借用上一类的计数或层级。
+  const rootModels = useMemo(() => models.filter(model => !rootCategory || model.rootCategory === rootCategory), [models, rootCategory]);
+  const tree = useMemo(() => modelFolderTree(rootCategory ? rootModels : [], "", folders.find(entry => entry.root === rootCategory)?.folders), [rootCategory, rootModels, folders]);
   const needle = query.trim().toLowerCase();
   // 排序偏好是本地库视图状态，不回写 settings.models 的原始顺序。
   // 创建页和 Agent 读取同一个扫描索引，但不应继承这里临时的倒序排列。
@@ -117,7 +127,10 @@ function useLocalLibraryFilters(models: LocalLibraryModel[]) {
   // 类别、目录和查询会改变 scope，确切目标范围变化时才重置多选。
   // view 继续只控制 CSS 密度，列表模式并不是另一套排序或数据来源。
   const [sort, setSort] = useState<ModelSortOrder>({ field: "name", direction: "asc" }), [view, setView] = useState("grid");
-  const filtered = rootModels.filter(model => (!category || model.folder === category || model.folder.startsWith(category + "/")) && (!needle || `${model.name} ${model.folder}`.toLowerCase().includes(needle)));
+  // 搜索和目录条件不变时复用数组身份，让排序与元数据索引也能复用。
+  // startsWith 的斜杠边界保留，style 不能意外包含 style-old。
+  // 全部依赖显式列出，重扫和同数量文件替换依旧会得到新结果。
+  const filtered = useMemo(() => rootModels.filter(model => (!category || model.folder === category || model.folder.startsWith(category + "/")) && (!needle || `${model.name} ${model.folder}`.toLowerCase().includes(needle))), [rootModels, category, needle]);
   // 排序旁车只在用户选择标记时读取，扫描和补全 revision 决定何时刷新。
   // 数据更新沿用原 store，不因排序创建另一个补全任务或磁盘监视器。
   const scannedAt = useSettingsStore(state => state.lastScannedAt) || 0;
@@ -169,12 +182,12 @@ function LocalLibraryFilters({ filters, onRootChange, recovery, management }: Lo
     {/* 中间页头：名称、真实层级和返回入口共用一行，不再显示营销介绍。 */}
     {/* 面包屑只修改浏览状态；返回工作台走既有工具页路由。 */}
     {/* 长目录名只截断外观，title 和辅助名称仍保留完整路径。 */}
-    <div className={styles.catalogTitle}><Boxes size={19} /><h1 title={title}>{title}</h1><nav aria-label={t("toolBox.civitai.folderPath")}><button type="button" onClick={() => onRootChange("")}>{t("toolBox.civitai.myFolders")}</button>{[filters.rootCategory, ...filters.category.split("/")].filter(Boolean).map((name, index, all) => <span key={all.slice(0, index + 1).join("/")}><ChevronRight size={12} /><button type="button" title={name} onClick={() => filters.setCategory(all.slice(1, index + 1).join("/"))}>{name}</button></span>)}</nav><Link href="/tools" className={styles.back}><ArrowLeft size={13} />{t("toolBox.civitai.workspaceBack")}</Link></div>
+    <div className={styles.catalogTitle}><Boxes size={19} /><HoverTip asChild layer="window" label={(title) ?? ""}><h1>{title}</h1></HoverTip><nav aria-label={t("toolBox.civitai.folderPath")}><button type="button" onClick={() => onRootChange("")}>{t("toolBox.civitai.myFolders")}</button>{[filters.rootCategory, ...filters.category.split("/")].filter(Boolean).map((name, index, all) => <span key={all.slice(0, index + 1).join("/")}><ChevronRight size={12} /><HoverTip asChild layer="window" label={(name) ?? ""}><button type="button" onClick={() => filters.setCategory(all.slice(1, index + 1).join("/"))}>{name}</button></HoverTip></span>)}</nav><Link href="/tools" className={styles.back}><ArrowLeft size={13} />{t("toolBox.civitai.workspaceBack")}</Link></div>
     {/* 工具栏第一行：搜索和排序共用边框，批量入口独立放到右边。 */}
     {/* 官方分类继续由左树控制，移除重复下拉但不移除真实筛选条件。 */}
     {/* 搜索只过滤当前索引；打开排序菜单也不会启动模型匹配。 */}
     <ModelLibrarySearch query={filters.query} onChange={filters.setQuery} label={t("toolBox.civitai.localSearch")} placeholder={t("toolBox.civitai.localSearch")} trailing={<LocalModelSort order={filters.sort} onChange={filters.setSort} />} action={recovery} />
-    {/* 工具栏第二行：移动和删除复用原多选流程，视图密度固定在最右。 */}
+    {/* 工具栏第二行：模型管理操作在左，视图密度固定在右。 */}
     {/* 两行都属于中心面板头部，不随详情滚动或窄屏隐藏而丢失入口。 */}
     {/* 三种密度复用同一张卡片，改变密度不改排序或当前选择。 */}
     <div className={styles.actionRow}>{management}<ModelLibraryViewModes view={filters.view} onChange={filters.setView} /></div>
@@ -344,12 +357,15 @@ function LocalModelCard({ model, selected, selecting, onSelect, onDetails, summa
 // 批量补全的目标来自当前筛选快照，不悄悄处理整个模型根。
 // 浏览状态仍由模型卡片打开详情，不需要在管理区重复一个详情按钮。
 // 删除沿用红色文字和原确认流程，不在此处绕过回收站契约。
+type BatchMode = "move" | "delete" | "hide" | "restore";
+
 interface BatchToolbarProps {
-  count: number; disabled: boolean; unsafe: boolean; mode: "move" | "delete" | null;
-  onAll: () => void; onClear: () => void; onExit: () => void; onAction: (action: "move" | "delete") => void;
+  count: number; disabled: boolean; unsafe: boolean; mode: BatchMode | null;
+  onAll: () => void; onClear: () => void; onExit: () => void; onAction: (action: BatchMode) => void;
+  hiddenView: boolean; hiddenCount: number; onToggleView: () => void;
 
 }
-function LocalModelBatchToolbar({ count, disabled, unsafe, mode, onAll, onClear, onExit, onAction }: BatchToolbarProps) {
+function LocalModelBatchToolbar({ count, disabled, unsafe, mode, onAll, onClear, onExit, onAction, hiddenView, hiddenCount, onToggleView }: BatchToolbarProps) {
   const { t } = useTranslation();
   // 此处不通过 selectedPath 推断批量目标，右侧详情对象只供阅读。
   // 用户点移动或删除进入显式多选后，第二次点击才进入原确认弹窗。
@@ -357,14 +373,32 @@ function LocalModelBatchToolbar({ count, disabled, unsafe, mode, onAll, onClear,
   // 读取补全期间会阻止移动删除，但清空和退出不改变正在执行的任务。
   // 多选辅助区域只在当前模式存在时渲染，普通浏览时不挤占搜索高度。
   // 危险操作继续有文字说明，不能只凭红色图标让用户猜点击后果。
+  const visibilityAction = hiddenView ? "restore" : "hide";
+  const VisibilityIcon = hiddenView ? Eye : EyeOff;
   return <div data-local-batch-toolbar data-local-selection-mode={mode || "browse"} className={styles.management}>
     {/* 中心管理区：选择状态属于当前范围，不与右侧当前详情对象混用。 */}
     {/* 三个辅助操作不受 unsafe 影响，选中共享目录后仍能取消或退出。 */}
     {mode && <div className={styles.selection}><p>{t("toolBox.civitai.batch.selected", {count})}</p><button type="button" data-local-select-all disabled={disabled} onClick={onAll}>{t("toolBox.civitai.batch.selectAll")}</button><button type="button" data-local-select-clear disabled={!count || disabled} onClick={onClear}>{t("toolBox.civitai.batch.clear")}</button><button type="button" data-local-select-exit onClick={onExit}>{t("toolBox.civitai.batch.exit")}</button></div>}
     {unsafe && <p role="status" className="mb-2 text-xs text-muted-foreground">{t("toolBox.civitai.folderOperationOnly")}</p>}
-    {/* 第二行左侧仅保留移动和删除；补全入口已移到上方搜索旁边。 */}
-    {/* 继续移动/删除仍要用户第二次确认，不能第一次切多选就改动磁盘。 */}
-    <div className={styles.managementGrid}><button type="button" data-local-batch-move disabled={disabled || unsafe || mode === "delete" || (mode === "move" && !count)} onClick={() => onAction("move")}><FolderInput size={14} />{t(mode === "move" ? "toolBox.civitai.batch.continueMove" : "toolBox.civitai.batch.move")}</button><button type="button" data-local-batch-delete disabled={disabled || unsafe || mode === "move" || (mode === "delete" && !count)} onClick={() => onAction("delete")} className={styles.danger}><Trash2 size={14} />{t(mode === "delete" ? "toolBox.civitai.batch.continueDelete" : "toolBox.civitai.batch.delete")}</button></div>
+    <div className={styles.managementGrid}>
+      {!hiddenView && mode !== "hide" && <>
+        <button type="button" data-local-batch-move disabled={disabled || unsafe || mode === "delete" || (mode === "move" && !count)} onClick={() => onAction("move")}>
+          <FolderInput size={14} />{t(mode === "move" ? "toolBox.civitai.batch.continueMove" : "toolBox.civitai.batch.move")}
+        </button>
+        <button type="button" data-local-batch-delete disabled={disabled || unsafe || mode === "move" || (mode === "delete" && !count)} onClick={() => onAction("delete")} className={styles.danger}>
+          <Trash2 size={14} />{t(mode === "delete" ? "toolBox.civitai.batch.continueDelete" : "toolBox.civitai.batch.delete")}
+        </button>
+      </>}
+      <button type="button" data-local-model-visibility-action
+        className={mode === visibilityAction ? styles.visibilityConfirm : undefined}
+        disabled={disabled || (!!mode && (mode !== visibilityAction || !count))}
+        onClick={() => onAction(visibilityAction)}>
+        <VisibilityIcon size={14} />{t(mode === visibilityAction ? "common.confirm" : hiddenView ? "toolBox.civitai.visibility.restore" : "toolBox.civitai.visibility.hide")}
+      </button>
+      {(hiddenView || hiddenCount > 0) && <button type="button" data-local-model-visibility-view onClick={onToggleView} aria-pressed={hiddenView}>
+        {hiddenView ? t("toolBox.civitai.visibility.back") : t("toolBox.civitai.visibility.count", { count: hiddenCount })}
+      </button>}
+    </div>
   </div>;
 }
 // 两类写操作互斥，但不会因此阻止用户搜索、浏览或切换应用导航。
@@ -378,7 +412,7 @@ function LocalModelBatchToolbar({ count, disabled, unsafe, mode, onAll, onClear,
 
 
 function useLocalModelSelection(filtered: LocalLibraryModel[], scope: string) {
-  const [selection, setSelection] = useState<{ scope: string; paths: string[]; mode: "move" | "delete" | null }>({ scope, paths: [], mode: null });
+  const [selection, setSelection] = useState<{ scope: string; paths: string[]; mode: BatchMode | null }>({ scope, paths: [], mode: null });
   const [batch, setBatch] = useState<{ action: "move" | "delete"; models: LocalLibraryModel[] } | null>(null);
   const mode = selection.scope === scope ? selection.mode : null;
   const checked = filtered.filter((model) => !!mode && selection.paths.includes(model.id));
@@ -387,11 +421,11 @@ function useLocalModelSelection(filtered: LocalLibraryModel[], scope: string) {
     const failed = filtered.filter(model => result.items.some(item => !item.success && item.folderPath === model.filePath)).map(model => model.id);
     setSelection({ scope, paths: failed, mode: failed.length ? mode : null });
   }
-  function open(action: "move" | "delete") {
+  function open(action: BatchMode) {
     if (mode !== action) setSelection({ scope, mode: action, paths: [] });
-    else if (checked.length && checked.every(model => model.folderFileCount === 1)) setBatch({ action, models: checked });
+    else if ((action === "move" || action === "delete") && checked.length && checked.every(model => model.folderFileCount === 1)) setBatch({ action, models: checked });
   }
-  return { mode, checked, toggle, batch, finish, open, close: () => setBatch(null), all: () => { if (mode) setSelection({ scope, mode, paths: filtered.map((model) => model.id) }); }, clear: () => setSelection({ scope, mode, paths: [] }), exit: () => setSelection({ scope, mode: null, paths: [] }) };
+  return { mode, checked, toggle, batch, finish, open, close: () => setBatch(null), all: () => { if (mode) setSelection({ scope, mode, paths: checked.length === filtered.length ? [] : filtered.map(model => model.id) }); }, clear: () => setSelection({ scope, mode, paths: [] }), exit: () => setSelection({ scope, mode: null, paths: [] }) };
 }
 // scope 同时覆盖官方根、目录、关键词，旧范围的勾选不会带进新范围。
 // 选中保存在文件 ID 集合中，不能继续用目录路径合并兄弟模型。
@@ -424,10 +458,33 @@ function useLocalLibraryData() {
 // 这不是跨进程磁盘锁，其他入口和外部工具仍由主进程复核处理。
 // 页面恢复时读取当前 revision，避免保留旧 DOM 才能维持补全结果。
 // 没有真实模型路径时显示空态与设置入口，不提供虚构分类和文件。
+/** 扫描刷新目录快照。旧读请求返回时不能盖掉新建后的结果。 */
+function useFolderSnapshot() {
+  const paths = useSettingsStore(state => state.paths);
+  const scannedAt = useSettingsStore(state => state.lastScannedAt);
+  const [folders, setFolders] = useState<LocalModelFolderRoot[]>([]);
+  const [revision, setRevision] = useState(0);
+  useEffect(() => {
+    let active = true;
+    listLocalModelFolders().then(result => { if (active) setFolders(result); })
+      .catch(() => { if (active) setFolders([]); });
+    return () => { active = false; };
+  }, [paths, scannedAt, revision]);
+  function refresh() { setRevision(value => value + 1); }
+  return { folders, refresh };
+}
 export function LocalModelLibrary({ switcher }: { switcher: ReactNode }) {
   const { t } = useTranslation();
-  const { models, scanning, scan } = useLocalLibraryData();
-  const filters = useLocalLibraryFilters(models);
+  const { models: allModels, scanning, scan } = useLocalLibraryData();
+  const [hiddenView, setHiddenView] = useState(false);
+  const hiddenPaths = useSettingsStore(state => state.hiddenModelPaths);
+  const setModelsHidden = useSettingsStore(state => state.setModelsHidden);
+  const [savingVisibility, setSavingVisibility] = useState(false);
+  const hiddenFiles = useMemo(() => new Set(hiddenPaths), [hiddenPaths]);
+  const models = useMemo(() => allModels.filter(model => hiddenFiles.has(modelPathKey(model.id)) === hiddenView), [allModels, hiddenFiles, hiddenView]);
+  const hiddenCount = hiddenView ? models.length : allModels.length - models.length;
+  const { folders, refresh: refreshFolders } = useFolderSnapshot();
+  const filters = useLocalLibraryFilters(models, folders);
   const [selectedPath, setSelectedPath] = useState<string | null>(null);
   // 空详情也能关闭；重新点模型才展开，扫描或切目录不会擅自抢回第三列。
   // 这个状态只控制阅读几何，不停止已经启动的补全、下载或扫描任务。
@@ -448,7 +505,11 @@ export function LocalModelLibrary({ switcher }: { switcher: ReactNode }) {
   // 复用详情相同的批量读取接口，每批最多 200 个文件，不读取权重内容。
   // filtered 就像当前书架上的可见书目，先确定范围再读取对应的资料卡。
   const listMetadataPaths = filters.view === "list" ? filtered.map(model => model.versions[0]?.filePath).filter((value): value is string => !!value) : [];
-  const listMetadata = useLocalModelMetadata(listMetadataPaths, metadataRevision);
+  // 详情重开只刷新被选文件，不再连带重读列表里所有旁车 JSON。
+  // 扫描与实际补全 revision 仍刷新列表，保留外部文件修改后的手动刷新。
+  // 详情继续使用上面的 metadataRevision，重开不能看到过期说明。
+  const listMetadata = useLocalModelMetadata(listMetadataPaths, scannedAt + recoveryRevision);
+  // 列表旁车 revision 不再包含详情重开次数，读取接口仍保持原授权边界。
   const metadataByPath = new Map(listMetadata.entries.map(entry => [entry.filePath, entry.metadata]));
   function showDetails(folder: string) { setSelectedPath(folder); setDetailsRevision(value => value + 1); setDetailsVisible(true); }
   const [error, setError] = useState(false);
@@ -456,7 +517,7 @@ export function LocalModelLibrary({ switcher }: { switcher: ReactNode }) {
   // 与 Agent 弹窗复用同一测量器，导航开合后各自读取当前布局而非猜测偏移。
   // 宽屏居中分支不使用此值，因此不改变确认图的三面板尺寸。
   const compactLeft = useAppMainInset();
-  const selection = useLocalModelSelection(filtered, JSON.stringify([filters.rootCategory, filters.category, filters.query]));
+  const selection = useLocalModelSelection(filtered, JSON.stringify([hiddenView, filters.rootCategory, filters.category, filters.query]));
   // 详情对象必须还在当前筛选里，避免改目录后留下一个不可见但可删除的目标。
   // 无匹配时保留用户选择的面板开关，不因结果变空而反复改变列宽。
   // metadataRevision 将扫描、手动读取与批量补全的更新合并为同一读取信号。
@@ -467,6 +528,50 @@ export function LocalModelLibrary({ switcher }: { switcher: ReactNode }) {
   // 点“返回工作台”只路由导航，不会调用 selection.exit 或停止会话任务。
   const selected = filtered.find((model) => model.id === selectedPath);
   async function rescan() { setError(false); try { await scan(); } catch { setError(true); } }
+  function toggleVisibilityView() {
+    selection.exit();
+    setSelectedPath(null);
+    filters.changeRoot("");
+    filters.setQuery("");
+    setHiddenView(value => !value);
+  }
+  async function runBatchAction(action: BatchMode) {
+    if ((action !== "hide" && action !== "restore") || selection.mode !== action) {
+      selection.open(action);
+      return;
+    }
+    if (savingVisibility || !selection.checked.length) return;
+    setSavingVisibility(true);
+    try {
+      // 文件的完整路径像门牌号，别的目录里有同名模型也可以独立显示。
+      setModelsHidden(selection.checked.map(model => model.id), action === "hide");
+      selection.exit();
+      setSelectedPath(null);
+      await flushUserDataSave();
+    } catch {
+      useToastStore.getState().show(t("toolBox.civitai.visibility.saveFailed"));
+    } finally {
+      setSavingVisibility(false);
+    }
+  }
+  const folderActions = useModelFolderActions({
+    disabled: scanning || recovering || !!selection.mode,
+    onCreated: (root, folder) => {
+      filters.changeRoot(root);
+      filters.setCategory(folder);
+      setSelectedPath(null);
+      refreshFolders();
+    },
+    onDeleted: ({ root, folder }) => {
+      // 删除当前目录或它的祖先后，返回仍存在的父级。
+      if (root === filters.rootCategory && (filters.category === folder || filters.category.startsWith(`${folder}/`))) {
+        filters.setCategory(folder.split("/").slice(0, -1).join("/"));
+      }
+      setSelectedPath(null);
+      refreshFolders();
+      void rescan();
+    },
+  });
   // 移动接口返回最终目录；重新扫描后从同一适配器还原完整层级。
   // 旧接口的 category 只是末级标签，不能用它跳转到 Anima 等父层之外。
   async function modelMoved(folder: string) {
@@ -478,7 +583,7 @@ export function LocalModelLibrary({ switcher }: { switcher: ReactNode }) {
   }
   async function batchFinished(result: LocalModelBatchResult) { selection.finish(result); setSelectedPath(null); await scan(); }
   return <ModelLibraryWorkspace local visible={detailsVisible} hasSelection={!!selected} onClose={() => { setDetailsVisible(false); setSelectedPath(null); }}
-    sidebar={<><div className={styles.librarySwitch}>{switcher}</div><ModelFolderNavigation roots={filters.roots} models={models} root={filters.rootCategory} folder={filters.category} tree={filters.tree} onRoot={root => { filters.changeRoot(root); setSelectedPath(null); }} onFolder={folder => { filters.setCategory(folder); setSelectedPath(null); }} /><div className={styles.scanActions}><Link href="/settings">{t("toolBox.civitai.configure")}</Link><button type="button" onClick={() => { void rescan(); }} disabled={scanning}><RefreshCw size={13} className={scanning ? "animate-spin" : ""} />{t(scanning ? "toolBox.civitai.scanning" : "toolBox.civitai.scan")}</button></div></>}
+    sidebar={<><div className={styles.librarySwitch}>{switcher}</div><ModelFolderNavigation roots={filters.roots} models={models} root={filters.rootCategory} folder={filters.category} tree={filters.tree} folders={folders} onMenu={folderActions.open} folderAction={folderActions.editor ?? (folders.some(item => item.root === filters.rootCategory) && <LocalModelFolderEditor key={JSON.stringify([filters.rootCategory, filters.category])} root={filters.rootCategory} parent={filters.category} onCreated={folder => { filters.setCategory(folder); setSelectedPath(null); refreshFolders(); }} />)} onRoot={root => { filters.changeRoot(root); setSelectedPath(null); }} onFolder={folder => { filters.setCategory(folder); setSelectedPath(null); }} /><div className={styles.scanActions}><Link href="/settings">{t("toolBox.civitai.configure")}</Link><button type="button" onClick={() => { void rescan(); }} disabled={scanning}><RefreshCw size={13} className={scanning ? "animate-spin" : ""} />{t(scanning ? "toolBox.civitai.scanning" : "toolBox.civitai.scan")}</button></div></>}
     // 模型数量交给公共底栏放到右下角，开合按钮与分类状态由宿主独立维护。
     // 这里只传本地筛选后的计数，不把在线网络状态或扫描副作用混进展示组件。
     // 移除原来的第二份 footer，避免数量和状态提示在页面上重复出现。
@@ -493,11 +598,12 @@ export function LocalModelLibrary({ switcher }: { switcher: ReactNode }) {
       {/* 后续写操作沿用原批量确认，不让搜索右边的小按钮绕过安全边界。 */}
       <LocalLibraryFilters filters={filters} onRootChange={root => {filters.changeRoot(root); setSelectedPath(null);}}
         recovery={<LocalModelRecoveryBatch models={filtered} disabled={scanning || !!selection.mode} compact compactLeft={compactLeft} />}
-        management={<LocalModelBatchToolbar count={selection.checked.length} mode={selection.mode} disabled={scanning || recovering} unsafe={selection.checked.some(model => model.folderFileCount > 1)} onAll={selection.all} onClear={selection.clear} onExit={selection.exit} onAction={action => selection.open(action)} />} />
+        management={<LocalModelBatchToolbar count={selection.checked.length} mode={selection.mode} disabled={scanning || recovering || savingVisibility} unsafe={(selection.mode === "move" || selection.mode === "delete") && selection.checked.some(model => model.folderFileCount > 1)} onAll={selection.all} onClear={selection.clear} onExit={selection.exit} hiddenView={hiddenView} hiddenCount={hiddenCount} onToggleView={toggleVisibilityView} onAction={action => { void runBatchAction(action); }} />} />
       {error && <p role="alert" className="px-4 text-xs text-red-600 dark:text-red-400">{t("toolBox.civitai.scanFailed")}</p>}
       {/* 模型列表：只滚动网格，页头工具栏和下方结果数量保持在面板边界内。 */}
       {/* 重新扫描保留旧索引供查看，aria-busy 说明数据正在更新而非假装空库。 */}
-      <div className={styles.catalogScroll} aria-busy={scanning || listMetadata.loading}><div className={styles.modelGrid} data-local-model-grid data-view={filters.view}>{filtered.map(model => <LocalModelCard key={model.id} model={model} summary={metadataByPath.get(model.versions[0]?.filePath || "")} selecting={!!selection.mode} selected={selection.mode ? selection.checked.some(item => item.id === model.id) : selectedPath === model.id} onSelect={() => selection.toggle(model.id)} onDetails={() => showDetails(model.id)} />)}</div>{filtered.length === 0 && <p role="status" className="px-4 py-12 text-center text-xs text-muted-foreground">{t(models.length ? "toolBox.civitai.empty" : "toolBox.civitai.localEmpty")}</p>}</div>
+      <div className={styles.catalogScroll} aria-busy={scanning || listMetadata.loading}><div key={String(hiddenView)} className={styles.modelGrid} data-hidden-model-view={hiddenView} data-local-model-grid data-view={filters.view}>{filtered.map(model => <LocalModelCard key={model.id} model={model} summary={metadataByPath.get(model.versions[0]?.filePath || "")} selecting={!!selection.mode} selected={selection.mode ? selection.checked.some(item => item.id === model.id) : selectedPath === model.id} onSelect={() => selection.toggle(model.id)} onDetails={() => showDetails(model.id)} />)}</div>{filtered.length === 0 && <p role="status" className="px-4 py-12 text-center text-xs text-muted-foreground">{t(hiddenView && !hiddenCount ? "toolBox.civitai.visibility.empty" : allModels.length ? "toolBox.civitai.empty" : "toolBox.civitai.localEmpty")}</p>}</div>
+    {folderActions.overlays}
     {selection.batch && <LocalModelBatchDialog {...selection.batch} onClose={selection.close} onFinished={batchFinished} />}
   </ModelLibraryWorkspace>;
 }

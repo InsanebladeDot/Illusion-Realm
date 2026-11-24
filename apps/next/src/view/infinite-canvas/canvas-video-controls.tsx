@@ -4,11 +4,13 @@
 // 截帧复用工具箱的文件选择与 frame 作业，不使用上传按钮或网络接口。
 import { useEffect, useRef, useState, type RefObject } from "react";
 import { useTranslation } from "@/i18n";
+import { useToastStore } from "@/stores/useToastStore";
 import { pickOutputFile, runVideoEdit } from "@/utils/video/ffmpeg";
 import { useVideoToolStore } from "@/stores/useVideoToolStore";
 import { formatTime } from "@/utils/video/time";
 import { CanvasIcon } from "./reference-ui/components";
 import type { CanvasMedia } from "./canvas-media-import";
+import { CanvasAudioWaveform } from "./canvas-audio-waveform";
 
 // transport 是播放器事件的只读展示快照。
 // time 表示当前源文件秒数，不是视频编辑器的工程秒数。
@@ -21,6 +23,20 @@ import type { CanvasMedia } from "./canvas-media-import";
 // 互斥播放由父媒体容器通知，不依赖这个展示对象同步时间。
 // 数值变化不会改变节点位置、选择或连线。
 export interface CanvasTransport { time: number; duration: number; playing: boolean; muted: boolean }
+
+interface MediaMuteButtonProps {
+  muted: boolean;
+  ready: boolean;
+  onMute: () => void;
+}
+
+/** 音视频底栏共用视频卡片的扬声器按钮，图标随所属播放器的静音事件更新。 */
+function CanvasMediaMuteButton({ muted, ready, onMute }: MediaMuteButtonProps) {
+  const { t } = useTranslation();
+  return <button type="button" className="hy-media-mute" aria-pressed={muted} aria-label={t("canvas.muteMedia")} disabled={!ready} onClick={onMute}>
+    <CanvasIcon name={muted ? "volume-off" : "volume"} size={15} />
+  </button>;
+}
 
 // 视频底栏复用现有 CanvasIcon，不引入另一套图标字体。
 // 按钮是原生 button，disabled 会阻止键盘和指针激活。
@@ -44,10 +60,8 @@ export interface CanvasTransport { time: number; duration: number; playing: bool
 // 本组件没有进度订阅，不需要注册另一组全局监听。
 // 视频本身的暂停与 src 清理由父会话负责。
 // 控制栏卸载不应擅自删除用户已导出的 PNG。
-// 全屏使用浏览器请求，用户拒绝权限或环境不支持时显示失败。
-// 全屏目标是媒体父容器，控件与实际视频一起显示。
-// 没有将 app 主窗口切换成另一种全屏状态。
-// 音频仍使用原生 controls，不为两种媒体复制这套 JSX。
+// 视频放大交给所属工作区的大预览；不调用系统全屏，也不另建播放器外壳。
+// 音视频共用此处的真实播放动作；音频只注入更紧凑的波形与底栏布局。
 // 所有可见名称从既有 i18n 获取，图标本身也有可读标签。
 // 播放与暂停标签随真实事件变化，读屏可以知道当前动作。
 // 静音按钮 aria-pressed 表达持续状态，悬停不会清掉静音。
@@ -62,10 +76,10 @@ export interface CanvasTransport { time: number; duration: number; playing: bool
 // 一个控制栏只接受所属 player，不查找 document 中第一个 video。
 // 因此同源多个节点截帧不会误导出另一张卡的当前帧。
 // 控制栏的键盘由媒体区隔离，不将 Delete 传给画布删除节点。
-export function CanvasVideoControls({ player, transport, media, ready, onSeek, onMute }: { player: RefObject<HTMLMediaElement | null>; transport: CanvasTransport; media: CanvasMedia; ready: boolean; onSeek: (time: number) => void; onMute: () => void }) {
+export function CanvasVideoControls({ player, transport, media, ready, onSeek, onMute, onExpand }: { player: RefObject<HTMLMediaElement | null>; transport: CanvasTransport; media: CanvasMedia; ready: boolean; onSeek: (time: number) => void; onMute: () => void; onExpand?: () => void }) {
   const { t } = useTranslation();
   const [busy, setBusy] = useState(false);
-  const [message, setMessage] = useState("");
+  const notify = useToastStore.getState().show;
 // 生命周期示例：用户打开截帧保存框，然后从导航离开画布。
 // 旧组件卸载会把 alive 置为 false。
 // 保存框返回后发现旧会话已结束，就不再启动文件作业。
@@ -103,7 +117,7 @@ export function CanvasVideoControls({ player, transport, media, ready, onSeek, o
     const video = player.current;
     if (!video || !ready) return;
     try { if (video.paused) await video.play(); else video.pause(); }
-    catch { setMessage(t("canvas.mediaError")); }
+    catch { if (alive.current) notify(t("canvas.mediaError"), "error"); }
   };
   // 读取源时间而非工程时间；打开系统框前暂停，避免保存的帧随等待漂移。
   // 仅在真实像素已就绪时导出，取消不发成功消息，作业失败保留当前媒体。
@@ -121,7 +135,7 @@ export function CanvasVideoControls({ player, transport, media, ready, onSeek, o
 // 输入采用受管路径，外部原文件移走后仍能导出。
 // 输出使用用户确认的 target，不在渲染层自行拼完整系统目录。
 // manualPath 直接传给现有执行封装，探测与进程管理继续由原服务承担。
-// 成功后仅通知这张卡，不自动导入 PNG 变成新节点。
+// 截帧保存后弹出轻提示，文件留在用户指定的目录中。
 // 错误不改变媒体引用，无法写输出目录也不该清空视频。
 // finally 结束截帧禁用状态，取消和失败都允许再次操作。
 // alive 检查区分旧会话与当前会话，不靠 setTimeout 延后更新。
@@ -132,35 +146,49 @@ export function CanvasVideoControls({ player, transport, media, ready, onSeek, o
     if (!video || video.readyState < 2 || busy) return;
     video.pause();
     const frameTime = Math.max(0, Math.min(video.currentTime, Math.max(0, video.duration - .001)));
-    setBusy(true); setMessage("");
+    setBusy(true);
     try {
       const target = await pickOutputFile(`${media.name.replace(/\.[^.]+$/, "")}_frame_${Math.round(frameTime * 1000)}ms.png`, "image");
       if (!target || !alive.current) return;
       await runVideoEdit({ mode: "frame", inputPath: media.path, outputPath: target, frameTime }, manualPath);
-      if (alive.current) setMessage(t("toolBox.video.frameExported"));
-    } catch { if (alive.current) setMessage(t("canvas.frameFailed")); }
+      if (alive.current) notify(t("toolBox.video.frameExported"), "success");
+    } catch { if (alive.current) notify(t("canvas.frameFailed"), "error"); }
     finally { if (alive.current) setBusy(false); }
   };
-// 可选 ref 处理节点刚卸载时的空引用。
-// 请求发生在用户动作内，保留浏览器的激活要求。
-// 不在 effect 自动进入全屏，打开工程不会突然遮住桌面。
-// 失败消息局限媒体卡，不把全屏权限问题说成工程损坏。
-// 退出全屏沿用浏览器现有机制，不创建第二份媒体元素。
-// 因此退出后播放时间、音量和解码会话仍保持同一来源。
-  const fullscreen = async () => {
-    try { await player.current?.parentElement?.requestFullscreen(); }
-    catch { setMessage(t("canvas.fullscreenFailed")); }
-  };
+  // 音频用中央圆形播放按钮，左侧时间与右侧真实文件格式保持固定位置。
+  // 文件格式只取导入文件的后缀，不将 WAV 等标签写死为假元数据。
+  // 播放被拒绝时弹出轻提示，图标由媒体事件同步。
+  // error 不删除音频引用，用户仍能通过节点更换与重试恢复。
+  // 音频不展示截帧与全屏按钮，避免把视频专有动作错误应用到声音文件。
+  // 两种布局拥有同一播放器 ref，渲染 UI 不会再创建一个自动发声的 audio。
+  // 波形读取失败不影响已可解码的声音，辅助图和播放状态继续分别报告。
+  // 切换选择和卸载的暂停与清理仍由父媒体会话负责。
+  // 仅波形进度和播放栏拦截拖动，周围留白仍可用来搬动节点。
+  // 格式和时间在浅深主题中读取卡片语义色，不沿用浏览器固定白色控件皮肤。
+  // 长文件名仍由节点标题与原有 caption 省略规则处理，不挤占中央播放位置。
+  if (media.kind === "audio") return <div className="hy-audio-player">
+    {/* 音频波形：拖动中的预览与实际跳转由波形控件管理。 */}
+    <CanvasAudioWaveform player={player} sourcePath={media.path} duration={transport.duration} time={transport.time} ready={ready} onSeek={onSeek} />
+    <div className="hy-audio-transport nodrag nopan nowheel" data-canvas-media-control>
+      <span>
+        {formatTime(transport.time)} / {formatTime(transport.duration)}
+        <CanvasMediaMuteButton muted={transport.muted} ready={ready} onMute={onMute} />
+      </span>
+      <button type="button" data-canvas-audio-play disabled={!ready} aria-label={t(transport.playing ? "canvas.pauseAudio" : "canvas.playAudio")} onClick={() => { void play(); }}>
+        <CanvasIcon name={transport.playing ? "pause" : "play"} size={16} />
+      </button>
+      <small>{media.name.split(".").pop()?.toUpperCase()}</small>
+    </div>
+  </div>;
   return <>
     {/* 视频底栏：原图标、细滑条和当前帧动作，所有操作只作用于所属播放器。 */}
-    <div className="hy-video-controls" data-canvas-media-control>
+    <div className="hy-video-controls nodrag nopan nowheel" data-canvas-media-control>
       <button type="button" disabled={!ready} aria-label={t(transport.playing ? "canvas.pauseMedia" : "canvas.playMedia")} onClick={() => { void play(); }}><CanvasIcon name={transport.playing ? "pause" : "play"} size={15} /></button>
       <input type="range" aria-label={t("canvas.mediaSeek")} min={0} max={transport.duration || 0} step={.01} value={Math.min(transport.time, transport.duration || 0)} disabled={!ready || !transport.duration} onChange={event => onSeek(Number(event.currentTarget.value))} />
       <span>{formatTime(transport.time)} / {formatTime(transport.duration)}</span>
-      <button type="button" aria-pressed={transport.muted} aria-label={t("canvas.muteMedia")} disabled={!ready} onClick={onMute}><CanvasIcon name="volume" size={15} /></button>
-      <button type="button" aria-label={t("canvas.fullscreen")} disabled={!ready} onClick={() => { void fullscreen(); }}><CanvasIcon name="expand" size={15} /></button>
+      <CanvasMediaMuteButton muted={transport.muted} ready={ready} onMute={onMute} />
+      {onExpand && <button type="button" aria-label={t("canvas.fullscreen")} disabled={!ready} onClick={onExpand}><CanvasIcon name="expand" size={15} /></button>}
       <button type="button" data-canvas-capture disabled={!ready || busy} onClick={() => { void capture(); }}>{t(busy ? "canvas.capturing" : "canvas.captureFrame")}</button>
     </div>
-    {message && <div className="hy-video-message" role="status">{message}</div>}
   </>;
 }

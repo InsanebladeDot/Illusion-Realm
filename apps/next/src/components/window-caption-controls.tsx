@@ -1,4 +1,6 @@
 "use client";
+import { HoverTip } from "@/components/hover-tip";
+
 
 // 界面：head 右侧自定义最小化、最大化/还原和关闭按钮。
 // 三个按钮与页面在同一 Chromium 提交中切换主题。
@@ -36,14 +38,14 @@ export function WindowCaptionControls() {
     {/* 最小化交还系统，任务栏恢复时继续显示原页面状态。 */}
     {/* 冒烟通过按钮确认 isMinimized，不只检查 handler 被调用。 */}
     {/* type=button 避免未来外壳加入表单时意外提交。 */}
-    <button type="button" data-window-control="minimize" className={classes} aria-label={t("common.minimizeWindow")} title={t("common.minimizeWindow")} onClick={() => control("minimize")}><Minus size={14} aria-hidden="true" /></button>
+    <HoverTip asChild layer="window" label={(t("common.minimizeWindow")) ?? ""}><button type="button" data-window-control="minimize" className={classes} aria-label={t("common.minimizeWindow")} onClick={() => control("minimize")}><Minus size={14} aria-hidden="true" /></button></HoverTip>
     {/* 系统最大化显示重叠方框，点击还原系统记住的窗口尺寸。 */}
     {/* 外部系统操作也刷新 aria-pressed，不在组件内反转状态。 */}
     {/* 两种状态共享按钮节点，主题变化不会替换整枚按钮。 */}
-    <button type="button" data-window-control="toggle-maximize" className={classes} aria-pressed={maximized} aria-label={label} title={label} onClick={() => control("toggle-maximize")}>{maximized ? <Copy size={14} aria-hidden="true" /> : <Square size={14} aria-hidden="true" />}</button>
+    <HoverTip asChild layer="window" label={(label) ?? ""}><button type="button" data-window-control="toggle-maximize" className={classes} aria-pressed={maximized} aria-label={label} onClick={() => control("toggle-maximize")}>{maximized ? <Copy size={14} aria-hidden="true" /> : <Square size={14} aria-hidden="true" />}</button></HoverTip>
     {/* close 保留既有关闭生命周期，由主进程处理任务清理。 */}
     {/* 不使用 window.close，不在 renderer 直接退出进程。 */}
     {/* 红色 hover 仅作用关闭按钮，默认底色继续来自整个 head。 */}
-    <button type="button" data-window-control="close" className={`${classes} hover:!bg-red-600 hover:!text-white`} aria-label={t("common.close")} title={t("common.close")} onClick={() => control("close")}><X size={14} aria-hidden="true" /></button>
+    <HoverTip asChild layer="window" label={(t("common.close")) ?? ""}><button type="button" data-window-control="close" className={`${classes} hover:!bg-red-600 hover:!text-white`} aria-label={t("common.close")} onClick={() => control("close")}><X size={14} aria-hidden="true" /></button></HoverTip>
   </div>;
 }

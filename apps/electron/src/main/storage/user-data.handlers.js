@@ -16,14 +16,15 @@ const path = require("path");
 
 const { IPC_CHANNELS } = require("../../common/ipc-channels");
 const { registerHandle } = require("../ipc/result");
-const { readUserData, writeUserData, getDefaultUserDataPath } = require("./user-data");
+const { getDefaultUserDataPath } = require("./user-data");
+const { readPersistedUserData, writePersistedUserData } = require("./sqlite/user-document");
 
 /**
- * 本地 JSON 持久化：读取 / 写入 / 取默认路径
+ * 用户文档持久化：业务段 SQLite、启动设置 JSON，保留原读取/写入契约
  * @returns {void}
  */
 function registerUserDataHandlers() {
-  registerHandle(IPC_CHANNELS.USER_DATA_READ, async () => readUserData());
+  registerHandle(IPC_CHANNELS.USER_DATA_READ, async () => readPersistedUserData());
 
   registerHandle(
     IPC_CHANNELS.USER_DATA_WRITE,
@@ -34,7 +35,7 @@ function registerUserDataHandlers() {
      */
     async (_event, data) => {
       const payload = /** @type {Record<string, unknown>} */ (data);
-      return writeUserData(payload);
+      return writePersistedUserData(payload);
     },
     /** @param {unknown[]} args @returns {string | null} */
     (args) => {

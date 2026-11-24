@@ -20,9 +20,24 @@ const { downloadTarget } = require("./model-download-paths");
 // 恢复绑定当前sender，后续取消、重试、移除仍沿用现有owner校验。
 // I/O错误由registerHandle统一转换成IpcResult，不跨边界泄露磁盘错误堆栈。
 const { restoreDownloads, startDownload, listDownloads, cancelDownload, retryDownload, removeDownload, changeLogo } = require("./model-download-manager");
-const { validateDownload, validateLocation, validateString, validateCategoryMove, validateModelBatch } = require("./model-download-validation");
+const { validateFolderDelete, validateFolderCreate, validateDownload, validateLocation, validateString, validateCategoryMove, validateModelBatch } = require("./model-download-validation");
 const { categoryTarget, moveCategory, operateModels } = require("../model-category-manager");
+const { downloadSetup, validateSetupArgs } = require("./setup-download-service");
+const { checkSetupModels, validateSetupCheckArgs } = require("./setup-check-service");
+const { listLocalModelFolders, createLocalModelFolder, deleteLocalModelFolder } = require("../local-model-folders");
 function registerModelDownloadHandlers() {
+  registerHandle(IPC_CHANNELS.MODELS_FOLDER_LIST, () => listLocalModelFolders(), args => args.length ? "invalid" : null);
+  registerHandle(IPC_CHANNELS.MODELS_FOLDER_CREATE, (_event, request) => createLocalModelFolder(request), validateFolderCreate);
+  registerHandle(IPC_CHANNELS.MODELS_FOLDER_DELETE, async (event, request) => {
+    await restoreDownloads(event.sender);
+    return deleteLocalModelFolder(request);
+  }, validateFolderDelete);
+  registerHandle(IPC_CHANNELS.MODELS_CHECK_SETUP, (event, ids, mode) => checkSetupModels(event.sender, ids, mode), validateSetupCheckArgs);
+  // 队列仍由同一管理器持有，任务清单只提交预设编号。
+  registerHandle(IPC_CHANNELS.MODELS_DOWNLOAD_SETUP, async (event, ids) => {
+    await restoreDownloads(event.sender);
+    return downloadSetup(event.sender, ids);
+  }, validateSetupArgs);
   registerHandle(IPC_CHANNELS.MODELS_DOWNLOAD_TARGET, (_event, location) => {
     try { return downloadTarget(location); } catch { throw new Error("configuration"); }
   }, validateLocation);

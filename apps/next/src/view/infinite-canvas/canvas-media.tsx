@@ -1,8 +1,10 @@
 "use client";
+
+import { HoverTip } from "@/components/hover-tip";
 /* eslint-disable @next/next/no-img-element -- 本地只读协议交给浏览器解码，不走静态导出不存在的图片优化服务。 */
 
 // 本地媒体在原有节点内容插槽中显示，不另建第二套节点或生成结果模型。
-// 图片按完整内容适配；视频使用真实媒体驱动底栏，音频保留原生控件。
+// 图片按完整内容适配；音视频使用同一真实媒体事件驱动各自控件布局。
 // 文件可能被移动或编码不受支持，元数据引用仍保留，让用户可以更换原文件。
 // 成功只来自真实加载事件；十五秒无结果进入可重试错误，不伪造进度。
 // 片段更换时由 key 重新挂载，旧源事件不会覆盖新源状态。
@@ -20,7 +22,7 @@ import { CanvasChip } from "./reference-ui/components";
 // 原生 controls 的键盘事件停在控件内，不让 Space 和方向键推动整个画布。
 // source 只从已保存路径构造，禁止将用户字符串直接当作远程 URL 自动请求。
 // 不创建 Blob URL，因此卸载没有临时 URL 泄漏；媒体缓冲仍需明确释放。
-interface MediaPreviewProps { media: CanvasMedia; selected: boolean; onReplace: () => void }
+interface MediaPreviewProps { media: CanvasMedia; selected: boolean; onReplace?: () => void; onExpand?: () => void; fit?: "cover" | "contain"; onDimensions?: (width: number, height: number) => void; onStatus?: (status: "loading" | "ready" | "error") => void }
 
 // 重试是一份新的解码会话，清理旧资源后重新读取同一个只读文件。
 // 不改节点身份或媒体引用，因此不会制造无意义的作品历史与未保存提示。
@@ -42,7 +44,7 @@ export function CanvasMediaPreview(props: MediaPreviewProps) {
 
 // 状态与真实 DOM 同时重新创建，不能先清掉错误文字却继续展示上一个坏源。
 // 图片事件和媒体事件只更新当前会话，React 卸载旧会话后不会再覆盖新源的状态。
-function MediaPreviewSession({ media, selected, onReplace, onRetry }: MediaPreviewProps & { onRetry: () => void }) {
+function MediaPreviewSession({ media, selected, onReplace, onRetry, onExpand, fit = "cover", onDimensions, onStatus }: MediaPreviewProps & { onRetry: () => void }) {
   // 只有渲染时的标签依 kind 分流；加载、错误、替换外壳不分出三套实现。
   // 音频和视频共用 HTMLMediaElement 契约，图片则用自己的 load/error 事件。
   // ref 接收实际挂载的元素，首次 effect 在提交后才能得到可暂停和释放的对象。
@@ -55,6 +57,8 @@ function MediaPreviewSession({ media, selected, onReplace, onRetry }: MediaPrevi
   const player = useRef<HTMLMediaElement | null>(null);
   const root = useRef<HTMLDivElement>(null);
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
+  // 对比复用真实解码状态，包括原15秒超时；上层不能靠文件路径或点击推断就绪。
+  useEffect(() => { onStatus?.(status); }, [status, onStatus]);
   const source = buildLocalFileUrl(media.path) ?? "";
   const [transport, setTransport] = useState<CanvasTransport>({ time: 0, duration: 0, playing: false, muted: false });
 // failed 是当前解码会话的终止屏障。
@@ -72,6 +76,19 @@ function MediaPreviewSession({ media, selected, onReplace, onRetry }: MediaPrevi
   const failed = useRef(false);
   const ready = () => { if (!failed.current) setStatus("ready"); };
   const fail = () => { failed.current = true; setStatus("error"); player.current?.pause(); };
+  // 缓存源可能先读好、后装上监听；像查收货架现货，读实际readyState补齐状态，不补发假事件。
+  useEffect(() => {
+    const element = player.current;
+    if (!element) return;
+    const read = () => {
+      if (element.readyState >= 2 && !failed.current) setStatus("ready");
+      setTransport({ time: element.currentTime, duration: Number.isFinite(element.duration) ? element.duration : 0, playing: !element.paused, muted: element.muted });
+      if (element instanceof HTMLVideoElement && element.videoWidth) onDimensions?.(element.videoWidth, element.videoHeight);
+    };
+    for (const name of ["loadedmetadata", "loadeddata", "canplay"]) element.addEventListener(name, read);
+    const timer = setTimeout(read, 0);
+    return () => { clearTimeout(timer); for (const name of ["loadedmetadata", "loadeddata", "canplay"]) element.removeEventListener(name, read); };
+  }, [source, onDimensions]);
   // 解码可能永远没有 loadeddata/error；给它真实的失败边界，不能让用户无限等。
   // 超时只表示当前会话没有读出画面，不抹掉文件引用；重试会建立新会话。
 // 十五秒是等待结果的上界，不是模拟读取过程的时长。
@@ -189,8 +206,11 @@ function MediaPreviewSession({ media, selected, onReplace, onRetry }: MediaPrevi
   // preload 不代表自动播放，本组件没有 autoplay，也没有效果里的 play 调用。
   // ref 回调只登记当前真实元素，不在渲染期间读取播放器进度。
   // 事件闭包属于当前会话，换源后整份组件卸载，旧源不能把新源错误清成 ready。
-  const properties = { ref: (element: HTMLMediaElement | null) => { player.current = element; }, src: source, controls: media.kind === "audio", preload: "auto", onLoadedMetadata: syncTransport, onLoadedData: ready, onCanPlay: ready, onError: fail, onPlay: playback, onPause: syncTransport, onTimeUpdate: syncTransport, onEnded: syncTransport, onVolumeChange: syncTransport } as const;
-  // 图片正文就是节点的抓取区域，不能和有播放控件的音视频一起禁止拖动。
+  // 音频控件改为共用的真实波形底栏，原元素继续持有解码、时钟和播放事件。
+  // 不再叠出浏览器自己的白色音频条，但没有删除真实 audio 或改用假播放动画。
+  // controls=false 不等于禁用媒体，播放与定位由拥有当前 ref 的控件执行。
+  const properties = { ref: (element: HTMLMediaElement | null) => { player.current = element; }, src: source, controls: false, preload: "auto", onLoadedMetadata: syncTransport, onLoadedData: ready, onCanPlay: ready, onError: fail, onPlay: playback, onPause: syncTransport, onTimeUpdate: syncTransport, onEnded: syncTransport, onVolumeChange: syncTransport } as const;
+  // 图片和视频正文都可搬动，播放条单独拦截拖动手势。
   // 浏览器原生图片拖放仍由 draggable=false 关闭，避免拖出一个文件影子。
   // nopan 也随图片移除，让未被节点拖动消费的手势仍符合图引擎原有规则。
   // 不在图片上手写 pointermove 坐标，保持抓取偏移、缩放与撤销由同一引擎计算。
@@ -201,29 +221,32 @@ function MediaPreviewSession({ media, selected, onReplace, onRetry }: MediaPrevi
   // 正常图的更换入口卸载而非透明隐藏，键盘不会落在用户看不见的按钮上。
   // 外部节点标题仍允许双击编辑，删除内层重复文件名不改变用户的自定义标题。
   // 图片 alt 继续使用真实基本名，移除视觉标题条不会让读屏失去来源名称。
-  // 完整画面仍按 contain 显示，不为填满节点而裁掉用户导入的图像边缘。
-  // 音视频的进度条继续隔离图引擎；错误恢复按钮单独隔离，不妨碍图片空白处抓取。
-  return <div ref={root} className={`hy-local-media${media.kind === "image" ? "" : " nodrag nopan nowheel"}`} data-canvas-media={media.kind} data-media-status={status} onKeyDown={event => event.stopPropagation()}>
-    {/* 节点内容：图片完整显示；视频和音频使用真实媒体元素，不用封面冒充播放。 */}
+  // 卡片默认铺满，主区预览通过fit显式选择完整画面。
+  // 媒体正文都能抓取，只有播放控件与恢复按钮隔离拖动，避免整张卡片无法移动。
+  return <div ref={root} className="hy-local-media" data-canvas-media={media.kind} data-media-fit={fit} data-media-status={status} onKeyDown={event => event.stopPropagation()}>
+    {/* 节点内容：图片铺满卡片；视频和音频使用真实媒体元素，不用封面冒充播放。 */}
     {/* 图片 alt 使用原始基本名，文件缺失时读屏仍能识别此引用；完整目录不暴露到正文。 */}
     {/* draggable=false 阻止浏览器默认拖走图片文件，节点移动仍交给图引擎外壳。 */}
     {/* nodrag/nopan 让视频进度拖动留在原生控件，不把调播放时间误当作移动整张卡片。 */}
     {/* playsInline 保持视频在当前节点显示，不因预览操作强制进入移动端全屏。 */}
-    {media.kind === "image" ? <img src={source} alt={media.name} draggable={false} onLoad={ready} onError={fail} /> : media.kind === "video" ? <video {...properties} playsInline /> : <audio {...properties} />}
+    {media.kind === "image" ? <img src={source} alt={media.name} draggable={false} onLoad={event => { onDimensions?.(event.currentTarget.naturalWidth, event.currentTarget.naturalHeight); ready(); }} onError={fail} /> : media.kind === "video" ? <video {...properties} playsInline /> : <audio {...properties} />}
     {/* 失败提示保留来源名，便于用户定位；不暴露绝对目录，也不清除已存引用。 */}
     {/* caption 的 title 保存完整文件名，视觉省略不影响用户查看真实来源。 */}
     {/* 状态文字使用 role=status 供辅助工具通知，普通成功不额外弹假完成通知。 */}
     {/* 预览加载失败也保留原生元素，用户可据此检查控件状态或选择更换文件。 */}
     {/* 状态层不盖住操作命中区域，不能让错误提示挡住修复错误所需的按钮。 */}
     {/* 图片只保留原有节点外标题，正文不再重复文件名或常驻更换按钮。 */}
-    {media.kind === "audio" && <div className="hy-media-caption" title={media.name}>{media.name}</div>}
-    {media.kind === "video" && <CanvasVideoControls player={player} transport={transport} media={media} ready={status === "ready"} onSeek={time => { if (player.current) player.current.currentTime = time; }} onMute={() => { if (player.current) player.current.muted = !player.current.muted; }} />}
+    {media.kind === "audio" && <HoverTip asChild label={(media.name) || ""}><div className="hy-media-caption">{media.name}</div></HoverTip>}
+    {/* 音视频控件：共用播放动作与真实事件快照，只有展示布局根据媒体类型注入差异。 */}
+    {/* 图片不创建媒体控件；更换与卸载继续沿用上方已有的会话清理。 */}
+    {/* 声音采样与导入保存独立，绘图失败不会将已导入的文件引用清空。 */}
+    {media.kind !== "image" && <CanvasVideoControls player={player} transport={transport} media={media} onExpand={onExpand} ready={status === "ready"} onSeek={time => { if (player.current) player.current.currentTime = time; }} onMute={() => { if (player.current) player.current.muted = !player.current.muted; }} />}
     {status !== "ready" && <div className="hy-media-state" role="status">{t(status === "loading" ? "canvas.mediaLoading" : "canvas.mediaError")}</div>}
     {/* 重试只读原文件，更换才写回节点数据；两个动作分别拥有准确的副作用。 */}
     {/* retry 只有失败时出现，正常加载过程中重复点击不会并行创建更多解码会话。 */}
     {/* 两个动作沿用 CanvasChip，主题、焦点与细线悬停无需在媒体内容里再画一套。 */}
     {/* 操作区域参与键盘导航但不传播画布删除快捷键，避免按键控制文件时误删卡片。 */}
     {/* 缺图仍需可恢复入口；正常图片不挂载隐形按钮，也不额外占用 Tab 焦点。 */}
-    {(media.kind !== "image" || status === "error") && <div className="hy-media-replace nodrag nopan" data-canvas-media-control>{status === "error" && <CanvasChip onClick={onRetry}>{t("canvas.retry")}</CanvasChip>}<CanvasChip onClick={onReplace}>{t("canvas.replaceMedia")}</CanvasChip></div>}
+    {(status === "error" || onReplace && media.kind !== "image") && <div className="hy-media-replace nodrag nopan" data-canvas-media-control>{status === "error" && <CanvasChip onClick={onRetry}>{t("canvas.retry")}</CanvasChip>}{onReplace && <CanvasChip onClick={onReplace}>{t("canvas.replaceMedia")}</CanvasChip>}</div>}
   </div>;
 }

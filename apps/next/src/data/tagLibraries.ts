@@ -1,7 +1,11 @@
 // 画师元数据转换为既有条目契约，所有库共用卡片/弹窗而不是独立实现。
 // 收藏分类和评分排序留给查询器，不伪造静态画风标签。
 // 不在模块加载时请求任何预览图片，只有可见卡片访问资源地址。
-import { ARTIST_ITEMS } from "@/utils/artist-library";
+// 注册表只保留画师入口信息，大型条目在实际打开的弹窗模块中解析。
+// 不能从按钮配置反向静态引入四万条记录，否则动态弹窗仍会拖大首屏。
+// 其他静态库继续使用既有数据与格式适配，不改分类、顺序或应用工具身份。
+// artist 的完整 items 在 TagLibraryDialog 内按原适配结果补入。
+// 收藏导出独立按需加载同一画师模块，不能把空入口数据当作完整收藏集合。
 import { backgroundData } from "@/data/prompt/background_prompt";
 import { expressionData } from "@/data/prompt/expression";
 import { poseData } from "@/data/prompt/pose_prompt";
@@ -80,7 +84,7 @@ export const TAG_LIBRARY_DEFINITIONS: TagLibraryDefinition[] = [
   // 标题、单位和搜索提示继续来自配置，源数据不夹带UI词条。
   // 用已有staticTagItem适配器，不给画师新建一份卡片形状。
   // 预览字段只是URL，资料列表和选择本身可离线工作。
-  { id: "artist", title: "characters.artist.title", unitLabel: "characters.artist.unit", searchPlaceholder: "characters.artist.search", testIdPrefix: "artist", tool: "artist", format: "staticTagItem", source: ARTIST_ITEMS },
+  { id: "artist", title: "characters.artist.title", unitLabel: "characters.artist.unit", searchPlaceholder: "characters.artist.search", testIdPrefix: "artist", tool: "artist", format: "staticTagItem", source: [] },
   {
     id: "pose",
     title: "taxonomy.tagLibraries.pose.title",

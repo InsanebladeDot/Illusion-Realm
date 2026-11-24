@@ -11,7 +11,7 @@ import { InfiniteCanvasDocumentSchema, InfiniteCanvasMediaSchema, InfiniteCanvas
 // name 上限与画布标题一致，不用媒体文件名推断工程名。
 // workspace 可省略，支持第一次导入时才创建工程目录。
 // 已有归属必须整体传 id 和 folder，不能只靠文件夹名续写。
-// files 最少一项，取消选择不应发空批次请求。
+// files 为空只准备工程分类目录，供生成直接落盘；取消文件选择仍不发请求。
 // 最多二百项限制单次系统选择对主进程的压力。
 // 这不是全库扫描 API，不能传一个根目录要求递归导入。
 // 同批允许多种媒体，具体单卡更换类型由调用方再约束。
@@ -34,7 +34,9 @@ export const CanvasImportMediaSchema = z.object({
   // 媒体源路径继续由各项描述，不从显示标题构造来源目录。
   // 实际磁盘能力没有增加新通道，只扩展现有受校验的导入请求。
   mode: z.enum(["copy", "move"]).optional(),
-  files: z.array(InfiniteCanvasMediaSchema).min(1).max(200),
+  // 仅软件生成与归档入口可声明来源；普通系统导入省略后默认为 imported。
+  origin: z.enum(["imported", "generated", "archive"]).optional(),
+  files: z.array(InfiniteCanvasMediaSchema).max(200),
 });
 // 文件名必须正好位于一种资产目录，不能接受 ../、盘符或嵌套目录。
 // 大小是后续流读取边界；所有偏移由主进程按顺序累加，不信任外部偏移值。
@@ -92,6 +94,8 @@ export type CanvasImportMediaRequest = z.infer<typeof CanvasImportMediaSchema>;
 // 结果没有进度百分比，因为底层 copyFile 未提供真实逐字节事件。
 // 不得基于文件个数伪装成全文件传输进度。
 export interface CanvasImportMediaResult {
+  /** 主进程校验归属后的分类输出目录；不保存到工程数据。 */
+  outputDirectories: Record<"image" | "video" | "audio", string>;
   workspace: z.infer<typeof InfiniteCanvasWorkspaceSchema>;
   media: z.infer<typeof InfiniteCanvasMediaSchema>[];
   rejected: string[];

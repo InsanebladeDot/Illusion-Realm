@@ -1,0 +1,6 @@
+/* 浏览器直接读取自定义高亮规则，跳过 Turbopack 的 CSS 解析。 */
+/* 提示词中的语言和说话内容共用主题强调色，高亮不新增可编辑DOM或可复制字符。 */
+::highlight(prompt-speech) {
+  background-color: color-mix(in srgb, var(--accent-stroke) 28%, transparent);
+  color: var(--foreground);
+}

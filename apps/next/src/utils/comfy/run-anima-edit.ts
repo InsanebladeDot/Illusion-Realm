@@ -3,6 +3,7 @@
  * 不在渲染进程请求 ComfyUI HTTP，也不建立第二套磁盘写入实现。
  * 原图只在用户明确运行时上传；所有参数与目标目录在等待前冻结。
  */
+import { upscaleGeneratedImages } from "./run-seedvr2";
 import { fetchComfyModelLists, generateWithComfy, revokeComfyImages, uploadImageToComfy } from "@/api/comfyui";
 import { useHistoryFolderStore } from "@/stores/useHistoryFolderStore";
 import { saveGeneratedImagesToDisk } from "@/utils/saveGeneratedImages";
@@ -45,7 +46,7 @@ export interface AnimaEditResult { image: ComfyGeneratedImage; width: number; he
 // 服务器和保存路径由公共队列的提交快照提供，不在等待轮到任务时重新读设置。
 // 上传和推理必须使用同一个服务器；切换页面或连接配置不能拆开一次任务。
 // output 是经共享目标解析器校验后的本机目录，不是 ComfyUI 临时输出目录。
-export interface AnimaEditSession { server: string; output: string; id: string; signal: AbortSignal; onPhase: (phase: "uploading" | "generating" | "saving") => void }
+export interface AnimaEditSession { modelAttention?: import("@/types/model-attention").ModelAttentionSettings; server: string; output: string; id: string; signal: AbortSignal; onPhase: (phase: "uploading" | "generating" | "saving") => void }
 
 /**
  * 先检查模型，再上传；任一前置失败都不创建生成请求。
@@ -59,7 +60,7 @@ export interface AnimaEditSession { server: string; output: string; id: string; 
  * 图片字节仅经过现有 preload 的最小 API 面传递。
  * 本函数不吞掉错误；hook 在当前表单显示具体失败并恢复可操作状态。
  */
-export async function runAnimaEdit(file: File, value: AnimaEditSettings, session: AnimaEditSession): Promise<AnimaEditResult> {
+export async function runAnimaEdit(file: File, value: AnimaEditSettings, session: AnimaEditSession, references: File[] = []): Promise<AnimaEditResult> {
   // 服务地址也按任务快照读取，生成和上传必须指向同一个 ComfyUI 实例。
   // 页面可以在其他功能中修改设置，但不能把本任务后半段切换到另一台服务。
   // 构建先做纯输入校验，非法指令或 seed 不消耗上传流量。
@@ -72,7 +73,7 @@ export async function runAnimaEdit(file: File, value: AnimaEditSettings, session
   // 不引用页面 hook，卸载也不能取消上传后的后续步骤。
   // 每个异步边界仍由 signal 防止显式停止后的提交。
   const { server, output } = session;
-  const prompt = buildAnimaEditPrompt(value, file.name);
+  const prompt = buildAnimaEditPrompt(value, file.name, references.map(item => item.name));
   // 任务可能在等待前一项时已被撤回，模型刷新前也要检查。
   // 此处没有创建远端会话，不发送无目标的 interrupt。
   // 真正取消由公共队列统一处理，本函数只遵循 signal。
@@ -90,9 +91,9 @@ export async function runAnimaEdit(file: File, value: AnimaEditSettings, session
   // 上传返回可能包含子目录或服务端改名，不能假定请求名被原样保留。
   // subfolder 为空时 filter 去掉空段，避免以斜线开头变成根路径。
   // 不将上传缓存当作本机生成结果，只有模型输出进入正式保存流程。
-  const extension = file.type === "image/jpeg" ? ".jpg" : file.type === "image/webp" ? ".webp" : ".png";
-  const uploaded = await uploadImageToComfy(new File([file], `anima_edit_${session.id}${extension}`, { type: file.type }), server);
-  session.signal.throwIfAborted(); prompt["edit-source"].inputs.image = [uploaded.subfolder, uploaded.name].filter(Boolean).join("/");
+  // 按输入顺序串行上传，像给照片编号；同名文件也不会覆盖另一张参考。
+  // 任一上传失败或取消会中止整次提交，不静默丢图后继续生成。
+  await uploadEditReferences(prompt, [file, ...references], value, session);
   session.onPhase("generating");
   // onPhase 同步发生在生成 IPC 之前，让停止按钮准确知道已进入远端阶段。
   // generateWithComfy 复用主进程的验证、等待、断线检测与 requestId 管理。
@@ -100,11 +101,11 @@ export async function runAnimaEdit(file: File, value: AnimaEditSettings, session
   // 返回后立即进入 try/finally 式资源保护区，后续任何错误都回收输出 URL。
   // 主动取消与模型完成可能同时到达，signal 检查防止取消后误保存成功。
   // 此处不自己轮询 history，不建立第二套超时或远端停止语义。
-  const result = await generateWithComfy(prompt, { serverAddress: server, requestId: session.id });
+  const result = await generateWithComfy(prompt, { serverAddress: server, requestId: session.id, modelAttention: session.modelAttention });
   try {
     session.signal.throwIfAborted();
-    const image = result.images.find((item) => prompt[item.nodeId]?.class_type === "PreviewImage");
-    // 只接受当前图的 PreviewImage 输出，忽略其他节点的临时预览。
+    const image = result.images.find((item) => (value.editWorkflow === "minimax-image-edit" ? item.nodeId === "16" && prompt[item.nodeId]?.class_type === "SaveImage" : prompt[item.nodeId]?.class_type === "PreviewImage"));
+    // Anima 接受自己的 PreviewImage，H3 只接受模板16号 SaveImage，忽略无关预览。
     // 没有预期图片时即失败，不能把原图补进去制造可下载的“结果”。
     // 图片解码确认真实尺寸，也能拒绝 MIME 声明为图片但字节损坏的回包。
     // 解码仍可能异步等待，此后第二次 signal 检查覆盖该时间窗口内的停止。
@@ -132,7 +133,19 @@ export async function runAnimaEdit(file: File, value: AnimaEditSettings, session
     // catch 不改写错误码，断线、主动停止和保存失败仍可由 hook 区分。
     if (!savedPaths.length) throw new Error(t("create.page.saveFailed"));
     revokeComfyImages(result.images.filter((item) => item !== image)); useHistoryFolderStore.getState().refreshGeneratedImages();
-    return { image, width: decoded.naturalWidth, height: decoded.naturalHeight, savedPaths };
+    // 超分与编辑共享同一队列槽，原结果落盘后才启动第二次请求。
+    if (value.upscale?.enabled) session.onPhase("generating");
+    const final = await upscaleGeneratedImages({ promptId: result.promptId, images: [image], savedPaths }, value.upscale, session);
+    return await decodeEditOutput(final, value.upscale?.enabled ? undefined : decoded);
+  } catch (error) { revokeComfyImages(result.images); throw error; }
+}
+
+/** 超分后换了对象 URL；解码失败也必须回收新结果，旧执行器只认识原来的 URL。 */
+async function decodeEditOutput(result: { images: ComfyGeneratedImage[]; savedPaths: string[] }, decoded?: HTMLImageElement): Promise<AnimaEditResult> {
+  try {
+    const image = result.images[0];
+    const size = decoded ?? await loadMaskImage(image.objectUrl);
+    return { image, width: size.naturalWidth, height: size.naturalHeight, savedPaths: result.savedPaths };
   } catch (error) { revokeComfyImages(result.images); throw error; }
 }
 
@@ -142,7 +155,19 @@ export async function runAnimaEdit(file: File, value: AnimaEditSettings, session
 // sourceImagePath 不伪造为服务端 input 名：上传名称并不是本机绝对路径。
 // 参考图名称仍可通过 LoadImage 节点追溯，不另造未版本化的旁车格式。
 // 原图与结果对照属于展示行为，不在此修改生成参数或图片字节。
-// 结果筛选严格使用图片工作流的 PreviewImage 节点，不能取 history 中第一个不相关输出。
+// 按各自模板识别输出节点，不能取 history 中第一个不相关图片。
 // 无结果、解码错误与磁盘保存错误都进入同一资源回收分支。
 // 错误释放所有临时对象 URL，成功仅留下返回给页面的单张结果。
 // 公共 FIFO 调度器负责串行执行，文字改图每个任务仍只输出一张。
+
+/** 上传名与源槽一一对应；URL 和输出回收仍归原执行器。 */
+async function uploadEditReferences(prompt: import("@/types/comfy").ComfyApiPrompt, files: File[], value: AnimaEditSettings, session: AnimaEditSession) {
+  for (const [index, file] of files.entries()) {
+    session.signal.throwIfAborted();
+    const extension = file.type === "image/jpeg" ? ".jpg" : file.type === "image/webp" ? ".webp" : ".png";
+    const uploaded = await uploadImageToComfy(new File([file], `anima_edit_${session.id}_${index}${extension}`, { type: file.type }), session.server);
+    session.signal.throwIfAborted();
+    const slot = value.editWorkflow === "minimax-image-edit" ? index ? `h3-source-${index}` : "26" : "edit-source";
+    prompt[slot].inputs.image = [uploaded.subfolder, uploaded.name].filter(Boolean).join("/");
+  }
+}

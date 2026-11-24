@@ -1,4 +1,6 @@
 "use client";
+import { HoverTip } from "@/components/hover-tip";
+
 
 import { useState, type ReactNode } from "react";
 import { ChevronDown, Download, ExternalLink } from "lucide-react";
@@ -25,7 +27,7 @@ function DownloadFooter({ model, version, source, fileId, onFileChange, onConfig
   const download = file ? civitaiDownload(file, source) : "";
   return <footer data-civitai-actions className="shrink-0 space-y-2 border-t border-border bg-background p-3">
     {version && version.files.length > 1 && <SimpleSelect value={String(file?.id || 0)} ariaLabel={t("toolBox.civitai.files")} onChange={(value) => onFileChange(Number(value))} options={version.files.map((item) => ({ value: String(item.id), label: item.name }))} portal />}
-    {file && <p className="text-[10px] text-muted-foreground"><span className="block truncate" title={file.name}>{file.name}</span>{(file.sizeKB / 1024).toFixed(1)} MB · {file.format}</p>}
+    {file && <p className="text-[10px] text-muted-foreground"><HoverTip asChild layer="window" label={(file.name) ?? ""}><span className="block truncate">{file.name}</span></HoverTip>{(file.sizeKB / 1024).toFixed(1)} MB · {file.format}</p>}
     {download && file ? <button type="button" data-civitai-download onClick={() => onConfigure(file)} className="flex w-full items-center justify-center gap-2 rounded-lg bg-sky-600 px-3 py-2 text-xs text-white hover:bg-sky-700"><Download size={14} />{t("toolBox.civitai.download")}</button> : <button type="button" disabled className="flex w-full items-center justify-center gap-2 rounded-lg bg-muted px-3 py-2 text-xs text-muted-foreground"><Download size={14} />{t("toolBox.civitai.unavailable")}</button>}
     <a href={`${source}/models/${model.id}`} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2 rounded-lg border border-border px-3 py-2 text-xs hover:bg-muted">{t("toolBox.civitai.modelPage")}<ExternalLink size={14} /></a>
     <p className="text-[10px] leading-relaxed text-muted-foreground">{t("toolBox.civitai.downloadHint")}</p>
@@ -55,17 +57,31 @@ function VersionContent({ model, version, source, previewIndex, onPreviewChange,
     <DownloadFooter model={model} version={version} source={source} fileId={fileId} onFileChange={setFileId} onConfigure={onConfigure} />
   </div>;
 }
-export function CivitaiDetails({ model, source }: { model: CivitaiModel; source: string }) {
+interface CivitaiDetailsProps {
+  model: CivitaiModel;
+  source: string;
+  matchedVersions: CivitaiVersion[];
+}
+
+export function CivitaiDetails({ model, source, matchedVersions }: CivitaiDetailsProps) {
   const { t } = useTranslation();
   const [versionId, setVersionId] = useState(model.versions[0]?.id || 0);
   const [downloadFile, setDownloadFile] = useState<CivitaiFile | null>(null);
   const [previewIndex, setPreviewIndex] = useState(0);
   const version = model.versions.find((version) => version.id === versionId) || model.versions[0];
+  // 按官网版本 ID 标记，同名版本不会被一起标成已匹配。
+  const matchedIds = new Set(matchedVersions.map(item => item.id));
+  const versionOptions = model.versions.map(item => ({
+    value: String(item.id),
+    label: matchedIds.has(item.id)
+      ? `${t("toolBox.civitai.localFound", { versions: item.name })} · ${item.baseModel}`
+      : `${item.name} · ${item.baseModel}`,
+  }));
   return <div className="flex h-full min-h-0 flex-col" data-civitai-details={model.id}>
     {/* 界面：顶部固定模型名称与版本 */}
     <header data-civitai-version-bar className="shrink-0 space-y-2 border-b border-border bg-background p-3">
-      <h3 className="truncate text-sm font-semibold" title={model.name}>{model.name}</h3><p className="truncate text-[10px] text-muted-foreground">{model.type} · {model.creator}</p>
-      {version && <SimpleSelect value={String(version.id)} ariaLabel={t("toolBox.civitai.version")} onChange={(value) => { setDownloadFile(null); setPreviewIndex(0); setVersionId(Number(value)); }} options={model.versions.map((item) => ({ value: String(item.id), label: `${item.name} · ${item.baseModel}` }))} portal />}
+      <HoverTip asChild layer="window" label={(model.name) ?? ""}><h3 className="truncate text-sm font-semibold">{model.name}</h3></HoverTip><p className="truncate text-[10px] text-muted-foreground">{model.type} · {model.creator}</p>
+      {version && <SimpleSelect value={String(version.id)} ariaLabel={t("toolBox.civitai.version")} onChange={(value) => { setDownloadFile(null); setPreviewIndex(0); setVersionId(Number(value)); }} options={versionOptions} portal />}
     </header>
     {downloadFile && version ? <ModelDownloadForm key={`${version.id}/${downloadFile.id}`} model={model} version={version} file={downloadFile} source={source} previewUrl={version.images[previewIndex] || ""} onBack={() => setDownloadFile(null)} /> : <VersionContent key={version?.id || 0} model={model} version={version} source={source} previewIndex={previewIndex} onPreviewChange={setPreviewIndex} onConfigure={setDownloadFile} />}
   </div>;

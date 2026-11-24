@@ -1,4 +1,6 @@
 "use client";
+import { HoverTip } from "@/components/hover-tip";
+
 
 /**
  * 界面：角色与背景共用的可折叠分类区和计数选项。
@@ -65,5 +67,5 @@ interface FacetOptionProps { prefix: string; field: string; value: string; label
 // 同一行不增加input或嵌套button，保持一个可聚焦控件。
 // 数据属性只用于界面定位，不把外部值插入HTML或执行脚本。
 export function LibraryFacetOption({ prefix, field, value, label, count, selected, onClick }: FacetOptionProps) {
-  return <button type="button" {...{ [`data-${prefix}-value`]: value, [`data-${prefix}-field`]: field }} aria-pressed={selected} title={value} onClick={onClick} className={cn("flex h-10 w-full items-center justify-between gap-2 rounded-xl px-3 text-left text-xs font-medium text-muted-foreground transition-colors hover:bg-muted", selected && "bg-muted text-foreground")}><span className="min-w-0 truncate">{label}</span><span {...{ [`data-${prefix}-count`]: true }} className="shrink-0 rounded-full bg-muted px-1.5 text-[10px] font-normal tabular-nums text-muted-foreground">{count ?? "—"}</span></button>;
+  return <HoverTip asChild layer="window" label={(value) ?? ""}><button type="button" {...{ [`data-${prefix}-value`]: value, [`data-${prefix}-field`]: field }} aria-pressed={selected} onClick={onClick} className={cn("flex h-10 w-full items-center justify-between gap-2 rounded-xl px-3 text-left text-xs font-medium text-muted-foreground transition-colors hover:bg-muted", selected && "bg-muted text-foreground")}><span className="min-w-0 truncate">{label}</span><span {...{ [`data-${prefix}-count`]: true }} className="shrink-0 rounded-full bg-muted px-1.5 text-[10px] font-normal tabular-nums text-muted-foreground">{count ?? "—"}</span></button></HoverTip>;
 }

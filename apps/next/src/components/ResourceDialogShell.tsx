@@ -16,6 +16,10 @@ import { cn } from "@/utils/cn";
 
 type ResourceDialogShellProps = {
   open: boolean;
+  // 画布配置可选中性表面，未传时保留原创建页及模型库颜色。
+  // 只改变门户根的语义变量，不重建弹窗结构、焦点路径或存储机制。
+  // 由调用方显式传入，不能根据路由名偷偷切换所有资源弹窗样式。
+  tone?: "neutral";
   /** 弹框标题（必填，用于 aria-labelledby） */
   title: ReactNode;
   /** 标题元素 id，便于测试与无障碍 */
@@ -33,6 +37,9 @@ type ResourceDialogShellProps = {
   onOpenChange: (open: boolean) => void;
   /** 关闭按钮的 aria-label（默认「关闭」） */
   closeLabel?: string;
+  /** 主区工具可选始终在 main 内打开，嵌套选择器可接管 Escape。 */
+  presentation?: "responsive" | "page";
+  dismissOnEscape?: boolean;
   /** 主体额外的类名 */
   bodyClassName?: string;
   /** 主体是否自带内边距（网格类内容通常自带） */
@@ -61,6 +68,10 @@ type ResourceDialogShellProps = {
  */
 export function ResourceDialogShell({
   open,
+  // 门户不继承节点局部配色，因此需要在实际弹窗根标记外观。
+  // 这个参数不保存为用户主题偏好，不影响导航或后续打开的其他工具。
+  // 取消配置页时只卸载当前实例，原创建页的颜色与草稿保持独立。
+  tone,
   title,
   titleId,
   description,
@@ -70,6 +81,8 @@ export function ResourceDialogShell({
   footer,
   onOpenChange,
   closeLabel,
+  presentation,
+  dismissOnEscape = true,
   bodyClassName,
   bodyPadded = true,
   bodyScroll = true,
@@ -84,7 +97,7 @@ export function ResourceDialogShell({
   // 否则 SSR 尚未绘制工具内容时就隐藏工作区，会留下空白 main。
   // 同一外壳可来自创建页表单或其嵌套资源页，因此宿主判断必须由统一 hook 提供。
   // host 为空时继续走原 body 弹窗路径，避免改变角色管理等非创建页面。
-  const mainPage = useCreateMainPage(open && isHydrated);
+  const mainPage = useCreateMainPage(open && isHydrated, presentation);
   /**
    * 创建单栏由主容器决定几何，使用带返回按钮的紧凑页头。
    * 创建页外与图片详情一致：< xl 占右侧主区，>= xl 使用居中弹窗。
@@ -130,7 +143,7 @@ export function ResourceDialogShell({
     if (!open || (mainPage.host && !mainPage.active)) return;
 
     const handleEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onOpenChange(false);
+      if (event.key === "Escape" && dismissOnEscape) onOpenChange(false);
     };
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
@@ -140,7 +153,7 @@ export function ResourceDialogShell({
       document.body.style.overflow = previousOverflow;
       document.removeEventListener("keydown", handleEscape);
     };
-  }, [mainPage.active, mainPage.host, onOpenChange, open]);
+  }, [dismissOnEscape, mainPage.active, mainPage.host, onOpenChange, open]);
 
   if (!open || !isHydrated) return null;
 
@@ -158,6 +171,10 @@ export function ResourceDialogShell({
 
       <div
         role="dialog"
+        // 中性标记供主题变量消费；没有标记的所有旧调用方仍使用原品牌主题。
+        // 属性只影响表面，内部模型卡片的真实选择与禁用继续由业务状态决定。
+        // 不添加额外DOM层，紧凑主区与居中弹窗沿用既有边界计算。
+        data-neutral-surface={tone === "neutral" ? "" : undefined}
         aria-modal={mainPage.host ? undefined : true}
         aria-labelledby={titleId}
         data-resource-dialog={titleId}

@@ -4,11 +4,14 @@
  * 先校验再排队，放行后才上传；取消排队项不会产生远端上传副作用。
  * 内部 workflowId 使用英文，中文提示词及合法模型相对路径保持原样。
  */
-import { enqueueGenerationTask, snapshotGeneration, generationSaveTarget } from '@/utils/image-generation-queue';
+import { assertWorkflowModelsInstalled } from "@/utils/workflow-model-readiness";
+import { enqueueGenerationTask, snapshotGeneration, generationSaveTarget, type GenerationOutputTarget } from '@/utils/image-generation-queue';
 // 入队同时冻结所选模板默认值，卡片显示真实默认或用户选择的 UNet。
 // reference File 决定模板，不能用上一次 UI 显示的节点前缀作为选择依据。
 // 默认步数和模型名来自 JSON，等待期间调整表单不改变已经入队的任务。
 import { audioWorkflowDefaults, buildAudioPrompt, resolveAudioModels, type AudioWorkflowInput } from '@/utils/comfy/audio-workflow';
+import { buildGptSovitsPrompt, GPT_SOVITS_NAME, type GptSovitsInput } from '@/utils/comfy/gpt-sovits-workflow';
+import type { ComfyApiPrompt } from '@/types/comfy';
 import { audioExtension, generateAudio, saveAudio, uploadReferenceAudio } from '@/utils/comfy/audio-media';
 import { useGenerationTaskStore } from '@/stores/useGenerationTaskStore';
 import { useGenerationNoticeStore } from '@/stores/useGenerationNoticeStore';
@@ -68,7 +71,7 @@ import { t } from '@/i18n';
 // 没有显式用户取消时，不在组件 cleanup 发出任何 interrupt。
 // 每个 await 的异常都由调度器统一 finishFailure，不在此层返回空成功值。
 // 网络原始音频字节只在当前任务结果中短暂存在，调度完成后不保留冗余副本。
-export function enqueueAudioGeneration(value: AudioWorkflowInput, reference: File | null) {
+export function enqueueAudioGeneration(value: AudioWorkflowInput, reference: File | null, output?: GenerationOutputTarget) {
   // 显式覆盖优先，未覆盖时读取与参考素材相对应模板的模型与步数。
   // 将默认值也冻结进快照，实际执行不用重新读取另一页面的模型选择。
   // structuredClone 继续隔离嵌套 LoRA 数组和权重。
@@ -77,23 +80,42 @@ export function enqueueAudioGeneration(value: AudioWorkflowInput, reference: Fil
   // 显式秒数优先于模板，参考文件存在性只决定未编辑时的默认。
   // 与模型、步数一起深克隆，批次等待期间改时长不会串入旧任务。
   const settings = structuredClone({ ...value, unetName: value.unetName ?? defaults.unetName, steps: value.steps ?? defaults.steps, durationSeconds: value.durationSeconds ?? defaults.durationSeconds });
+  const build: AudioGraphBuilder = referenceName => buildAudioPrompt({ ...settings, referenceName });
+  return enqueueAudio({ text: settings.prompt, model: settings.unetName, build, resolve: resolveAudioModels }, reference, output);
+}
+
+export function enqueueGptSovitsGeneration(value: GptSovitsInput, reference: File | null, output: GenerationOutputTarget) {
+  const settings = { ...value };
+  // 插件按自己的目录验证两份权重，不使用 MiniMax 的 UNet/CLIP 模型解析。
+  return enqueueAudio({ text: settings.text, model: GPT_SOVITS_NAME, build: name => buildGptSovitsPrompt(settings, name) }, reference, output);
+}
+
+type AudioGraphBuilder = (referenceName?: string) => ComfyApiPrompt;
+interface AudioQueueInput {
+  text: string;
+  model: string;
+  build: AudioGraphBuilder;
+  resolve?: (graph: ComfyApiPrompt, server: string) => Promise<void>;
+}
+
+function enqueueAudio({ text, model, build, resolve }: AudioQueueInput, reference: File | null, output?: GenerationOutputTarget) {
   if (reference) audioExtension(reference);
-  buildAudioPrompt({ ...settings, referenceName: reference ? 'reference.flac' : undefined });
-  const snapshot = snapshotGeneration({ positivePrompt: settings.prompt });
+  assertWorkflowModelsInstalled(build(reference ? 'reference.flac' : undefined));
+  // 画布传入自己的 Audio 目录；省略时仍使用创作页原图库位置，不重复落盘。
+  const snapshot = snapshotGeneration({ positivePrompt: text }, output);
   let remote = false;
-  // 音频标记决定卡片媒介，model 则保留本任务真正使用的 UNet 名称。
-  // 内部 32×32 仍不作为用户图像尺寸展示，队列卡片沿用音频分支。
-  // 同一公共 FIFO 逐项执行按钮所选数量，单项的 total 始终为一。
-  return enqueueGenerationTask({ prompt: settings.prompt, model: settings.unetName, width: 32, height: 32, total: 1, folderId: snapshot.folderId, mediaKind: 'audio' }, async (id, signal) => {
+  // 音频标记决定任务卡的展示；32×32 是公共队列占位，不显示为音频尺寸。
+  return enqueueGenerationTask({ prompt: text, model, width: 32, height: 32, total: 1, folderId: snapshot.folderId, mediaKind: 'audio' }, async (id, signal) => {
     const update = useGenerationTaskStore.getState().update;
     update(id, { status: 'generating' }); useGenerationNoticeStore.getState().start();
     const target = await generationSaveTarget(snapshot); signal.throwIfAborted();
     update(id, { folderId: target.folderId });
     const referenceName = reference ? await uploadReferenceAudio(reference, snapshot.server) : undefined;
     signal.throwIfAborted();
-    const graph = buildAudioPrompt({ ...settings, referenceName });
-    await resolveAudioModels(graph, snapshot.server); signal.throwIfAborted(); remote = true;
-    const outputs = await generateAudio(graph, snapshot.server, id); signal.throwIfAborted();
+    const graph = build(referenceName);
+    if (resolve) await resolve(graph, snapshot.server);
+    signal.throwIfAborted(); remote = true;
+    const outputs = await generateAudio(graph, snapshot.server, id, snapshot.modelAttention); signal.throwIfAborted();
     update(id, { status: 'saving' });
     const savedPaths = await saveAudio(outputs, target.path);
     update(id, { status: 'completed', completed: 1, savedPaths });

@@ -1,51 +1,42 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
-import {
-  Check,
-  Info,
-  Settings,
-} from "lucide-react";
-import { DEFAULT_PRESET_ID, findPresetInAll } from "@/data/presetPrompts";
-import type { PresetPromptOption } from "@/types/presetPrompt";
-import { useCreateFormStore } from "@/stores/useCreateFormStore";
-import { useTranslation } from "@/i18n";
-import { PresetPromptDialog } from "@/view/create/PresetPromptDialog";
+import type { ReactNode } from "react";
+import { useCreateFormStore, type CreateFormState } from "@/stores/useCreateFormStore";
+// store 只注入数据归属，不复制字段或另写参数布局；省略时仍是创建页原草稿。
+// useStore 与原绑定 hook 共享同一 Zustand 订阅方式，局部实例不会反写全局。
+import { useStore, type StoreApi } from "zustand";
 // 采样器到种子直接复用完整字段块，普通图片继续拥有自己的表单状态。
 // 共用组件不决定工作流默认值，当前系列模板仍由本层读取。
-// 原图预设选择与保存弹窗保留，不随参数块抽取而重置。
 import { GenerationSamplingFields } from "./generation-sampling-fields";
 import { AdvancedSettingsSection } from "./advanced-settings-section";
 import { getImageWorkflowDefaults } from "@/utils/comfy/imageWorkflow";
 import { clampSeed, generateRandomSeed } from "@/utils/seed";
-import { cn } from "@/utils/cn";
 
-export function AdvancedSettings({ series = "anima", children }: { series?: "anima" | "sdxl"; children?: ReactNode }) {
-  const { t } = useTranslation();
-  const [usePreset, setUsePreset] = useState(true);
-  const samplerOverride = useCreateFormStore((state) => state.sampler);
-  const schedulerOverride = useCreateFormStore((state) => state.scheduler);
+// 这里只增加原 store 的注入口，高级设置内部布局和全部原字段保持共用。
+// sampler 的缺省仍由当前系列模板解析，不能固定填成某个常用采样器。
+// scheduler 的显示也独立回退，用户只覆盖其中一个时另一个仍继承原模板。
+// steps 和 cfg 使用原字段动作，局部适配器只负责把确认值写回节点。
+// seedMode 与 customSeed 必须来自同一 store，否则随机按钮和数字框会相互矛盾。
+// 切到 custom 仍生成原规则的随机起始数字，不改原创建页的交互约定。
+// 数字输入空串仍按原处理保留旧确认值，不能把临时删除解释成种子零。
+// 原 clampSeed 负责范围，读取局部状态不意味着跳过原数值约束。
+// children 仍留给原图片高级扩展，局部 store 注入不改变插槽顺序。
+// 折叠由原 AdvancedSettingsSection 管理，字段不会出现两套开关状态。
+// 输出参数变更由宿主事务负责，展开高级区自身不创建工程修改。
+export function AdvancedSettings({ series = "anima", children, store }: { series?: Parameters<typeof getImageWorkflowDefaults>[0]; children?: ReactNode; store?: StoreApi<CreateFormState> }) {
+  const samplerOverride = useStore(store ?? useCreateFormStore, (state) => state.sampler);
+  const schedulerOverride = useStore(store ?? useCreateFormStore, (state) => state.scheduler);
   /** 未自定义时显示当前系列工作流模板自带的采样器 / 调度器 */
   const workflowDefaults = getImageWorkflowDefaults(series);
   const sampler = samplerOverride ?? workflowDefaults.samplerName;
   const scheduler = schedulerOverride ?? workflowDefaults.scheduler;
-  const steps = useCreateFormStore((state) => state.steps);
-  const cfg = useCreateFormStore((state) => state.cfg);
-  const seedMode = useCreateFormStore((state) => state.seedMode);
-  const customSeed = useCreateFormStore((state) => state.customSeed);
-  const setAdvancedSettings = useCreateFormStore(
+  const steps = useStore(store ?? useCreateFormStore, (state) => state.steps);
+  const cfg = useStore(store ?? useCreateFormStore, (state) => state.cfg);
+  const seedMode = useStore(store ?? useCreateFormStore, (state) => state.seedMode);
+  const customSeed = useStore(store ?? useCreateFormStore, (state) => state.customSeed);
+  const setAdvancedSettings = useStore(store ?? useCreateFormStore,
     (state) => state.setAdvancedSettings
   );
-  const [selectedPresetId, setSelectedPresetId] = useState(DEFAULT_PRESET_ID);
-  const [presetDialogOpen, setPresetDialogOpen] = useState(false);
-  const [customPresets, setCustomPresets] = useState<
-    Record<string, PresetPromptOption[]>
-  >({});
-
-  const selectedPreset =
-    findPresetInAll(selectedPresetId, customPresets) ??
-    findPresetInAll(DEFAULT_PRESET_ID, customPresets)!;
-
 
   const handleSeedModeChange = (mode: "random" | "custom") => {
     setAdvancedSettings({
@@ -59,88 +50,26 @@ export function AdvancedSettings({ series = "anima", children }: { series?: "ani
     setAdvancedSettings({ customSeed: clampSeed(Number(raw)) });
   };
 
+  // 界面：「高级设置」折叠区的外壳由图片、视频与音频共用。
   return (
-    <>
-      {/* 界面：「高级设置」图片与视频共用折叠外壳 */}
-      <AdvancedSettingsSection>
-          <div className="space-y-1.5">
-            <div className="flex items-center space-x-2">
-              <label className="text-sm font-medium">
-                {t("create.advancedSettings.presetPrompt")}
-              </label>
-              <button
-                type="button"
-                className="focus:outline-none"
-                aria-label={t("create.advancedSettings.presetPromptHint")}
-              >
-                <Info className="h-4 w-4 cursor-pointer text-muted-foreground opacity-80 hover:text-primary hover:opacity-100" />
-              </button>
-            </div>
-            <div className="flex items-center space-x-2 pb-1">
-              <button
-                type="button"
-                role="checkbox"
-                aria-checked={usePreset}
-                onClick={() => setUsePreset((prev) => !prev)}
-                className={cn(
-                  "peer flex h-4 w-4 shrink-0 items-center justify-center rounded-sm border border-primary shadow focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
-                  usePreset && "bg-primary text-primary-foreground"
-                )}
-              >
-                {usePreset && <Check className="h-3 w-3" />}
-              </button>
-              <label className="text-sm font-normal leading-none">
-                {t("create.advancedSettings.usePreset")}
-              </label>
-            </div>
-            <div className="w-full min-w-0 space-y-1.5 rounded-md bg-muted/50 p-2 text-left text-[11px] text-muted-foreground">
-              <div className="flex min-w-0 items-center justify-between gap-2">
-                <span className="min-w-0 truncate text-[10px] font-medium text-foreground/70">
-                  {t("create.advancedSettings.inUse")}{" "}
-                  <span className="text-foreground/90">{selectedPreset.name}</span>
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setPresetDialogOpen(true)}
-                  className="flex shrink-0 items-center gap-1 text-[10px] text-muted-foreground transition-colors hover:text-foreground"
-                >
-                  <Settings className="h-3 w-3" />
-                  {t("create.advancedSettings.edit")}
-                </button>
-              </div>
-              <div className="space-y-0.5">
-                <p className="line-clamp-1">
-                  <span className="font-medium text-foreground/70">
-                    {t("create.advancedSettings.positivePrefix")}
-                  </span>{" "}
-                  {selectedPreset.positivePrefix}
-                </p>
-                <p className="line-clamp-1">
-                  <span className="font-medium text-foreground/70">
-                    {t("create.advancedSettings.negativePrefix")}
-                  </span>{" "}
-                  {selectedPreset.negativePrefix}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* 界面：采样器、调度器、滑条及种子与编辑工作区复用整个参数块。 */}
-          {/* 普通图片仍使用原领域 store，组件复用不混用两个模式的草稿。 */}
-          {/* 随机模式保持原提交路径，实际种子仍由生成器逐张产生。 */}
-          <GenerationSamplingFields sampler={sampler} scheduler={scheduler} steps={steps} cfg={cfg} seed={String(customSeed)} seedMode={seedMode} onSampler={sampler => setAdvancedSettings({ sampler })} onScheduler={scheduler => setAdvancedSettings({ scheduler })} onSteps={steps => setAdvancedSettings({ steps })} onCfg={cfg => setAdvancedSettings({ cfg })} onSeed={handleCustomSeedChange} onSeedMode={handleSeedModeChange} />
-          {/* 界面：图片模式特有的高级选项，由创建页提供状态。 */}
-          {children}
-      </AdvancedSettingsSection>
-
-      <PresetPromptDialog
-        open={presetDialogOpen}
-        selectedPresetId={selectedPresetId}
-        customPresets={customPresets}
-        onCustomPresetsChange={setCustomPresets}
-        onOpenChange={setPresetDialogOpen}
-        onSave={setSelectedPresetId}
+    <AdvancedSettingsSection>
+      {/* 界面：采样与种子参数和图片编辑工作区共用。 */}
+      <GenerationSamplingFields
+        sampler={sampler}
+        scheduler={scheduler}
+        steps={steps}
+        cfg={cfg}
+        seed={String(customSeed)}
+        seedMode={seedMode}
+        onSampler={sampler => setAdvancedSettings({ sampler })}
+        onScheduler={scheduler => setAdvancedSettings({ scheduler })}
+        onSteps={steps => setAdvancedSettings({ steps })}
+        onCfg={cfg => setAdvancedSettings({ cfg })}
+        onSeed={handleCustomSeedChange}
+        onSeedMode={handleSeedModeChange}
       />
-    </>
+      {/* 界面：生成模式专属参数由调用方填入。 */}
+      {children}
+    </AdvancedSettingsSection>
   );
 }

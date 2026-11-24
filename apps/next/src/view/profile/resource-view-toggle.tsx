@@ -1,4 +1,6 @@
 "use client";
+import { HoverTip } from "@/components/hover-tip";
+
 
 import { Grid3x3, List } from "lucide-react";
 import { useTranslation } from "@/i18n";
@@ -11,6 +13,6 @@ interface ResourceViewToggleProps { value: ResourceView; onChange: (value: Resou
 export function ResourceViewToggle({ value, onChange }: ResourceViewToggleProps) {
   const { t } = useTranslation();
   return <div className="inline-flex shrink-0 gap-1 rounded-lg bg-muted p-1">
-    {([{ value: "grid", Icon: Grid3x3, key: "profile.tabs.gridView" }, { value: "list", Icon: List, key: "profile.tabs.listView" }] as const).map(item => <button key={item.value} type="button" data-resource-view={item.value} aria-label={t(item.key)} title={t(item.key)} aria-pressed={value === item.value} onClick={() => onChange(item.value)} className={cn("inline-flex h-8 w-9 items-center justify-center rounded-md text-muted-foreground transition-colors focus-visible:outline-2 focus-visible:outline-accent-stroke", value === item.value ? "bg-background text-foreground shadow-sm" : "hover:text-foreground")}><item.Icon size={16} aria-hidden="true" /></button>)}
+    {([{ value: "grid", Icon: Grid3x3, key: "profile.tabs.gridView" }, { value: "list", Icon: List, key: "profile.tabs.listView" }] as const).map(item => <HoverTip key={item.value} asChild layer="window" label={(t(item.key)) ?? ""}><button key={item.value} type="button" data-resource-view={item.value} aria-label={t(item.key)} aria-pressed={value === item.value} onClick={() => onChange(item.value)} className={cn("inline-flex h-8 w-9 items-center justify-center rounded-md text-muted-foreground transition-colors focus-visible:outline-2 focus-visible:outline-accent-stroke", value === item.value ? "bg-background text-foreground shadow-sm" : "hover:text-foreground")}><item.Icon size={16} aria-hidden="true" /></button></HoverTip>)}
   </div>;
 }

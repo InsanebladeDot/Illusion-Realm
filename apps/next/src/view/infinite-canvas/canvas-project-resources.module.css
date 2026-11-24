@@ -1,0 +1,11 @@
+/* 素材页沿用画布弹窗几何与资料卡片，不在缩放图内挂载整份资源管理器。 */
+.panel { width: min(850px, 82vw); max-width: 100%; max-height: 78vh; padding: 20px; border-radius: 20px; background: var(--hy-panel); box-shadow: 0 12px 40px #0003; display: flex; flex-direction: column; gap: 12px; min-height: 0; }
+.panel h2 { font-size: 16px; }
+.toolbar { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; font-size: 12px; }
+.panel p { font-size: 12px; overflow-wrap: anywhere; color: var(--hy-muted); }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; overflow: auto; min-height: 0; padding: 3px; flex: 1; }
+.panel footer { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; flex-shrink: 0; }
+.confirmDialog { width: min(360px, calc(100vw - 36px)); }
+.confirmDialog .danger:global(.hy-chip) { border: 0; background: var(--destructive, #b34b60); color: #fff; }
+.confirmDialog .danger:global(.hy-chip):hover:not(:disabled), .confirmDialog .danger:global(.hy-chip):focus-visible:not(:disabled) { background: color-mix(in srgb, var(--destructive, #b34b60) 82%, #000); }
+@media(max-width:760px) { .panel { width: 82vw; padding: 14px; } }

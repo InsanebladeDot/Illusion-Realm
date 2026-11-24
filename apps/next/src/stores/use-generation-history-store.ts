@@ -80,7 +80,7 @@ export const useGenerationHistoryStore = create<GenerationHistoryState>()(persis
 /**
  * 终态落盘的约定：
  * 图片类型省略代表原有图片任务，兼容此前调用方。
- * mediaKind 为 audio 时立即结束，不能把声音文件当作一张图。
+ * 音频与视频不写图片账本，不能把声音文件或视频当作一张图。
  * 未到终态的 task 不具有 finishedAt，此时不应生成历史小票。
  * 模型准备失败仍会有 startedAt 和 failed，因此可以计入失败分母。
  * 排队撤回没有 startedAt，但仍保留 cancelled 供区分停止原因。
@@ -96,7 +96,7 @@ export const useGenerationHistoryStore = create<GenerationHistoryState>()(persis
  * 提示不包含原始异常路径，防止把用户文件位置写进日志或分享截图。
  */
 export async function recordGenerationTask(task: GenerationTask): Promise<void> {
-  if (task.mediaKind === "audio" || task.finishedAt === undefined || !["completed", "failed", "cancelled"].includes(task.status)) return;
+  if (task.mediaKind !== undefined && task.mediaKind !== "image" || task.finishedAt === undefined || !["completed", "failed", "cancelled"].includes(task.status)) return;
   try {
     if (!useGenerationHistoryStore.persist.hasHydrated()) await useGenerationHistoryStore.persist.rehydrate();
     useGenerationHistoryStore.getState().record({

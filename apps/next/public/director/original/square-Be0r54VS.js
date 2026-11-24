@@ -1,0 +1,1 @@
+import{_t as createLucideIcon}from"./index-CN6-Eq3i.js";var Square=createLucideIcon(`square`,[[`rect`,{width:`18`,height:`18`,x:`3`,y:`3`,rx:`2`,key:`afitv7`}]]);export{Square as t};

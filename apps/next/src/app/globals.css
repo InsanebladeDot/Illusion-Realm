@@ -133,6 +133,22 @@ body:has([data-profile-scroll]) { position: fixed; inset: 0; }
   max-height: min(560px, calc(100dvh - var(--window-chrome-height) - 24px));
 }
 
+/* 清单比下载中心宽，按清单自身宽度决定双栏，避免贴边小窗被挤出屏幕。 */
+#window-setup-checklist {
+  width: min(760px, calc(100vw - 24px));
+  right: clamp(12px, calc(100vw - env(titlebar-area-x, 0px) - env(titlebar-area-width, calc(100vw - 138px))), max(12px, calc(100vw - 784px)));
+  max-height: min(660px, calc(100dvh - var(--window-chrome-height) - 24px));
+}
+.setup-checklist-layout { container-type: inline-size; }
+.setup-checklist-columns { display: grid; grid-template: auto minmax(0, 1fr) / minmax(0, 1fr); }
+.setup-checklist-nav { display: flex; gap: 4px; overflow-x: auto; border-bottom: 1px solid var(--border); }
+.setup-checklist-nav > button { flex-shrink: 0; white-space: nowrap; }
+@container (min-width: 560px) {
+  .setup-checklist-columns { grid-template: minmax(0, 1fr) / 190px minmax(0, 1fr); }
+  .setup-checklist-nav { flex-direction: column; overflow: auto; border-bottom: 0; border-right: 1px solid var(--border); }
+  .setup-checklist-nav > button { white-space: normal; }
+}
+
 /* 生成队列：局部淡紫语义色，表面混入全局底色以跟随主题；不影响下载浮窗。 */
 .generation-task-panel {
   --task-accent: #7955b5;
@@ -753,50 +769,8 @@ html.page-transition[data-page-direction="backward"]::view-transition-group(page
 }
 
 /* 按钮交互以本地模型“更换封面”为基准：淡底反馈配单根细线。 */
-/* 公共入口统一交互线条，业务按钮仍自己决定主色、危险色和选中填充。 */
-/* 悬停描边向内画，不增减按钮尺寸，也不让相邻按钮跟着跳位置。 */
-/* 图片卡片与画布按钮不盖背景，真实图像和透明操作层不能被淡底遮住。 */
-/* 原本带hover:bg-muted的普通操作继续用相同语义背景，而非另一套配色。 */
-/* 原生禁用状态不响应悬停；可聚焦的aria-disabled入口仍显示键盘位置。 */
-/* 焦点只用一根线，清掉Tailwind额外光圈，避免两圈叠成截图中的粗蓝边。 */
-/* 输入框也走这条焦点规则，单击或键盘进入数值编辑不会再叠加厚阴影。 */
-/* 颜色混入前景提高深浅主题下的可辨性，线条宽度始终是一像素。 */
-/* 轮廓不承担选中数据，选中、加载和错误的业务状态保留在各自组件。 */
-/* 使用现有主题变量，换配色和系统深浅主题不需要重建控件。 */
-/* 高对比度系统模式交还系统Highlight，避免定制色把焦点藏掉。 */
-/* 这里不设置动画，减少动态效果偏好不会遭遇新增的闪动或缩放。 */
-/* 不给全部按钮加实体边框，顶栏与图标按钮的原有几何尺寸保持不变。 */
-/* 按钮规则放在已有globals入口，避免每个工具各复制一份hover/focus CSS。 */
-/* 边界只作用于交互线条，不触碰窗口定位、导航宽度或主区滚动归属。 */
-/* role=button覆盖项目中保留的可访问自定义按钮，不局限于原生button标签。 */
-/* 原生disabled与aria-disabled都排除悬停，灰色不可用入口不应显示像可以执行的反馈。 */
-/* focus-visible仍允许aria-disabled入口说明不可用原因，键盘焦点不能被一并隐藏。 */
-/* outline不参与盒模型，因此hover不让同一排按钮互相挤动或换行。 */
-/* outline-offset负一将轮廓放在现有边缘，避免外面多画一根形成视觉双框。 */
-/* focus比hover更高对比，键盘当前位置仍然明确，不能为了细边框把焦点去掉。 */
-/* 清除的是额外ring阴影，不是业务loading或选中状态，aria-pressed不被本规则重写。 */
-/* 输入框与按钮共用一像素焦点标准，外部fieldInput可通过局部规则统一负责整框。 */
-/* 背景仍交给原按钮的hover:bg-muted，不能给图像预览按钮刷一层灰遮住内容。 */
-/* 图标、文字、主操作和危险按钮的前景色保持原组件语义。 */
-/* 采用现有accent-stroke/foreground/border变量，不另建浅深主题开关。 */
-/* forced-colors使用系统高亮色是为了Windows辅助模式可辨，不改变普通配色。 */
-/* 没有transition或transform，按钮触摸效果不会产生尺寸弹跳。 */
-/* 规则同时适用于Portal内弹窗，不能因为不在AppShell子树就漏掉复制或关闭按钮。 */
-/* 顶栏按钮保留各自的浅底或危险色反馈，不套用页面操作按钮的悬停描边。 */
-/* 素材分类与翻页箭头同样只用颜色反馈，避免经过图标时出现参考图中的方框。 */
-/* 此处只排除hover规则，键盘focus-visible仍由下方规则提供可见的一像素提示。 */
-/* 个人主页标签以文字和下划线提示选择，鼠标悬停不再叠加矩形轮廓。 */
-/* 设置分类同样只排除悬停描边，aria-pressed 对应的选中填充仍由原组件维护。 */
-/* 两处使用既有业务标记定位，不排除整个页面，以免误伤删除和确认等操作。 */
-/* 这不是取消焦点：后续 focus-visible 规则仍向键盘用户展示当前位置。 */
-/* 鼠标点击后若指针仍停在标签上，也不会再次被通用 hover 规则套上边框。 */
-/* 与已有创作模式标签共用同一排除机制，避免新增一套高优先级覆盖。 */
-/* 原生禁用与 aria-disabled 的边界保持不变，禁用入口不会借此获得高亮。 */
-/* 语义主题变量仍由各原组件读取，不针对深浅主题硬编码边框或文字颜色。 */
-:root :is(button, [role="button"]):not(:disabled):not([aria-disabled="true"]):not(:where([data-window-titlebar] *, [data-media-library-tabs] *, [data-profile-content-tab], [data-settings-category])):hover {
-  outline: 1px solid color-mix(in srgb, var(--foreground) 30%, var(--border));
-  outline-offset: -1px;
-}
+/* 鼠标悬停由各组件自己的文字/底色反馈负责，不给所有按钮额外叠加轮廓。 */
+/* 键盘焦点单独保留一像素提示；清掉叠加光圈，避免焦点变成双框。 */
 :root :is(button, input, textarea, select, [role="button"]):focus-visible {
   outline: 1px solid color-mix(in srgb, var(--accent-stroke) 70%, var(--foreground));
   outline-offset: -1px;

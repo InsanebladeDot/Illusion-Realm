@@ -1,4 +1,6 @@
 "use client";
+import { HoverTip } from "@/components/hover-tip";
+
 
 import { ChevronDown } from "lucide-react";
 import { ResourceCoverImage } from "@/components/ResourceCoverImage";
@@ -17,7 +19,7 @@ export function ModelCoverSelect({ name, cover, label, onClick, disabled, priori
     {/* 界面：「模型」封面卡片，图片和视频使用相同样式 */}
     {cover && <ResourceCoverImage cover={cover} alt={name} fill sizes="(max-width: 768px) 100vw, 50vw" className="absolute inset-0 -z-10 h-full w-full object-cover" priority={priority} />}
     {cover && <div className="absolute inset-0 -z-10 bg-gradient-to-t from-gray-900/70 via-gray-900/50 to-gray-900/10 sm:from-gray-900/60 sm:via-gray-900/40 sm:to-gray-900/0" />}
-    <div className={cn("flex w-full min-w-0 flex-col pr-7", cover ? "text-white" : "text-foreground")}><span className="text-xs font-semibold sm:text-sm">{label}</span><span className="truncate text-base font-semibold leading-tight sm:text-lg sm:leading-6" title={name}>{name}</span></div>
+    <div className={cn("flex w-full min-w-0 flex-col pr-7", cover ? "text-white" : "text-foreground")}><span className="text-xs font-semibold sm:text-sm">{label}</span><HoverTip asChild layer="window" label={(name) ?? ""}><span className="truncate text-base font-semibold leading-tight sm:text-lg sm:leading-6">{name}</span></HoverTip></div>
     <ChevronDown className={cn("pointer-events-none absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2", cover ? "text-white drop-shadow" : "text-muted-foreground")} />
   </button>;
 }

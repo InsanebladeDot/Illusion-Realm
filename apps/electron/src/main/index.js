@@ -106,7 +106,8 @@ function createWindow() {
     win.webContents.openDevTools({ mode: "detach" });
   } else {
     // 生产环境：必须用 app:// 协议加载，否则 /_next/... 绝对路径在 file:// 下全部 404
-    void win.loadURL("app://app/index.html");
+    // 协议会把根路由读成 index.html，页面地址保留 /，首页导航和门牌才能一致。
+    void win.loadURL("app://app/");
   }
 }
 

@@ -27,7 +27,7 @@ function useViewTask(onClose: () => void) {
     // 异步失败显式呈现，保留任务卡片及已保存结果供重试。
     // 成功或失败均不删除磁盘文件，也不会再次请求 ComfyUI 生成。
     // 标题栏面板可以正常关闭，音频结果仍从 Role TTS 返回查看。
-    if (task.mediaKind === 'audio') { void revealAudio(path).catch((error: unknown) => useToastStore.getState().show(error instanceof Error ? error.message : '')); onClose(); return; }
+    if (task.mediaKind === 'audio' || task.mediaKind === 'video') { void revealAudio(path).catch((error: unknown) => useToastStore.getState().show(error instanceof Error ? error.message : '')); onClose(); return; }
     const history = useHistoryFolderStore.getState();
     history.openFolder(task.folderId ?? DEFAULT_FOLDER_ID);
     history.requestOpenImage(path);

@@ -1,4 +1,6 @@
 "use client";
+import { HoverTip } from "@/components/hover-tip";
+
 // 模型加载设置由各模式传入真实模板和独立草稿，四个入口共用一套控件。
 // 像同一张登记表由不同柜台填写：字段从模板来，选择结果仍归各自业务。
 // 这里只更新文件名，不加载模型、不提交生成，也不修改模板连接。
@@ -8,11 +10,13 @@ import { useEffect, useMemo, useState } from "react";
 import { ChevronDown, RefreshCw, Settings2 } from "lucide-react";
 import { SimpleSelect } from "@/components/SimpleSelect";
 import { useTranslation } from "@/i18n";
+import { isModelNameHidden } from "@/utils/local-model-visibility";
+
 import { useSettingsStore } from "@/stores/useSettingsStore";
 import { fetchComfyModelLists } from "@/api/comfyui";
 import type { ComfyApiPrompt, ComfyModelLists } from "@/types/comfy";
 import { getVideoWorkflowTemplate } from "@/utils/comfy/videoWorkflow";
-import { getVideoModelNames, getWorkflowAuxiliarySlots, type VideoModelOverrides, type VideoModelSlot } from "@/utils/comfy/video-workflow-models";
+import { localLoaderRoots, getVideoModelNames, getWorkflowAuxiliarySlots, type VideoModelOverrides, type VideoModelSlot } from "@/utils/comfy/video-workflow-models";
 
 // templateOverride 接受图片、编辑和音频的真实图，视频继续按 workflowId 获取。
 // mediaKind 只决定 VAE 标签，不能借这个展示参数切换实际生成工作流。
@@ -65,17 +69,21 @@ function VideoModelSlotSelect({ slot, overrides, lists, onChange, minimax, disab
   const { t } = useTranslation();
   const models = useSettingsStore((state) => state.models);
   const paths = useSettingsStore((state) => state.paths);
-  const names = getVideoModelNames(slot, models, paths, lists, minimax ? "minimax" : undefined);
+  const hidden = useSettingsStore(state => state.hiddenModelPaths);
+  const roots = localLoaderRoots(slot.category, paths);
+  // ComfyUI 给的是分类下的相对路径，加上模型根才能和本地隐藏项比对。
+  const isHidden = (name: string) => isModelNameHidden(name, roots, hidden);
+  const names = getVideoModelNames(slot, models, paths, lists, minimax ? "minimax" : undefined).filter(name => !isHidden(name));
   const value = overrides[slot.id] || "";
-  const options = [{ value: "", label: t("create.videoModels.default", { name: slot.defaultName }) }, ...[...new Set([...(value ? [value] : []), ...names])].map((name) => ({ value: name, label: name }))];
+  const options = [{ value: "", label: t("create.videoModels.default", { name: isHidden(slot.defaultName) ? t("toolBox.civitai.visibility.hiddenName") : slot.defaultName }) }, ...[...new Set([...(value ? [value] : []), ...names])].filter(name => !isHidden(name)).map((name) => ({ value: name, label: name }))];
   function select(name: string) {
     const next = { ...overrides };
     if (name) next[slot.id] = name; else delete next[slot.id];
     onChange(next);
   }
-  return <div data-video-model-slot={slot.id} className="flex min-w-0 items-center gap-2"><span title={t(slot.label)} className="w-20 shrink-0 whitespace-nowrap text-xs font-medium">{slot.category === "clips" ? "CLIP" : t(slot.label)} {slot.position}</span>
+  return <div data-video-model-slot={slot.id} className="flex min-w-0 items-center gap-2"><HoverTip asChild layer="window" label={(t(slot.label)) ?? ""}><span className="w-20 shrink-0 whitespace-nowrap text-xs font-medium">{slot.category === "clips" ? "CLIP" : t(slot.label)} {slot.position}</span></HoverTip>
     {/* 共用下拉框负责长路径省略、浮层避让和键盘选择，业务只接收真实文件名。 */}
-    <SimpleSelect value={value} options={options} disabled={disabled} onChange={select} ariaLabel={`${t(slot.label)}${slot.position ? ` ${slot.position}` : ""}`} portal className="min-w-0 flex-1" triggerClassName="text-xs" />
+    <SimpleSelect value={value} fallbackLabel={isHidden(value) ? t("toolBox.civitai.visibility.hiddenName") : undefined} options={options} disabled={disabled} onChange={select} ariaLabel={`${t(slot.label)}${slot.position ? ` ${slot.position}` : ""}`} portal className="min-w-0 flex-1" triggerClassName="text-xs" />
   </div>;
 }
 // 加载行由模板实际存在的输入派生，不从产品模式名字推断节点数量。
@@ -119,9 +127,9 @@ function VideoModelSettingsBody(props: SettingsProps) {
 export function WorkflowModelSettings(props: SettingsProps) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
-  return <section className="space-y-2 px-2 py-2 sm:px-3" data-video-model-section data-workflow-model-kind={props.mediaKind ?? "video"}>
+  return <section className="space-y-1 px-2 sm:px-3" data-video-model-section data-workflow-model-kind={props.mediaKind ?? "video"}>
     {/* 界面：「模型加载设置」默认收起，展开才加载可选模型清单 */}
-    <button type="button" data-video-model-toggle disabled={props.disabled} aria-expanded={open} onClick={() => setOpen(!open)} className="flex w-full items-center gap-2 rounded-md px-1 py-2 text-xs text-muted-foreground hover:bg-muted"><Settings2 size={14} /><span>{t("create.videoModels.title")}</span><ChevronDown size={14} className={`ml-auto transition-transform ${open ? "rotate-180" : ""}`} /></button>
+    <button type="button" data-video-model-toggle disabled={props.disabled} aria-expanded={open} onClick={() => setOpen(!open)} className="flex min-h-7 w-full items-center gap-2 rounded-md px-1 text-xs text-muted-foreground hover:bg-muted"><Settings2 size={14} /><span>{t("create.videoModels.title")}</span><ChevronDown size={14} className={`ml-auto transition-transform ${open ? "rotate-180" : ""}`} /></button>
     {open && <VideoModelSettingsBody {...props} />}
   </section>;
 }

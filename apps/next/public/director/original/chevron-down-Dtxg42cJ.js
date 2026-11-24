@@ -1,0 +1,1 @@
+import{_t as createLucideIcon}from"./index-CN6-Eq3i.js";var ChevronDown=createLucideIcon(`chevron-down`,[[`path`,{d:`m6 9 6 6 6-6`,key:`qrunsl`}]]);export{ChevronDown as t};

@@ -71,6 +71,7 @@ export type ComfyGenerateResult = {
 };
 
 export type ComfyGenerateOptions = {
+  modelAttention?: import("./model-attention").ModelAttentionSettings;
   serverAddress?: string;
   requestId?: string;
   clientId?: string;

@@ -1,4 +1,6 @@
 "use client";
+import { HoverTip } from "@/components/hover-tip";
+
 
 // 本地权重与在线模型共享封面比例、标题和选中样式，资源读取仍由各自适配器负责。
 // 卡片点击只报告查看或选择意图，不把下载和删除塞进公共展示组件。
@@ -81,10 +83,10 @@ export function ModelLibraryCard({ name, displayName = name, subtitle, cover, ba
       <div className="pointer-events-none absolute left-2 top-2 z-[1] flex max-w-[calc(100%-1rem)] flex-wrap gap-1">{badges}</div>
       {/* 列表资料：完整名称保留悬停提示，两行都省略长文本而不改变行高。 */}
       {/* 两种密度的文字共用一个按钮，屏幕上隐藏的排版也从辅助树中隐藏。 */}
-      <button {...attributes} type="button" onClick={onSelect} aria-label={label || displayName} aria-pressed={pressed} className={styles.cardOverlay} title={subtitle || displayName}>
+      <HoverTip asChild layer="window" label={(subtitle || displayName) ?? ""}><button {...attributes} type="button" onClick={onSelect} aria-label={label || displayName} aria-pressed={pressed} className={styles.cardOverlay}>
         <div className={styles.cardGridContent}>{overlay || <p>{displayName}</p>}{!overlay && subtitle && <small>{subtitle}</small>}</div>
-        <div className={styles.cardListContent} data-model-list-summary><p title={displayName}>{displayName}</p><small title={listAttributes}>{listAttributes}</small></div>
-      </button>
+        <div className={styles.cardListContent} data-model-list-summary><HoverTip asChild layer="window" label={(displayName) ?? ""}><p>{displayName}</p></HoverTip><HoverTip asChild layer="window" label={(listAttributes) ?? ""}><small>{listAttributes}</small></HoverTip></div>
+      </button></HoverTip>
     </div>{selectionControl}
   </div>;
 }

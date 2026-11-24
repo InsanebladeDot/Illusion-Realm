@@ -16,10 +16,10 @@ import { cn } from "@/utils/cn";
 // 只复用展示层，不改写会话字符串、工具输出或用户自己的消息。
 import { MarkdownCodeBlock } from './markdown-code-block';
 
-// 输入仅为正文和展示样式，不接管网络、消息状态或编辑动作。
+// 正文与业务状态归调用方；内置清单可注入图片和应用内链接，其余入口沿用默认阅读组件。
 // 相同文本由 memo 复用，其他消息更新不会重复解析已经完成的长回答。
 // className 只影响外层字号或布局，不允许调用方注入 HTML 内容。
-interface MarkdownResponseProps { markdown: string; className?: string }
+interface MarkdownResponseProps { markdown: string; className?: string; components?: Components }
 
 /**
  * 表格使用独立横向滚动容器，长列不会撑宽聊天区或整个 main。
@@ -72,12 +72,12 @@ const components: Components = {
  * 每次完整传入当前累计文本，支持流式过程中表格分隔行逐步到达。
  * 这里只使用同步解析，不增加计时器或依赖窗口可见性的 rAF 等待。
  */
-export const MarkdownResponse = memo(function MarkdownResponse({ markdown, className }: MarkdownResponseProps) {
+export const MarkdownResponse = memo(function MarkdownResponse({ markdown, className, components: overrides }: MarkdownResponseProps) {
   return <div data-markdown-response className={cn(
     "min-w-0 max-w-full space-y-3 text-sm leading-7 [overflow-wrap:anywhere] [&>:first-child]:mt-0 [&>:last-child]:mb-0",
     "[&_h1]:mt-5 [&_h1]:text-xl [&_h1]:font-semibold [&_h2]:mt-5 [&_h2]:text-lg [&_h2]:font-semibold [&_h3]:mt-4 [&_h3]:text-base [&_h3]:font-semibold [&_h4]:font-semibold [&_h5]:font-semibold [&_h6]:font-semibold [&_strong]:font-semibold [&_p]:whitespace-pre-line",
     "[&_ul]:list-disc [&_ul]:space-y-1 [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:space-y-1 [&_ol]:pl-5 [&_li>p]:my-1 [&_blockquote]:border-l-2 [&_blockquote]:border-border [&_blockquote]:pl-3 [&_blockquote]:text-muted-foreground [&_hr]:my-4 [&_hr]:border-border",
     "[&_pre]:max-w-full [&_pre]:overflow-x-auto [&_pre]:rounded-lg [&_pre]:bg-muted/60 [&_pre]:p-3 [&_pre]:text-xs [&_pre]:[scrollbar-width:thin] [&_code]:rounded [&_code]:bg-muted/60 [&_code]:px-1 [&_code]:py-0.5 [&_code]:font-mono [&_pre_code]:whitespace-pre [&_pre_code]:bg-transparent [&_pre_code]:p-0",
     "[&_th]:border-b [&_th]:border-border [&_th]:bg-muted/40 [&_th]:px-3 [&_th]:py-2 [&_th]:font-medium [&_td]:border-b [&_td]:border-border/50 [&_td]:px-3 [&_td]:py-2 [&_a]:text-primary [&_a]:underline [&_a]:underline-offset-2 [&_input]:mr-2", className,
-  )}><ReactMarkdown remarkPlugins={[remarkGfm]} components={components}>{markdown}</ReactMarkdown></div>;
+  )}><ReactMarkdown remarkPlugins={[remarkGfm]} components={overrides ? { ...components, ...overrides } : components}>{markdown}</ReactMarkdown></div>;
 });

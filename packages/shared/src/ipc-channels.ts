@@ -41,6 +41,9 @@ export const IPC_CHANNELS = {
   // 参数与返回值见 local-model-metadata.schema，主进程校验配置根目录。
   // 与 CommonJS 副本保持同值，由 Electron 模块审计验证。
   MODELS_RECOVER_METADATA: 'models:recoverMetadata',
+  MODELS_HASH_LOCAL: 'models:hashLocal',
+  MODELS_DOWNLOAD_SETUP: 'models:downloadSetup',
+  MODELS_CHECK_SETUP: 'models:checkSetup',
   MODELS_DOWNLOAD_TARGET: 'models:downloadTarget',
   MODELS_DOWNLOAD_START: 'models:downloadStart',
   MODELS_DOWNLOAD_CANCEL: 'models:downloadCancel',
@@ -49,6 +52,9 @@ export const IPC_CHANNELS = {
   MODELS_DOWNLOAD_LIST: 'models:downloadList',
   MODELS_CHANGE_LOGO: 'models:changeLogo',
   MODELS_CATEGORY_TARGET: 'models:categoryTarget',
+  MODELS_FOLDER_LIST: 'models:folderList',
+  MODELS_FOLDER_CREATE: 'models:folderCreate',
+  MODELS_FOLDER_DELETE: 'models:folderDelete',
   MODELS_MOVE_CATEGORY: 'models:moveCategory',
   MODELS_BATCH: 'models:batch',
   MODELS_DOWNLOAD_PROGRESS: 'models:downloadProgress',
@@ -76,6 +82,9 @@ export const IPC_CHANNELS = {
   COMFY_FREE_MEMORY: 'comfy:freeMemory',
   COMFY_UPLOAD_IMAGE: 'comfy:uploadImage',
   COMFY_LIST_MODELS: 'comfy:listModels',
+  COMFY_GSV_WEIGHTS: 'comfy:gptSovitsWeights',
+  CANVAS_REFERENCE_VOICES: 'canvas:referenceVoices',
+  CANVAS_ADD_REFERENCE_VOICE: 'canvas:addReferenceVoice',
 
   // paths —— 路径解析
   PATHS_GET_DEFAULT_OUTPUT: 'paths:getDefaultOutput',
@@ -102,6 +111,7 @@ export const IPC_CHANNELS = {
   // 同一通道也接受按请求身份取消，不开放任意进程操作。
   // 字符串与主进程/preload副本同步，旧探测契约保持不变。
   VIDEO_WAVEFORM: 'video:waveform',
+  VIDEO_UPSCALE: 'video:upscale',
   VIDEO_RUN: 'video:run',
   VIDEO_CANCEL: 'video:cancel',
   /** 主进程 → 渲染进程的单向进度推送（webContents.send，非 invoke） */
@@ -167,8 +177,16 @@ export const IPC_CHANNELS = {
 // 删除图节点因此不会意外调用系统文件删除。
 // 导出完成通过 IpcResult 返回，不另加可丢失的一次性成功事件。
 // 打开取消通过 null 返回，不靠窗口 blur 猜测系统操作结果。
+  // 原合成器只提交明确的本地媒体，不获得任意文件写入接口。
+  CANVAS_COMPOSITION_MEDIA: 'canvas:compositionMedia',
+  CANVAS_LIBRARY: 'canvas:library',
   CANVAS_IMPORT_MEDIA: 'canvas:importMedia',
   CANVAS_EXPORT_PROJECT: 'canvas:exportProject',
+  EUZHI_IMAGE_SECRET_STATUS: 'euzhiImage:secretStatus',
+  EUZHI_IMAGE_SECRET_SET: 'euzhiImage:secretSet',
+  EUZHI_IMAGE_SECRET_CLEAR: 'euzhiImage:secretClear',
+  EUZHI_IMAGE_GENERATE: 'euzhiImage:generate',
+  EUZHI_IMAGE_CANCEL: 'euzhiImage:cancel',
   CANVAS_OPEN_PROJECT: 'canvas:openProject',
   ACCOUNT_LOGIN: 'account:login',
   ACCOUNT_ME: 'account:me',

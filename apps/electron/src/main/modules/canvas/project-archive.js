@@ -1,3 +1,4 @@
+const { imageReferences } = require("./director-media");
 // .ircanvas 是有版本的流式容器：固定魔数、清单字节数、UTF-8 JSON、按序排列的素材字节。
 // 不执行归档中的命令，不接受绝对路径、解压符号链接或隐含目录。
 // 像按装箱单顺序装货：只缓存清单，每份大视频按流搬运，不把整个工程放进内存。
@@ -157,21 +158,47 @@ async function prepareArchive(input) {
   const assets = [];
   const sources = [];
   const seen = new Map();
-  for (const node of document.nodes) {
+  // 先收齐原地址再改副本，防止两个节点共享 media 对象时第二个读到已替换的相对路径。
+  // 像先抄完取货单再贴箱号，不能边改原标签边让下一张单继续认地址。
+  for (const { node, references } of document.nodes.map(node => ({ node, references: nodeReferences(node) }))) {
     const media = node.data.media;
-    if (!media) continue;
-    if (!path.isAbsolute(media.path) || !EXTENSIONS[media.kind].includes(path.extname(media.path).slice(1).toLowerCase())) throw new Error("canvas-invalid-media");
-    let relative = seen.get(media.path);
-    if (!relative) {
-      const info = await fs.promises.stat(media.path);
-      if (!info.isFile()) throw new Error("canvas-asset-missing");
-      relative = `${DIRECTORIES[media.kind]}/${randomUUID()}${path.extname(media.path).toLowerCase()}`;
-      assets.push({ path: relative, size: info.size, sha256: await digest(media.path) });
-      sources.push(media.path); seen.set(media.path, relative);
+    for (const ref of references) {
+      if (!path.isAbsolute(ref.path) || !EXTENSIONS[ref.kind].includes(path.extname(ref.path).slice(1).toLowerCase())) throw new Error("canvas-invalid-media");
+      let relative = seen.get(ref.path);
+      if (!relative) {
+        const info = await fs.promises.stat(ref.path);
+        if (!info.isFile()) throw new Error("canvas-asset-missing");
+        relative = `${DIRECTORIES[ref.kind]}/${randomUUID()}${path.extname(ref.path).toLowerCase()}`;
+        assets.push({ path: relative, size: info.size, sha256: await digest(ref.path) });
+        sources.push(ref.path); seen.set(ref.path, relative);
+      }
+      ref.set(relative);
+      if (media && media.path === relative) media.size = assets.find(asset => asset.path === relative)?.size ?? media.size;
+      const audio = node.data.audioParameters?.reference;
+      if (audio && audio.path === relative) audio.size = assets.find(asset => asset.path === relative)?.size ?? audio.size;
+      for (const image of node.data.inputImages ?? []) if (image.path === relative) image.size = assets.find(asset => asset.path === relative)?.size ?? image.size;
+      // 合成器的素材也须按磁盘实物更新大小，重开时由同一装箱单核对。
+      for (const asset of node.data.composition?.assets ?? []) if (asset.media.path === relative) asset.media.size = assets.find(item => item.path === relative)?.size ?? asset.media.size;
     }
-    node.data.media = { ...media, path: relative, size: assets.find(asset => asset.path === relative)?.size ?? media.size };
   }
   return { manifest: { format: "illusion-realm-canvas", version: 1, document, assets }, sources };
+}
+// 普通媒体和导演台图片都汇入同一装箱单，按原路径去重，不创建第二套归档器。
+// setter 只修改已经深拷贝的导出文档，用户正在编辑的原文档不受影响。
+/** @param {import('@illusion-realm/shared').UserDataInfiniteCanvas['nodes'][number]} node */
+function nodeReferences(node) {
+  /** @type {{path:string, kind:"image"|"video"|"audio",set:(value:string)=>void}[]} */
+  const refs = imageReferences(node.data.scene).map(ref => ({ ...ref, kind: /** @type {const} */ ("image") }));
+  const media = node.data.media;
+  if (media) refs.push({ path: media.path, kind: media.kind, set: value => { media.path = value; } });
+  // 参考音频也进入同一资源索引，导出、删除保护与 temp 回收都能看见这份依赖。
+  const audio = node.data.audioParameters?.reference;
+  if (audio) refs.push({ path: audio.path, kind: "audio", set: value => { audio.path = value; } });
+  for (const image of node.data.inputImages ?? []) refs.push({ path: image.path, kind: "image", set: value => { image.path = value; } });
+  // 合成器快照只存资产编号，搬工程时只替换资产表，不碰片段效果参数。
+  // 原节点删除后，已入轨素材仍由此表保留，不能因连线消失丢失工程。
+  for (const asset of node.data.composition?.assets ?? []) refs.push({ path: asset.media.path, kind: asset.media.kind, set: value => { asset.media.path = value; } });
+  return refs;
 }
 
 // 同目录临时文件完成并关闭后才替换目标，取消或失败不留下假工程。
@@ -219,7 +246,6 @@ async function writeArchive(target, document) {
 
 // 主进程与 shared 一样限制清单字段；长度来自实际文件，不能被包声明欺骗。
 // 先验证完整图和所有相对路径，再创建目标目录，坏包不会污染用户工程。
-/** @param {unknown} value @param {number} payloadSize @returns {value is import('@illusion-realm/shared').CanvasArchive} */
 // 这里检查外部工程的完整结构，不能因为文件扩展名正确就信任内容。
 // format 区分画布工程与用户设置 JSON，避免误导入账户文档。
 // version 只接受已实现的第一版，不尝试猜测未来版本字段含义。
@@ -246,6 +272,15 @@ async function writeArchive(target, document) {
 // 空媒体卡没有引用，因此不强迫它拥有一份不存在的二进制文件。
 // 清单可能包含未被节点使用的合法资产；它们不会自动创建额外节点。
 // 这一层不启动解码器，完整但无法解码的视频仍由卡片给出真实错误。
+// 参考音频必须确实装箱且大小一致，不能从工程清单偷带外部地址。
+/** @param {import('@illusion-realm/shared').UserDataInfiniteCanvas['nodes'][number]} node @param {Map<string, {size: number}>} assets */
+function validAudioReference(node, assets) {
+  const media = node.data.audioParameters?.reference;
+  return !media || media.size === assets.get(media.path)?.size
+    && media.path.startsWith("Audio/") && EXTENSIONS.audio.includes(path.extname(media.path).slice(1).toLowerCase());
+}
+
+/** @param {unknown} value @param {number} payloadSize @returns {value is import('@illusion-realm/shared').CanvasArchive} */
 function validManifest(value, payloadSize) {
   if (!value || typeof value !== "object" || !("format" in value) || value.format !== "illusion-realm-canvas" || !("version" in value) || value.version !== 1) return false;
   if (!("document" in value) || !validDocument(value.document) || !("assets" in value) || !Array.isArray(value.assets) || value.assets.length > 5000) return false;
@@ -257,7 +292,7 @@ function validManifest(value, payloadSize) {
     assets.set(asset.path, asset); size += asset.size;
   }
   if (!Number.isSafeInteger(size) || size !== payloadSize) return false;
-  return value.document.nodes.every(node => !node.data.media || assets.has(node.data.media.path) && node.data.media.size === assets.get(node.data.media.path).size && node.data.media.path.startsWith(`${DIRECTORIES[node.data.media.kind]}/`) && EXTENSIONS[node.data.media.kind].includes(path.extname(node.data.media.path).slice(1).toLowerCase()));
+  return value.document.nodes.every(node => validAudioReference(node, assets) && (node.data.composition?.assets ?? []).every(({media}) => assets.has(media.path) && media.size === assets.get(media.path).size && media.path.startsWith(`${DIRECTORIES[media.kind]}/`) && EXTENSIONS[media.kind].includes(path.extname(media.path).slice(1).toLowerCase())) && (node.data.inputImages ?? []).every(image => assets.has(image.path) && image.size === assets.get(image.path).size && image.path.startsWith("Picture/") && EXTENSIONS.image.includes(path.extname(image.path).slice(1).toLowerCase())) && imageReferences(node.data.scene).every(ref => assets.has(ref.path) && ref.path.startsWith("Picture/") && EXTENSIONS.image.includes(path.extname(ref.path).slice(1).toLowerCase())) && (!node.data.media || assets.has(node.data.media.path) && node.data.media.size === assets.get(node.data.media.path).size && node.data.media.path.startsWith(`${DIRECTORIES[node.data.media.kind]}/`) && EXTENSIONS[node.data.media.kind].includes(path.extname(node.data.media.path).slice(1).toLowerCase())));
 }
 
 // 限制清单读取尺寸，后续素材逐份流出；截断、尾随字节和版本错误都拒绝。
@@ -337,7 +372,7 @@ async function readManifest(file) {
 // 回滚之后重新抛错，不能因清理成功而向用户报告工程导入成功。
 // 用户离开页面时主进程可能仍完成解包，渲染会话负责忽略迟到结果。
 // 已完整恢复但未被页面接收的目录不会被当作损坏工程随意清除。
-// 当前没有垃圾收集任务，避免误删其他仍被草稿或历史引用的资产。
+// 解包成功的副本明确登记，后续回收仍要等保存关闭并核对全部工程引用。
 // 包中不包含撤销栈；导入完成作为新的作品基线，而不是重放旧电脑动作。
 async function readArchive(file, root) {
   const { manifest, offset: initial } = await readManifest(file);
@@ -355,15 +390,28 @@ async function readArchive(file, root) {
       if (await digest(target) !== asset.sha256) throw new Error("canvas-project-checksum-failed");
       offset += asset.size;
     }
-    const document = manifest.document;
-    document.workspace = workspace;
-    for (const node of document.nodes) if (node.data.media) node.data.media.path = path.join(directory, node.data.media.path);
+    const document = restoreReferences(manifest.document, workspace, directory);
+    const unique = new Map(document.nodes.flatMap(node => nodeReferences(node)).map(ref => [ref.path, ref]));
+    await require('./resource-ledger').registerResources(root, workspace, [...unique.values()].map(ref => ({ path: ref.path, kind: ref.kind, name: path.basename(ref.path), size: 0 })), 'archive');
     return document;
   } catch (error) {
     // directory 刚刚由本调用独占创建，且位于 root 内；只回滚自己的导入资产。
     await fs.promises.rm(directory, { recursive: true, force: true });
     throw error;
   }
+}
+// 所有素材校验通过后才统一回填新路径，不让半份恢复文档进入编辑器。
+/**
+ * @param {import('@illusion-realm/shared').UserDataInfiniteCanvas} document
+ * @param {Awaited<ReturnType<typeof allocateWorkspace>>} workspace
+ * @param {string} directory
+ */
+function restoreReferences(document, workspace, directory) {
+  document.workspace = workspace;
+  for (const node of document.nodes) {
+    for (const ref of nodeReferences(node)) ref.set(path.join(directory, ref.path));
+  }
+  return document;
 }
 // 只导出明确的归档与清单能力，不提供任意目录解压工具。
 // 调用者不能从模块取得已打开文件句柄或内部随机临时路径。
@@ -377,4 +425,4 @@ async function readArchive(file, root) {
 // 没有压缩线程池，性能主要受磁盘吞吐与两遍摘要读取影响。
 // 多次请求的界面互斥由调用方 Hook 管理，服务不冒充全局任务调度器。
 // 将来若做取消或进度，需要另立明确作业契约，不能伪造当前百分比。
-module.exports = { writeArchive, readArchive, readManifest, validManifest };
+module.exports = { writeArchive, readArchive, readManifest, validManifest, nodeReferences, digest };

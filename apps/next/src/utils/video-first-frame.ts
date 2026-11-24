@@ -11,18 +11,25 @@ function frameDataUrl(video: HTMLVideoElement): string | undefined {
   return canvas.toDataURL("image/jpeg", 0.8);
 }
 
-export function videoFirstFrame(src: string): Promise<string | undefined> {
+/** 允许列表在滚出视野或关闭后中止读取；不支持解码时返回空封面。 */
+export function videoFirstFrame(src: string, signal?: AbortSignal): Promise<string | undefined> {
+  if (signal?.aborted) return Promise.resolve(undefined);
   return new Promise((resolve) => {
     const video = document.createElement("video");
     let settled = false;
     const finish = (thumbnail?: string) => {
       if (settled) return;
       settled = true; clearTimeout(timer);
+      signal?.removeEventListener("abort", abort);
       video.onloadeddata = null; video.onerror = null;
       video.removeAttribute("src"); video.load();
       resolve(thumbnail);
     };
+    const abort = () => finish();
     const timer = setTimeout(() => finish(), 8000);
+    signal?.addEventListener("abort", abort, { once: true });
+    // 本地媒体协议按应用来源授权，启用匿名跨域读取后才能导出首帧小图。
+    video.crossOrigin = "anonymous";
     video.muted = true; video.playsInline = true; video.preload = "auto";
     video.onloadeddata = () => {
       try { finish(frameDataUrl(video)); } catch { finish(); }

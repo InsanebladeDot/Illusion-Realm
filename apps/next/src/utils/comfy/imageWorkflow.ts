@@ -1,5 +1,5 @@
 /**
- * 文生图工作流（Anima / SDXL 两套 JSON）的加载与参数填槽。
+ * 加载文生图模板，并在副本里写入本次任务的参数。
  *
  * 怎么做：import 静态工作流 JSON → 深拷贝 → 按参数名把提示词 / 模型 / LoRA /
  * 采样参数写进对应节点，产出可直接提交的 API prompt。
@@ -7,14 +7,20 @@
 import type { ComfyApiPrompt } from "@/types/comfy";
 import animaWorkflowJson from "@/data/comfy/imageWorkflower/Anima/标准anima生成流.json";
 import sdxlWorkflowJson from "@/data/comfy/imageWorkflower/SDXL/标准SDXL生成.json";
+import mossWorkflowJson from "@/data/comfy/imageWorkflower/Moss_Image/文生图.json";
 import { t } from "@/i18n";
 import { cloneComfyPrompt } from "@/utils/comfy/workflowToApi";
 // 图片与视频共用槽位校验，只把当前图片工作流的 CLIP/VAE 交给辅助设置。
 // 参数随队列深拷贝，后续改选只影响下一次生成。
+import { alignImageModelDefaults } from "./image-core-models";
 import { applyWorkflowAuxiliaryOverrides, type VideoModelOverrides } from "./video-workflow-models";
 
 /** 图像生成工作流系列（对应创建页模型系列） */
-export type ImageWorkflowSeries = "anima" | "sdxl";
+export type ImageWorkflowSeries = "anima" | "sdxl" | "moss";
+
+export function resolveImageWorkflowSeries(id: string): ImageWorkflowSeries {
+  return id === "sdxl" || id === "moss" ? id : "anima";
+}
 
 export type LoraPromptItem = {
   name: string;
@@ -22,6 +28,7 @@ export type LoraPromptItem = {
 };
 
 export type ImageWorkflowParams = {
+  upscale?: import("./seedvr2-workflow").UpscaleSettings;
   positivePrompt?: string;
   negativePrompt?: string;
   seed?: number;
@@ -33,6 +40,7 @@ export type ImageWorkflowParams = {
   width?: number;
   height?: number;
   batchSize?: number;
+  slg?: boolean;
   /** Anima → UNETLoader.unet_name；SDXL → CheckpointLoaderSimple.ckpt_name */
   checkpointName?: string;
   /** 按 UI 扩展顺序链式加载；空数组表示不加载 LoRA */
@@ -52,11 +60,12 @@ type WorkflowNode = {
 /**
  * 图像工作流注册表：任务规范要求 Anima / 传统 SDXL 分开管理，
  * 工作流 JSON 位于 src/data/comfy/imageWorkflower/<系列>/。
- * Anima 工作流的 VAE/CLIP 已固定绑定（CLIPLoader/VAELoader），不开放给用户选择。
+ * 有独立 CLIP、VAE 加载节点时，可以用当前任务的选择覆盖模板。
  */
 const IMAGE_WORKFLOWS: Record<ImageWorkflowSeries, ComfyApiPrompt> = {
   anima: animaWorkflowJson as ComfyApiPrompt,
   sdxl: sdxlWorkflowJson as ComfyApiPrompt,
+  moss: mossWorkflowJson as ComfyApiPrompt,
 };
 // UI 与提交使用同一模板来源，文件改名后的默认展示不会另维护一份常量。
 // 返回深拷贝，设置组件读取它不会污染下一次图片或编辑生成。
@@ -68,7 +77,7 @@ const IMAGE_WORKFLOWS: Record<ImageWorkflowSeries, ComfyApiPrompt> = {
 // 克隆不替换节点 id，设置面板拿到的键才能直接用于实际生成。
 // 读取模板本身不注入提示词、随机种子或用户 LoRA，展示不会改变生成草稿。
 export function getImageWorkflowTemplate(series: ImageWorkflowSeries): ComfyApiPrompt {
-  return cloneComfyPrompt(IMAGE_WORKFLOWS[series]);
+  return alignImageModelDefaults(cloneComfyPrompt(IMAGE_WORKFLOWS[series]), series);
 }
 
 function findNodes(
@@ -108,7 +117,7 @@ function resolveTextEncodeNodeId(
 function extractWorkflowDefaults(series: ImageWorkflowSeries) {
   const prompt = IMAGE_WORKFLOWS[series];
   const sampler = findNode(prompt, "KSampler");
-  const latent = findNode(prompt, "EmptyLatentImage");
+  const latent = findNode(prompt, "EmptyLatentImage") ?? findNode(prompt, "EmptyFlux2LatentImage");
   return {
     cfg: (sampler?.node.inputs.cfg as number) ?? 3,
     steps: (sampler?.node.inputs.steps as number) ?? 15,
@@ -146,10 +155,25 @@ export const IMAGE_WORKFLOW_DEFAULTS = getImageWorkflowDefaults("sdxl");
  */
 const LORA_NODE_ID_START = 100;
 
+/** LoRA 按表单顺序串接，只处理模型线，不碰文本编码器。 */
+function appendImageLoras(prompt: ComfyApiPrompt, base: [string, number], loras: LoraPromptItem[]): [string, number] {
+  let previous = base;
+  for (const [index, lora] of loras.entries()) {
+    const id = String(LORA_NODE_ID_START + index);
+    prompt[id] = {
+      class_type: "LoraLoaderModelOnly",
+      inputs: { lora_name: lora.name, strength_model: lora.strength ?? 1, model: previous },
+    };
+    previous = [id, 0];
+  }
+  return previous;
+}
+
 function injectUserLoras(
   prompt: ComfyApiPrompt,
   samplerId: string,
-  loras: LoraPromptItem[]
+  loras: LoraPromptItem[],
+  baseModel?: [string, number]
 ): void {
   const sampler = prompt[samplerId];
   if (!sampler) return;
@@ -157,9 +181,9 @@ function injectUserLoras(
   // 链首固定为模型加载器（Anima → UNETLoader，SDXL → CheckpointLoaderSimple）
   const loader =
     findNode(prompt, "UNETLoader") ?? findNode(prompt, "CheckpointLoaderSimple");
-  const baseLink = loader
+  const baseLink = baseModel ?? (loader
     ? ([loader.id, 0] as [string, number])
-    : (sampler.inputs.model as [string, number] | undefined);
+    : (sampler.inputs.model as [string, number] | undefined));
 
   if (loras.length === 0) {
     // 零 LoRA 边界：KSampler.model 直连加载器（工作流自带 LoRA 栈时不覆盖）
@@ -170,23 +194,23 @@ function injectUserLoras(
     return;
   }
 
-  let previous = baseLink;
-  if (!Array.isArray(previous)) return;
+  if (Array.isArray(baseLink)) sampler.inputs.model = appendImageLoras(prompt, baseLink, loras);
+}
 
-  loras.forEach((lora, index) => {
-    const nodeId = String(LORA_NODE_ID_START + index);
-    prompt[nodeId] = {
-      class_type: "LoraLoaderModelOnly",
-      inputs: {
-        lora_name: lora.name,
-        strength_model: lora.strength ?? 1.0,
-        model: previous,
-      },
-    };
-    previous = [nodeId, 0];
-  });
-
-  sampler.inputs.model = previous;
+/** SLG 像给模型管线加岔道，开关两边共用注意力后端和 LoRA。 */
+function connectMossModel(prompt: ComfyApiPrompt, samplerId: string, params: ImageWorkflowParams) {
+  const modelSwitch = findNode(prompt, "ComfySwitchNode");
+  const slg = findNode(prompt, "SkipLayerGuidanceDiTSimple");
+  const attention = findNode(prompt, "ModelAttentionBackend");
+  if (!modelSwitch || !slg || !attention) throw Error(t("create.moss.invalidWorkflow"));
+  const sampler = prompt[samplerId];
+  injectUserLoras(prompt, samplerId, params.loras ?? [], [attention.id, 0]);
+  const model = sampler.inputs.model;
+  slg.node.inputs.model = model;
+  modelSwitch.node.inputs.switch = params.slg === true;
+  modelSwitch.node.inputs.on_true = [slg.id, 0];
+  modelSwitch.node.inputs.on_false = model;
+  sampler.inputs.model = [modelSwitch.id, 0];
 }
 
 /** 输出节点判定：ComfyUI 要求 API Prompt 至少有一个输出节点，否则报 prompt_no_outputs */
@@ -203,25 +227,10 @@ function assertHasOutputNode(prompt: ComfyApiPrompt, series: ImageWorkflowSeries
   }
 }
 
-/** 把用户参数注入对应系列的工作流 API Prompt */
-export function buildImagePrompt(
-  series: ImageWorkflowSeries,
-  params: ImageWorkflowParams = {}
-): ComfyApiPrompt {
-  const base = IMAGE_WORKFLOWS[series];
-  if (!base) {
-    throw new Error(t("errors.imageWorkflow.unknownSeries", { series }));
-  }
-  const prompt = cloneComfyPrompt(base);
-
-  const sampler = findNode(prompt, "KSampler");
-  if (!sampler) {
-    throw new Error(t("errors.imageWorkflow.missingSampler", { series }));
-  }
-  const samplerNode = sampler.node;
-
-  const positiveId = resolveTextEncodeNodeId(prompt, sampler.id, "positive");
-  const negativeId = resolveTextEncodeNodeId(prompt, sampler.id, "negative");
+function applyImageSampling(prompt: ComfyApiPrompt, samplerId: string, params: ImageWorkflowParams) {
+  const samplerNode = prompt[samplerId];
+  const positiveId = resolveTextEncodeNodeId(prompt, samplerId, "positive");
+  const negativeId = resolveTextEncodeNodeId(prompt, samplerId, "negative");
 
   if (params.positivePrompt != null && positiveId) {
     prompt[positiveId].inputs.text = params.positivePrompt;
@@ -245,7 +254,11 @@ export function buildImagePrompt(
     samplerNode.inputs.denoise = params.denoise;
   }
 
-  const latent = findNode(prompt, "EmptyLatentImage");
+}
+
+/** Moss 使用 Flux2 的空图节点，尺寸和批次仍写入工作流本身。 */
+function applyImageModelInputs(prompt: ComfyApiPrompt, params: ImageWorkflowParams) {
+  const latent = findNode(prompt, "EmptyLatentImage") ?? findNode(prompt, "EmptyFlux2LatentImage");
   if (latent) {
     if (params.width != null) latent.node.inputs.width = params.width;
     if (params.height != null) latent.node.inputs.height = params.height;
@@ -262,8 +275,19 @@ export function buildImagePrompt(
     modelLoader.node.inputs[key] = params.checkpointName;
   }
 
-  // LoRA 注入：模型链由加载器 → LoRA(100…) → KSampler，CLIP 链路不动
-  injectUserLoras(prompt, sampler.id, params.loras ?? []);
+}
+
+/** 用当前系列的模板生成本次提交给 ComfyUI 的工作流。 */
+export function buildImagePrompt(series: ImageWorkflowSeries, params: ImageWorkflowParams = {}): ComfyApiPrompt {
+  const base = IMAGE_WORKFLOWS[series];
+  if (!base) throw Error(t("errors.imageWorkflow.unknownSeries", { series }));
+  const prompt = getImageWorkflowTemplate(series);
+  const sampler = findNode(prompt, "KSampler");
+  if (!sampler) throw Error(t("errors.imageWorkflow.missingSampler", { series }));
+  applyImageSampling(prompt, sampler.id, params);
+  applyImageModelInputs(prompt, params);
+  if (series === "moss") connectMossModel(prompt, sampler.id, params);
+  else injectUserLoras(prompt, sampler.id, params.loras ?? []);
   // LoRA 注入不改变 CLIP/VAE 的节点身份，辅助覆盖最后写入实际提交图。
   // 路径和槽位校验失败交给生成入口提示，不能悄悄回落到另一个模型。
   applyWorkflowAuxiliaryOverrides(prompt, params.modelOverrides);

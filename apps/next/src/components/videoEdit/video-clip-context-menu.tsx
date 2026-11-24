@@ -1,4 +1,6 @@
 "use client";
+import { HoverTip } from "@/components/hover-tip";
+
 
 /** 界面：「区间右键菜单」。所有入口只传区间 ID 与操作回调，速度面板和菜单读取同一份效果。 */
 import { ContextMenuItem, ContextMenuSeparator, ContextMenuCaption } from "@/components/context-menu-item";
@@ -101,7 +103,7 @@ export function VideoClipContextMenu(props: VideoClipContextMenuProps) {
     <div data-video-clip-menu>
       <EffectControls clip={props.clip} onChange={props.onChange} />
       <ClipMenuActions {...props} />
-      <div title={t("toolBox.video.clipMenu.previewHint")}><ContextMenuCaption>{props.clip.name}</ContextMenuCaption></div>
+      <HoverTip asChild layer="window" label={(t("toolBox.video.clipMenu.previewHint")) ?? ""}><div><ContextMenuCaption>{props.clip.name}</ContextMenuCaption></div></HoverTip>
     </div>
   </ContextMenuShell>;
 }

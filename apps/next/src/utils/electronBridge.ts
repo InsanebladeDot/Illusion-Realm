@@ -25,7 +25,7 @@ import { LocalModelMetadataEntrySchema, ReadLocalModelMetadataArgsSchema, type L
 // 补全入口同时验证请求和响应，不让旧 preload 的缺失能力静默成功。
 // 本模块不读取模型字节，也不获取主进程保存的 Civitai 密钥。
 // 主进程仍会独立验证路径，不依赖这里的客户端 schema 作为授权。
-import { LocalModelRecoveryResultSchema, RecoverLocalModelArgsSchema } from "@illusion-realm/shared";
+import { LocalModelHashResultSchema, LocalModelRecoveryResultSchema, RecoverLocalModelArgsSchema } from "@illusion-realm/shared";
 
 /**
  * 只提交用户选择的具体版本路径，不把相邻版本或整个目录交给识别器。
@@ -48,6 +48,14 @@ export async function recoverLocalModelMetadata(filePath: string) {
   // 明确区分传输失败与业务 data.status，UI 不推断 HTTP 状态码。
   // 返回模型结果不含来源文件原始 JSON，展示仍使用只读规范化接口。
   return LocalModelRecoveryResultSchema.parse(unwrapIpc(await api.recoverLocalModelMetadata(model)));
+}
+
+/** 用户点击后才读取权重；传输失败交给批量面板逐项显示。 */
+export async function hashLocalModel(filePath: string) {
+  const api = getElectronAPI();
+  if (!api?.hashLocalModel) throw new Error("desktop");
+  const [model] = RecoverLocalModelArgsSchema.parse([filePath]);
+  return LocalModelHashResultSchema.parse(unwrapIpc(await api.hashLocalModel(model)));
 }
 
 /** 模型来源 JSON 和 LoRA 触发词共用这条只读链路，旧版 preload 明确失败而不是伪装为空。 */

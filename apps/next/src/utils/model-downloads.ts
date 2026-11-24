@@ -1,5 +1,5 @@
 /** Native download bridge: validate requests, flush settings, and translate stable native errors. */
-import { ModelDownloadRequestSchema, type ModelDownloadLocation, type ModelDownloadError, type ModelDownloadRequest } from "@illusion-realm/shared";
+import { ModelDownloadTargetRequestSchema, ModelDownloadRequestSchema, type ModelDownloadLocation, type ModelDownloadError, type ModelDownloadRequest } from "@illusion-realm/shared";
 import { t } from "@/i18n";
 import { unwrapIpc } from "@/utils/ipcResult";
 import { flushUserDataSave } from "@/utils/userDataStorage";
@@ -8,9 +8,11 @@ import { getModelDownloadAPI } from "@/utils/electronBridge";
 export function modelDownloadApi() {
   return getModelDownloadAPI();
 }
-export async function getModelDownloadTarget(location: ModelDownloadLocation) {
+export async function getModelDownloadTarget(location: ModelDownloadLocation & { modelName?: string }) {
+  const input = ModelDownloadTargetRequestSchema.safeParse(location);
+  if (!input.success) throw new Error("invalid");
   await flushUserDataSave();
-  return unwrapIpc(await modelDownloadApi().modelDownloadTarget(location));
+  return unwrapIpc(await modelDownloadApi().modelDownloadTarget(input.data));
 }
 export async function startModelDownload(request: ModelDownloadRequest) {
   if (!ModelDownloadRequestSchema.safeParse(request).success) throw new Error("invalid");

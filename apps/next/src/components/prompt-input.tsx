@@ -9,9 +9,11 @@
  * 工具条定位依赖相对容器，正文预留底部空间，长文本不会压住助手图标。
  */
 import { useLayoutEffect, useRef, type HTMLAttributes } from "react";
+import type { CompositionSize } from "@/view/create/moss-composition/composition-draft";
 import { PromptAssistantToolbar } from "@/components/prompt-assistant/prompt-assistant-toolbar";
 import { ACCENT_FOCUS_RING_CLASS, INPUT_BORDER_CLASS, PROMPT_EDITOR_SCROLL_CLASS } from "@/utils/layout";
 import { cn } from "@/utils/cn";
+import { usePromptSpeechHighlight } from "@/hooks/use-prompt-speech-highlight";
 
 // HTML 属性透传 label、测试标记与 data-placeholder，不重复定义另一套可访问接口。
 // id 同时是 label 目标与助手上下文标识，一页内必须唯一。
@@ -37,12 +39,17 @@ interface PromptInputProps extends Omit<HTMLAttributes<HTMLDivElement>, "onChang
   // 高级组装由各分类输入负责助手，主表面不重复提供另一个写入口。
   // 普通正反向与编辑指令默认具有相同的功能工具条。
   assistant?: boolean;
+  compositionSize?: CompositionSize;
   // 未设置限长时不截断普通图片提示词，保留原有工具的文本容量。
   // 编辑明确传入三千字限制，手动和助手都使用同一截断点。
   maxLength?: number;
   // 使用项目已存在的高度类，响应式布局仍由父级表单决定。
   // 短负面输入与较高正向输入共用同一正文和滚动机制。
   minHeight?: string;
+  // H3 调用方注入资源规则；输入本身不决定模型类型，也不解析磁盘路径。
+  preparePrompt?: (value: string) => string;
+  restorePrompt?: (value: string, input: string) => string;
+  referenceKey?: string;
 }
 
 /**
@@ -57,7 +64,7 @@ interface PromptInputProps extends Omit<HTMLAttributes<HTMLDivElement>, "onChang
  * spellCheck=false 延续原图片输入行为，提示词不出现系统拼写下划线。
  * suppressContentEditableWarning 只说明正文由 DOM 管理，不忽略输入异常。
  */
-export function PromptInput({ id, value, onValueChange, disabled = false, assistant = true, maxLength, minHeight = "min-h-36", className, ...props }: PromptInputProps) {
+export function PromptInput({ id, value, onValueChange, disabled = false, assistant = true, maxLength, minHeight = "min-h-36", className, preparePrompt, restorePrompt, referenceKey, compositionSize, ...props }: PromptInputProps) {
   // layout effect 仅做同步文本校正，不等待 rAF；遮挡窗口也能恢复正确草稿。
   // 空字符串必须同步，用于用户主动清空或重置预设。
   // 不把 undefined 回退为空值，否则普通图片工具写入的 DOM 会被重绘抹掉。
@@ -69,6 +76,7 @@ export function PromptInput({ id, value, onValueChange, disabled = false, assist
   // 客户端布局 effect 不读取 Node 或 Electron，仅操作当前 DOM 引用。
   // read 返回 trim 与旧 readEditableText 保持一致，手动状态仍保留原始空格。
   const element = useRef<HTMLDivElement>(null);
+  usePromptSpeechHighlight(element);
   useLayoutEffect(() => { if (value !== undefined && element.current && element.current.textContent !== value) element.current.textContent = value; }, [value]);
   // 文本助手可能跨异步等待返回，因此读 DOM 的当前禁用状态而非旧闭包值。
   // 写入前截断，字数显示、导出与生成都读取同一受控文本。
@@ -92,6 +100,6 @@ export function PromptInput({ id, value, onValueChange, disabled = false, assist
   // 透传标记落在正文元素，既有读文本和测试选择器仍指向实际输入。
   return <div className="relative min-w-0"><div {...props} id={id} ref={element} role="textbox" aria-multiline="true" aria-disabled={disabled} contentEditable={disabled ? false : "plaintext-only"} suppressContentEditableWarning spellCheck={false} onInput={(event) => write(event.currentTarget.textContent ?? "")} className={cn("whitespace-pre-wrap break-words rounded-lg bg-background px-3 pb-10 pt-2 text-base outline-none focus-visible:ring-1 md:text-sm", minHeight, PROMPT_EDITOR_SCROLL_CLASS, ACCENT_FOCUS_RING_CLASS, INPUT_BORDER_CLASS, className)} />
     {/* 界面：复用提示词助手的复制、翻译、撤销与设置，不绘制无功能的占位图标。 */}
-    {assistant && !disabled && <PromptAssistantToolbar contextId={id} read={() => element.current?.textContent?.trim() ?? ""} write={write} />}
+    {assistant && !disabled && <PromptAssistantToolbar contextId={id} compositionSize={compositionSize} mossPresetScope={!!compositionSize} maxLength={maxLength} prepare={preparePrompt} restore={restorePrompt} referenceKey={referenceKey} read={() => element.current?.textContent?.trim() ?? ""} write={write} />}
   </div>;
 }

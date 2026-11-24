@@ -1,5 +1,7 @@
 "use client";
 
+import { HoverTip } from "@/components/hover-tip";
+
 import { useCallback, useEffect, useRef, useState, type RefObject } from "react";
 import { Check, ChevronDown, Eye, ImagePlus, Plus, ShieldCheck } from "lucide-react";
 import { useTranslation } from "@/i18n";
@@ -7,6 +9,9 @@ import { useAgentStore, type AgentPermission } from "@/stores/useAgentStore";
 import { cn } from "@/utils/cn";
 import { THIN_BORDER_CLASS } from "@/utils/layout";
 import { filesToAttachments, pickImageFiles } from "@/view/agent/AgentAttachments";
+import { useAgentProviderStore } from '@/stores/use-agent-provider-store';
+import { useModelImageCapability } from '@/hooks/use-model-image-capability';
+import { imageCapabilityHint } from '@/utils/provider-image-capability';
 
 /** 触发器（+ / 权限）共用外观：与 Codex 一致 —— 小圆角、静音色、悬停有底 */
 const TRIGGER_CLASS = cn(
@@ -51,6 +56,8 @@ function useDismissPopover(
  */
 export function AgentAddMenu() {
   const { t } = useTranslation();
+  const preferences = useAgentProviderStore(state => state.preferences);
+  const capability = useModelImageCapability(preferences.provider, preferences.models[preferences.provider] || undefined);
   const addAttachments = useAgentStore((state) => state.addAttachments);
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -58,6 +65,7 @@ export function AgentAddMenu() {
   useDismissPopover(ref, open, close);
 
   const handlePick = async () => {
+    if (capability !== true) return;
     close();
     const files = await pickImageFiles();
     if (files.length > 0) addAttachments(filesToAttachments(files));
@@ -65,18 +73,18 @@ export function AgentAddMenu() {
 
   return (
     <div ref={ref} className="relative">
-      <button
+      <HoverTip asChild label={capability === true ? t("agent.composer.addMenuLabel") : imageCapabilityHint(capability)}><span className="inline-flex"><button
         type="button"
         data-agent-add
+        disabled={capability !== true}
         aria-haspopup="menu"
         aria-expanded={open}
         aria-label={t("agent.composer.addMenuLabel")}
-        title={t("agent.composer.addMenuLabel")}
         onClick={() => setOpen((previous) => !previous)}
-        className={cn(TRIGGER_CLASS, "w-7 justify-center gap-0 px-0")}
+        className={cn(TRIGGER_CLASS, "w-7 justify-center gap-0 px-0 disabled:cursor-not-allowed disabled:opacity-40")}
       >
         <Plus className="h-4 w-4" />
-      </button>
+      </button></span></HoverTip>
 
       {open ? (
         <div data-agent-add-menu role="menu" className={PANEL_CLASS}>
@@ -87,6 +95,7 @@ export function AgentAddMenu() {
             type="button"
             role="menuitem"
             data-agent-add-image
+            disabled={capability !== true}
             onClick={() => void handlePick()}
             className={ITEM_CLASS}
           >
@@ -96,7 +105,7 @@ export function AgentAddMenu() {
                 {t("agent.composer.addImage")}
               </span>
               <span className="block text-[11px] leading-4 text-muted-foreground">
-                {t("agent.composer.addImageHint")}
+                {capability === true ? t("agent.composer.addImageHint") : imageCapabilityHint(capability)}
               </span>
             </span>
           </button>
@@ -134,21 +143,20 @@ export function AgentPermissionMenu() {
 
   return (
     <div ref={ref} className="relative">
-      <button
+      <HoverTip asChild label={(t("agent.composer.permissionChange")) ?? ""}><button
         type="button"
         data-agent-permission
         data-agent-permission-value={permission}
         aria-haspopup="menu"
         aria-expanded={open}
         aria-label={t("agent.composer.permission")}
-        title={t("agent.composer.permissionChange")}
         onClick={() => setOpen((previous) => !previous)}
         className={TRIGGER_CLASS}
       >
         <CurrentIcon className="h-3.5 w-3.5" />
         {label(permission)}
         <ChevronDown className="h-3 w-3 opacity-60" />
-      </button>
+      </button></HoverTip>
 
       {open ? (
         <div data-agent-permission-menu role="menu" className={PANEL_CLASS}>

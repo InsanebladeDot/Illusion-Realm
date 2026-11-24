@@ -1,4 +1,6 @@
 "use client";
+import { HoverTip } from "@/components/hover-tip";
+
 
 // 侧栏父级与其他库共用，字母和分类只是其内部可组合内容。
 // 统一宽度和主题边界，避免同一个modal里出现两套浅色背景。
@@ -176,11 +178,11 @@ function CategoryRow({
   onClick: () => void;
 }) {
   return (
-    <button
+    <HoverTip asChild layer="window" label={(title ?? label) ?? ""}><button
       type="button"
       {...{ [`data-${prefix}-category`]: title ?? label }}
       aria-pressed={selected}
-      title={title ?? label}
+
       onClick={onClick}
       className={cn(
         "relative flex w-full items-center rounded-md px-2 py-1.5 text-left text-sm transition-colors",
@@ -197,6 +199,6 @@ function CategoryRow({
       ) : null}
       <Tag className="mr-1.5 h-3.5 w-3.5 shrink-0 opacity-60" />
       <span className={cn("truncate", selected && "font-medium")}>{label}</span>
-    </button>
+    </button></HoverTip>
   );
 }

@@ -17,6 +17,7 @@ export type ComfyRemoteVideo = {
 
 export type ComfyRemoteGenerateResult = {
   promptId: string;
+  executionMs?: number;
   images: ComfyRemoteImage[];
   videos: ComfyRemoteVideo[];
 };

@@ -1,0 +1,14 @@
+/* 上层原图只裁切右边；两层完整适配同一容器，原始像素和文件都不改写。 */
+.compare { position: relative; width: 100%; height: 100%; overflow: hidden; background: var(--hy-node); }
+.original, .result { position: absolute; inset: 0; }
+.original { z-index: 2; }
+.result { z-index: 1; }
+.left, .right { position: absolute; top: 8px; z-index: 3; border-radius: 4px; padding: 3px 7px; background: var(--hy-panel); color: var(--hy-text); font-size: 11px; pointer-events: none; }
+.left { left: 8px; }
+.right { right: 8px; }
+.compare .divider { position: absolute; top: 0; bottom: 0; z-index: 4; width: 26px; padding: 0; margin: 0; transform: translateX(-50%); border: 0; border-radius: 0; background: transparent; cursor: ew-resize; touch-action: none; color: var(--hy-text); }
+.divider::before { position: absolute; top: 0; bottom: 0; left: 12px; width: 1px; background: var(--hy-text); content: ""; box-shadow: 0 0 2px var(--hy-canvas); }
+.divider svg { position: relative; padding: 2px; width: 26px; height: 26px; border-radius: 50%; background: var(--hy-panel); }
+.divider:focus-visible svg { outline: 1px solid var(--hy-selected); outline-offset: 2px; }
+.status { position: absolute; left: 8px; right: 8px; bottom: 8px; z-index: 3; display: flex; align-items: center; gap: 8px; padding: 6px 8px; background: var(--hy-panel); color: var(--hy-muted); font-size: 11px; }
+.empty { display: grid; place-items: center; width: 100%; height: 100%; padding: 20px; color: var(--hy-muted); text-align: center; font-size: 12px; }

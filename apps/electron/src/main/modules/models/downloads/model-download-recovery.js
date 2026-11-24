@@ -5,13 +5,13 @@
  * 完成记录继续保留；模型已提交但封面未完成时，不重复下载已验证模型。
  * 恢复失败保留任务并显示错误，不能因为外接盘暂时不可用就把任务从队列删除。
  */
-const fs = require("fs/promises"), path = require("path");
+const fs = require("fs/promises");
 const { checkFolder, fileIdentity } = require("./model-download-files");
-const { downloadTarget, isInside } = require("./model-download-paths");
+const { matchesDownloadFolder } = require("./model-download-paths");
 /** @typedef {import("./model-download-persistence").SavedDownload} SavedDownload */
 /**
  * 继续和清理前重新验证当前配置根目录，磁盘快照不是任意文件操作的授权。
- * 模型布局固定为 root/category/model，目标必须恰好处于这两层子目录中。
+ * 按请求重算新旧保存路径，旧断点继续使用原文件夹。
  * 不能仅比较字符串前缀，否则 Root-other 也可能被当作 Root 内部目录。
  * checkFolder 还验证原 realpath，目录被换成 junction 或被移动后必须拒绝写入。
  * 未更改配置的合法断点保持原路径，不重新创建一个新目录来隐藏旧文件。
@@ -19,8 +19,11 @@ const { downloadTarget, isInside } = require("./model-download-paths");
  * @param {SavedDownload["request"]} request @param {string} folder @param {string} realFolder
  */
 function authorizeResume(request, folder, realFolder) {
-  const root = downloadTarget(request).rootPath;
-  if (!isInside(root, folder) || path.dirname(path.dirname(folder)) !== path.resolve(root)) throw new Error("configuration");
+  if (request.setupId) {
+    if (folder !== require("./setup-download-paths").setupFolder(request.setupId)) throw new Error("configuration");
+    checkFolder(folder, realFolder); return;
+  }
+  if (!matchesDownloadFolder(request, folder)) throw new Error("configuration");
   checkFolder(folder, realFolder);
 }
 /**
@@ -86,6 +89,7 @@ async function inspectFile(file) {
  */
 async function recoverRecord(record) {
   const task = { ...record.task, revision: record.task.revision + 1, bytesPerSecond: 0 }, next = { ...record, task };
+  if (task.queued) task.queued = false;
   if (task.status === "completed") return next;
   try {
     authorizeResume(record.request, task.folderPath, record.realFolder);

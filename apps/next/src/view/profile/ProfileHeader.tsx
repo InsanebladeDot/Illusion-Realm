@@ -1,4 +1,6 @@
 "use client";
+import { HoverTip } from "@/components/hover-tip";
+
 
 import { useRef, useState, type ReactNode } from "react";
 import { ImagePlus, RotateCcw, SquarePen } from "lucide-react";
@@ -25,8 +27,8 @@ function ProfileCover({ onEdit, children }: { onEdit: () => void; children: Reac
   return <header className="pr-banner" data-profile-cover>
     <img src={cover ?? PROFILE_REFERENCE_ART.banner} alt={t("profile.cover.preview")} className="pr-banner-image" /><div className="pr-banner-wash" />{children}
     <div className="pr-cover-actions">
-      {cover && <button type="button" onClick={() => setCover(null)} className={buttonClass} aria-label={t("profile.cover.reset")} title={t("profile.cover.reset")}><RotateCcw size={14} /></button>}
-      <button type="button" className={buttonClass} title={t("profile.cover.hint")} onClick={() => input.current?.click()}><ImagePlus size={14} /><span>{t("profile.cover.change")}</span></button>
+      {cover && <HoverTip asChild layer="window" label={(t("profile.cover.reset")) ?? ""}><button type="button" onClick={() => setCover(null)} className={buttonClass} aria-label={t("profile.cover.reset")}><RotateCcw size={14} /></button></HoverTip>}
+      <HoverTip asChild layer="window" label={(t("profile.cover.hint")) ?? ""}><button type="button" className={buttonClass} onClick={() => input.current?.click()}><ImagePlus size={14} /><span>{t("profile.cover.change")}</span></button></HoverTip>
       <button type="button" onClick={onEdit} className={buttonClass}><SquarePen size={14} />{t("profile.ui.edit")}</button>
     </div>
     <input ref={input} type="file" accept="image/*" className="hidden" aria-label={t("profile.cover.change")} onChange={event => { const file = event.target.files?.[0]; event.target.value = ""; void choose(file); }} />
@@ -73,7 +75,7 @@ export function ProfileHeader({ onEdit, sample }: ProfileHeaderProps) {
     {/* 界面：资料横幅内头像、昵称与社交统计；样例数字不写入真实资料。 */}
     <div className="pr-identity"><button type="button" className="pr-avatar" onClick={onEdit} aria-label={t("profile.ui.edit")}>
       {avatar || sample ? <img src={avatar ?? PROFILE_REFERENCE_ART.avatar} alt={username} /> : getProfileInitials(username)}
-    </button><div className="pr-identity-copy"><div className="pr-name"><h1 title={username}>{username}</h1>{sample && <span>{t("profile.ui.level")}</span>}</div>
+    </button><div className="pr-identity-copy"><div className="pr-name"><HoverTip asChild layer="window" label={(username) ?? ""}><h1>{username}</h1></HoverTip>{sample && <span>{t("profile.ui.level")}</span>}</div>
       <p className="pr-bio">{bio || (sample ? t("profile.ui.defaultBio") : "")}</p><AccountDetails /><ProfileStats sample={sample} />
     </div></div>
     <blockquote>{t("profile.ui.quoteFirst")}<br />{t("profile.ui.quoteLast")}</blockquote>

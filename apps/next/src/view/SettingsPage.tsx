@@ -23,7 +23,7 @@ import { LocalModelList } from "@/view/settings/LocalModelList";
 import { useIsHydrated } from "@/hooks/useIsHydrated";
 import { CivitaiApiKeySetting } from "@/view/settings/CivitaiApiKeySetting";
 import { CivitaiContentSetting } from "@/view/settings/civitai-content-setting";
-import { PromptApiKeySetting } from "@/view/settings/prompt-api-key-setting";
+import { PromptApiKeySetting, EuzhiImageApiKeySetting } from "@/view/settings/prompt-api-key-setting";
 
 const PATH_KEYS: SettingsPathKey[] = [
   "searchPath",
@@ -172,6 +172,12 @@ export function SettingsPage() {
       {show("keys") && <section className={cn("space-y-4 rounded-2xl bg-background p-4 sm:p-6", INPUT_BORDER_CLASS)}>
         <div><h2 className="text-base font-semibold text-foreground">{t("settings.civitai.title")}</h2><p className="mt-1 text-xs text-muted-foreground">{t("settings.civitai.subtitle")}</p></div>
         <CivitaiApiKeySetting />
+      </section>}
+
+      {/* 设置：图片密钥单独展示；表单与提示词助手复用，凭据分区完全独立。 */}
+      {show("keys") && <section id="euzhi-images" className={cn("scroll-mt-28 space-y-4 rounded-2xl bg-background p-4 sm:p-6", INPUT_BORDER_CLASS)}>
+        <h2 className="text-base font-semibold text-foreground">{t("settings.euzhiImages.title")}</h2>
+        <EuzhiImageApiKeySetting />
       </section>}
 
       {show("keys") && <section id="prompt-keys" className={cn("scroll-mt-28 space-y-4 rounded-2xl bg-background p-4 sm:p-6", INPUT_BORDER_CLASS)}>

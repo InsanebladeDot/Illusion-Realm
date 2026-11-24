@@ -1,0 +1,273 @@
+{
+  "1": {
+    "inputs": {
+      "unet_name": "Minimax\\minimax_h3_image\\minimax_h3_fl2va_pruned_int8_convrot.safetensors",
+      "weight_dtype": "fp8_e5m2"
+    },
+    "class_type": "UNETLoader",
+    "_meta": {
+      "title": "UNet加载器",
+      "cnr_id": "comfy-core",
+      "ver": "0.43.0"
+    }
+  },
+  "2": {
+    "inputs": {
+      "clip_name": "Minimax\\MiniMax_h3_image\\p-h3-image_text_encoder_int8_convrot\\p-h3-image_text_encoder_int8_convrot.safetensors",
+      "type": "minimax",
+      "device": "default"
+    },
+    "class_type": "CLIPLoader",
+    "_meta": {
+      "title": "Text encoder",
+      "cnr_id": "comfy-core",
+      "ver": "0.43.0"
+    }
+  },
+  "3": {
+    "inputs": {
+      "vae_name": "Minimax\\MiniMax_h3_image\\p-h3-image_vae_int8_convrot\\p-h3-image_vae_int8_convrot.safetensors"
+    },
+    "class_type": "VAELoader",
+    "_meta": {
+      "title": "加载VAE",
+      "cnr_id": "comfy-core",
+      "ver": "0.43.0"
+    }
+  },
+  "6": {
+    "inputs": {
+      "upscale_method": "lanczos",
+      "megapixels": 0.4,
+      "resolution_steps": 32,
+      "image": [
+        "26",
+        0
+      ]
+    },
+    "class_type": "ImageScaleToTotalPixels",
+    "_meta": {
+      "title": "Upsampler vision size",
+      "cnr_id": "comfy-core",
+      "ver": "0.43.0"
+    }
+  },
+  "9": {
+    "inputs": {
+      "prompt": "subject_definitions:\n  Subject 1 is the green-haired woman holding a stemmed glass filled with iced black tea.\n  The background consists of liquor bottles, shelving, and a bar counter.\n\nsummary:\n  [keyframe completion] Create a near-black nighttime scene and replace the drink in the character's glass with iced black tea.\n\nretention_analysis:\n  Preserve the original composition, character identity, pose, expression, body proportions, clothing, accessories, and background objects.\n  Keep the glass shape, position, and the character's grip unchanged.\n  Change only the drink, lighting, exposure, and atmospheric color.\n\ndetailed_description:\n  Anime digital illustration style. [Shot 1] Replace the drink inside the existing stemmed glass with translucent reddish-brown iced black tea containing several clearly visible ice cubes. Add subtle condensation to the outside of the glass. Preserve the glass rim's contact with the character's lips and the original hand placement. The bar remains enveloped in deep, near-black nighttime shadows. Remove the bright golden shelf illumination. A controlled, soft-edged light illuminates the character's face and shoulders, fading gently across the clothing. Faint cool reflections trace the hair, glass rim, and ice cubes, making the iced tea recognizable without brightening the overall scene. Preserve natural anatomy and original body proportions. Static camera, single still image.\n\noverall_soundscape:\n  N/A\n\nnon_diegetic_music:\n  N/A",
+      "width": [
+        "27",
+        0
+      ],
+      "height": [
+        "27",
+        1
+      ],
+      "clip": [
+        "2",
+        0
+      ],
+      "vae": [
+        "3",
+        0
+      ],
+      "images.image_1": [
+        "6",
+        0
+      ]
+    },
+    "class_type": "PH3ImageConditioning",
+    "_meta": {
+      "title": "p-h3-image Conditioning",
+      "cnr_id": "comfy-core",
+      "ver": "0.43.0"
+    }
+  },
+  "10": {
+    "inputs": {
+      "model": [
+        "18",
+        0
+      ],
+      "conditioning": [
+        "9",
+        0
+      ]
+    },
+    "class_type": "BasicGuider",
+    "_meta": {
+      "title": "基本引导器",
+      "cnr_id": "comfy-core",
+      "ver": "0.43.0"
+    }
+  },
+  "11": {
+    "inputs": {
+      "sampler_name": "er_sde"
+    },
+    "class_type": "KSamplerSelect",
+    "_meta": {
+      "title": "K采样器选择",
+      "cnr_id": "comfy-core",
+      "ver": "0.43.0"
+    }
+  },
+  "12": {
+    "inputs": {
+      "noise_seed": 691899913323484
+    },
+    "class_type": "RandomNoise",
+    "_meta": {
+      "title": "随机噪波",
+      "cnr_id": "comfy-core",
+      "ver": "0.43.0"
+    }
+  },
+  "13": {
+    "inputs": {
+      "sigmas": "1.0, 0.984753, 0.967905, 0.951688, 0.925372, 0.881923, 0.810083, 0.528718, 0.0"
+    },
+    "class_type": "ManualSigmas",
+    "_meta": {
+      "title": "自定义Sigmas",
+      "cnr_id": "comfy-core",
+      "ver": "0.43.0"
+    }
+  },
+  "14": {
+    "inputs": {
+      "noise": [
+        "12",
+        0
+      ],
+      "guider": [
+        "10",
+        0
+      ],
+      "sampler": [
+        "11",
+        0
+      ],
+      "sigmas": [
+        "13",
+        0
+      ],
+      "latent_image": [
+        "9",
+        1
+      ]
+    },
+    "class_type": "SamplerCustomAdvanced",
+    "_meta": {
+      "title": "自定义采样器（高级）",
+      "cnr_id": "comfy-core",
+      "ver": "0.43.0"
+    }
+  },
+  "15": {
+    "inputs": {
+      "samples": [
+        "14",
+        0
+      ],
+      "vae": [
+        "3",
+        0
+      ]
+    },
+    "class_type": "VAEDecode",
+    "_meta": {
+      "title": "VAE解码",
+      "cnr_id": "comfy-core",
+      "ver": "0.43.0"
+    }
+  },
+  "16": {
+    "inputs": {
+      "filename_prefix": "image_p_h3_image_edit",
+      "images": [
+        "15",
+        0
+      ]
+    },
+    "class_type": "SaveImage",
+    "_meta": {
+      "title": "保存图像",
+      "cnr_id": "comfy-core",
+      "ver": "0.43.0"
+    }
+  },
+  "18": {
+    "inputs": {
+      "shift_video": 1,
+      "shift_audio": 1,
+      "model": [
+        "19",
+        0
+      ]
+    },
+    "class_type": "MiniMaxH3SigmaShift",
+    "_meta": {
+      "title": "ModelSamplingMiniMaxH3 (keep at 1.0)",
+      "cnr_id": "comfy-core",
+      "ver": "0.43.0"
+    }
+  },
+  "19": {
+    "inputs": {
+      "lora_name": "Minimax\\MiniMax_h3_image\\p-h3-image_lora_bf16\\p-h3-image_lora_bf16.safetensors",
+      "strength_model": 1,
+      "model": [
+        "1",
+        0
+      ]
+    },
+    "class_type": "LoraLoaderModelOnly",
+    "_meta": {
+      "title": "LoRA加载器（仅模型）"
+    }
+  },
+  "20": {
+    "inputs": {
+      "compare_view": {
+        "__value__": [
+          "",
+          ""
+        ]
+      },
+      "image_a": [
+        "16",
+        0
+      ],
+      "image_b": [
+        "6",
+        0
+      ]
+    },
+    "class_type": "ImageCompare",
+    "_meta": {
+      "title": "图像对比"
+    }
+  },
+  "26": {
+    "inputs": {
+      "image": "image.png"
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "加载图像"
+    }
+  },
+  "27": {
+    "inputs": {
+      "image": [
+        "6",
+        0
+      ]
+    },
+    "class_type": "GetImageSize",
+    "_meta": {
+      "title": "获取图像尺寸"
+    }
+  }
+}

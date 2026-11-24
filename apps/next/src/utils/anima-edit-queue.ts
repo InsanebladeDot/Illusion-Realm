@@ -7,7 +7,10 @@
  * 任务缩略图与编辑画布分别拥有 URL，清空草稿不影响公共任务历史。
  */
 import { enqueueGenerationTask, snapshotGeneration, generationSaveTarget } from "@/utils/image-generation-queue";
+import type { GenerationOutputTarget } from "@/utils/image-generation-queue";
 import { runAnimaEdit } from "@/utils/comfy/run-anima-edit";
+import { assertWorkflowModelsInstalled } from "@/utils/workflow-model-readiness";
+import { workflowModelDraft } from "@/utils/workflow-model-draft";
 import { buildAnimaEditPrompt, type AnimaEditSettings } from "@/utils/comfy/anima-edit-workflow";
 import { useGenerationTaskStore } from "@/stores/useGenerationTaskStore";
 import { useGenerationNoticeStore } from "@/stores/useGenerationNoticeStore";
@@ -28,19 +31,19 @@ import type { EditPhase, EditSource } from "@/stores/use-anima-edit-store";
  * 阶段通知同时更新表单与卡片，卡片状态沿用已有生成/保存枚举。
  * checking/uploading 在全局卡片归入活动生成，表单保留更具体的阶段文字。
  */
-export function enqueueAnimaEdit(source: EditSource, value: AnimaEditSettings, onPhase: (phase: EditPhase) => void) {
+export function enqueueAnimaEdit(source: EditSource, value: AnimaEditSettings, onPhase: (phase: EditPhase) => void, references: EditSource[] = [], target?: GenerationOutputTarget) {
   // 深克隆保证等待期间 LoRA 数组也不再变化，不能只复制最外层对象。
   // 纯构建先验证长度、范围和 seed；服务端模型存在性仍在执行时刷新。
   // 本机原文件名只用于预校验，最终 prompt 使用上传服务确认的名称。
-  const settings = structuredClone(value); buildAnimaEditPrompt(settings, source.file.name);
+  // 任务和工作流共用首图的解码尺寸，后续参考图只参与内容生成。
+  const outputSize = { width: source.width, height: source.height };
+  const settings = { ...structuredClone(value), outputSize }, files = references.map(item => item.file);
+  // 队列持有不可变 File，后续删图或换工作流不影响已排队请求。
+  assertWorkflowModelsInstalled(workflowModelDraft(buildAnimaEditPrompt(settings, source.file.name, files.map(item => item.name)), { upscale: settings.upscale }));
   // 这里只取通用队列的运行上下文，不把编辑当成一次文生图来构建。
   // 模型摘要用于卡片，实际推理图仍完全由 runAnimaEdit 构建。
   // 源尺寸用于排队前估算，不能把 0×0 的占位值当成已知结果。
-  const input = snapshotGeneration({ positivePrompt: settings.instruction, checkpointName: settings.checkpointName });
-  // LLLite 模板从源图读取宽高，不能用旧参考链的 MP 缩放预估任务尺寸。
-  // 普通文字编辑保持原缩放规则，两类任务最终都由实际结果解码修正。
-  // 蒙版保留原尺寸可避免笔迹与图像错位，边缘图也不在上传前再次缩放。
-  const scale = settings.controlMode ? 1 : Math.sqrt(settings.megapixels * 1e6 / (source.width * source.height));
+  const input = snapshotGeneration({ positivePrompt: settings.instruction, checkpointName: settings.checkpointName }, target);
   // phase 在模块闭包中同步更新，取消不依赖 React 是否完成下一帧提交。
   // 队列等待期间没有远端会话，因此初始值必须是 queued。
   // onPhase 不保存组件 setter，调用者使用常驻 store 的 patch。
@@ -53,7 +56,7 @@ export function enqueueAnimaEdit(source: EditSource, value: AnimaEditSettings, o
   // 任务元数据是提交摘要，不包含 File 字节、用户绝对路径或凭据。
   // source.file 由执行闭包保留，离开页面后仍能完成尚未开始的上传。
   // pending 任务撤回后整个闭包释放，不产生额外的上传缓存。
-  return enqueueGenerationTask({ prompt: settings.instruction, model: settings.checkpointName, width: Math.max(8, Math.round(source.width * scale / 8) * 8), height: Math.max(8, Math.round(source.height * scale / 8) * 8), total: 1, folderId: input.folderId }, async (id, signal) => {
+  return enqueueGenerationTask({ prompt: settings.instruction, model: settings.checkpointName, ...outputSize, total: 1, folderId: input.folderId }, async (id, signal) => {
     // 执行器被调用意味着 FIFO 已放行，排队时绝不提前开始目录解析或上传。
     // 通知与任务卡片此时才切为活动，不能覆盖前一任务的运行提示。
     // 目录解析可能跨 IPC 等待，返回后先判断期间有没有显式取消。
@@ -65,7 +68,7 @@ export function enqueueAnimaEdit(source: EditSource, value: AnimaEditSettings, o
     // generating 标记在安全生成 IPC 前同步设置，使停止总能定位 requestId。
     // signal 由公共队列持有，页面卸载不触发 abort。
     // 上传回包或模型刷新等待结束后，执行器仍会检查 signal。
-    const result = await runAnimaEdit(source.file, settings, { id, signal, server: input.server, output: target.path, onPhase: (next) => { phase = next; onPhase(next); update(id, { status: next === "saving" ? "saving" : "generating" }); } });
+    const result = await runAnimaEdit(source.file, settings, { id, signal, server: input.server, output: target.path, modelAttention: input.modelAttention, onPhase: (next) => { phase = next; onPhase(next); update(id, { status: next === "saving" ? "saving" : "generating" }); } }, files);
     // 成功返回已经包含落盘确认，只有此时可以增加完成数量并展示保存路径。
     // 全局任务保留原 URL；编辑画布另建 URL，任务历史裁剪不能破坏当前结果。
     // Blob 字节本身可复用，创建另一个 URL 不重新下载或重编码图片。

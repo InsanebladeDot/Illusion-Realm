@@ -1,4 +1,6 @@
 "use client";
+import { HoverTip } from "@/components/hover-tip";
+
 
 // 本地库排序仅组织已有文件索引，菜单复用公共外部关闭与视口避让。
 // 日期和大小来自扫描 stat，标记来自本地来源中已经保存的触发词。
@@ -6,7 +8,7 @@
 // 没有书签的书放末尾，不把“未知”当零以制造看似准确的排序。
 // 读取标记只访问小型旁车 JSON，绝不启动模型哈希和 Civitai 网络匹配。
 // 共享菜单外壳处理 Portal、Escape 和外部点击，本模块只负责两组选择。
-import { useRef, useState, type KeyboardEvent } from "react";
+import { useMemo, useRef, useState, type KeyboardEvent } from "react";
 import { ArrowDownUp, Check, ChevronDown } from "lucide-react";
 import { ContextMenuShell } from "@/components/context-menu-shell";
 import { useLocalModelMetadata } from "@/hooks/use-local-model-metadata";
@@ -48,6 +50,20 @@ export function useSortedLocalModels(models: LocalLibraryFile[], order: ModelSor
   // 这个字段不代表收藏、NSFW 标签或网上热度，入口提示写明真实来源。
   // 本次没有新增用户标记写入功能，也没有另一份落盘缓存需要迁移。
   // 网络不可用不会影响已保存词条读取；缺失资料不会自动联网补齐。
+  // 点击详情只改变选中项，输入集合与排序条件不变时保留原排序数组。
+  // 元数据读取完成仍会替换 entries，标记排序不会被缓存成第一次的空值。
+  // 比较器留在 memo 内部，闭包读取的字段与依赖一一对应。
+  // 未知项置尾和同名路径回退仍使用下面同一套规则，不复制比较逻辑。
+  // sorted 不写回全局模型索引，创建页原有顺序和身份继续保持独立。
+  const sorted = useMemo(() => {
+  // order.field 与 direction 使用标量依赖，父组件创建新 order 外壳不会失效。
+  // metadata.entries 稳定为空时，不读取标记的名称排序也可真正复用结果。
+  // 有旁车返回时 entries 引用变化，未知项会按实际词条重新找到位置。
+  // 再次打开详情不改变 models 身份，原排序无需重新遍历每一张卡片。
+  // 日期与大小仍来自每个具体版本的 stat，不借用同目录另一版本的数值。
+  // 比较器中的 fallback 没有反转，切方向不打乱同属性的稳定次序。
+  // sortLoading 和 sortFailed 留在 memo 外，状态文字不因数组复用停滞。
+  // 避免按 revision 单独记一份永久排序缓存，输入集合变化自然触发重算。
   const marks = new Map(metadata.entries.map(entry => [entry.filePath, entry.metadata?.trainedWords.slice().sort().join(", ") || undefined]));
   // 每张卡片已被适配成单个版本，数组第一项就是该文件的属性。
   // 不取目录分组大小，目录下可能同时放着几份不同体积的量化权重。
@@ -95,7 +111,9 @@ export function useSortedLocalModels(models: LocalLibraryFile[], order: ModelSor
   // 标记读取失败时空 Map 触发名称回退，已显示模型仍然可浏览。
   // 用户可以手动重扫后重新读取，不在后台自动重试大型模型任务。
   // 其他排序字段忽略旁车失败，文件名和 stat 仍是独立可用的数据。
-  return { models: models.slice().sort(compare), loading: order.field === "mark" && metadata.loading, failed: order.field === "mark" && metadata.failed };
+  return models.slice().sort(compare);
+  }, [models, order.field, order.direction, metadata.entries]);
+  return { models: sorted, loading: order.field === "mark" && metadata.loading, failed: order.field === "mark" && metadata.failed };
 }
 
 // 上下键在菜单内循环，Home/End 可以直接到第一项或最后一项。
@@ -173,7 +191,7 @@ export function LocalModelSort({ order, onChange }: { order: ModelSortOrder; onC
     {/* 拦截范围只限此按钮，不能阻止菜单外真实点击关闭。 */}
     {/* 图标随文字同行且保留完整命中区域，不要求点中很小的箭头。 */}
     {/* 标题反映两个真实状态，菜单收起后仍可悬停核对当前规则。 */}
-    <button ref={trigger} type="button" data-local-sort-trigger aria-haspopup="menu" aria-expanded={!!position} title={t(`toolBox.civitai.localSort.${order.field}`) + " · " + t(`toolBox.civitai.localSort.${order.direction}`)} onPointerDown={event => { if (position) event.stopPropagation(); }} onKeyDown={event => { if (event.key === "ArrowDown" && !position) { event.preventDefault(); open(); } }} onClick={() => position ? close() : open()} className="flex h-8 items-center gap-1.5 border-l border-border px-3 text-xs text-muted-foreground focus-visible:outline-2 focus-visible:outline-primary"><ArrowDownUp size={14} /><span>{t("toolBox.civitai.localSort.title")}</span><ChevronDown size={12} /></button>
+    <HoverTip asChild layer="window" label={t(`toolBox.civitai.localSort.${order.field}`) + " · " + t(`toolBox.civitai.localSort.${order.direction}`)}><button ref={trigger} type="button" data-local-sort-trigger aria-haspopup="menu" aria-expanded={!!position} onPointerDown={event => { if (position) event.stopPropagation(); }} onKeyDown={event => { if (event.key === "ArrowDown" && !position) { event.preventDefault(); open(); } }} onClick={() => position ? close() : open()} className="flex h-8 items-center gap-1.5 border-l border-border px-3 text-xs text-muted-foreground focus-visible:outline-2 focus-visible:outline-primary"><ArrowDownUp size={14} /><span>{t("toolBox.civitai.localSort.title")}</span><ChevronDown size={12} /></button></HoverTip>
     {/* 菜单外壳沿用共享主题、层级与视口避让，避免复制固定定位逻辑。 */}
     {/* 它挂到 body，搜索组的边框和裁切不会截断菜单。 */}
     {/* 没有声明 aria-modal，排序不是必须先关闭才能离开的业务对话框。 */}
@@ -181,7 +199,7 @@ export function LocalModelSort({ order, onChange }: { order: ModelSortOrder; onC
     {position && <ContextMenuShell {...position} label={t("toolBox.civitai.localSort.title")} onClose={() => close()} className="w-40 p-1.5">
       {/* 菜单浮层：每组共用参数映射，避免六个按钮各自维护不同点击规则。 */}
       {/* 标记来源写在提示中，不能让用户误以为这里是在线热门标签。 */}
-      <div role="group" aria-label={t("toolBox.civitai.localSort.title")}>{fields.map(field => <button key={field} data-local-sort-field={field} type="button" role="menuitemradio" aria-checked={order.field === field} title={field === "mark" ? t("toolBox.civitai.localSort.markHint") : undefined} onClick={() => { onChange({ ...order, field }); close(true); }} className="flex w-full items-center gap-2 rounded-md px-2 py-2 text-left text-xs hover:bg-muted focus:bg-muted focus:outline-none"><Check size={13} className={order.field === field ? "" : "invisible"} />{t(`toolBox.civitai.localSort.${field}`)}</button>)}</div>
+      <div role="group" aria-label={t("toolBox.civitai.localSort.title")}>{fields.map(field => <HoverTip key={field} asChild layer="window" label={(field === "mark" ? t("toolBox.civitai.localSort.markHint") : undefined) ?? ""}><button key={field} data-local-sort-field={field} type="button" role="menuitemradio" aria-checked={order.field === field} onClick={() => { onChange({ ...order, field }); close(true); }} className="flex w-full items-center gap-2 rounded-md px-2 py-2 text-left text-xs hover:bg-muted focus:bg-muted focus:outline-none"><Check size={13} className={order.field === field ? "" : "invisible"} />{t(`toolBox.civitai.localSort.${field}`)}</button></HoverTip>)}</div>
       <hr role="separator" className="my-1 border-border" />
       <div role="group" aria-label={t("toolBox.civitai.localSort.direction")}>{(["asc", "desc"] as const).map(direction => <button key={direction} data-local-sort-direction={direction} type="button" role="menuitemradio" aria-checked={order.direction === direction} onClick={() => { onChange({ ...order, direction }); close(true); }} className="flex w-full items-center gap-2 rounded-md px-2 py-2 text-left text-xs hover:bg-muted focus:bg-muted focus:outline-none"><Check size={13} className={order.direction === direction ? "" : "invisible"} />{t(`toolBox.civitai.localSort.${direction}`)}</button>)}</div>
     </ContextMenuShell>}

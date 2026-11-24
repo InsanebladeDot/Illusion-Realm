@@ -6,16 +6,19 @@
  */
 export const agent = {
   "providers": {
-    "siliconflow": "SiliconFlow", "euzhi": "Euzhi · Grok", "title": "Choose a chat model",
+    "imageSupported": "Image uploads supported", "imageUnsupported": "Text only · no images", "imageUnknown": "Image support unconfirmed",
+    "capabilityFilter": "Model capabilities", "allModels": "All models", "imagesOnly": "Image uploads · multimodal",
+    "sort": { "label": "Model order", "free-first": "Free first", "price-asc": "Price: low to high", "price-desc": "Price: high to low", "official": "Official order" },
+    "glm": "GLM", "siliconflow": "SiliconFlow", "euzhi": "Euzhi", "title": "Choose a chat model",
     // 应用只提交当前暂选，点击卡片时不再直接更换聊天模型。
     // 英文保持相同动作含义，不能把这一步描述成发起聊天。
     // 与中文键一致，按钮状态继续复用已有加载词条。
     "apply": "Apply",
-    "description": "Choose a provider and model using your own API key. Changes apply to the next conversation request.",
+    "description": "Choose a provider and model using its API key. Apply to use it for the next request.",
     "search": "Search models", "refresh": "Refresh", "input": "Input / million tokens", "output": "Output / million tokens",
     "free": "Free", "budget": "Budget", "premium": "Premium", "recommended": "Low cost pick", "unknownPrice": "Not published",
     "group": "Reference group: {group}", "longPrice": "Above {count} input tokens: input {input} / output {output} per million",
-    "unavailable": "Unavailable with this key", "unverified": "Key permissions not checked", "visible": "Listed for this key · inference not yet verified",
+    "unavailable": "Last request unavailable · refresh to retry", "unverified": "Selectable · checked when used", "visible": "Last request succeeded",
     "priceNote": "Published reference prices per million tokens. Groups, caching, long context and top-up discounts may change the bill.",
     "recommendNote": "Ranked by base price for one million input plus one million output tokens; newer versions break ties. Usage can change the cheapest choice.",
     "pricingLink": "View live provider pricing", "updated": "Prices checked: {time}", "live": "Live catalog", "cache": "Local cache", "snapshot": "Bundled reference catalog",
@@ -23,8 +26,11 @@ export const agent = {
     "refreshError": "Could not refresh the catalog or key visibility. The latest available reference data has been kept; try again later.",
     "loading": "Loading models…", "empty": "No matching available models", "saveFailed": "Could not save the model selection. Please retry.",
     "selectionUnavailable": "The model is unavailable or settings could not be loaded. Check the model picker and retry.",
-    "euzhiHelp": "Create an Euzhi API key and choose an available Grok group. Only Grok chat models are integrated here.",
-    "tokenLink": "Open Euzhi token settings", "keyIsolation": "Euzhi keys are stored separately on this device and are never shared with SiliconFlow."
+    "euzhiHelp": "Euzhi offers more than Grok. Token groups control model access and price multipliers; the Claude guide uses the Kiro group. Check the token group, model permissions and balance, then refresh. Public starting prices are not your token’s actual bill.",
+    "glmHelp": "Use a Zhipu API key and select a GLM chat model from its official price list.",
+    "glmKeyLink": "GLM API key setup",
+    "groupPrice": "{group}: input {input} / output {output} (per million tokens)",
+    "tokenLink": "Open Euzhi token settings", "keyIsolation": "Keys are isolated by provider. Agent and prompt transcreation share the selected provider’s credentials."
   },
   "title": "Agent",
   "newChat": "新聊天",

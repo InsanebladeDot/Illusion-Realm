@@ -1,4 +1,6 @@
 "use client";
+import { HoverTip } from "@/components/hover-tip";
+
 
 // 时间轴骨架复用一套工程时间坐标，先不挂载旧源片段修剪轴。
 // TimelineScrubber 是视频/GIF 的单源 trim，不能改名冒充多轨工程模型。
@@ -106,13 +108,13 @@ function TrackHeader({ track, locked, onLock, hidden, onVisibility }: { track: T
   const name = t(video ? "toolBox.editorUi.video" : track === "A1" ? "toolBox.editorUi.voice" : "toolBox.editorUi.music");
   // 轨道编号保留在可访问名称与悬停提示里，窄头部只展示同一排紧凑图标。
   // 锁和显隐仍走原工程回调；音量与独奏尚未接混音，不能仅换图标就开放。
-  return <div data-editor-region="R08" data-editor-track-head={track} className={styles.trackHeader} aria-label={`${track} · ${name}`} title={`${track} · ${name}`}>
+  return <HoverTip asChild layer="window" label={`${track} · ${name}`}><div data-editor-region="R08" data-editor-track-head={track} className={styles.trackHeader} aria-label={`${track} · ${name}`}>
     {video ? <MonitorPlay size={14} aria-hidden="true" /> : <Music2 size={14} aria-hidden="true" />}
     <EditorAction appearance="plain" icon={locked ? Lock : LockOpen} label={t("toolBox.editorUi.lock")} pressed={onLock ? !!locked : undefined} compact onClick={onLock} />
     {video && <EditorAction appearance="plain" icon={hidden ? EyeOff : Eye} label={t("toolBox.editorUi.visibility")} pressed={onVisibility ? !hidden : undefined} onClick={onVisibility} compact />}
     <EditorAction appearance="plain" icon={Volume2} label={t("toolBox.editorUi.mute")} compact />
     <EditorAction appearance="plain" compact glyph="S" label={t("toolBox.editorUi.solo")} />
-  </div>;
+  </div></HoverTip>;
 }
 
 // R09 所有片段共享位置、选中外框和手柄，内部通过媒体类型换封面或波形。

@@ -1,33 +1,3 @@
-﻿import type { ImageAsset } from "./common";
-
-export type PresetPromptOption = {
-  id: string;
-  name: string;
-  positivePrefix: string;
-  positiveSuffix?: string;
-  negativePrefix: string;
-  negativeSuffix?: string;
-  isDefault?: boolean;
-  isCustom?: boolean;
-  seriesId?: string;
-};
-
-export type CustomPresetForm = {
-  name: string;
-  positivePrefix: string;
-  positiveSuffix: string;
-  negativePrefix: string;
-  negativeSuffix: string;
-};
-
-export type PresetPromptSeries = {
-  id: string;
-  label: string;
-  icon: ImageAsset;
-  description: string;
-  presets: PresetPromptOption[];
-};
-
 /** 鍙嶅悜鎻愮ず璇嶉璁撅紙鍐呯疆 + 鐢ㄦ埛鑷畾涔夛紝鍚庤€呮寔涔呭寲鍒扮敤鎴锋暟鎹枃浠讹級 */
 export type NegativePromptPreset = {
   id: string;

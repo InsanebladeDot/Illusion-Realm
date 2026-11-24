@@ -1,4 +1,6 @@
 "use client";
+import { HoverTip } from "@/components/hover-tip";
+
 
 import { useState } from "react";
 import Image from "next/image";
@@ -163,13 +165,13 @@ export function CharacterDetailDialog({
               {t("characters.detail.triggerLabel")}
             </p>
             <div className="flex items-center gap-2">
-              <div
+              <HoverTip asChild layer="window" label={(character.trigger) ?? ""}><div
                 data-character-trigger
                 className="h-10 min-w-0 flex-1 truncate rounded-lg border-0 bg-muted px-3 text-sm leading-10 text-foreground"
-                title={character.trigger}
+
               >
                 {character.trigger || t("characters.detail.noTrigger")}
-              </div>
+              </div></HoverTip>
               <button
                 type="button"
                 data-character-add-lora
@@ -298,9 +300,9 @@ export function CharacterDetailDialog({
               {t("characters.detail.rating")}
               {character.rating.up} / {character.rating.down}
             </span>
-            <span className="ml-auto truncate" title={character.slug}>
+            <HoverTip asChild layer="window" label={(character.slug) ?? ""}><span className="ml-auto truncate">
               {character.slug}
-            </span>
+            </span></HoverTip>
           </div>
         </div>
       </div>

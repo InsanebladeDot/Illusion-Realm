@@ -1,4 +1,6 @@
 "use client";
+import { HoverTip } from "@/components/hover-tip";
+
 
 import type { RefObject } from "react";
 import {
@@ -57,16 +59,16 @@ function TransportButton({
   children: React.ReactNode;
 }) {
   return (
-    <button
+    <HoverTip asChild layer="window" label={(label) ?? ""}><button
       type="button"
-      title={label}
+
       aria-label={label}
       disabled={disabled}
       onClick={onClick}
       className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-sm text-white/85 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline-2 focus-visible:outline-white disabled:opacity-40"
     >
       {children}
-    </button>
+    </button></HoverTip>
   );
 }
 
@@ -101,14 +103,14 @@ export function PreviewStage({
   return (
     <section className="overflow-hidden rounded-xl border border-border bg-background">
       <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-2">
-        <span className="min-w-0 truncate text-xs text-muted-foreground" title={clipLabel}>
+        <HoverTip asChild layer="window" label={(clipLabel) ?? ""}><span className="min-w-0 truncate text-xs text-muted-foreground">
           {clipTotal > 1 && (
             <span className="mr-2 rounded bg-muted px-1.5 py-0.5 font-mono text-[11px] text-foreground">
               {clipIndex + 1}/{clipTotal}
             </span>
           )}
           {clipLabel}
-        </span>
+        </span></HoverTip>
         <span className="shrink-0 font-mono text-xs text-muted-foreground">
           {formatTime(currentTime, true)} / {formatTime(duration, true)}
         </span>
@@ -157,13 +159,11 @@ export function PreviewStage({
         >
           <StepBack className="h-4 w-4" />
         </TransportButton>
-        <button
-          type="button"
-          title={
-            playing
+        <HoverTip asChild layer="window" label={(playing
               ? t("toolBox.videoEdit.preview.pause")
-              : t("toolBox.videoEdit.preview.play")
-          }
+              : t("toolBox.videoEdit.preview.play")) ?? ""}><button
+          type="button"
+
           aria-label={
             playing
               ? t("toolBox.videoEdit.preview.pause")
@@ -178,7 +178,7 @@ export function PreviewStage({
           ) : (
             <Play className="ml-0.5 h-5 w-5" />
           )}
-        </button>
+        </button></HoverTip>
         <TransportButton
           label={t("toolBox.videoEdit.preview.forwardOneFrame")}
           disabled={disabled}
@@ -223,16 +223,16 @@ export function PreviewStage({
         </span>
         {/* 界面：「导出当前帧」按钮 */}
         {onExportFrame && (
-          <button
+          <HoverTip asChild layer="window" label={(t("toolBox.video.exportFrameHint")) ?? ""}><button
             type="button"
             disabled={disabled}
             onClick={onExportFrame}
-            title={t("toolBox.video.exportFrameHint")}
+
             className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border bg-background px-3 text-xs font-medium text-foreground transition-colors hover:bg-muted disabled:opacity-40"
           >
             <Camera className="h-4 w-4" />
             {t("toolBox.video.exportFrame")}
-          </button>
+          </button></HoverTip>
         )}
         <button
           type="button"

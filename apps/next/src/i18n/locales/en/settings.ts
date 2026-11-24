@@ -57,6 +57,7 @@ export const settings = {
     "videoTitle": "Video processing settings",
     "videoDescription": "Use the video toolbox for video editing, equal-duration splitting and frame export."
   },
+  euzhiImages: {"title": "Euzhi image generation", "pricing": "Image2 pricing", "description": "Dedicated to canvas images, separate from Agent/prompt assistant Euzhi keys. Saving configures this device only and does not send a paid test request."},
   promptKeys: {
     title: "Prompt assistant",
     description: "GLM, proxies, Agent and Civitai each use their own platform key. Saving configures local storage; it does not validate API access.",
@@ -92,7 +93,7 @@ export const settings = {
   },
   "userDataSection": {
     "title": "User data",
-    "description": "Settings, profile and quick phrases are stored in a single JSON file."
+    "description": "Settings and profile information are stored in the user data JSON file."
   },
   "userDataPath": {
     "updated": "User data path updated — restart the app for it to take effect",

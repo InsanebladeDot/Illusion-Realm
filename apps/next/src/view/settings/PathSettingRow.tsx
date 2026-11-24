@@ -1,4 +1,6 @@
 "use client";
+import { HoverTip } from "@/components/hover-tip";
+
 
 import { FolderOpen } from "lucide-react";
 import { useTranslation } from "@/i18n";
@@ -31,17 +33,17 @@ export function PathSettingRow({
         </p>
       </div>
       <div className="flex w-full min-w-0 flex-col gap-2 sm:max-w-xl sm:flex-1">
-        <div
+        <HoverTip asChild layer="window" label={(value || t("settings.pathSection.empty")) ?? ""}><div
           className={cn(
             "flex min-h-10 items-center rounded-xl bg-muted/30 px-3 py-2 text-xs text-muted-foreground",
             INPUT_BORDER_CLASS
           )}
-          title={value || t("settings.pathSection.empty")}
+
         >
           <span className="truncate">
             {value || t("settings.pathSection.placeholder")}
           </span>
-        </div>
+        </div></HoverTip>
         <button
           type="button"
           disabled={disabled}

@@ -1,5 +1,9 @@
 "use client";
 
+import { HoverTip } from "@/components/hover-tip";
+
+import { SuspendedCanvases } from "@/view/infinite-canvas/suspended-canvases";
+import { useCanvasSessionsStore } from "@/stores/use-canvas-sessions-store";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { MAIN_NAV_ITEMS } from "@/data/navigation";
@@ -27,21 +31,22 @@ export function Sidebar() {
   const navigate = (event: React.MouseEvent, href: string, label: string, implemented: boolean) => {
     event.preventDefault();
     if (!implemented) { showNotImplementedToast(label); return; }
+    if (href === "/canvas") useCanvasSessionsStore.getState().showLibrary();
     if (href !== pathname) startPageNavigation({ href, push: () => router.push(href), direction: resolvePageDirection(pathname, href) });
   };
   return <nav data-app-nav className={cn("fixed left-0 top-[var(--window-chrome-height)] z-50 hidden h-[calc(100dvh-var(--window-chrome-height))] flex-col bg-shell transition-[width] md:flex", PANEL_RESIZE_MOTION)} aria-expanded={expanded}>
     <div className={cn("flex h-full flex-col items-center justify-between gap-2 p-2 pb-4", expanded ? "overflow-hidden" : "overflow-visible")}>
       <div className="flex min-h-0 w-full flex-col items-center gap-0.5">
-        {/* nav：直接展示业务导航，项目名统一保留在顶部标题栏。 */}
         {/** 首页和创建采用导航表原始顺序，与移动导航及转场方向保持一致。 */}
         {/** 不再在渲染时把创建排到首位，其他业务入口仍沿用配置中的顺序。 */}
         {/** 只改变展示顺序，选中状态继续按 href 匹配，不把首项当作默认当前页。 */}
         {MAIN_NAV_ITEMS.map(item => {
           const Icon = item.icon;
           return <div key={item.id} className="group relative w-full">
-            <Link href={item.href} title={!expanded ? t(item.label) : undefined} aria-current={pathname === item.href ? "page" : undefined} onClick={event => navigate(event, item.href, t(item.label), item.implemented)} className={cn("flex h-9 items-center gap-2 rounded-xl px-3 text-sm transition-all active:scale-[0.98]", expanded ? "w-full min-w-0" : "w-10 justify-center", pathname === item.href ? "bg-accent-soft text-accent-text" : "hover:bg-foreground/5")}><Icon className="h-4 w-4 shrink-0" />{expanded && <span className="truncate whitespace-nowrap">{t(item.label)}</span>}</Link>
+            <HoverTip asChild label={(!expanded ? t(item.label) : undefined) ?? ""} placement="right"><Link href={item.href} aria-current={pathname === item.href ? "page" : undefined} onClick={event => navigate(event, item.href, t(item.label), item.implemented)} className={cn("flex h-9 items-center gap-2 rounded-xl px-3 text-sm transition-all active:scale-[0.98]", expanded ? "w-full min-w-0" : "w-10 justify-center", pathname === item.href ? "bg-accent-soft text-accent-text" : "hover:bg-foreground/5")}><Icon className="h-4 w-4 shrink-0" />{expanded && <span className="truncate whitespace-nowrap">{t(item.label)}</span>}</Link></HoverTip>
           </div>;
         })}
+        <SuspendedCanvases expanded={expanded} />
       </div>
       {/* nav：原始透明角色插画；仅在展开且有足够空间时显示。 */}
       {expanded && <img data-sidebar-art src={sidebarRole.src} alt="" className="pointer-events-none mt-auto min-h-0 w-full object-contain object-bottom" />}

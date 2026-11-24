@@ -1,0 +1,44 @@
+/* 大图不铺灰色底板；预览背景只虚化当前画布，原工作区底色不改。 */
+.preview { position: relative; display: flex; flex-direction: column; height: 100%; width: 100%; min-height: 0; color: var(--hy-text); background: color-mix(in srgb, var(--hy-canvas) 58%, transparent); }
+.stage { flex: 1; min-height: 0; position: relative; padding: 64px 36px 14px; }
+.content { position: relative; display: grid; place-items: center; height: 100%; width: 100%; min-height: 0; overflow: hidden; background: transparent; }
+.surface { position: relative; width: 100%; height: 100%; flex-shrink: 0; border-radius: 7px; overflow: hidden; transition: transform .22s ease, width .22s ease, height .22s ease; }
+.surface > img { width: 100%; height: 100%; object-fit: contain; display: block; }
+/* 图片可直接抓取；对比线、视频和工具条仍使用各自的手势。 */
+.content img { cursor: grab; touch-action: none; user-select: none; }
+.content [data-image-compare] img { cursor: inherit; }
+.content[data-preview-dragging=true], .content[data-preview-dragging=true] img { cursor: grabbing; }
+.text { height: 100%; overflow: auto; padding: 24px; white-space: pre-wrap; overflow-wrap: anywhere; }
+/* 悬浮工具独立于媒体变换；鼠标经过footer/nav不唤出，键盘进入仍可操作。 */
+.tools { position: absolute; inset: 12px 12px auto; display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; z-index: 5; opacity: 0; pointer-events: none; transition: opacity .16s; }
+.preview[data-controls-visible=true] .tools { opacity: 1; pointer-events: auto; }
+.pill { display: inline-flex; align-items: center; justify-content: center; gap: 5px; padding: 4px 9px; border-radius: 999px; background: color-mix(in srgb, var(--hy-raised) 87%, transparent); color: var(--hy-text); font-size: 11px; line-height: 1.4; white-space: nowrap; box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--hy-line) 40%, transparent); }
+.pill i { display: block; width: 1px; height: 16px; background: var(--hy-line); margin: 0 2px; }
+.pill :global(.hy-icon-button) { border-radius: 50%; background: color-mix(in srgb, var(--hy-text) 10%, transparent); }
+.pill :global(.hy-icon-button):hover:not(:disabled) { background: color-mix(in srgb, var(--hy-text) 18%, transparent); }
+.zoom { position: absolute; left: 50%; transform: translateX(-50%); }
+.zoom output { min-width: 36px; text-align: center; font-weight: 600; }
+.zoom input { width: clamp(48px, 9vw, 100px); accent-color: var(--hy-text); height: 14px; }
+.close { margin-left: auto; padding: 4px; }
+.information { position: relative; }
+.metadata { position: absolute; top: calc(100% + 8px); left: 0; display: grid; grid-template-columns: auto auto; gap: 7px 18px; width: max-content; padding: 10px 12px; border-radius: 5px; background: #050505; color: #ccc; font-size: 11px; box-shadow: 0 4px 18px #0004; }
+.metadata[hidden] { display: none; }
+.metadata b { text-align: right; color: #eee; }
+.footer { flex-shrink: 0; padding: 0 12px 12px; }
+.summary { display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 14px; font-size: 11px; color: var(--hy-muted); }
+.summary .pill { height: 27px; padding: 3px 10px; }
+.summary :global(.hy-icon-button) { width: 17px; min-width: 17px; height: 17px; min-height: 17px; border-radius: 4px; background: transparent; box-shadow: inset 0 0 0 1px var(--hy-line); }
+.strip { overflow-x: auto; padding: 3px; scrollbar-width: thin; }
+.stripInner { display: flex; gap: 6px; width: max-content; margin-inline: auto; }
+.strip .thumbnail { position: relative; flex-shrink: 0; display: flex; align-items: center; justify-content: center; width: 96px; height: 56px; overflow: hidden; background: transparent; border: 1px solid transparent; border-radius: 8px; color: var(--hy-muted); }
+.strip .thumbnail[aria-pressed=true] { border-color: var(--hy-edge-selected); color: var(--hy-text); }
+.strip .thumbnail:hover { color: var(--hy-text); }
+.strip .thumbnail:focus-visible { box-shadow: inset 0 0 0 1px var(--hy-text); }
+.thumbnail :is(img,video) { width: 100%; height: 100%; object-fit: cover; pointer-events: none; border-radius: 7px; }
+.thumbnail > span:not([data-video-cover]) { position: absolute; bottom: 0; left: 0; max-width: 100%; padding: 2px 5px; background: #0005; color: white; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 10px; text-shadow: 0 1px 2px #000; }
+.srOnly { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+@media(max-width:760px) { .stage { padding: 64px 10px 12px; } .tools { inset: 8px 8px auto; gap: 4px; } .pill { padding: 3px 5px; gap: 3px; } .zoom input { width: 46px; } .footer { padding: 0 8px 8px; } }
+@media(max-width:480px) { .stage { padding-top: 100px; } .zoom { top: 42px; } }
+@media(prefers-reduced-motion:reduce) { .surface, .tools { transition: none; } }
+
+.preview:focus { outline: none; }

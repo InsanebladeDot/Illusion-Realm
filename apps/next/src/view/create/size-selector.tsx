@@ -1,4 +1,6 @@
 "use client";
+import { HoverTip } from "@/components/hover-tip";
+
 
 // 图片与视频共用的受控尺寸 UI；不读取业务 store，不请求接口，不计算模型分辨率。
 import { Ruler } from "lucide-react";
@@ -99,7 +101,7 @@ function SizeScaleControl({ scale, max, onChange }: { scale: number; max?: numbe
   // 超过常用范围的已确认值仍完整显示，不为放进滑条而截断实际参数。
   // max 保持可选也能表达同构调用的范围，本次只接图片和现有视频入口。
   const hint = max === undefined ? t("create.imageSizeSection.scaleHint") : t("create.imageSizeSection.scaleLimitedHint", { max });
-  return <div data-size-scale className="flex shrink-0 items-center gap-2" title={hint}>
+  return <HoverTip asChild layer="window" label={(hint) ?? ""}><div data-size-scale className="flex shrink-0 items-center gap-2">
     <span className="flex h-5 w-14 items-center px-1">
       {/* rail：倍率滑条保留，拖动与文字输入确认后使用同一个回调。 */}
       {/* 图片调整的是基准宽高，UI 不直接改预设或覆盖自定义基准。 */}
@@ -120,8 +122,8 @@ function SizeScaleControl({ scale, max, onChange }: { scale: number; max?: numbe
       {/* 小数草稿使用文本框，原生 number 会在 1. 这类中间状态提前清洗值。 */}
       {/* decimal 提供合适的输入键盘，数值范围仍在确认入口按业务 max 处理。 */}
       {/* 不把原生 step 的有效性当校验，1.26 可以完整输入后规范为 1.3。 */}
-      <input ref={inputRef} type="text" inputMode="decimal" value={draft}
-        data-size-scale-input aria-label={t("create.imageSizeSection.scale")} title={hint}
+      <HoverTip asChild layer="window" label={(hint) ?? ""}><input ref={inputRef} type="text" inputMode="decimal" value={draft}
+        data-size-scale-input aria-label={t("create.imageSizeSection.scale")}
         // 仅修改草稿，允许先清空再键入；摘要与实际生成仍读取确认值。
         // blur 包含鼠标点到其他控件与 Tab 离开，两者遵循相同确认规则。
         // 切换页面卸载时草稿自然释放，不把未提交内容写入用户文档。
@@ -144,8 +146,8 @@ function SizeScaleControl({ scale, max, onChange }: { scale: number; max?: numbe
         // 文本框保留紧凑倍率文字的占位，不增加会挤占空间的原生数字箭头。
         // 焦点边界读取现有语义变量，深浅主题不另建一套硬编码配色。
         // w-full 配合 min-w-0，让一位小数在窄 rail 中仍有稳定编辑空间。
-        className="h-6 w-full min-w-0 rounded border border-input bg-background px-0.5 text-right tabular-nums focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" />×
-    </span> : <button type="button" data-size-scale-value aria-label={t("create.imageSizeSection.scale")} title={hint}
+        className="h-6 w-full min-w-0 rounded border border-input bg-background px-0.5 text-right tabular-nums focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" /></HoverTip>×
+    </span> : <HoverTip asChild layer="window" label={(hint) ?? ""}><button type="button" data-size-scale-value aria-label={t("create.imageSizeSection.scale")}
       // 双击进入编辑，单击只聚焦，不与旁边拖动滑条争夺操作。
       // detail=0 的点击来自键盘或辅助技术，也允许直接进入同一编辑流程。
       // 开始时使用已确认的一位小数，不把上一轮取消的草稿重新带回来。
@@ -172,8 +174,8 @@ function SizeScaleControl({ scale, max, onChange }: { scale: number; max?: numbe
       // disabled 样式继承 fieldset，生成期间倍率文字也不应看起来可点击。
       className="h-6 w-12 rounded text-right text-[11px] tabular-nums text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed">
       {scale.toFixed(1)}×
-    </button>}
-  </div>;
+    </button></HoverTip>}
+  </div></HoverTip>;
 }
 
 // 标题仍只拼装调用方算好的宽高，不因新增倍率编辑而再乘一次。
@@ -196,14 +198,14 @@ function SizeSelectorHeader({ value, dimensions, scale, scaleMax, onScaleChange 
 
 function SizePresetButton({ preset, selected, onClick }: { preset: ImageSizePreset; selected: boolean; onClick: () => void }) {
   return (
-    <button type="button" title={`${preset.label} · ${preset.width}×${preset.height}（${preset.note}）`}
+    <HoverTip asChild layer="window" label={`${preset.label} · ${preset.width}×${preset.height}（${preset.note}）`}><button type="button"
       aria-pressed={selected} data-size-preset={preset.id} onClick={onClick}
       className={cn(SIZE_BUTTON_CLASS, INPUT_BORDER_CLASS, selected && ACCENT_SELECTED_OUTLINE_CLASS)}>
       <span className="flex items-center gap-1 whitespace-nowrap">
         <AspectRatioIcon ratio={preset.id} className="shrink-0 text-foreground/70" /><span>{preset.label}</span>
       </span>
       <span className="truncate text-[10px] font-normal text-muted-foreground">{preset.width}×{preset.height}</span>
-    </button>
+    </button></HoverTip>
   );
 }
 

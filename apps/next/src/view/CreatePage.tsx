@@ -43,23 +43,16 @@ import {
 import {
   ModelSeriesSelector,
 } from "@/view/create/ModelSeriesSelector";
-import { AdvancedSettings } from "@/view/create/AdvancedSettings";
 // 已检测的边缘 PNG 进入公共图片队列，普通图片生成仍保留原执行入口。
 // 不从 DOM 截图提取控制图，使用 Worker 返回的原始 Blob。
 // 任务持有 File 字节，切页或改阈值释放预览 URL 不影响已提交的上传。
 import { CreateModeTabs } from "@/view/create/CreateModeTabs";
 import { ExtensionSelectDialog } from "@/view/create/ExtensionSelectDialog";
+import { isModelNameHidden, visibleLocalModels } from "@/utils/local-model-visibility";
 import { filterAndSortExtensions } from "@/data/extensions";
-import { GenerateFooter } from "@/view/create/GenerateFooter";
 import { GeneratingStatus } from "@/view/create/generating-status";
-import { ImageSizeSection } from "@/view/create/ImageSizeSection";
-import { NegativePromptSection } from "@/view/create/NegativePromptSection";
 import { ModelSelectDialog } from "@/view/create/ModelSelectDialog";
-import { PromptSection } from "@/view/create/PromptSection";
-import {
-  PromptGuideButton,
-  PromptGuideDialog,
-} from "@/view/create/PromptGuideDialog";
+import { ImageCreatePanel } from "@/view/create/image-create-panel";
 import { SelectedExtensions } from "@/view/create/selected-extensions";
 import { RoleTtsPanel } from "@/view/create/RoleTtsPanel";
 // 音频 stage 使用同一个结果组件，避免将音频 URL 交给图片预览层。
@@ -79,9 +72,9 @@ import {
 } from "@/view/create/GeneratedImageActionLayer";
 import { PromptAssemblyPanel } from "@/view/create/promptAssembly/PromptAssemblyPanel";
 import {
+  DEFAULT_SELECTED_MODEL,
   getSelectedModelDisplay,
 } from "@/data/models";
-import { ModelCoverSelect } from "@/view/create/model-cover-select";
 import { ImagePreviewTrigger } from "@/components/ImagePreviewOverlay";
 import type { ImagePreviewItem } from "@/components/ImagePreviewOverlay";
 import { useSettingsStore } from "@/stores/useSettingsStore";
@@ -95,22 +88,30 @@ import { useToastStore } from "@/stores/useToastStore";
 import { useTranslation } from "@/i18n";
 import type { MessageKey } from "@/i18n";
 import type { Translator } from "@/i18n/translate";
-import { resolveImageDimensions } from "@/utils/imageSize";
+import { createSizeSelection, resolveImageDimensions, type ImageSizeSelection } from "@/utils/imageSize";
+import { MossCompositionControl } from "@/view/create/moss-composition/moss-composition-control";
+import { serializeMossComposition, type CompositionDraft } from "@/view/create/moss-composition/composition-draft";
 import { findImageSizePresetBySize } from "@/data/imageSizes";
 import { useComfyGenerate } from "@/hooks/useComfyGenerate";
 import { useCreateLayout } from "@/hooks/use-create-layout";
-import { getDefaultLocalSelectedModel } from "@/utils/localModelResources";
+
 import { listGeneratedImages } from "@/utils/generatedImages";
+import { workflowModelDraft } from "@/utils/workflow-model-draft";
 import { buildGenerateParams } from "@/utils/comfy/buildGenerateParams";
 // 图片模型加载设置与实际生成读取同一模板，不维护另一组 CLIP/VAE 默认名。
 // 辅助覆盖按图片系列隔离，切换到视频或编辑不会改变这里的选择。
-import { getImageWorkflowDefaults, getImageWorkflowTemplate } from "@/utils/comfy/imageWorkflow";
+import { MossSlgSetting } from "@/view/create/moss-slg-setting";
+import { getImageWorkflowDefaults, resolveImageWorkflowSeries } from "@/utils/comfy/imageWorkflow";
 // 图片辅助覆盖由 CreatePage 持有，图片与视频切换后仍保留当前页面草稿。
 // 系列作为字典键，节点号相同也不能让不同工作流串用同一份文件名。
 // 提交时用实际 workflowSeries 取值，不能只依赖屏幕当前展示的系列标签。
 // 生成队列继续冻结完整参数，辅助覆盖与主模型、提示词属于同一任务快照。
-import { WorkflowModelSettings } from '@/view/create/video-model-settings';
-import type { VideoModelOverrides } from '@/utils/comfy/video-workflow-models';
+import { useIsHydrated } from "@/hooks/useIsHydrated";
+import { MODEL_SERIES } from "@/data/modelSeries";
+import { isPrimaryUnetError } from "@/utils/comfy/image-model-verification";
+import { useImageModelSetup } from "@/hooks/use-image-model-setup";
+import { ImageModelSetupTip } from "@/view/create/image-model-setup-tip";
+import { resolveImageCoreName, selectedImageCoreModel, splitImageModelChoices } from "@/utils/comfy/image-core-models";
 import { readEditableText, setEditableText } from "@/utils/promptEditor";
 import { readPromptText, setPromptText } from "@/utils/promptTarget";
 import { isElectronEnvironment } from "@/utils/electronBridge";
@@ -175,6 +176,8 @@ function getRemixToastMessage(
 export function CreatePage() {
   const { t } = useTranslation();
   const localModels = useSettingsStore((state) => state.models);
+  const hiddenModelPaths = useSettingsStore(state => state.hiddenModelPaths);
+  const selectableModels = useMemo(() => visibleLocalModels(localModels, hiddenModelPaths), [localModels, hiddenModelPaths]);
   const paths = useSettingsStore((state) => state.paths);
   const outputPath = useSettingsStore((state) => state.outputPath);
   const openedFolderId = useHistoryFolderStore((state) => state.openedFolderId);
@@ -245,28 +248,55 @@ export function CreatePage() {
   const [narrowPage, setNarrowPage] = useState<"form" | "preview" | "history">("form");
   const imageActionsRef = useRef<GeneratedImageActionHandle>(null);
   const [createMode, setCreateMode] = useState<CreateMode>("image");
-  // 系列、模型和 LoRA 都从原生成入口的权威状态读取。
-  // 保留变量名，后续生成参数组装与二创回填仍使用同一条路径。
-  // 资源选择跨路由保留，编辑同步不会因图片表单卸载而丢失来源。
-  // setter 保留函数式更新，现有默认模型与系列切换逻辑无需改写。
-  // 每个 selector 独立订阅，弹窗开关继续是页面局部状态。
-  // 此处只读取 store，不在渲染期间写入另一个组件的状态。
-  const seriesId = useImageResourceStore((s) => s.seriesId), setSeriesId = useImageResourceStore((s) => s.setSeriesId);
-  // Anima 的独立加载器与 SDXL 的 checkpoint 输出不是同一套槽位。
-  // 保留每个系列的草稿，返回时不把上一系列的节点 id 套进当前图。
-  // 和视频页相同，这些辅助选择仅保存在当前页面会话中。
-  const [modelOverridesBySeries, setModelOverridesBySeries] = useState<Record<string, VideoModelOverrides>>({});
-  const imageModelTemplate = useMemo(() => getImageWorkflowTemplate(seriesId === 'sdxl' ? 'sdxl' : 'anima'), [seriesId]);
-  const selectedModel = useImageResourceStore((s) => s.selectedModel), setSelectedModel = useImageResourceStore((s) => s.setSelectedModel);
+  // 模型系列和加载槽随创作表单恢复，LoRA 仍由原会话保存。
+  const seriesId = useCreateFormStore(state => state.imageSeries);
+  const setSeriesId = useCreateFormStore(state => state.setImageSeries);
+  const [requestedSetup, setRequestedSetup] = useState<ReturnType<typeof resolveImageWorkflowSeries> | null>(null);
+  const [dismissedSetup, setDismissedSetup] = useState("");
+  const hydrated = useIsHydrated();
+  const scanningModels = useSettingsStore(state => state.scanning);
+  const workflowSeries = seriesId;
+  const [mossSlg, setMossSlg] = useState(false);
+  const [mossComposition, setMossComposition] = useState<CompositionDraft | null>(null);
+  function applyMossComposition(draft: CompositionDraft, size: ImageSizeSelection) {
+    setMossComposition(draft);
+    useCreateFormStore.getState().setSizeSelection(size);
+    // 整段 JSON 写回普通输入框，高级组装里的各分类草稿继续保留。
+    useCreateFormStore.getState().setAdvancedPrompt(false);
+    setPromptText(serializeMossComposition(draft, size));
+  }
   const [modelDialogOpen, setModelDialogOpen] = useState(false);
   const [extensionDialogOpen, setExtensionDialogOpen] = useState(false);
-  const [promptGuideOpen, setPromptGuideOpen] = useState(false);
   // 扩展数组就是图片生成实际输入，不额外维护一份只供同步显示的列表。
   // 编辑复制时深拷贝各行，后续权重变化不会跨模式串联。
   // 清空数组仍表示不使用 LoRA，不从编辑模板自动补项。
   const selectedExtensions = useImageResourceStore((s) => s.selectedExtensions), setSelectedExtensions = useImageResourceStore((s) => s.setSelectedExtensions);
 
-  const modelDisplay = getSelectedModelDisplay(selectedModel, localModels);
+  const modelSetup = useImageModelSetup(workflowSeries, localModels, paths, scanningModels);
+  const imageModelTemplate = modelSetup.templates[workflowSeries];
+  const modelChoices = modelSetup.overrides[workflowSeries];
+  const changeModelChoices = modelSetup.change;
+  const { main: configuredMain, auxiliary: modelOverrides, mainSlot } = useMemo(
+    () => splitImageModelChoices(imageModelTemplate, modelChoices), [imageModelTemplate, modelChoices]);
+  const mainOverrides = mainSlot && modelChoices?.[mainSlot.id] ? { [mainSlot.id]: modelChoices[mainSlot.id] } : {};
+  const activeSetup = modelSetup.status.find(item => item.id === workflowSeries);
+  const targetSetup = modelSetup.status.find(item => item.id === requestedSetup && item.issue) ?? activeSetup;
+  const setupKey = `${targetSetup?.id}:${targetSetup?.issue}`;
+  const imageLocked = Boolean(activeSetup?.issue);
+  const formStateForReadiness = useCreateFormStore(state => state.upscale);
+  const selectedModel = mainSlot && configuredMain
+    ? selectedImageCoreModel(mainSlot, configuredMain, localModels, paths) ?? DEFAULT_SELECTED_MODEL
+    : DEFAULT_SELECTED_MODEL;
+  const modelDisplay = isModelNameHidden(selectedModel.versionId, [], hiddenModelPaths)
+    ? { name: t("toolBox.civitai.visibility.hiddenName"), cover: "" }
+    : selectedModel !== DEFAULT_SELECTED_MODEL ? getSelectedModelDisplay(selectedModel, localModels)
+    : { name: configuredMain?.split(/[/\\]/).pop() ?? "", cover: "" };
+  const imageReadinessPrompt = useMemo(() => {
+    try {
+      const params = buildGenerateParams({ positivePrompt: "", negativePrompt: "", seed: 0, selectedModel: DEFAULT_SELECTED_MODEL, selectedExtensions, localModels, paths, series: workflowSeries });
+      return workflowModelDraft(imageModelTemplate, { main: configuredMain, loras: params.loras, overrides: modelOverrides, upscale: formStateForReadiness });
+    } catch { return imageModelTemplate; }
+  }, [imageModelTemplate, selectedExtensions, localModels, paths, workflowSeries, configuredMain, modelOverrides, formStateForReadiness]);
   const isImageMode = createMode === "image";
   const isVideoMode = createMode === "video";
   const isRoleTtsMode = createMode === "roleTts";
@@ -470,44 +500,24 @@ export function CreatePage() {
     [historyImages, previewGalleryItems]
   );
 
-  useEffect(() => {
-    const defaultLocal = getDefaultLocalSelectedModel(
-      localModels,
-      seriesId === "sdxl" ? "sdxl" : "anima"
-    );
-    if (!defaultLocal) return;
 
-    const frame = window.requestAnimationFrame(() => {
-      setSelectedModel((current) => {
-        if (current.modelId.startsWith("local-checkpoint:")) return current;
-        return defaultLocal;
-      });
-    });
-
-    return () => window.cancelAnimationFrame(frame);
-  // Zustand 的 setter 引用稳定，显式依赖保持迁移后的 hook 契约完整。
-  // 默认模型校正仍读取同一个图片草稿，不创建供同步使用的镜像。
-  // 扫描变化不应让编辑同步读取另一个过期的局部选择。
-  }, [localModels, seriesId, setSelectedModel]);
 
   /**
    * 切换模型系列（Anima ⇄ SDXL）：
    * 1. LoRA 扩展跨系列不通用 → 自动清空；
-   * 2. 模型换成该系列的本地模型（Anima 取 diffusion_models，SDXL 取 checkpoints）；
+   * 2. 恢复该系列保存的模型，首次打开使用工作流默认值；
    * 3. 采样器 / 调度器 / 步数 / CFG 回到**该系列基础工作流**自带的默认参数；
    * 4. 尺寸同样换成该系列基础工作流的默认尺寸（能对上预设就用预设，否则用自定义宽高）。
    */
   const handleSeriesChange = useCallback(
     (nextSeriesId: string) => {
-      if (nextSeriesId === seriesId) return;
-      const nextSeries: "anima" | "sdxl" =
-        nextSeriesId === "sdxl" ? "sdxl" : "anima";
+      if (nextSeriesId === seriesId || modelSetup.status.some(item => item.id === nextSeriesId && item.issue)) return;
+      setRequestedSetup(null);
+      setDismissedSetup("");
+      const nextSeries = resolveImageWorkflowSeries(nextSeriesId);
 
-      setSeriesId(nextSeriesId);
+      setSeriesId(nextSeries);
       setSelectedExtensions([]);
-
-      const defaultLocal = getDefaultLocalSelectedModel(localModels, nextSeries);
-      if (defaultLocal) setSelectedModel(defaultLocal);
 
       const defaults = getImageWorkflowDefaults(nextSeries);
       setAdvancedSettings({
@@ -524,10 +534,10 @@ export function CreatePage() {
         setCustomSize({ width: defaults.width, height: defaults.height });
       }
     },
-    // 系列切换仍负责清空扩展和选择默认模型，编辑同步不能反向触发它。
+    // 系列切换仍负责清空扩展，编辑同步不能反向触发它。
     // 显式依赖公共 setter，避免从 useState 迁移后遗留 hook 依赖逃逸。
     // 动作引用稳定，不会增加普通图片页不必要的回调重建。
-    [localModels, seriesId, setAdvancedSettings, setAspectRatio, setCustomSize, setSelectedExtensions, setSelectedModel, setSeriesId]
+    [modelSetup.status, seriesId, setAdvancedSettings, setAspectRatio, setCustomSize, setSelectedExtensions, setSeriesId]
   );
 
   const appliedRemixRequestIdRef = useRef<number | null>(null);
@@ -540,7 +550,10 @@ export function CreatePage() {
     // 提交后再应用外部请求；计时器在窗口不可见时仍会执行，不能改成 rAF。
     const timer = window.setTimeout(() => {
       appliedRemixRequestIdRef.current = remixRequestId;
-      if (remixPayload.selectedModel) setSelectedModel(remixPayload.selectedModel);
+      if (remixPayload.selectedModel && mainSlot) {
+        const name = resolveImageCoreName(mainSlot, remixPayload.selectedModel.versionId, paths);
+        if (name) changeModelChoices(workflowSeries, { ...modelOverrides, [mainSlot.id]: name });
+      }
       setSelectedExtensions(remixPayload.selectedExtensions);
       setAspectRatio(remixPayload.aspectRatio);
       setAdvancedSettings({
@@ -567,7 +580,7 @@ export function CreatePage() {
     // 显式声明两个写入动作，保留完整 hook 依赖关系。
     // 不在这个 effect 同步编辑资源，用户仍需主动点击快速加载。
     // 提示词和尺寸继续按原二创流程回填，不改变其既有行为。
-    setSelectedModel,
+    changeModelChoices, mainSlot, modelOverrides, paths, workflowSeries,
     setSelectedExtensions,
     remixPayload,
     clearRemix,
@@ -580,43 +593,43 @@ export function CreatePage() {
 
   const handleGenerate = useCallback(
     async (imageCount: number) => {
-      // 高级组装模式下取分类拼接结果，普通模式取单一输入框
-      const positivePrompt = readPromptText();
-      if (!positivePrompt) {
-        showToast(t("create.page.promptRequired"));
+      if (imageLocked) {
+        setRequestedSetup(null);
+        setDismissedSetup("");
         return;
       }
-
-      const negativePrompt = readEditableText("negative-prompt-editor");
-      const formState = useCreateFormStore.getState();
-      const workflowSeries = seriesId === "sdxl" ? "sdxl" : "anima";
-      const workflowDefaults = getImageWorkflowDefaults(workflowSeries);
-      const { width, height } = resolveImageDimensions({
-        mode: formState.sizeMode,
-        aspectRatio,
-        customWidth: formState.customWidth,
-        customHeight: formState.customHeight,
-        scale: formState.sizeScale,
-      });
-      const baseParams = buildGenerateParams({
-        positivePrompt,
-        negativePrompt,
-        selectedModel,
-        selectedExtensions,
-        localModels,
-        paths,
-        width,
-        height,
-        seed: getResolvedSeedFromStore(formState),
-        steps: formState.steps,
-        cfg: formState.cfg,
-        // 未自定义采样器/调度器时，使用工作流模板自带值
-        samplerName: formState.sampler ?? workflowDefaults.samplerName,
-        scheduler: formState.scheduler ?? workflowDefaults.scheduler,
-        series: workflowSeries,
-      });
-
       try {
+        const negativePrompt = readEditableText("negative-prompt-editor");
+        const formState = useCreateFormStore.getState();
+
+        const workflowDefaults = getImageWorkflowDefaults(workflowSeries);
+        const { width, height } = resolveImageDimensions({
+          mode: formState.sizeMode,
+          aspectRatio,
+          customWidth: formState.customWidth,
+          customHeight: formState.customHeight,
+          scale: formState.sizeScale,
+        });
+        const positivePrompt = readPromptText();
+        if (!positivePrompt) { showToast(t("create.page.promptRequired")); return; }
+        const baseParams = buildGenerateParams({
+          positivePrompt,
+          negativePrompt,
+          selectedModel: DEFAULT_SELECTED_MODEL,
+          selectedExtensions,
+          localModels,
+          paths,
+          width,
+          height,
+          seed: getResolvedSeedFromStore(formState),
+          steps: formState.steps,
+          cfg: formState.cfg,
+          // 未自定义采样器/调度器时，使用工作流模板自带值
+          samplerName: formState.sampler ?? workflowDefaults.samplerName,
+          scheduler: formState.scheduler ?? workflowDefaults.scheduler,
+          series: workflowSeries,
+        });
+
         // 普通图片生成只使用文生图参数；边缘控制在编辑工作区单独准备。
         // 此入口保留原数量、尺寸、队列和保存逻辑，不携带任何隐式控制图。
         // 用户离开编辑后，Canny 的开关和阈值不会改变这里的生成行为。
@@ -624,7 +637,8 @@ export function CreatePage() {
         // 保留原生成返回值供统一的保存失败反馈处理，不把准备图当成功输出。
         // 点击时交付当前系列覆盖，公共队列随其他参数一起深拷贝。
         // 生成期间修改下拉框不会追溯改动旧任务或其他模式的图。
-        const result = await generate({ ...baseParams, modelOverrides: modelOverridesBySeries[workflowSeries] }, imageCount);
+        const result = await generate({ ...baseParams, checkpointName: configuredMain, modelOverrides,
+          upscale: formState.upscale, slg: workflowSeries === "moss" && mossSlg }, imageCount, modelSetup.check);
         const lastSavedPath = result.savedPaths[0];
 
         if (!lastSavedPath && isElectronEnvironment()) {
@@ -640,6 +654,8 @@ export function CreatePage() {
         if (error instanceof DOMException && error.name === "AbortError") {
           return;
         }
+        // 主 UNet 的 TopTip 由队列发出，切出创作页也可收到。
+        if (isPrimaryUnetError(error)) return;
         const message =
           error instanceof Error ? error.message : t("create.page.generateFailed");
         showToast(message);
@@ -651,11 +667,11 @@ export function CreatePage() {
       localModels,
       paths,
       selectedExtensions,
-      selectedModel,
       showToast,
-      seriesId,
+      workflowSeries,
+      mossSlg,
       // 回调读取最新辅助草稿，不能因缺依赖而提交上一次的 CLIP/VAE。
-      modelOverridesBySeries,
+      modelOverrides, configuredMain, modelSetup.check, imageLocked,
       t,
     ]
   );
@@ -772,93 +788,43 @@ export function CreatePage() {
         {isImageMode && (
           <div data-model-series className="shrink-0">
             {/* 界面：「模型系列」那一行（Anima / SDXL；切换会换工作流与默认相机距离） */}
-            <ModelSeriesSelector value={seriesId} onChange={handleSeriesChange} />
+            <ModelSeriesSelector value={seriesId} onChange={handleSeriesChange}
+              unavailable={modelSetup.status.filter(item => item.issue).map(item => item.id)}
+              onUnavailable={id => { setRequestedSetup(resolveImageWorkflowSeries(id)); setDismissedSetup(""); }} />
           </div>
         )}
 
         {isImageMode ? (
           <>
-            <div data-create-rail-scroll className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto [scrollbar-width:thin]">
-              <div data-create-form-sections className="flex min-w-0 max-w-full flex-col gap-4 px-3 pb-3 pt-3 sm:px-4">
-                <div data-create-model-section className="space-y-1.5">
-                  {/* 界面：「模型」卡片，与视频模型选择共用 */}
-                  <ModelCoverSelect name={modelDisplay.name} cover={modelDisplay.cover} label={t("create.page.model")} onClick={() => setModelDialogOpen(true)} priority />
-                  {/* 界面：模型卡片下方的「如何为 Anima / SDXL 编写提示词？」按钮 */}
-                  <PromptGuideButton
-                    series={seriesId === "sdxl" ? "sdxl" : "anima"}
-                    onClick={() => setPromptGuideOpen(true)}
-                  />
-                </div>
-                {/* 界面：「添加扩展」独占一行；已选 LoRA 仍保留权重编辑。 */}
-                {/**
-                 * 指南属于模型系列信息，跟随模型卡片，而不是作为扩展列表里的一个按钮。
-                 * 扩展区域是模型卡片的后续兄弟，父级 gap 负责两者间隔。
-                 * 不再使用横向 flex 把指南与添加扩展挤成两个小操作。
-                 * SelectedExtensions 根据列表是否为空选择大加号或紧凑追加入口。
-                 * 本层不判断资源是否下载，也不依赖用户已经打开过选择器才显示图标。
-                 * value 与 onChange 继续连接创建表单原有的 selectedExtensions 状态。
-                 * 打开选择器只设置可见性，不预先清空已有扩展或覆盖权重。
-                 * 选择器取消时没有 onChange，返回后仍展示进入前的扩展列表。
-                 * 确认提交继续由原选择器完成，本层不复制它的搜索或版本草稿。
-                 * 已选行保留各自 key，增删其他项不会重新初始化未修改行的权重。
-                 * 扩展封面使用业务资源数据，不能把参考 HTML 的示例图放入正式默认值。
-                 * 分区标记仅用于布局回归定位，不参与用户数据保存或工作流序列化。
-                 * 原有模型系列过滤仍从当前 seriesId 传给选择器，不由入口样式推断。
-                 * SDXL 与 Anima 的选择值继续隔离，视觉调整不自动迁移系列模型。
-                 * 视频有自己的表单调用方，共享添加入口组件而不共享图片模式状态。
-                 * 父级 min-w-0 与纵向布局使长词条在当前栏内分配空间。
-                 * 窄屏时扩展区域与模型卡片一起留在 rail，不转移到已隐藏的预览区。
-                 * 表单滚动区持有二者；不会为扩展入口增加第二层独立滚动。
-                 * 入口不提交生成请求，也不改变当前队列和输出目录。
-                 * 最后一项移除后由共享组件恢复空态，无需本页添加监听 effect。
-                 * 键盘聚焦样式由入口按钮提供，本容器不增加额外 Tab 停靠。
-                 * 保持原来的 i18n 词条，布局恢复不会引入只支持中文的展示文本。
-                 * 后面的边缘检测与提示词区仍是独立分区，不嵌入扩展按钮的点击范围。
-                 * 创建页主区隐藏时保留这份表单树，工具返回不重新构造扩展状态。
-                 * 指南按钮继续读取当前模型系列，入口布局不会改变其打开内容。
-                 * 指南与添加扩展分别拥有独立点击范围，避免误触进入资源选择。
-                 * 扩展行的删除按钮由子组件阻止默认表单提交，父容器不拦截事件。
-                 * 切换单栏/双栏/三栏时这一区域仍属于 rail，不随 stage 的显隐移动。
-                 * stage 先隐藏只释放中间列宽，不会将扩展入口挤到 side 或文件管理内。
-                 * 文件管理主区页切换时 rail 仅隐藏，返回后仍保留扩展列表与模型系列。
-                 * 本容器不缓存第二份选择值，避免从工具返回后出现两处状态不同步。
-                 * 空态加号的可点击范围覆盖整行，满足鼠标与触屏目标尺寸。
-                 * 已选态入口缩小但仍保留整行宽度，不改变连续添加多项的操作方式。
-                 * 表单初始渲染即输出扩展入口，图标不依赖用户先打开后才被挂载。
-                 * 标签颜色和背景来自主题 token，不固定为浅色原型的色值。
-                 * 模式变化沿用原有 selectedExtensions 处理，不能由布局容器主动清空。
-                 * 创建页关闭或切换路由时沿用原路由生命周期，不额外写入本地持久化。
-                 * 自动化定位属性只供回归脚本使用，不能用作显示逻辑的状态来源。
-                 */}
-                <div data-create-extension-section>
-                  <SelectedExtensions value={selectedExtensions} onChange={setSelectedExtensions} onAdd={() => setExtensionDialogOpen(true)} />
-                </div>
-                {/* rail：图片沿用视频模型加载外观，只传当前图片模板和独立系列草稿。 */}
-                {/* SDXL 无独立槽时明确说明 CLIP/VAE 来自主模型，不展示无效选择。 */}
-                {/* 恢复默认仅清辅助文件，不重置图片提示词、LoRA 或采样设置。 */}
-                <WorkflowModelSettings key={seriesId} workflowId={seriesId} mediaKind="image" templateOverride={imageModelTemplate} overrides={modelOverridesBySeries[seriesId] ?? {}} onChange={value => setModelOverridesBySeries(current => ({ ...current, [seriesId]: value }))} onReset={() => setModelOverridesBySeries(current => ({ ...current, [seriesId]: {} }))} disabled={generating} />
-
-
-                {/* 界面：「提示词」区（普通模式是单一输入框；含高级组装开关与工具行） */}
-                <PromptSection
-                  series={seriesId === "sdxl" ? "sdxl" : "anima"}
-                  loraIds={selectedExtensions.map(item => item.extensionId)}
-                  sideVisible={isWideViewport}
-                />
-
-                {/* 界面：「反向提示词」区 */}
-                <NegativePromptSection />
-
-                {/* 界面：普通文生图保留原尺寸与高级参数设置。 */}
-                {/* 尺寸草稿独立于编辑控制图，边缘功能搬迁不会清空原宽高。 */}
-                {/* 高级参数继续决定采样，不再挂载原图检测开关。 */}
-                <ImageSizeSection />
-                <AdvancedSettings series={seriesId === "sdxl" ? "sdxl" : "anima"} />
-              </div>
-            </div>
-
-            {/* 界面：rail 底部的「生成」按钮条 */}
-            <GenerateFooter generating={generating} onGenerate={handleGenerate} />
+            {/* rail：原文生图区域整体引用共享表单，页面仍拥有原生成业务。
+                handleGenerate 留在页面，工作流构建与任务快照不移入公共组件。
+                主模型选择仍修改本页原 modelDialogOpen，画布有自己的选择状态。
+                selectedExtensions 继续使用本页原数组，节点 LoRA 不会借它中转。
+                模型封面显示仍由原 modelDisplay 计算，不让共享表单重新选默认模型。
+                图片模板仍由本页原系列状态决定，抽取不改变切系列初始化规则。
+                模型覆盖按图片系列隔离，不存进节点参数表。
+                onReset 只清当前系列的辅助覆盖，不顺带恢复全部图片表单。
+                isWideViewport 来自既有容器布局，不能在共享表单里再算一个导航偏移。
+                此处不传局部 store，保留普通图片的原持久化与水合路径。
+                此处也不传受控正负词，原生成仍可按既有输入编号读取正文。
+                generating 继续锁原模型加载控件，不因组件搬迁丢失忙碌状态。
+                视频与音频分支仍是兄弟，文生图表单不常驻隐藏在那些模式下。
+                模式外层和模型系列入口仍位于本页，不把整个 CreatePage 挂进画布。
+                同一面板抽取后的调整会同时影响这两个实际入口，应同时回归。 */}
+            {hydrated && !showHistoryPage && !showPreviewPage && targetSetup?.issue && dismissedSetup !== setupKey &&
+              <ImageModelSetupTip key={targetSetup.id} issue={targetSetup.issue} title={MODEL_SERIES.find(item => item.id === targetSetup.id)?.label ?? targetSetup.id}
+                group={targetSetup.id} missing={targetSetup.missing} template={modelSetup.templates[targetSetup.id]}
+                values={modelSetup.overrides[targetSetup.id] ?? {}} models={selectableModels} paths={paths}
+                onChange={values => modelSetup.change(targetSetup.id, values)} onClose={() => setDismissedSetup(setupKey)} />}
+            <ImageCreatePanel locked={imageLocked} modelPrompt={imageReadinessPrompt} series={workflowSeries} advancedFields={workflowSeries === "moss" && <MossSlgSetting checked={mossSlg} onChange={setMossSlg} />}
+              renderPromptHeaderAction={workflowSeries === "moss" ? revealPrompt => <MossCompositionControl draft={mossComposition} readPrompt={readPromptText}
+                readSize={() => {
+                  const { sizeMode, aspectRatio, customWidth, customHeight, sizeScale } = useCreateFormStore.getState();
+                  return createSizeSelection({ mode: sizeMode, aspectRatio, customWidth, customHeight, scale: sizeScale });
+                }}
+                onApply={(draft, size) => { applyMossComposition(draft, size); revealPrompt(); }} /> : undefined}
+              loraIds={selectedExtensions.map(item => item.extensionId)} modelDisplay={modelDisplay}
+              modelVerification={!imageLocked && mainSlot?.input === "unet_name" ? modelSetup.verification : undefined} onModelClick={() => setModelDialogOpen(true)} extensions={<SelectedExtensions value={selectedExtensions} onChange={setSelectedExtensions} onAdd={() => setExtensionDialogOpen(true)} />} modelSettings={{ workflowId: seriesId, mediaKind: "image", templateOverride: imageModelTemplate, overrides: modelOverrides, onChange: value => modelSetup.change(workflowSeries, { ...value, ...mainOverrides }), onReset: () => modelSetup.change(workflowSeries, mainOverrides), disabled: generating }} sideVisible={isWideViewport} generating={generating} onGenerate={handleGenerate} />
           </>
         ) : isVideoMode ? (
           /* 界面：视频模式（「视频」标签）下替换整个 rail 的面板 */
@@ -1002,10 +968,12 @@ export function CreatePage() {
       >
         {advancedPrompt && isWideViewport ? (
           /* 界面：右栏的「提示词组装」面板 */
-          <PromptAssemblyPanel
-            series={seriesId === "sdxl" ? "sdxl" : "anima"}
-            onClose={() => setAdvancedPrompt(false)}
-          />
+          <div inert={isImageMode && imageLocked} className="contents">
+            <PromptAssemblyPanel
+              series={workflowSeries === "sdxl" ? "sdxl" : "anima"}
+              onClose={() => setAdvancedPrompt(false)}
+            />
+          </div>
         // 详情未关闭时仅隐藏窄屏 side，保留其 portal 与 Meta 读取会话。
         // 没有打开详情则仍按原宽度规则挂载，不增加常驻隐藏图库。
         // 侧栏收缩后的实际详情形态由共享主区 hook 决定，不在父层复制几何规则。
@@ -1107,25 +1075,24 @@ export function CreatePage() {
 
       {/* 弹窗：选择模型（标题随系列变化：「选择 Anima 模型」/「选择 SDXL 模型」） */}
       <ModelSelectDialog
-        open={modelDialogOpen}
+        open={modelDialogOpen && (!isImageMode || !imageLocked)}
         selected={selectedModel}
-        series={seriesId === "sdxl" ? "sdxl" : "anima"}
+        series={workflowSeries}
         onOpenChange={setModelDialogOpen}
-        onSelect={setSelectedModel}
+        onSelect={value => {
+          if (!mainSlot) return;
+          const name = resolveImageCoreName(mainSlot, value.versionId, paths);
+          if (name) changeModelChoices(workflowSeries, { ...modelOverrides, [mainSlot.id]: name });
+        }}
       />
 
       {/* 弹窗：提示词编写指南 */}
-      <PromptGuideDialog
-        open={promptGuideOpen}
-        series={seriesId === "sdxl" ? "sdxl" : "anima"}
-        onOpenChange={setPromptGuideOpen}
-      />
 
       {/* 弹窗：选择扩展（LoRA） */}
       <ExtensionSelectDialog
-        open={extensionDialogOpen}
+        open={extensionDialogOpen && (!isImageMode || !imageLocked)}
         selectedIds={selectedExtensions.map((item) => item.extensionId)}
-        resources={filterAndSortExtensions("", localModels, paths, null, seriesId === "sdxl" ? "sdxl" : "anima")}
+        resources={filterAndSortExtensions("", localModels, paths, null, workflowSeries)}
         onOpenChange={setExtensionDialogOpen}
         onConfirm={(models) => setSelectedExtensions((prev) => [
           ...prev,

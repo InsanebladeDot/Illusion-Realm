@@ -1,4 +1,6 @@
 "use client";
+import { HoverTip } from "@/components/hover-tip";
+
 
 // 下拉选项沿用原业务值，菜单外观、滚动与键盘操作统一复用采样器组件。
 import { SimpleSelect } from "@/components/SimpleSelect";
@@ -168,33 +170,33 @@ export function RoleSelectDialog({
                       Role
                     </div>
                     <div className="absolute right-2 top-2 z-20 flex gap-1">
-                      <button
+                      <HoverTip asChild layer="window" label={(t("create.roleSelectDialog.viewInfo")) ?? ""}><button
                         type="button"
                         className="rounded-full bg-black/50 p-1.5 transition-colors hover:bg-black/70"
-                        title={t("create.roleSelectDialog.viewInfo")}
+
                         onClick={(event) => event.stopPropagation()}
                       >
                         <Info className="h-4 w-4 text-white" />
-                      </button>
-                      <button
+                      </button></HoverTip>
+                      <HoverTip asChild layer="window" label={(t("create.roleSelectDialog.addToFavorites")) ?? ""}><button
                         type="button"
                         className="rounded-full bg-black/50 p-1.5 transition-colors hover:bg-black/70"
-                        title={t("create.roleSelectDialog.addToFavorites")}
+
                         onClick={(event) => event.stopPropagation()}
                       >
                         <Star className="h-4 w-4 text-white" />
-                      </button>
+                      </button></HoverTip>
                     </div>
                   </div>
 
                   <div className="flex min-w-0 flex-1 flex-col px-3 pb-3 pt-2">
                     <div className="min-w-0 flex-1">
-                      <h3
+                      <HoverTip asChild layer="window" label={(role.name) ?? ""}><h3
                         className="truncate text-sm font-semibold leading-6 text-primary"
-                        title={role.name}
+
                       >
                         {role.name}
-                      </h3>
+                      </h3></HoverTip>
                       <p className="line-clamp-2 text-xs text-muted-foreground">
                         {role.description}
                       </p>

@@ -1,4 +1,6 @@
 "use client";
+import { HoverTip } from "@/components/hover-tip";
+
 
 import { FolderInput, FolderOutput, Loader2, Upload } from "lucide-react";
 import { useTranslation } from "@/i18n";
@@ -41,9 +43,9 @@ function FolderRow({
       </span>
       <div className="min-w-0 flex-1">
         <p className="text-xs font-medium text-muted-foreground">{label}</p>
-        <p className="truncate text-sm text-foreground" title={folder ?? undefined}>
+        <HoverTip asChild layer="window" label={(folder ?? undefined) ?? ""}><p className="truncate text-sm text-foreground">
           {folder ?? t("toolBox.exif.uploadZone.none")}
-        </p>
+        </p></HoverTip>
       </div>
       <button
         type="button"

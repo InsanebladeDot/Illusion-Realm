@@ -46,7 +46,7 @@ export async function importAnimaEditFile(file: File, controlMode?: "inpaint") {
   // 操作入口读取最新任务门闩，事件闭包不能绕过运行时的输入保护。
   // 单独的导入错误仍保留上一张可用源图，不自动重置用户已经选好的模型。
   // 本地解码由导入操作拥有，页面卸载不会把合法请求标记为过期。
-  const state = useAnimaEditStore.getState(); if (state.taskId) return;
+  const state = useAnimaEditStore.getState(); if (state.taskId || (state.editWorkflow === "minimax-image-edit" && state.importing)) return;
   // 错误和 importing 分别写回同一个领域 store，跨路由可恢复真正导入状态。
   // 不使用旧页面闭包中的 source，释放旧 URL 时总是读取当前源数据。
   // 保存成功的新 source 接管 URL，失败 catch 仅释放本次未接管的临时 URL。
@@ -103,9 +103,10 @@ export async function importAnimaEditFile(file: File, controlMode?: "inpaint") {
  * 结果使用独立展示 URL，清空不会让任务卡片缩略图变成坏图。
  */
 function clear() {
-  const state = useAnimaEditStore.getState(); if (state.taskId) return;
+  const state = useAnimaEditStore.getState(); if (state.taskId || state.importing) return;
   sourceVersion++; if (state.source) URL.revokeObjectURL(state.source.url);
-  state.setResult(null); state.patch({ source: null, importing: false, error: "" });
+  state.references.forEach(item => URL.revokeObjectURL(item.url));
+  state.setResult(null); state.patch({ source: null, references: [], importing: false, error: "" });
 }
 
 /**
@@ -167,7 +168,7 @@ export function useAnimaEdit(requestedMode?: ControlMode | 'text') {
       // 本次生成只抽取一次随机值，队列上传重试不会再次改变它。
       const latest = getAnimaEditDraft(mode);
       const settings = latest.seedMode === 'random' ? { ...latest.settings, seed: String(generateRandomSeed()) } : latest.settings;
-      const job = enqueueAnimaEdit((prepared?.source ?? current.source)!, models.snapshot(prepared ? { ...settings, controlMode: prepared.controlMode } : settings), (phase) => current.patch({ phase }));
+      const job = enqueueAnimaEdit((prepared?.source ?? current.source)!, models.snapshot(prepared ? { ...settings, controlMode: prepared.controlMode } : settings), (phase) => current.patch({ phase }), !prepared && settings.editWorkflow === "minimax-image-edit" ? current.references : []);
       current.patch({ taskId: job.id }); current.setResult(await job.promise);
     } catch (reason) { current.patch({ error: editError(reason) }); }
     finally { current.patch({ taskId: null, phase: "idle" }); }

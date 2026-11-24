@@ -1,4 +1,6 @@
 "use client";
+import { HoverTip } from "@/components/hover-tip";
+
 
 /** 分组排序编辑态：沿用公共拖拽容器，只把确认后的身份队列交回业务 store。 */
 // 像先在便签上安排座位，点“完成”才交给店员；取消直接扔掉便签。
@@ -157,9 +159,9 @@ function PromptOrderRow({ tab, index, active, disabled }: { tab: PromptTab; inde
   const count = tab.content.split(/[,，\n]+/).filter(part => part.trim()).length;
   const { setNodeRef, setActivatorNodeRef, attributes, listeners, transform, transition, isDragging } = useSortable({ id: tab.id, disabled });
   return <div ref={setNodeRef} data-prompt-sort-row={tab.id} style={{ transform: CSS.Transform.toString(transform), transition }} className={cn("relative flex min-w-0 items-center gap-2 rounded-md border border-border bg-background px-2 py-2 focus-within:border-accent-stroke/50", active && "border-accent-stroke/40 bg-accent/30", isDragging && "z-10 shadow-md")}>
-    <button ref={setActivatorNodeRef} type="button" {...attributes} {...listeners} disabled={disabled} data-prompt-drag-handle={tab.id} aria-label={t("promptAssembly.sort.drag", { label: tab.label })} title={t("promptAssembly.sort.drag", { label: tab.label })} className="flex h-7 w-5 shrink-0 touch-none cursor-grab items-center justify-center rounded text-muted-foreground active:cursor-grabbing focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent-stroke disabled:opacity-40"><GripVertical className="h-3 w-3" aria-hidden="true" /></button>
+    <HoverTip asChild layer="window" label={(t("promptAssembly.sort.drag", { label: tab.label })) ?? ""}><button ref={setActivatorNodeRef} type="button" {...attributes} {...listeners} disabled={disabled} data-prompt-drag-handle={tab.id} aria-label={t("promptAssembly.sort.drag", { label: tab.label })} className="flex h-7 w-5 shrink-0 touch-none cursor-grab items-center justify-center rounded text-muted-foreground active:cursor-grabbing focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent-stroke disabled:opacity-40"><GripVertical className="h-3 w-3" aria-hidden="true" /></button></HoverTip>
     <span className="text-[10px] tabular-nums text-muted-foreground">{String(index + 1).padStart(2, "0")}</span>
-    <span title={tab.label} className="min-w-0 flex-1 truncate text-xs font-medium">{tab.label}{count > 0 && <span aria-hidden="true" className="ml-1 inline-block h-1.5 w-1.5 rounded-full bg-accent-fill/70" />}</span>
+    <HoverTip asChild layer="window" label={(tab.label) ?? ""}><span className="min-w-0 flex-1 truncate text-xs font-medium">{tab.label}{count > 0 && <span aria-hidden="true" className="ml-1 inline-block h-1.5 w-1.5 rounded-full bg-accent-fill/70" />}</span></HoverTip>
     <span className="shrink-0 text-[10px] text-muted-foreground">{count ? t("promptAssembly.sort.items", { count }) : t("promptAssembly.sort.empty")}</span>
   </div>;
 }

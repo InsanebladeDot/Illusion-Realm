@@ -1,4 +1,6 @@
 "use client";
+import { HoverTip } from "@/components/hover-tip";
+
 /**
  * 界面：主图右侧纵向通道栏，第一张返回编辑，其余只读预览。
  * 小 Canvas 随文档 revision 刷新，PNG 只在显式导出时编码。
@@ -64,7 +66,7 @@ function Channel({ kind }: { kind: MaskChannel }) {
   // 观察通道仍实时重绘，下载入口收敛到工具栏不会增加一次导出前置操作。
   // 隐藏 img 只提供已编码 Blob 的可解码预览，不参与主区排版。
   // 首张保持绘画 RGB，原图透明通道仍与生成合成输入分开保存。
-  return <div className="min-w-0 space-y-1"><button type="button" data-mask-channel={kind} disabled={!state.doc} aria-label={label} aria-pressed={state.channel === kind} title={label} onClick={() => state.patch({ channel: kind })} className={cn('flex aspect-square w-full items-center justify-center overflow-hidden rounded-lg border bg-background/50 p-1 focus-visible:ring-2 focus-visible:ring-ring', state.channel === kind ? 'border-primary/60 ring-1 ring-primary/20' : 'border-border/70')}><canvas ref={canvas} className="max-h-full max-w-full rounded object-contain" /></button><p className="truncate text-center text-[9px] text-muted-foreground" title={label}>{label}</p>{state.exports && <ChannelPreview kind={kind} blob={state.exports[kind]} label={label} />}</div>;
+  return <div className="min-w-0 space-y-1"><HoverTip asChild layer="window" label={(label) ?? ""}><button type="button" data-mask-channel={kind} disabled={!state.doc} aria-label={label} aria-pressed={state.channel === kind} onClick={() => state.patch({ channel: kind })} className={cn('flex aspect-square w-full items-center justify-center overflow-hidden rounded-lg border bg-background/50 p-1 focus-visible:ring-2 focus-visible:ring-ring', state.channel === kind ? 'border-primary/60 ring-1 ring-primary/20' : 'border-border/70')}><canvas ref={canvas} className="max-h-full max-w-full rounded object-contain" /></button></HoverTip><HoverTip asChild layer="window" label={(label) ?? ""}><p className="truncate text-center text-[9px] text-muted-foreground">{label}</p></HoverTip>{state.exports && <ChannelPreview kind={kind} blob={state.exports[kind]} label={label} />}</div>;
 }
 // 固定窄栏只占用通道所需的空间，不扩展成第二个模型参数侧栏。
 // 纵向只保留编辑图像、独立蒙版、原图透明；合成透明仅供生成。

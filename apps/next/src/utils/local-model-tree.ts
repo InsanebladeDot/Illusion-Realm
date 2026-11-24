@@ -4,7 +4,7 @@
  * 类比文件管理器：主分类是磁盘入口，文件夹是道路，模型文件才是终点。
  * 不像旧分类函数那样跳过 Anima 或 SDXL，保留每一级实际相对目录。
  * 这里只处理索引里的字符串，不读取本地磁盘、不新增 Electron 权限。
- * 空文件夹不在扫描结果中，界面只显示含可识别模型的目录。
+ * 可合并主进程给出的真实目录，让尚未存放模型的文件夹也能显示。
  * 目录管理仍由原业务负责，单文件展示不意味着能安全删除同目录其他文件。
  */
 import type { LocalModel } from "@/types/localModel";
@@ -115,12 +115,13 @@ export function localLibraryFiles(models: LocalModel[], paths: SettingsPaths): L
 // 此函数不修改输入数组，两个浏览实例可以读取同一数据而各自导航。
 // 排序只按可见目录名，路径值和文件身份不随排序改变。
 // 不创建合成的模型文件夹，不把模型扩展名误当成可继续打开的目录。
-export function modelFolderTree(files: LocalLibraryFile[], parent = ""): ModelFolderNode[] {
+export function modelFolderTree(files: LocalLibraryFile[], parent = "", folders: string[] = []): ModelFolderNode[] {
   const prefix = parent ? `${parent}/` : "";
-  const names = [...new Set(files.filter(file => file.folder.startsWith(prefix)).map(file => file.folder.slice(prefix.length).split("/")[0]).filter(Boolean))];
+  const paths = [...folders, ...files.map(file => file.folder)];
+  const names = [...new Set(paths.filter(value => value.startsWith(prefix)).map(value => value.slice(prefix.length).split("/")[0]).filter(Boolean))];
   return names.sort((a, b) => a.localeCompare(b, "zh-CN")).map(name => {
     const value = prefix + name, descendants = files.filter(file => file.folder === value || file.folder.startsWith(`${value}/`));
-    return { name, value, count: descendants.length, children: modelFolderTree(descendants, value) };
+    return { name, value, count: descendants.length, children: modelFolderTree(descendants, value, folders.filter(folder => folder.startsWith(value + "/"))) };
   });
 }
 // 树中节点只代表目录，只有叶子文件卡片才是用户选择的模型单元。

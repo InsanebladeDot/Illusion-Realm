@@ -1,0 +1,3883 @@
+{
+  "fields": {
+    "version": {
+      "optional": {
+        "union": [
+          {
+            "literal": 2
+          },
+          {
+            "literal": 3
+          }
+        ]
+      }
+    },
+    "characters": {
+      "array": {
+        "fields": {
+          "id": {
+            "type": "string",
+            "checks": [
+              {
+                "kind": "min",
+                "value": 1
+              },
+              {
+                "kind": "max",
+                "value": 200
+              }
+            ]
+          },
+          "label": {
+            "type": "string",
+            "checks": [
+              {
+                "kind": "max",
+                "value": 200
+              }
+            ]
+          },
+          "category": {
+            "optional": {
+              "type": "string",
+              "checks": [
+                {
+                  "kind": "max",
+                  "value": 200
+                }
+              ]
+            }
+          },
+          "position": {
+            "fields": {
+              "x": {
+                "type": "number",
+                "checks": [
+                  {
+                    "kind": "finite"
+                  },
+                  {
+                    "kind": "min",
+                    "value": -10000,
+                    "inclusive": true
+                  },
+                  {
+                    "kind": "max",
+                    "value": 10000,
+                    "inclusive": true
+                  }
+                ]
+              },
+              "y": {
+                "type": "number",
+                "checks": [
+                  {
+                    "kind": "finite"
+                  },
+                  {
+                    "kind": "min",
+                    "value": -10000,
+                    "inclusive": true
+                  },
+                  {
+                    "kind": "max",
+                    "value": 10000,
+                    "inclusive": true
+                  }
+                ]
+              },
+              "z": {
+                "type": "number",
+                "checks": [
+                  {
+                    "kind": "finite"
+                  },
+                  {
+                    "kind": "min",
+                    "value": -10000,
+                    "inclusive": true
+                  },
+                  {
+                    "kind": "max",
+                    "value": 10000,
+                    "inclusive": true
+                  }
+                ]
+              }
+            }
+          },
+          "rotation": {
+            "optional": {
+              "union": [
+                {
+                  "fields": {
+                    "x": {
+                      "type": "number",
+                      "checks": [
+                        {
+                          "kind": "finite"
+                        },
+                        {
+                          "kind": "min",
+                          "value": -10000,
+                          "inclusive": true
+                        },
+                        {
+                          "kind": "max",
+                          "value": 10000,
+                          "inclusive": true
+                        }
+                      ]
+                    },
+                    "y": {
+                      "type": "number",
+                      "checks": [
+                        {
+                          "kind": "finite"
+                        },
+                        {
+                          "kind": "min",
+                          "value": -10000,
+                          "inclusive": true
+                        },
+                        {
+                          "kind": "max",
+                          "value": 10000,
+                          "inclusive": true
+                        }
+                      ]
+                    },
+                    "z": {
+                      "type": "number",
+                      "checks": [
+                        {
+                          "kind": "finite"
+                        },
+                        {
+                          "kind": "min",
+                          "value": -10000,
+                          "inclusive": true
+                        },
+                        {
+                          "kind": "max",
+                          "value": 10000,
+                          "inclusive": true
+                        }
+                      ]
+                    }
+                  }
+                },
+                {
+                  "type": "number",
+                  "checks": [
+                    {
+                      "kind": "finite"
+                    },
+                    {
+                      "kind": "min",
+                      "value": -10000,
+                      "inclusive": true
+                    },
+                    {
+                      "kind": "max",
+                      "value": 10000,
+                      "inclusive": true
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "scale": {
+            "optional": {
+              "fields": {
+                "x": {
+                  "type": "number",
+                  "checks": [
+                    {
+                      "kind": "min",
+                      "value": 0.001,
+                      "inclusive": true
+                    },
+                    {
+                      "kind": "max",
+                      "value": 100,
+                      "inclusive": true
+                    }
+                  ]
+                },
+                "y": {
+                  "type": "number",
+                  "checks": [
+                    {
+                      "kind": "min",
+                      "value": 0.001,
+                      "inclusive": true
+                    },
+                    {
+                      "kind": "max",
+                      "value": 100,
+                      "inclusive": true
+                    }
+                  ]
+                },
+                "z": {
+                  "type": "number",
+                  "checks": [
+                    {
+                      "kind": "min",
+                      "value": 0.001,
+                      "inclusive": true
+                    },
+                    {
+                      "kind": "max",
+                      "value": 100,
+                      "inclusive": true
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "visible": {
+            "optional": {
+              "type": "boolean"
+            }
+          },
+          "locked": {
+            "optional": {
+              "type": "boolean"
+            }
+          },
+          "color": {
+            "optional": {
+              "type": "string",
+              "checks": [
+                {
+                  "kind": "regex",
+                  "source": "^#[0-9a-f]{6}$",
+                  "flags": "i"
+                }
+              ]
+            }
+          },
+          "bodyType": {
+            "optional": {
+              "type": "string",
+              "checks": [
+                {
+                  "kind": "max",
+                  "value": 200
+                }
+              ]
+            }
+          },
+          "posture": {
+            "optional": {
+              "nullable": {
+                "record": {
+                  "record": {
+                    "type": "number",
+                    "checks": [
+                      {
+                        "kind": "finite"
+                      },
+                      {
+                        "kind": "min",
+                        "value": -10000,
+                        "inclusive": true
+                      },
+                      {
+                        "kind": "max",
+                        "value": 10000,
+                        "inclusive": true
+                      }
+                    ]
+                  },
+                  "key": {
+                    "type": "string",
+                    "checks": [
+                      {
+                        "kind": "max",
+                        "value": 40
+                      }
+                    ]
+                  }
+                },
+                "key": {
+                  "type": "string",
+                  "checks": [
+                    {
+                      "kind": "max",
+                      "value": 40
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "poseId": {
+            "optional": {
+              "type": "string",
+              "checks": [
+                {
+                  "kind": "max",
+                  "value": 200
+                }
+              ]
+            }
+          },
+          "assetId": {
+            "optional": {
+              "type": "string",
+              "checks": [
+                {
+                  "kind": "max",
+                  "value": 200
+                }
+              ]
+            }
+          },
+          "imageUrl": {
+            "optional": {
+              "union": [
+                {
+                  "type": "string",
+                  "checks": [
+                    {
+                      "kind": "max",
+                      "value": 32767
+                    }
+                  ]
+                },
+                {
+                  "type": "string",
+                  "checks": [
+                    {
+                      "kind": "max",
+                      "value": 16000000
+                    },
+                    {
+                      "kind": "regex",
+                      "source": "^data:image\\/(png|jpeg|webp);base64,[A-Za-z0-9+/=]+$",
+                      "flags": ""
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "fov": {
+            "optional": {
+              "type": "number",
+              "checks": [
+                {
+                  "kind": "min",
+                  "value": 10,
+                  "inclusive": true
+                },
+                {
+                  "kind": "max",
+                  "value": 120,
+                  "inclusive": true
+                }
+              ]
+            }
+          },
+          "roll": {
+            "optional": {
+              "type": "number",
+              "checks": [
+                {
+                  "kind": "finite"
+                },
+                {
+                  "kind": "min",
+                  "value": -10000,
+                  "inclusive": true
+                },
+                {
+                  "kind": "max",
+                  "value": 10000,
+                  "inclusive": true
+                }
+              ]
+            }
+          },
+          "lookAt": {
+            "optional": {
+              "fields": {
+                "x": {
+                  "type": "number",
+                  "checks": [
+                    {
+                      "kind": "finite"
+                    },
+                    {
+                      "kind": "min",
+                      "value": -10000,
+                      "inclusive": true
+                    },
+                    {
+                      "kind": "max",
+                      "value": 10000,
+                      "inclusive": true
+                    }
+                  ]
+                },
+                "y": {
+                  "type": "number",
+                  "checks": [
+                    {
+                      "kind": "finite"
+                    },
+                    {
+                      "kind": "min",
+                      "value": -10000,
+                      "inclusive": true
+                    },
+                    {
+                      "kind": "max",
+                      "value": 10000,
+                      "inclusive": true
+                    }
+                  ]
+                },
+                "z": {
+                  "type": "number",
+                  "checks": [
+                    {
+                      "kind": "finite"
+                    },
+                    {
+                      "kind": "min",
+                      "value": -10000,
+                      "inclusive": true
+                    },
+                    {
+                      "kind": "max",
+                      "value": 10000,
+                      "inclusive": true
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "lookAtTarget": {
+            "optional": {
+              "type": "string",
+              "checks": [
+                {
+                  "kind": "max",
+                  "value": 200
+                }
+              ]
+            }
+          },
+          "cameraRotation": {
+            "optional": {
+              "fields": {
+                "x": {
+                  "type": "number",
+                  "checks": [
+                    {
+                      "kind": "finite"
+                    },
+                    {
+                      "kind": "min",
+                      "value": -10000,
+                      "inclusive": true
+                    },
+                    {
+                      "kind": "max",
+                      "value": 10000,
+                      "inclusive": true
+                    }
+                  ]
+                },
+                "y": {
+                  "type": "number",
+                  "checks": [
+                    {
+                      "kind": "finite"
+                    },
+                    {
+                      "kind": "min",
+                      "value": -10000,
+                      "inclusive": true
+                    },
+                    {
+                      "kind": "max",
+                      "value": 10000,
+                      "inclusive": true
+                    }
+                  ]
+                },
+                "z": {
+                  "type": "number",
+                  "checks": [
+                    {
+                      "kind": "finite"
+                    },
+                    {
+                      "kind": "min",
+                      "value": -10000,
+                      "inclusive": true
+                    },
+                    {
+                      "kind": "max",
+                      "value": 10000,
+                      "inclusive": true
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "ik": {
+            "optional": {
+              "fields": {
+                "targets": {
+                  "optional": {
+                    "record": {
+                      "fields": {
+                        "enabled": {
+                          "type": "boolean"
+                        },
+                        "point": {
+                          "nullable": {
+                            "fields": {
+                              "x": {
+                                "type": "number",
+                                "checks": [
+                                  {
+                                    "kind": "finite"
+                                  },
+                                  {
+                                    "kind": "min",
+                                    "value": -10000,
+                                    "inclusive": true
+                                  },
+                                  {
+                                    "kind": "max",
+                                    "value": 10000,
+                                    "inclusive": true
+                                  }
+                                ]
+                              },
+                              "y": {
+                                "type": "number",
+                                "checks": [
+                                  {
+                                    "kind": "finite"
+                                  },
+                                  {
+                                    "kind": "min",
+                                    "value": -10000,
+                                    "inclusive": true
+                                  },
+                                  {
+                                    "kind": "max",
+                                    "value": 10000,
+                                    "inclusive": true
+                                  }
+                                ]
+                              },
+                              "z": {
+                                "type": "number",
+                                "checks": [
+                                  {
+                                    "kind": "finite"
+                                  },
+                                  {
+                                    "kind": "min",
+                                    "value": -10000,
+                                    "inclusive": true
+                                  },
+                                  {
+                                    "kind": "max",
+                                    "value": 10000,
+                                    "inclusive": true
+                                  }
+                                ]
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "key": {
+                      "type": "string",
+                      "checks": [
+                        {
+                          "kind": "max",
+                          "value": 100
+                        }
+                      ]
+                    }
+                  }
+                },
+                "l_wrist": {
+                  "optional": {
+                    "fields": {
+                      "x": {
+                        "type": "number",
+                        "checks": [
+                          {
+                            "kind": "finite"
+                          },
+                          {
+                            "kind": "min",
+                            "value": -10000,
+                            "inclusive": true
+                          },
+                          {
+                            "kind": "max",
+                            "value": 10000,
+                            "inclusive": true
+                          }
+                        ]
+                      },
+                      "y": {
+                        "type": "number",
+                        "checks": [
+                          {
+                            "kind": "finite"
+                          },
+                          {
+                            "kind": "min",
+                            "value": -10000,
+                            "inclusive": true
+                          },
+                          {
+                            "kind": "max",
+                            "value": 10000,
+                            "inclusive": true
+                          }
+                        ]
+                      },
+                      "z": {
+                        "type": "number",
+                        "checks": [
+                          {
+                            "kind": "finite"
+                          },
+                          {
+                            "kind": "min",
+                            "value": -10000,
+                            "inclusive": true
+                          },
+                          {
+                            "kind": "max",
+                            "value": 10000,
+                            "inclusive": true
+                          }
+                        ]
+                      }
+                    }
+                  }
+                },
+                "r_wrist": {
+                  "optional": {
+                    "fields": {
+                      "x": {
+                        "type": "number",
+                        "checks": [
+                          {
+                            "kind": "finite"
+                          },
+                          {
+                            "kind": "min",
+                            "value": -10000,
+                            "inclusive": true
+                          },
+                          {
+                            "kind": "max",
+                            "value": 10000,
+                            "inclusive": true
+                          }
+                        ]
+                      },
+                      "y": {
+                        "type": "number",
+                        "checks": [
+                          {
+                            "kind": "finite"
+                          },
+                          {
+                            "kind": "min",
+                            "value": -10000,
+                            "inclusive": true
+                          },
+                          {
+                            "kind": "max",
+                            "value": 10000,
+                            "inclusive": true
+                          }
+                        ]
+                      },
+                      "z": {
+                        "type": "number",
+                        "checks": [
+                          {
+                            "kind": "finite"
+                          },
+                          {
+                            "kind": "min",
+                            "value": -10000,
+                            "inclusive": true
+                          },
+                          {
+                            "kind": "max",
+                            "value": 10000,
+                            "inclusive": true
+                          }
+                        ]
+                      }
+                    }
+                  }
+                },
+                "l_ankle": {
+                  "optional": {
+                    "fields": {
+                      "x": {
+                        "type": "number",
+                        "checks": [
+                          {
+                            "kind": "finite"
+                          },
+                          {
+                            "kind": "min",
+                            "value": -10000,
+                            "inclusive": true
+                          },
+                          {
+                            "kind": "max",
+                            "value": 10000,
+                            "inclusive": true
+                          }
+                        ]
+                      },
+                      "y": {
+                        "type": "number",
+                        "checks": [
+                          {
+                            "kind": "finite"
+                          },
+                          {
+                            "kind": "min",
+                            "value": -10000,
+                            "inclusive": true
+                          },
+                          {
+                            "kind": "max",
+                            "value": 10000,
+                            "inclusive": true
+                          }
+                        ]
+                      },
+                      "z": {
+                        "type": "number",
+                        "checks": [
+                          {
+                            "kind": "finite"
+                          },
+                          {
+                            "kind": "min",
+                            "value": -10000,
+                            "inclusive": true
+                          },
+                          {
+                            "kind": "max",
+                            "value": 10000,
+                            "inclusive": true
+                          }
+                        ]
+                      }
+                    }
+                  }
+                },
+                "r_ankle": {
+                  "optional": {
+                    "fields": {
+                      "x": {
+                        "type": "number",
+                        "checks": [
+                          {
+                            "kind": "finite"
+                          },
+                          {
+                            "kind": "min",
+                            "value": -10000,
+                            "inclusive": true
+                          },
+                          {
+                            "kind": "max",
+                            "value": 10000,
+                            "inclusive": true
+                          }
+                        ]
+                      },
+                      "y": {
+                        "type": "number",
+                        "checks": [
+                          {
+                            "kind": "finite"
+                          },
+                          {
+                            "kind": "min",
+                            "value": -10000,
+                            "inclusive": true
+                          },
+                          {
+                            "kind": "max",
+                            "value": 10000,
+                            "inclusive": true
+                          }
+                        ]
+                      },
+                      "z": {
+                        "type": "number",
+                        "checks": [
+                          {
+                            "kind": "finite"
+                          },
+                          {
+                            "kind": "min",
+                            "value": -10000,
+                            "inclusive": true
+                          },
+                          {
+                            "kind": "max",
+                            "value": 10000,
+                            "inclusive": true
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "max": 500
+    },
+    "cameras": {
+      "array": {
+        "fields": {
+          "id": {
+            "type": "string",
+            "checks": [
+              {
+                "kind": "min",
+                "value": 1
+              },
+              {
+                "kind": "max",
+                "value": 200
+              }
+            ]
+          },
+          "label": {
+            "type": "string",
+            "checks": [
+              {
+                "kind": "max",
+                "value": 200
+              }
+            ]
+          },
+          "category": {
+            "optional": {
+              "type": "string",
+              "checks": [
+                {
+                  "kind": "max",
+                  "value": 200
+                }
+              ]
+            }
+          },
+          "position": {
+            "fields": {
+              "x": {
+                "type": "number",
+                "checks": [
+                  {
+                    "kind": "finite"
+                  },
+                  {
+                    "kind": "min",
+                    "value": -10000,
+                    "inclusive": true
+                  },
+                  {
+                    "kind": "max",
+                    "value": 10000,
+                    "inclusive": true
+                  }
+                ]
+              },
+              "y": {
+                "type": "number",
+                "checks": [
+                  {
+                    "kind": "finite"
+                  },
+                  {
+                    "kind": "min",
+                    "value": -10000,
+                    "inclusive": true
+                  },
+                  {
+                    "kind": "max",
+                    "value": 10000,
+                    "inclusive": true
+                  }
+                ]
+              },
+              "z": {
+                "type": "number",
+                "checks": [
+                  {
+                    "kind": "finite"
+                  },
+                  {
+                    "kind": "min",
+                    "value": -10000,
+                    "inclusive": true
+                  },
+                  {
+                    "kind": "max",
+                    "value": 10000,
+                    "inclusive": true
+                  }
+                ]
+              }
+            }
+          },
+          "rotation": {
+            "optional": {
+              "union": [
+                {
+                  "fields": {
+                    "x": {
+                      "type": "number",
+                      "checks": [
+                        {
+                          "kind": "finite"
+                        },
+                        {
+                          "kind": "min",
+                          "value": -10000,
+                          "inclusive": true
+                        },
+                        {
+                          "kind": "max",
+                          "value": 10000,
+                          "inclusive": true
+                        }
+                      ]
+                    },
+                    "y": {
+                      "type": "number",
+                      "checks": [
+                        {
+                          "kind": "finite"
+                        },
+                        {
+                          "kind": "min",
+                          "value": -10000,
+                          "inclusive": true
+                        },
+                        {
+                          "kind": "max",
+                          "value": 10000,
+                          "inclusive": true
+                        }
+                      ]
+                    },
+                    "z": {
+                      "type": "number",
+                      "checks": [
+                        {
+                          "kind": "finite"
+                        },
+                        {
+                          "kind": "min",
+                          "value": -10000,
+                          "inclusive": true
+                        },
+                        {
+                          "kind": "max",
+                          "value": 10000,
+                          "inclusive": true
+                        }
+                      ]
+                    }
+                  }
+                },
+                {
+                  "type": "number",
+                  "checks": [
+                    {
+                      "kind": "finite"
+                    },
+                    {
+                      "kind": "min",
+                      "value": -10000,
+                      "inclusive": true
+                    },
+                    {
+                      "kind": "max",
+                      "value": 10000,
+                      "inclusive": true
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "scale": {
+            "optional": {
+              "fields": {
+                "x": {
+                  "type": "number",
+                  "checks": [
+                    {
+                      "kind": "min",
+                      "value": 0.001,
+                      "inclusive": true
+                    },
+                    {
+                      "kind": "max",
+                      "value": 100,
+                      "inclusive": true
+                    }
+                  ]
+                },
+                "y": {
+                  "type": "number",
+                  "checks": [
+                    {
+                      "kind": "min",
+                      "value": 0.001,
+                      "inclusive": true
+                    },
+                    {
+                      "kind": "max",
+                      "value": 100,
+                      "inclusive": true
+                    }
+                  ]
+                },
+                "z": {
+                  "type": "number",
+                  "checks": [
+                    {
+                      "kind": "min",
+                      "value": 0.001,
+                      "inclusive": true
+                    },
+                    {
+                      "kind": "max",
+                      "value": 100,
+                      "inclusive": true
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "visible": {
+            "optional": {
+              "type": "boolean"
+            }
+          },
+          "locked": {
+            "optional": {
+              "type": "boolean"
+            }
+          },
+          "color": {
+            "optional": {
+              "type": "string",
+              "checks": [
+                {
+                  "kind": "regex",
+                  "source": "^#[0-9a-f]{6}$",
+                  "flags": "i"
+                }
+              ]
+            }
+          },
+          "bodyType": {
+            "optional": {
+              "type": "string",
+              "checks": [
+                {
+                  "kind": "max",
+                  "value": 200
+                }
+              ]
+            }
+          },
+          "posture": {
+            "optional": {
+              "nullable": {
+                "record": {
+                  "record": {
+                    "type": "number",
+                    "checks": [
+                      {
+                        "kind": "finite"
+                      },
+                      {
+                        "kind": "min",
+                        "value": -10000,
+                        "inclusive": true
+                      },
+                      {
+                        "kind": "max",
+                        "value": 10000,
+                        "inclusive": true
+                      }
+                    ]
+                  },
+                  "key": {
+                    "type": "string",
+                    "checks": [
+                      {
+                        "kind": "max",
+                        "value": 40
+                      }
+                    ]
+                  }
+                },
+                "key": {
+                  "type": "string",
+                  "checks": [
+                    {
+                      "kind": "max",
+                      "value": 40
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "poseId": {
+            "optional": {
+              "type": "string",
+              "checks": [
+                {
+                  "kind": "max",
+                  "value": 200
+                }
+              ]
+            }
+          },
+          "assetId": {
+            "optional": {
+              "type": "string",
+              "checks": [
+                {
+                  "kind": "max",
+                  "value": 200
+                }
+              ]
+            }
+          },
+          "imageUrl": {
+            "optional": {
+              "union": [
+                {
+                  "type": "string",
+                  "checks": [
+                    {
+                      "kind": "max",
+                      "value": 32767
+                    }
+                  ]
+                },
+                {
+                  "type": "string",
+                  "checks": [
+                    {
+                      "kind": "max",
+                      "value": 16000000
+                    },
+                    {
+                      "kind": "regex",
+                      "source": "^data:image\\/(png|jpeg|webp);base64,[A-Za-z0-9+/=]+$",
+                      "flags": ""
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "fov": {
+            "optional": {
+              "type": "number",
+              "checks": [
+                {
+                  "kind": "min",
+                  "value": 10,
+                  "inclusive": true
+                },
+                {
+                  "kind": "max",
+                  "value": 120,
+                  "inclusive": true
+                }
+              ]
+            }
+          },
+          "roll": {
+            "optional": {
+              "type": "number",
+              "checks": [
+                {
+                  "kind": "finite"
+                },
+                {
+                  "kind": "min",
+                  "value": -10000,
+                  "inclusive": true
+                },
+                {
+                  "kind": "max",
+                  "value": 10000,
+                  "inclusive": true
+                }
+              ]
+            }
+          },
+          "lookAt": {
+            "optional": {
+              "fields": {
+                "x": {
+                  "type": "number",
+                  "checks": [
+                    {
+                      "kind": "finite"
+                    },
+                    {
+                      "kind": "min",
+                      "value": -10000,
+                      "inclusive": true
+                    },
+                    {
+                      "kind": "max",
+                      "value": 10000,
+                      "inclusive": true
+                    }
+                  ]
+                },
+                "y": {
+                  "type": "number",
+                  "checks": [
+                    {
+                      "kind": "finite"
+                    },
+                    {
+                      "kind": "min",
+                      "value": -10000,
+                      "inclusive": true
+                    },
+                    {
+                      "kind": "max",
+                      "value": 10000,
+                      "inclusive": true
+                    }
+                  ]
+                },
+                "z": {
+                  "type": "number",
+                  "checks": [
+                    {
+                      "kind": "finite"
+                    },
+                    {
+                      "kind": "min",
+                      "value": -10000,
+                      "inclusive": true
+                    },
+                    {
+                      "kind": "max",
+                      "value": 10000,
+                      "inclusive": true
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "lookAtTarget": {
+            "optional": {
+              "type": "string",
+              "checks": [
+                {
+                  "kind": "max",
+                  "value": 200
+                }
+              ]
+            }
+          },
+          "cameraRotation": {
+            "optional": {
+              "fields": {
+                "x": {
+                  "type": "number",
+                  "checks": [
+                    {
+                      "kind": "finite"
+                    },
+                    {
+                      "kind": "min",
+                      "value": -10000,
+                      "inclusive": true
+                    },
+                    {
+                      "kind": "max",
+                      "value": 10000,
+                      "inclusive": true
+                    }
+                  ]
+                },
+                "y": {
+                  "type": "number",
+                  "checks": [
+                    {
+                      "kind": "finite"
+                    },
+                    {
+                      "kind": "min",
+                      "value": -10000,
+                      "inclusive": true
+                    },
+                    {
+                      "kind": "max",
+                      "value": 10000,
+                      "inclusive": true
+                    }
+                  ]
+                },
+                "z": {
+                  "type": "number",
+                  "checks": [
+                    {
+                      "kind": "finite"
+                    },
+                    {
+                      "kind": "min",
+                      "value": -10000,
+                      "inclusive": true
+                    },
+                    {
+                      "kind": "max",
+                      "value": 10000,
+                      "inclusive": true
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "ik": {
+            "optional": {
+              "fields": {
+                "targets": {
+                  "optional": {
+                    "record": {
+                      "fields": {
+                        "enabled": {
+                          "type": "boolean"
+                        },
+                        "point": {
+                          "nullable": {
+                            "fields": {
+                              "x": {
+                                "type": "number",
+                                "checks": [
+                                  {
+                                    "kind": "finite"
+                                  },
+                                  {
+                                    "kind": "min",
+                                    "value": -10000,
+                                    "inclusive": true
+                                  },
+                                  {
+                                    "kind": "max",
+                                    "value": 10000,
+                                    "inclusive": true
+                                  }
+                                ]
+                              },
+                              "y": {
+                                "type": "number",
+                                "checks": [
+                                  {
+                                    "kind": "finite"
+                                  },
+                                  {
+                                    "kind": "min",
+                                    "value": -10000,
+                                    "inclusive": true
+                                  },
+                                  {
+                                    "kind": "max",
+                                    "value": 10000,
+                                    "inclusive": true
+                                  }
+                                ]
+                              },
+                              "z": {
+                                "type": "number",
+                                "checks": [
+                                  {
+                                    "kind": "finite"
+                                  },
+                                  {
+                                    "kind": "min",
+                                    "value": -10000,
+                                    "inclusive": true
+                                  },
+                                  {
+                                    "kind": "max",
+                                    "value": 10000,
+                                    "inclusive": true
+                                  }
+                                ]
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "key": {
+                      "type": "string",
+                      "checks": [
+                        {
+                          "kind": "max",
+                          "value": 100
+                        }
+                      ]
+                    }
+                  }
+                },
+                "l_wrist": {
+                  "optional": {
+                    "fields": {
+                      "x": {
+                        "type": "number",
+                        "checks": [
+                          {
+                            "kind": "finite"
+                          },
+                          {
+                            "kind": "min",
+                            "value": -10000,
+                            "inclusive": true
+                          },
+                          {
+                            "kind": "max",
+                            "value": 10000,
+                            "inclusive": true
+                          }
+                        ]
+                      },
+                      "y": {
+                        "type": "number",
+                        "checks": [
+                          {
+                            "kind": "finite"
+                          },
+                          {
+                            "kind": "min",
+                            "value": -10000,
+                            "inclusive": true
+                          },
+                          {
+                            "kind": "max",
+                            "value": 10000,
+                            "inclusive": true
+                          }
+                        ]
+                      },
+                      "z": {
+                        "type": "number",
+                        "checks": [
+                          {
+                            "kind": "finite"
+                          },
+                          {
+                            "kind": "min",
+                            "value": -10000,
+                            "inclusive": true
+                          },
+                          {
+                            "kind": "max",
+                            "value": 10000,
+                            "inclusive": true
+                          }
+                        ]
+                      }
+                    }
+                  }
+                },
+                "r_wrist": {
+                  "optional": {
+                    "fields": {
+                      "x": {
+                        "type": "number",
+                        "checks": [
+                          {
+                            "kind": "finite"
+                          },
+                          {
+                            "kind": "min",
+                            "value": -10000,
+                            "inclusive": true
+                          },
+                          {
+                            "kind": "max",
+                            "value": 10000,
+                            "inclusive": true
+                          }
+                        ]
+                      },
+                      "y": {
+                        "type": "number",
+                        "checks": [
+                          {
+                            "kind": "finite"
+                          },
+                          {
+                            "kind": "min",
+                            "value": -10000,
+                            "inclusive": true
+                          },
+                          {
+                            "kind": "max",
+                            "value": 10000,
+                            "inclusive": true
+                          }
+                        ]
+                      },
+                      "z": {
+                        "type": "number",
+                        "checks": [
+                          {
+                            "kind": "finite"
+                          },
+                          {
+                            "kind": "min",
+                            "value": -10000,
+                            "inclusive": true
+                          },
+                          {
+                            "kind": "max",
+                            "value": 10000,
+                            "inclusive": true
+                          }
+                        ]
+                      }
+                    }
+                  }
+                },
+                "l_ankle": {
+                  "optional": {
+                    "fields": {
+                      "x": {
+                        "type": "number",
+                        "checks": [
+                          {
+                            "kind": "finite"
+                          },
+                          {
+                            "kind": "min",
+                            "value": -10000,
+                            "inclusive": true
+                          },
+                          {
+                            "kind": "max",
+                            "value": 10000,
+                            "inclusive": true
+                          }
+                        ]
+                      },
+                      "y": {
+                        "type": "number",
+                        "checks": [
+                          {
+                            "kind": "finite"
+                          },
+                          {
+                            "kind": "min",
+                            "value": -10000,
+                            "inclusive": true
+                          },
+                          {
+                            "kind": "max",
+                            "value": 10000,
+                            "inclusive": true
+                          }
+                        ]
+                      },
+                      "z": {
+                        "type": "number",
+                        "checks": [
+                          {
+                            "kind": "finite"
+                          },
+                          {
+                            "kind": "min",
+                            "value": -10000,
+                            "inclusive": true
+                          },
+                          {
+                            "kind": "max",
+                            "value": 10000,
+                            "inclusive": true
+                          }
+                        ]
+                      }
+                    }
+                  }
+                },
+                "r_ankle": {
+                  "optional": {
+                    "fields": {
+                      "x": {
+                        "type": "number",
+                        "checks": [
+                          {
+                            "kind": "finite"
+                          },
+                          {
+                            "kind": "min",
+                            "value": -10000,
+                            "inclusive": true
+                          },
+                          {
+                            "kind": "max",
+                            "value": 10000,
+                            "inclusive": true
+                          }
+                        ]
+                      },
+                      "y": {
+                        "type": "number",
+                        "checks": [
+                          {
+                            "kind": "finite"
+                          },
+                          {
+                            "kind": "min",
+                            "value": -10000,
+                            "inclusive": true
+                          },
+                          {
+                            "kind": "max",
+                            "value": 10000,
+                            "inclusive": true
+                          }
+                        ]
+                      },
+                      "z": {
+                        "type": "number",
+                        "checks": [
+                          {
+                            "kind": "finite"
+                          },
+                          {
+                            "kind": "min",
+                            "value": -10000,
+                            "inclusive": true
+                          },
+                          {
+                            "kind": "max",
+                            "value": 10000,
+                            "inclusive": true
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "max": 500
+    },
+    "props": {
+      "array": {
+        "fields": {
+          "id": {
+            "type": "string",
+            "checks": [
+              {
+                "kind": "min",
+                "value": 1
+              },
+              {
+                "kind": "max",
+                "value": 200
+              }
+            ]
+          },
+          "label": {
+            "type": "string",
+            "checks": [
+              {
+                "kind": "max",
+                "value": 200
+              }
+            ]
+          },
+          "category": {
+            "optional": {
+              "type": "string",
+              "checks": [
+                {
+                  "kind": "max",
+                  "value": 200
+                }
+              ]
+            }
+          },
+          "position": {
+            "fields": {
+              "x": {
+                "type": "number",
+                "checks": [
+                  {
+                    "kind": "finite"
+                  },
+                  {
+                    "kind": "min",
+                    "value": -10000,
+                    "inclusive": true
+                  },
+                  {
+                    "kind": "max",
+                    "value": 10000,
+                    "inclusive": true
+                  }
+                ]
+              },
+              "y": {
+                "type": "number",
+                "checks": [
+                  {
+                    "kind": "finite"
+                  },
+                  {
+                    "kind": "min",
+                    "value": -10000,
+                    "inclusive": true
+                  },
+                  {
+                    "kind": "max",
+                    "value": 10000,
+                    "inclusive": true
+                  }
+                ]
+              },
+              "z": {
+                "type": "number",
+                "checks": [
+                  {
+                    "kind": "finite"
+                  },
+                  {
+                    "kind": "min",
+                    "value": -10000,
+                    "inclusive": true
+                  },
+                  {
+                    "kind": "max",
+                    "value": 10000,
+                    "inclusive": true
+                  }
+                ]
+              }
+            }
+          },
+          "rotation": {
+            "optional": {
+              "union": [
+                {
+                  "fields": {
+                    "x": {
+                      "type": "number",
+                      "checks": [
+                        {
+                          "kind": "finite"
+                        },
+                        {
+                          "kind": "min",
+                          "value": -10000,
+                          "inclusive": true
+                        },
+                        {
+                          "kind": "max",
+                          "value": 10000,
+                          "inclusive": true
+                        }
+                      ]
+                    },
+                    "y": {
+                      "type": "number",
+                      "checks": [
+                        {
+                          "kind": "finite"
+                        },
+                        {
+                          "kind": "min",
+                          "value": -10000,
+                          "inclusive": true
+                        },
+                        {
+                          "kind": "max",
+                          "value": 10000,
+                          "inclusive": true
+                        }
+                      ]
+                    },
+                    "z": {
+                      "type": "number",
+                      "checks": [
+                        {
+                          "kind": "finite"
+                        },
+                        {
+                          "kind": "min",
+                          "value": -10000,
+                          "inclusive": true
+                        },
+                        {
+                          "kind": "max",
+                          "value": 10000,
+                          "inclusive": true
+                        }
+                      ]
+                    }
+                  }
+                },
+                {
+                  "type": "number",
+                  "checks": [
+                    {
+                      "kind": "finite"
+                    },
+                    {
+                      "kind": "min",
+                      "value": -10000,
+                      "inclusive": true
+                    },
+                    {
+                      "kind": "max",
+                      "value": 10000,
+                      "inclusive": true
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "scale": {
+            "optional": {
+              "fields": {
+                "x": {
+                  "type": "number",
+                  "checks": [
+                    {
+                      "kind": "min",
+                      "value": 0.001,
+                      "inclusive": true
+                    },
+                    {
+                      "kind": "max",
+                      "value": 100,
+                      "inclusive": true
+                    }
+                  ]
+                },
+                "y": {
+                  "type": "number",
+                  "checks": [
+                    {
+                      "kind": "min",
+                      "value": 0.001,
+                      "inclusive": true
+                    },
+                    {
+                      "kind": "max",
+                      "value": 100,
+                      "inclusive": true
+                    }
+                  ]
+                },
+                "z": {
+                  "type": "number",
+                  "checks": [
+                    {
+                      "kind": "min",
+                      "value": 0.001,
+                      "inclusive": true
+                    },
+                    {
+                      "kind": "max",
+                      "value": 100,
+                      "inclusive": true
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "visible": {
+            "optional": {
+              "type": "boolean"
+            }
+          },
+          "locked": {
+            "optional": {
+              "type": "boolean"
+            }
+          },
+          "color": {
+            "optional": {
+              "type": "string",
+              "checks": [
+                {
+                  "kind": "regex",
+                  "source": "^#[0-9a-f]{6}$",
+                  "flags": "i"
+                }
+              ]
+            }
+          },
+          "bodyType": {
+            "optional": {
+              "type": "string",
+              "checks": [
+                {
+                  "kind": "max",
+                  "value": 200
+                }
+              ]
+            }
+          },
+          "posture": {
+            "optional": {
+              "nullable": {
+                "record": {
+                  "record": {
+                    "type": "number",
+                    "checks": [
+                      {
+                        "kind": "finite"
+                      },
+                      {
+                        "kind": "min",
+                        "value": -10000,
+                        "inclusive": true
+                      },
+                      {
+                        "kind": "max",
+                        "value": 10000,
+                        "inclusive": true
+                      }
+                    ]
+                  },
+                  "key": {
+                    "type": "string",
+                    "checks": [
+                      {
+                        "kind": "max",
+                        "value": 40
+                      }
+                    ]
+                  }
+                },
+                "key": {
+                  "type": "string",
+                  "checks": [
+                    {
+                      "kind": "max",
+                      "value": 40
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "poseId": {
+            "optional": {
+              "type": "string",
+              "checks": [
+                {
+                  "kind": "max",
+                  "value": 200
+                }
+              ]
+            }
+          },
+          "assetId": {
+            "optional": {
+              "type": "string",
+              "checks": [
+                {
+                  "kind": "max",
+                  "value": 200
+                }
+              ]
+            }
+          },
+          "imageUrl": {
+            "optional": {
+              "union": [
+                {
+                  "type": "string",
+                  "checks": [
+                    {
+                      "kind": "max",
+                      "value": 32767
+                    }
+                  ]
+                },
+                {
+                  "type": "string",
+                  "checks": [
+                    {
+                      "kind": "max",
+                      "value": 16000000
+                    },
+                    {
+                      "kind": "regex",
+                      "source": "^data:image\\/(png|jpeg|webp);base64,[A-Za-z0-9+/=]+$",
+                      "flags": ""
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "fov": {
+            "optional": {
+              "type": "number",
+              "checks": [
+                {
+                  "kind": "min",
+                  "value": 10,
+                  "inclusive": true
+                },
+                {
+                  "kind": "max",
+                  "value": 120,
+                  "inclusive": true
+                }
+              ]
+            }
+          },
+          "roll": {
+            "optional": {
+              "type": "number",
+              "checks": [
+                {
+                  "kind": "finite"
+                },
+                {
+                  "kind": "min",
+                  "value": -10000,
+                  "inclusive": true
+                },
+                {
+                  "kind": "max",
+                  "value": 10000,
+                  "inclusive": true
+                }
+              ]
+            }
+          },
+          "lookAt": {
+            "optional": {
+              "fields": {
+                "x": {
+                  "type": "number",
+                  "checks": [
+                    {
+                      "kind": "finite"
+                    },
+                    {
+                      "kind": "min",
+                      "value": -10000,
+                      "inclusive": true
+                    },
+                    {
+                      "kind": "max",
+                      "value": 10000,
+                      "inclusive": true
+                    }
+                  ]
+                },
+                "y": {
+                  "type": "number",
+                  "checks": [
+                    {
+                      "kind": "finite"
+                    },
+                    {
+                      "kind": "min",
+                      "value": -10000,
+                      "inclusive": true
+                    },
+                    {
+                      "kind": "max",
+                      "value": 10000,
+                      "inclusive": true
+                    }
+                  ]
+                },
+                "z": {
+                  "type": "number",
+                  "checks": [
+                    {
+                      "kind": "finite"
+                    },
+                    {
+                      "kind": "min",
+                      "value": -10000,
+                      "inclusive": true
+                    },
+                    {
+                      "kind": "max",
+                      "value": 10000,
+                      "inclusive": true
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "lookAtTarget": {
+            "optional": {
+              "type": "string",
+              "checks": [
+                {
+                  "kind": "max",
+                  "value": 200
+                }
+              ]
+            }
+          },
+          "cameraRotation": {
+            "optional": {
+              "fields": {
+                "x": {
+                  "type": "number",
+                  "checks": [
+                    {
+                      "kind": "finite"
+                    },
+                    {
+                      "kind": "min",
+                      "value": -10000,
+                      "inclusive": true
+                    },
+                    {
+                      "kind": "max",
+                      "value": 10000,
+                      "inclusive": true
+                    }
+                  ]
+                },
+                "y": {
+                  "type": "number",
+                  "checks": [
+                    {
+                      "kind": "finite"
+                    },
+                    {
+                      "kind": "min",
+                      "value": -10000,
+                      "inclusive": true
+                    },
+                    {
+                      "kind": "max",
+                      "value": 10000,
+                      "inclusive": true
+                    }
+                  ]
+                },
+                "z": {
+                  "type": "number",
+                  "checks": [
+                    {
+                      "kind": "finite"
+                    },
+                    {
+                      "kind": "min",
+                      "value": -10000,
+                      "inclusive": true
+                    },
+                    {
+                      "kind": "max",
+                      "value": 10000,
+                      "inclusive": true
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "ik": {
+            "optional": {
+              "fields": {
+                "targets": {
+                  "optional": {
+                    "record": {
+                      "fields": {
+                        "enabled": {
+                          "type": "boolean"
+                        },
+                        "point": {
+                          "nullable": {
+                            "fields": {
+                              "x": {
+                                "type": "number",
+                                "checks": [
+                                  {
+                                    "kind": "finite"
+                                  },
+                                  {
+                                    "kind": "min",
+                                    "value": -10000,
+                                    "inclusive": true
+                                  },
+                                  {
+                                    "kind": "max",
+                                    "value": 10000,
+                                    "inclusive": true
+                                  }
+                                ]
+                              },
+                              "y": {
+                                "type": "number",
+                                "checks": [
+                                  {
+                                    "kind": "finite"
+                                  },
+                                  {
+                                    "kind": "min",
+                                    "value": -10000,
+                                    "inclusive": true
+                                  },
+                                  {
+                                    "kind": "max",
+                                    "value": 10000,
+                                    "inclusive": true
+                                  }
+                                ]
+                              },
+                              "z": {
+                                "type": "number",
+                                "checks": [
+                                  {
+                                    "kind": "finite"
+                                  },
+                                  {
+                                    "kind": "min",
+                                    "value": -10000,
+                                    "inclusive": true
+                                  },
+                                  {
+                                    "kind": "max",
+                                    "value": 10000,
+                                    "inclusive": true
+                                  }
+                                ]
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "key": {
+                      "type": "string",
+                      "checks": [
+                        {
+                          "kind": "max",
+                          "value": 100
+                        }
+                      ]
+                    }
+                  }
+                },
+                "l_wrist": {
+                  "optional": {
+                    "fields": {
+                      "x": {
+                        "type": "number",
+                        "checks": [
+                          {
+                            "kind": "finite"
+                          },
+                          {
+                            "kind": "min",
+                            "value": -10000,
+                            "inclusive": true
+                          },
+                          {
+                            "kind": "max",
+                            "value": 10000,
+                            "inclusive": true
+                          }
+                        ]
+                      },
+                      "y": {
+                        "type": "number",
+                        "checks": [
+                          {
+                            "kind": "finite"
+                          },
+                          {
+                            "kind": "min",
+                            "value": -10000,
+                            "inclusive": true
+                          },
+                          {
+                            "kind": "max",
+                            "value": 10000,
+                            "inclusive": true
+                          }
+                        ]
+                      },
+                      "z": {
+                        "type": "number",
+                        "checks": [
+                          {
+                            "kind": "finite"
+                          },
+                          {
+                            "kind": "min",
+                            "value": -10000,
+                            "inclusive": true
+                          },
+                          {
+                            "kind": "max",
+                            "value": 10000,
+                            "inclusive": true
+                          }
+                        ]
+                      }
+                    }
+                  }
+                },
+                "r_wrist": {
+                  "optional": {
+                    "fields": {
+                      "x": {
+                        "type": "number",
+                        "checks": [
+                          {
+                            "kind": "finite"
+                          },
+                          {
+                            "kind": "min",
+                            "value": -10000,
+                            "inclusive": true
+                          },
+                          {
+                            "kind": "max",
+                            "value": 10000,
+                            "inclusive": true
+                          }
+                        ]
+                      },
+                      "y": {
+                        "type": "number",
+                        "checks": [
+                          {
+                            "kind": "finite"
+                          },
+                          {
+                            "kind": "min",
+                            "value": -10000,
+                            "inclusive": true
+                          },
+                          {
+                            "kind": "max",
+                            "value": 10000,
+                            "inclusive": true
+                          }
+                        ]
+                      },
+                      "z": {
+                        "type": "number",
+                        "checks": [
+                          {
+                            "kind": "finite"
+                          },
+                          {
+                            "kind": "min",
+                            "value": -10000,
+                            "inclusive": true
+                          },
+                          {
+                            "kind": "max",
+                            "value": 10000,
+                            "inclusive": true
+                          }
+                        ]
+                      }
+                    }
+                  }
+                },
+                "l_ankle": {
+                  "optional": {
+                    "fields": {
+                      "x": {
+                        "type": "number",
+                        "checks": [
+                          {
+                            "kind": "finite"
+                          },
+                          {
+                            "kind": "min",
+                            "value": -10000,
+                            "inclusive": true
+                          },
+                          {
+                            "kind": "max",
+                            "value": 10000,
+                            "inclusive": true
+                          }
+                        ]
+                      },
+                      "y": {
+                        "type": "number",
+                        "checks": [
+                          {
+                            "kind": "finite"
+                          },
+                          {
+                            "kind": "min",
+                            "value": -10000,
+                            "inclusive": true
+                          },
+                          {
+                            "kind": "max",
+                            "value": 10000,
+                            "inclusive": true
+                          }
+                        ]
+                      },
+                      "z": {
+                        "type": "number",
+                        "checks": [
+                          {
+                            "kind": "finite"
+                          },
+                          {
+                            "kind": "min",
+                            "value": -10000,
+                            "inclusive": true
+                          },
+                          {
+                            "kind": "max",
+                            "value": 10000,
+                            "inclusive": true
+                          }
+                        ]
+                      }
+                    }
+                  }
+                },
+                "r_ankle": {
+                  "optional": {
+                    "fields": {
+                      "x": {
+                        "type": "number",
+                        "checks": [
+                          {
+                            "kind": "finite"
+                          },
+                          {
+                            "kind": "min",
+                            "value": -10000,
+                            "inclusive": true
+                          },
+                          {
+                            "kind": "max",
+                            "value": 10000,
+                            "inclusive": true
+                          }
+                        ]
+                      },
+                      "y": {
+                        "type": "number",
+                        "checks": [
+                          {
+                            "kind": "finite"
+                          },
+                          {
+                            "kind": "min",
+                            "value": -10000,
+                            "inclusive": true
+                          },
+                          {
+                            "kind": "max",
+                            "value": 10000,
+                            "inclusive": true
+                          }
+                        ]
+                      },
+                      "z": {
+                        "type": "number",
+                        "checks": [
+                          {
+                            "kind": "finite"
+                          },
+                          {
+                            "kind": "min",
+                            "value": -10000,
+                            "inclusive": true
+                          },
+                          {
+                            "kind": "max",
+                            "value": 10000,
+                            "inclusive": true
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "max": 500
+    },
+    "groups": {
+      "array": {
+        "fields": {
+          "id": {
+            "type": "string",
+            "checks": [
+              {
+                "kind": "min",
+                "value": 1
+              },
+              {
+                "kind": "max",
+                "value": 200
+              }
+            ]
+          },
+          "label": {
+            "type": "string",
+            "checks": [
+              {
+                "kind": "max",
+                "value": 200
+              }
+            ]
+          },
+          "memberIds": {
+            "array": {
+              "type": "string",
+              "checks": [
+                {
+                  "kind": "min",
+                  "value": 1
+                },
+                {
+                  "kind": "max",
+                  "value": 200
+                }
+              ]
+            },
+            "max": 500
+          }
+        }
+      },
+      "max": 100
+    },
+    "cameraAnimations": {
+      "array": {
+        "fields": {
+          "schemaVersion": {
+            "literal": 2
+          },
+          "id": {
+            "type": "string",
+            "checks": [
+              {
+                "kind": "min",
+                "value": 1
+              },
+              {
+                "kind": "max",
+                "value": 200
+              }
+            ]
+          },
+          "label": {
+            "type": "string",
+            "checks": [
+              {
+                "kind": "max",
+                "value": 200
+              }
+            ]
+          },
+          "fps": {
+            "type": "number",
+            "checks": [
+              {
+                "kind": "int"
+              },
+              {
+                "kind": "min",
+                "value": 1,
+                "inclusive": true
+              },
+              {
+                "kind": "max",
+                "value": 120,
+                "inclusive": true
+              }
+            ]
+          },
+          "durationFrames": {
+            "type": "number",
+            "checks": [
+              {
+                "kind": "int"
+              },
+              {
+                "kind": "min",
+                "value": 1,
+                "inclusive": true
+              },
+              {
+                "kind": "max",
+                "value": 180000,
+                "inclusive": true
+              }
+            ]
+          },
+          "playMode": {
+            "enum": [
+              "once",
+              "loop",
+              "pingpong"
+            ]
+          },
+          "playRange": {
+            "nullable": {
+              "fields": {
+                "startFrame": {
+                  "type": "number",
+                  "checks": [
+                    {
+                      "kind": "int"
+                    },
+                    {
+                      "kind": "min",
+                      "value": 0,
+                      "inclusive": true
+                    },
+                    {
+                      "kind": "max",
+                      "value": 180000,
+                      "inclusive": true
+                    }
+                  ]
+                },
+                "endFrame": {
+                  "type": "number",
+                  "checks": [
+                    {
+                      "kind": "int"
+                    },
+                    {
+                      "kind": "min",
+                      "value": 0,
+                      "inclusive": true
+                    },
+                    {
+                      "kind": "max",
+                      "value": 180000,
+                      "inclusive": true
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "playbackSpeed": {
+            "type": "number",
+            "checks": [
+              {
+                "kind": "min",
+                "value": 0.1,
+                "inclusive": true
+              },
+              {
+                "kind": "max",
+                "value": 10,
+                "inclusive": true
+              }
+            ]
+          },
+          "defaultInterp": {
+            "enum": [
+              "spline",
+              "linear"
+            ]
+          },
+          "tracks": {
+            "array": {
+              "fields": {
+                "id": {
+                  "type": "string",
+                  "checks": [
+                    {
+                      "kind": "min",
+                      "value": 1
+                    },
+                    {
+                      "kind": "max",
+                      "value": 200
+                    }
+                  ]
+                },
+                "targetId": {
+                  "nullable": {
+                    "type": "string",
+                    "checks": [
+                      {
+                        "kind": "min",
+                        "value": 1
+                      },
+                      {
+                        "kind": "max",
+                        "value": 200
+                      }
+                    ]
+                  }
+                },
+                "targetType": {
+                  "enum": [
+                    "character",
+                    "camera",
+                    "prop"
+                  ]
+                },
+                "collapsed": {
+                  "type": "boolean"
+                },
+                "muted": {
+                  "type": "boolean"
+                },
+                "locked": {
+                  "type": "boolean"
+                },
+                "channels": {
+                  "array": {
+                    "fields": {
+                      "id": {
+                        "type": "string",
+                        "checks": [
+                          {
+                            "kind": "min",
+                            "value": 1
+                          },
+                          {
+                            "kind": "max",
+                            "value": 200
+                          }
+                        ]
+                      },
+                      "kind": {
+                        "enum": [
+                          "camera",
+                          "transform",
+                          "posture"
+                        ]
+                      },
+                      "clips": {
+                        "array": {
+                          "fields": {
+                            "id": {
+                              "type": "string",
+                              "checks": [
+                                {
+                                  "kind": "min",
+                                  "value": 1
+                                },
+                                {
+                                  "kind": "max",
+                                  "value": 200
+                                }
+                              ]
+                            },
+                            "startFrame": {
+                              "type": "number",
+                              "checks": [
+                                {
+                                  "kind": "int"
+                                },
+                                {
+                                  "kind": "min",
+                                  "value": 0,
+                                  "inclusive": true
+                                },
+                                {
+                                  "kind": "max",
+                                  "value": 180000,
+                                  "inclusive": true
+                                }
+                              ]
+                            },
+                            "endFrame": {
+                              "type": "number",
+                              "checks": [
+                                {
+                                  "kind": "int"
+                                },
+                                {
+                                  "kind": "min",
+                                  "value": 0,
+                                  "inclusive": true
+                                },
+                                {
+                                  "kind": "max",
+                                  "value": 180000,
+                                  "inclusive": true
+                                }
+                              ]
+                            },
+                            "keyframes": {
+                              "array": {
+                                "fields": {
+                                  "id": {
+                                    "type": "string",
+                                    "checks": [
+                                      {
+                                        "kind": "min",
+                                        "value": 1
+                                      },
+                                      {
+                                        "kind": "max",
+                                        "value": 200
+                                      }
+                                    ]
+                                  },
+                                  "frame": {
+                                    "type": "number",
+                                    "checks": [
+                                      {
+                                        "kind": "int"
+                                      },
+                                      {
+                                        "kind": "min",
+                                        "value": 0,
+                                        "inclusive": true
+                                      },
+                                      {
+                                        "kind": "max",
+                                        "value": 180000,
+                                        "inclusive": true
+                                      }
+                                    ]
+                                  },
+                                  "interp": {
+                                    "enum": [
+                                      "linear",
+                                      "spline",
+                                      "hold"
+                                    ]
+                                  },
+                                  "easing": {
+                                    "optional": {
+                                      "type": "string",
+                                      "checks": [
+                                        {
+                                          "kind": "max",
+                                          "value": 200
+                                        }
+                                      ]
+                                    }
+                                  },
+                                  "position": {
+                                    "optional": {
+                                      "fields": {
+                                        "x": {
+                                          "type": "number",
+                                          "checks": [
+                                            {
+                                              "kind": "finite"
+                                            },
+                                            {
+                                              "kind": "min",
+                                              "value": -10000,
+                                              "inclusive": true
+                                            },
+                                            {
+                                              "kind": "max",
+                                              "value": 10000,
+                                              "inclusive": true
+                                            }
+                                          ]
+                                        },
+                                        "y": {
+                                          "type": "number",
+                                          "checks": [
+                                            {
+                                              "kind": "finite"
+                                            },
+                                            {
+                                              "kind": "min",
+                                              "value": -10000,
+                                              "inclusive": true
+                                            },
+                                            {
+                                              "kind": "max",
+                                              "value": 10000,
+                                              "inclusive": true
+                                            }
+                                          ]
+                                        },
+                                        "z": {
+                                          "type": "number",
+                                          "checks": [
+                                            {
+                                              "kind": "finite"
+                                            },
+                                            {
+                                              "kind": "min",
+                                              "value": -10000,
+                                              "inclusive": true
+                                            },
+                                            {
+                                              "kind": "max",
+                                              "value": 10000,
+                                              "inclusive": true
+                                            }
+                                          ]
+                                        }
+                                      }
+                                    }
+                                  },
+                                  "rotation": {
+                                    "optional": {
+                                      "fields": {
+                                        "x": {
+                                          "type": "number",
+                                          "checks": [
+                                            {
+                                              "kind": "finite"
+                                            },
+                                            {
+                                              "kind": "min",
+                                              "value": -10000,
+                                              "inclusive": true
+                                            },
+                                            {
+                                              "kind": "max",
+                                              "value": 10000,
+                                              "inclusive": true
+                                            }
+                                          ]
+                                        },
+                                        "y": {
+                                          "type": "number",
+                                          "checks": [
+                                            {
+                                              "kind": "finite"
+                                            },
+                                            {
+                                              "kind": "min",
+                                              "value": -10000,
+                                              "inclusive": true
+                                            },
+                                            {
+                                              "kind": "max",
+                                              "value": 10000,
+                                              "inclusive": true
+                                            }
+                                          ]
+                                        },
+                                        "z": {
+                                          "type": "number",
+                                          "checks": [
+                                            {
+                                              "kind": "finite"
+                                            },
+                                            {
+                                              "kind": "min",
+                                              "value": -10000,
+                                              "inclusive": true
+                                            },
+                                            {
+                                              "kind": "max",
+                                              "value": 10000,
+                                              "inclusive": true
+                                            }
+                                          ]
+                                        }
+                                      }
+                                    }
+                                  },
+                                  "scale": {
+                                    "optional": {
+                                      "fields": {
+                                        "x": {
+                                          "type": "number",
+                                          "checks": [
+                                            {
+                                              "kind": "min",
+                                              "value": 0.001,
+                                              "inclusive": true
+                                            },
+                                            {
+                                              "kind": "max",
+                                              "value": 100,
+                                              "inclusive": true
+                                            }
+                                          ]
+                                        },
+                                        "y": {
+                                          "type": "number",
+                                          "checks": [
+                                            {
+                                              "kind": "min",
+                                              "value": 0.001,
+                                              "inclusive": true
+                                            },
+                                            {
+                                              "kind": "max",
+                                              "value": 100,
+                                              "inclusive": true
+                                            }
+                                          ]
+                                        },
+                                        "z": {
+                                          "type": "number",
+                                          "checks": [
+                                            {
+                                              "kind": "min",
+                                              "value": 0.001,
+                                              "inclusive": true
+                                            },
+                                            {
+                                              "kind": "max",
+                                              "value": 100,
+                                              "inclusive": true
+                                            }
+                                          ]
+                                        }
+                                      }
+                                    }
+                                  },
+                                  "lookAt": {
+                                    "optional": {
+                                      "fields": {
+                                        "x": {
+                                          "type": "number",
+                                          "checks": [
+                                            {
+                                              "kind": "finite"
+                                            },
+                                            {
+                                              "kind": "min",
+                                              "value": -10000,
+                                              "inclusive": true
+                                            },
+                                            {
+                                              "kind": "max",
+                                              "value": 10000,
+                                              "inclusive": true
+                                            }
+                                          ]
+                                        },
+                                        "y": {
+                                          "type": "number",
+                                          "checks": [
+                                            {
+                                              "kind": "finite"
+                                            },
+                                            {
+                                              "kind": "min",
+                                              "value": -10000,
+                                              "inclusive": true
+                                            },
+                                            {
+                                              "kind": "max",
+                                              "value": 10000,
+                                              "inclusive": true
+                                            }
+                                          ]
+                                        },
+                                        "z": {
+                                          "type": "number",
+                                          "checks": [
+                                            {
+                                              "kind": "finite"
+                                            },
+                                            {
+                                              "kind": "min",
+                                              "value": -10000,
+                                              "inclusive": true
+                                            },
+                                            {
+                                              "kind": "max",
+                                              "value": 10000,
+                                              "inclusive": true
+                                            }
+                                          ]
+                                        }
+                                      }
+                                    }
+                                  },
+                                  "fov": {
+                                    "optional": {
+                                      "type": "number",
+                                      "checks": [
+                                        {
+                                          "kind": "min",
+                                          "value": 10,
+                                          "inclusive": true
+                                        },
+                                        {
+                                          "kind": "max",
+                                          "value": 120,
+                                          "inclusive": true
+                                        }
+                                      ]
+                                    }
+                                  },
+                                  "roll": {
+                                    "optional": {
+                                      "type": "number",
+                                      "checks": [
+                                        {
+                                          "kind": "finite"
+                                        },
+                                        {
+                                          "kind": "min",
+                                          "value": -10000,
+                                          "inclusive": true
+                                        },
+                                        {
+                                          "kind": "max",
+                                          "value": 10000,
+                                          "inclusive": true
+                                        }
+                                      ]
+                                    }
+                                  },
+                                  "posture": {
+                                    "optional": {
+                                      "nullable": {
+                                        "record": {
+                                          "record": {
+                                            "type": "number",
+                                            "checks": [
+                                              {
+                                                "kind": "finite"
+                                              },
+                                              {
+                                                "kind": "min",
+                                                "value": -10000,
+                                                "inclusive": true
+                                              },
+                                              {
+                                                "kind": "max",
+                                                "value": 10000,
+                                                "inclusive": true
+                                              }
+                                            ]
+                                          },
+                                          "key": {
+                                            "type": "string",
+                                            "checks": [
+                                              {
+                                                "kind": "max",
+                                                "value": 40
+                                              }
+                                            ]
+                                          }
+                                        },
+                                        "key": {
+                                          "type": "string",
+                                          "checks": [
+                                            {
+                                              "kind": "max",
+                                              "value": 40
+                                            }
+                                          ]
+                                        }
+                                      }
+                                    }
+                                  },
+                                  "bezier": {
+                                    "optional": {
+                                      "fields": {
+                                        "x1": {
+                                          "type": "number",
+                                          "checks": [
+                                            {
+                                              "kind": "min",
+                                              "value": 0,
+                                              "inclusive": true
+                                            },
+                                            {
+                                              "kind": "max",
+                                              "value": 1,
+                                              "inclusive": true
+                                            }
+                                          ]
+                                        },
+                                        "y1": {
+                                          "type": "number",
+                                          "checks": [
+                                            {
+                                              "kind": "finite"
+                                            },
+                                            {
+                                              "kind": "min",
+                                              "value": -10000,
+                                              "inclusive": true
+                                            },
+                                            {
+                                              "kind": "max",
+                                              "value": 10000,
+                                              "inclusive": true
+                                            }
+                                          ]
+                                        },
+                                        "x2": {
+                                          "type": "number",
+                                          "checks": [
+                                            {
+                                              "kind": "min",
+                                              "value": 0,
+                                              "inclusive": true
+                                            },
+                                            {
+                                              "kind": "max",
+                                              "value": 1,
+                                              "inclusive": true
+                                            }
+                                          ]
+                                        },
+                                        "y2": {
+                                          "type": "number",
+                                          "checks": [
+                                            {
+                                              "kind": "finite"
+                                            },
+                                            {
+                                              "kind": "min",
+                                              "value": -10000,
+                                              "inclusive": true
+                                            },
+                                            {
+                                              "kind": "max",
+                                              "value": 10000,
+                                              "inclusive": true
+                                            }
+                                          ]
+                                        }
+                                      }
+                                    }
+                                  },
+                                  "speedCurve": {
+                                    "optional": {
+                                      "array": {
+                                        "fields": {
+                                          "x": {
+                                            "type": "number",
+                                            "checks": [
+                                              {
+                                                "kind": "min",
+                                                "value": 0,
+                                                "inclusive": true
+                                              },
+                                              {
+                                                "kind": "max",
+                                                "value": 1,
+                                                "inclusive": true
+                                              }
+                                            ]
+                                          },
+                                          "v": {
+                                            "type": "number",
+                                            "checks": [
+                                              {
+                                                "kind": "min",
+                                                "value": 0,
+                                                "inclusive": true
+                                              },
+                                              {
+                                                "kind": "max",
+                                                "value": 100,
+                                                "inclusive": true
+                                              }
+                                            ]
+                                          }
+                                        }
+                                      },
+                                      "max": 1000
+                                    }
+                                  },
+                                  "handleType": {
+                                    "optional": {
+                                      "type": "string",
+                                      "checks": [
+                                        {
+                                          "kind": "max",
+                                          "value": 200
+                                        }
+                                      ]
+                                    }
+                                  },
+                                  "tangentIn": {
+                                    "optional": {
+                                      "nullable": {
+                                        "fields": {
+                                          "x": {
+                                            "type": "number",
+                                            "checks": [
+                                              {
+                                                "kind": "finite"
+                                              },
+                                              {
+                                                "kind": "min",
+                                                "value": -10000,
+                                                "inclusive": true
+                                              },
+                                              {
+                                                "kind": "max",
+                                                "value": 10000,
+                                                "inclusive": true
+                                              }
+                                            ]
+                                          },
+                                          "y": {
+                                            "type": "number",
+                                            "checks": [
+                                              {
+                                                "kind": "finite"
+                                              },
+                                              {
+                                                "kind": "min",
+                                                "value": -10000,
+                                                "inclusive": true
+                                              },
+                                              {
+                                                "kind": "max",
+                                                "value": 10000,
+                                                "inclusive": true
+                                              }
+                                            ]
+                                          },
+                                          "z": {
+                                            "type": "number",
+                                            "checks": [
+                                              {
+                                                "kind": "finite"
+                                              },
+                                              {
+                                                "kind": "min",
+                                                "value": -10000,
+                                                "inclusive": true
+                                              },
+                                              {
+                                                "kind": "max",
+                                                "value": 10000,
+                                                "inclusive": true
+                                              }
+                                            ]
+                                          }
+                                        }
+                                      }
+                                    }
+                                  },
+                                  "tangentOut": {
+                                    "optional": {
+                                      "nullable": {
+                                        "fields": {
+                                          "x": {
+                                            "type": "number",
+                                            "checks": [
+                                              {
+                                                "kind": "finite"
+                                              },
+                                              {
+                                                "kind": "min",
+                                                "value": -10000,
+                                                "inclusive": true
+                                              },
+                                              {
+                                                "kind": "max",
+                                                "value": 10000,
+                                                "inclusive": true
+                                              }
+                                            ]
+                                          },
+                                          "y": {
+                                            "type": "number",
+                                            "checks": [
+                                              {
+                                                "kind": "finite"
+                                              },
+                                              {
+                                                "kind": "min",
+                                                "value": -10000,
+                                                "inclusive": true
+                                              },
+                                              {
+                                                "kind": "max",
+                                                "value": 10000,
+                                                "inclusive": true
+                                              }
+                                            ]
+                                          },
+                                          "z": {
+                                            "type": "number",
+                                            "checks": [
+                                              {
+                                                "kind": "finite"
+                                              },
+                                              {
+                                                "kind": "min",
+                                                "value": -10000,
+                                                "inclusive": true
+                                              },
+                                              {
+                                                "kind": "max",
+                                                "value": 10000,
+                                                "inclusive": true
+                                              }
+                                            ]
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              },
+                              "max": 2000
+                            }
+                          }
+                        },
+                        "max": 500
+                      }
+                    }
+                  },
+                  "max": 3
+                },
+                "aim": {
+                  "optional": {
+                    "fields": {
+                      "mode": {
+                        "enum": [
+                          "keyframes",
+                          "target",
+                          "tangent"
+                        ]
+                      },
+                      "target": {
+                        "fields": {
+                          "objectId": {
+                            "nullable": {
+                              "type": "string",
+                              "checks": [
+                                {
+                                  "kind": "min",
+                                  "value": 1
+                                },
+                                {
+                                  "kind": "max",
+                                  "value": 200
+                                }
+                              ]
+                            }
+                          },
+                          "point": {
+                            "fields": {
+                              "x": {
+                                "type": "number",
+                                "checks": [
+                                  {
+                                    "kind": "finite"
+                                  },
+                                  {
+                                    "kind": "min",
+                                    "value": -10000,
+                                    "inclusive": true
+                                  },
+                                  {
+                                    "kind": "max",
+                                    "value": 10000,
+                                    "inclusive": true
+                                  }
+                                ]
+                              },
+                              "y": {
+                                "type": "number",
+                                "checks": [
+                                  {
+                                    "kind": "finite"
+                                  },
+                                  {
+                                    "kind": "min",
+                                    "value": -10000,
+                                    "inclusive": true
+                                  },
+                                  {
+                                    "kind": "max",
+                                    "value": 10000,
+                                    "inclusive": true
+                                  }
+                                ]
+                              },
+                              "z": {
+                                "type": "number",
+                                "checks": [
+                                  {
+                                    "kind": "finite"
+                                  },
+                                  {
+                                    "kind": "min",
+                                    "value": -10000,
+                                    "inclusive": true
+                                  },
+                                  {
+                                    "kind": "max",
+                                    "value": 10000,
+                                    "inclusive": true
+                                  }
+                                ]
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "max": 500
+          }
+        }
+      },
+      "max": 20
+    },
+    "activeCamera": {
+      "nullable": {
+        "type": "string",
+        "checks": [
+          {
+            "kind": "min",
+            "value": 1
+          },
+          {
+            "kind": "max",
+            "value": 200
+          }
+        ]
+      }
+    },
+    "panoramaUrl": {
+      "union": [
+        {
+          "type": "string",
+          "checks": [
+            {
+              "kind": "max",
+              "value": 32767
+            }
+          ]
+        },
+        {
+          "type": "string",
+          "checks": [
+            {
+              "kind": "max",
+              "value": 16000000
+            },
+            {
+              "kind": "regex",
+              "source": "^data:image\\/(png|jpeg|webp);base64,[A-Za-z0-9+/=]+$",
+              "flags": ""
+            }
+          ]
+        }
+      ]
+    },
+    "skyColor": {
+      "type": "string",
+      "checks": [
+        {
+          "kind": "regex",
+          "source": "^#[0-9a-f]{6}$",
+          "flags": "i"
+        }
+      ]
+    },
+    "groundOpacity": {
+      "type": "number",
+      "checks": [
+        {
+          "kind": "min",
+          "value": 0,
+          "inclusive": true
+        },
+        {
+          "kind": "max",
+          "value": 1,
+          "inclusive": true
+        }
+      ]
+    },
+    "groundHeight": {
+      "type": "number",
+      "checks": [
+        {
+          "kind": "finite"
+        },
+        {
+          "kind": "min",
+          "value": -10000,
+          "inclusive": true
+        },
+        {
+          "kind": "max",
+          "value": 10000,
+          "inclusive": true
+        }
+      ]
+    },
+    "aspectRatio": {
+      "type": "number",
+      "checks": [
+        {
+          "kind": "min",
+          "value": 0.1,
+          "inclusive": true
+        },
+        {
+          "kind": "max",
+          "value": 10,
+          "inclusive": true
+        }
+      ]
+    },
+    "showLabels": {
+      "type": "boolean"
+    },
+    "labelFontSize": {
+      "type": "number",
+      "checks": [
+        {
+          "kind": "int"
+        },
+        {
+          "kind": "min",
+          "value": 8,
+          "inclusive": true
+        },
+        {
+          "kind": "max",
+          "value": 60,
+          "inclusive": true
+        }
+      ]
+    },
+    "showBaseMarker": {
+      "type": "boolean"
+    },
+    "editorCameraPose": {
+      "optional": {
+        "fields": {
+          "position": {
+            "fields": {
+              "x": {
+                "type": "number",
+                "checks": [
+                  {
+                    "kind": "finite"
+                  },
+                  {
+                    "kind": "min",
+                    "value": -10000,
+                    "inclusive": true
+                  },
+                  {
+                    "kind": "max",
+                    "value": 10000,
+                    "inclusive": true
+                  }
+                ]
+              },
+              "y": {
+                "type": "number",
+                "checks": [
+                  {
+                    "kind": "finite"
+                  },
+                  {
+                    "kind": "min",
+                    "value": -10000,
+                    "inclusive": true
+                  },
+                  {
+                    "kind": "max",
+                    "value": 10000,
+                    "inclusive": true
+                  }
+                ]
+              },
+              "z": {
+                "type": "number",
+                "checks": [
+                  {
+                    "kind": "finite"
+                  },
+                  {
+                    "kind": "min",
+                    "value": -10000,
+                    "inclusive": true
+                  },
+                  {
+                    "kind": "max",
+                    "value": 10000,
+                    "inclusive": true
+                  }
+                ]
+              }
+            }
+          },
+          "target": {
+            "fields": {
+              "x": {
+                "type": "number",
+                "checks": [
+                  {
+                    "kind": "finite"
+                  },
+                  {
+                    "kind": "min",
+                    "value": -10000,
+                    "inclusive": true
+                  },
+                  {
+                    "kind": "max",
+                    "value": 10000,
+                    "inclusive": true
+                  }
+                ]
+              },
+              "y": {
+                "type": "number",
+                "checks": [
+                  {
+                    "kind": "finite"
+                  },
+                  {
+                    "kind": "min",
+                    "value": -10000,
+                    "inclusive": true
+                  },
+                  {
+                    "kind": "max",
+                    "value": 10000,
+                    "inclusive": true
+                  }
+                ]
+              },
+              "z": {
+                "type": "number",
+                "checks": [
+                  {
+                    "kind": "finite"
+                  },
+                  {
+                    "kind": "min",
+                    "value": -10000,
+                    "inclusive": true
+                  },
+                  {
+                    "kind": "max",
+                    "value": 10000,
+                    "inclusive": true
+                  }
+                ]
+              }
+            }
+          },
+          "fov": {
+            "optional": {
+              "type": "number",
+              "checks": [
+                {
+                  "kind": "min",
+                  "value": 10,
+                  "inclusive": true
+                },
+                {
+                  "kind": "max",
+                  "value": 120,
+                  "inclusive": true
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    "previewPath": {
+      "optional": {
+        "type": "string",
+        "checks": [
+          {
+            "kind": "max",
+            "value": 32767
+          }
+        ]
+      }
+    },
+    "previewImageUrl": {
+      "optional": {
+        "nullable": {
+          "type": "string",
+          "checks": [
+            {
+              "kind": "max",
+              "value": 16000000
+            }
+          ]
+        }
+      }
+    }
+  }
+}

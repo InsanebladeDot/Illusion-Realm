@@ -1,4 +1,6 @@
 "use client";
+import { HoverTip } from "@/components/hover-tip";
+
 
 // 在线模型只做展示适配：图片读取、模型身份与本地匹配提示保持原有规则。
 // 与本地模型引用同一张 Card，避免两个入口分别维护封面比例和长文本行为。
@@ -6,8 +8,7 @@ import { useTranslation } from "@/i18n";
 import { Download, MessageCircle, ThumbsUp } from "lucide-react";
 import type { CivitaiModel } from "@/utils/civitai";
 // 卡片只消费匹配证据，不读取 JSON 或请求本地模型哈希。
-// 类型保留名称与摘要的差别，显示的提示必须与实际判断依据一致。
-import type { CivitaiLocalMatch } from "@/utils/civitai-local-models";
+import type { CivitaiVersion } from "@/utils/civitai";
 import { CivitaiImage } from "./civitai-image";
 import { formatBytes } from "@/utils/format";
 import { ModelLibraryCard } from "./model-library-card";
@@ -22,13 +23,10 @@ import styles from "./local-model-library.module.css";
  * 封面沿用第一个可用版本预览，点开详情后仍由原详情组件管理版本内切图。
  * 图片节点以 URL 为 key，换图会清理上一张的失败状态，不沿用旧占位结果。
  * localMatch 只提示至少一份文件有本地证据，不表示所有网站版本都已安装。
- * name 要求本地文件夹与网站标题、文件前缀分别完全相同，不只看文件名。
- * sha256 仅比较来源 JSON 已保存的摘要，不宣称本轮读取权重做了完整性校验。
- * 缺少证据时不显示标记，不能把来源加载中误报为严格同名或摘要匹配。
- * 两种角标复用同一个位置，匹配成功不能挤掉模型类型或另建一套卡片布局。
- * 提示词条按判定类型选择，切换语言时无需重读磁盘或重新判断身份。
- * DOM 只记录 name 或 sha256 这类判定，不输出真实用户路径或来源 JSON 内容。
- * 名称提示明确提醒没有校验内容，让用户可以自行决定是否再次下载验证。
+ * sha256 比较来源或离线记录，不在显示卡片时重新读取权重。
+ * 缺少完整摘要时不显示匹配标记。
+ * 匹配角标复用现有插槽，不挤掉模型类型。
+ * 切换语言只更新提示文字，不重新读取磁盘。
  * 该提示不禁用下载，用户仍可能需要同一个模型的另一个版本。
  * 统计字段先核对 number，未提供的字段省略，不能把未知量显示成精确零。
  * 数字采用当前语言的紧凑格式，不把中文“万”写死到英文界面。
@@ -43,8 +41,9 @@ import styles from "./local-model-library.module.css";
  * 这里没有文件系统路径处理，线上名称不能被误用作任意本地保存地址。
  * 实际下载的文件名、校验摘要和保存位置仍由详情表单与主进程服务决定。
  */
-export function CivitaiCard({ model, selected, localMatch = null, onSelect }: { model: CivitaiModel; selected: boolean; localMatch?: CivitaiLocalMatch; onSelect: () => void }) {
+export function CivitaiCard({ model, selected, matchedVersions, onSelect }: { model: CivitaiModel; selected: boolean; matchedVersions: CivitaiVersion[]; onSelect: () => void }) {
   const { t, locale } = useTranslation();
+  const matchedNames = matchedVersions.map(version => version.name).join(" · ");
   const image = model.versions.flatMap(version => version.images)[0] || "";
   // 在线统计进入图片底部独立信息层，字段缺失就省略，不伪造零值。
   const count = new Intl.NumberFormat(locale, { notation: "compact", maximumFractionDigits: 1 });
@@ -65,7 +64,13 @@ export function CivitaiCard({ model, selected, localMatch = null, onSelect }: { 
   // 在线封面与名称都选择模型并打开资料，和本地库保持同一个浏览顺序。
   // 大图入口留在详情的 CivitaiPreview，仍复用创建页的共享预览层。
   // 卡片不再构建整份预览图数组，避免浏览列表时提前持有无用的画廊数据。
-  return <ModelLibraryCard name={model.name} listAttributes={listAttributes} subtitle={model.creator} overlay={<div className={styles.modelCardOverlayContent}><p>{model.creator}</p><h3>{model.name}</h3><div className={styles.modelCardStats}>{stats.map(({ key, Icon }) => <span key={key} title={count.format(model.stats[key])}><Icon size={11} />{count.format(model.stats[key])}</span>)}</div></div>} selected={selected} pressed={selected} onSelect={onSelect} attributes={{ "data-civitai-card": model.id }}
+  return <ModelLibraryCard name={model.name} listAttributes={listAttributes} subtitle={model.creator} overlay={<div className={styles.modelCardOverlayContent}><p>{model.creator}</p><h3>{model.name}</h3><div className={styles.modelCardStats}>{stats.map(({ key, Icon }) => <HoverTip key={key} asChild layer="window" label={(count.format(model.stats[key])) ?? ""}><span key={key}><Icon size={11} />{count.format(model.stats[key])}</span></HoverTip>)}</div></div>} selected={selected} pressed={selected} onSelect={onSelect} attributes={{ "data-civitai-card": model.id }}
     cover={<CivitaiImage key={image} src={image} alt={model.name} className="absolute inset-0 h-full w-full object-cover" />}
-    badges={<><span data-civitai-bases title={[model.type, ...model.baseModels].join(" · ")} className="inline-flex min-w-0 max-w-full items-center gap-1 overflow-hidden whitespace-nowrap rounded-full bg-black/55 px-2 py-1 text-[9px] font-semibold text-white backdrop-blur-md"><span className="shrink-0 border-r border-white/40 pr-1.5">{model.type}</span><span className="min-w-0 truncate">{model.baseModels.slice(0, 3).map(base => base.trim().slice(0, 3).toUpperCase()).join(" ")}</span>{model.baseModels.length > 3 && <span className="shrink-0">+{model.baseModels.length - 3}</span>}</span>{localMatch && <span data-civitai-local-match={localMatch} title={t(localMatch === "name" ? "toolBox.civitai.localNameMatchHint" : "toolBox.civitai.localMatchHint")} className="rounded-full bg-primary px-2 py-1 text-[9px] text-primary-foreground">{t(localMatch === "name" ? "toolBox.civitai.localNameFound" : "toolBox.civitai.localFound")}</span>}</>} />;
+    badges={<><HoverTip asChild layer="window" label={([model.type, ...model.baseModels].join(" · ")) ?? ""}><span data-civitai-bases className="inline-flex min-w-0 max-w-full items-center gap-1 overflow-hidden whitespace-nowrap rounded-full bg-black/55 px-2 py-1 text-[9px] font-semibold text-white backdrop-blur-md"><span className="shrink-0 border-r border-white/40 pr-1.5">{model.type}</span><span className="min-w-0 truncate">{model.baseModels.slice(0, 3).map(base => base.trim().slice(0, 3).toUpperCase()).join(" ")}</span>{model.baseModels.length > 3 && <span className="shrink-0">+{model.baseModels.length - 3}</span>}</span></HoverTip>{
+      matchedVersions.length > 0 && <HoverTip asChild layer="window" label={t("toolBox.civitai.localMatchHint", { versions: matchedNames })}>
+        <span data-civitai-local-match="sha256" onClick={onSelect} className="pointer-events-auto min-w-0 cursor-pointer truncate rounded-full bg-primary px-2 py-1 text-[9px] text-primary-foreground">
+          {t("toolBox.civitai.localFound", { versions: matchedNames })}
+        </span>
+      </HoverTip>
+    }</>} />;
 }

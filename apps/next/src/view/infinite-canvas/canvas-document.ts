@@ -20,7 +20,8 @@ export function parseCanvasDocument(value: unknown): UserDataInfiniteCanvas {
   // 老文档省略端口时补默认值；真正写盘的端口仍由唯一序列化入口确定。
   for (const edge of document.edges) {
     const connection = { ...edge, sourceHandle: edge.sourceHandle ?? "out", targetHandle: edge.targetHandle ?? "in" };
-    if (connectionError(connection, graph)) throw new Error("invalid-canvas-connection");
+    // 保存与恢复允许文生图保留暂未使用的图片边；重复、类型和循环检查照常执行。
+    if (connectionError(connection, graph, true)) throw new Error("invalid-canvas-connection");
     graph.edges.push(edge);
   }
   return document;

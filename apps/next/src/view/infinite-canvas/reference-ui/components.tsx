@@ -4,9 +4,11 @@
 // 所有状态样式来自同一份 canvas-components.css，不能靠调用方覆写几何来模拟复用。
 // 原生 disabled 同时阻止鼠标和键盘操作；title 解释未接通能力，不产生假完成事件。
 import type { ReactNode, Ref } from "react";
+import { HoverTip } from "@/components/hover-tip";
 import { CanvasIcon, type IconName } from "./canvas-icon";
 
 export { CanvasIcon };
+export { ToggleSwitch as CanvasSwitch } from "@/components/toggle-switch";
 export type { IconName };
 export type CanvasAction = (action: string) => void;
 
@@ -26,7 +28,7 @@ interface IconButtonProps {
 export function IconButton({ icon, label, onClick, disabled = false, className = "", pressed, reason }: IconButtonProps) {
   // 使用原生 disabled 统一拦住鼠标、Enter 和 Space，不只依赖灰色样式。
   // 点击后不自动置 pressed；状态是否改变由真正拥有业务数据的调用者决定。
-  return <button type="button" title={reason || label} aria-label={label} aria-pressed={pressed} disabled={disabled} onClick={onClick} className={`hy-icon-button ${className}`}><CanvasIcon name={icon} /></button>;
+  return <HoverTip label={reason || label}><button type="button" aria-label={label} aria-pressed={pressed} disabled={disabled} onClick={onClick} className={`hy-icon-button hy-hover-grow ${className}`}><CanvasIcon name={icon} /></button></HoverTip>;
 }
 
 interface ChipProps {
@@ -46,7 +48,8 @@ interface ChipProps {
 // 展开、关联面板和触发器引用都是可选参数；普通胶囊不用承担浮层生命周期。
 // ref 使用 React 19 的原生参数，只把焦点交回同一个真实按钮，不额外套一层 DOM。
 export function CanvasChip({ children, icon, active, disabled, onClick, className = "", reason, ref, expanded, controls }: ChipProps) {
-  return <button ref={ref} type="button" className={`hy-chip ${active ? "is-active" : ""} ${className}`} disabled={disabled} aria-pressed={active} aria-expanded={expanded} aria-controls={controls} title={reason} onClick={onClick}>{icon && <CanvasIcon name={icon} size={14} />}<span>{children}</span></button>;
+  const button = <button ref={ref} type="button" className={`hy-chip ${active ? "is-active" : ""} ${className}`} disabled={disabled} aria-pressed={active} aria-expanded={expanded} aria-controls={controls} onClick={onClick}>{icon && <CanvasIcon name={icon} size={14} />}<span>{children}</span></button>;
+  return reason ? <HoverTip label={reason} asChild>{button}</HoverTip> : button;
 }
 
 // value 使用稳定 ID，翻译只改变 label；切换语言不能把已有模式变成另一种模式。
@@ -57,8 +60,3 @@ export function SegmentedControl({ items, value, onChange, label, disabled }: { 
   return <div className="hy-segmented" role="group" aria-label={label}>{items.map(item => <button type="button" key={item.id} disabled={disabled} aria-pressed={item.id === value} aria-label={item.label} className={item.id === value ? "is-active" : ""} onClick={() => onChange(item.id)}>{item.label}</button>)}</div>;
 }
 
-export function CanvasSwitch({ checked, onChange, label, disabled }: { checked: boolean; onChange: (checked: boolean) => void; label: string; disabled?: boolean }) {
-  // checked 与视觉 class 同源，避免读屏读“开启”但滑块仍留在左边。
-  // 这里只通知下一个值；设置是否可保存、是否影响图引擎仍由设置调用方处理。
-  return <button type="button" role="switch" aria-label={label} aria-checked={checked} disabled={disabled} className={`hy-switch ${checked ? "is-on" : ""}`} onClick={() => onChange(!checked)}><span /></button>;
-}

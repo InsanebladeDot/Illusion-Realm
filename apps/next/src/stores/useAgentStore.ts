@@ -11,7 +11,8 @@ import { useAgentSecretStore } from "@/stores/useAgentSecretStore";
 // 真正运行从持久化提供商选择取快照，不再只修改 composer 上的显示标签。
 // 获取偏好后明确查询该站点密钥，不能复用另一站点的 configured 状态。
 // 配置错误显示给用户但不清草稿，模型目录不可用不会造成内容丢失。
-import { agentRunSelection } from '@/stores/use-agent-provider-store';
+import { agentRunSelection, useAgentProviderStore } from '@/stores/use-agent-provider-store';
+import { assertModelImages, imageCapabilityHint } from '@/utils/provider-image-capability';
 import { useSettingsStore } from "@/stores/useSettingsStore";
 import { cancelAgent, runAgent } from "@/utils/electronBridge";
 // 发送前读取实际图片字节，blob 地址仅用于本页预览，模型无法访问。
@@ -331,13 +332,15 @@ export const useAgentStore = create<AgentState>((set, get) => ({
       // 读取的是本次调用的原会话，切换会话仍由后面的快照检查作废提交。
       // 只有用户已发送图片计入预算，工具生成物的磁盘路径不是远端输入图片。
       const previousImages = state.sessions.find(item => item.id === state.activeSessionId)?.messages.flatMap(message => message.inputImages || []) || [];
+      if (state.attachments.length || previousImages.length) assertModelImages(selection.provider, selection.model, useAgentProviderStore.getState().catalogs);
       inputImages = await prepareAgentImages(state.attachments, previousImages);
     } catch (error) {
       const { useToastStore } = await import('@/stores/useToastStore');
       // 图片错误给出可读反馈，配置错误仍用原模型提示；两者都保留原输入。
       // 不回显底层浏览器异常或完整 data URL，错误来自受控转换模块。
       // 用户可删除超大或不可读取的附件后重新发送，不能静默丢图继续运行。
-      useToastStore.getState().show(error instanceof Error && error.message === t('agent.composer.imageReadFailed') ? error.message : t('agent.providers.selectionUnavailable'), 'error');
+      const hints = [t('agent.composer.imageReadFailed'), imageCapabilityHint(false), imageCapabilityHint(null)];
+      useToastStore.getState().show(error instanceof Error && hints.includes(error.message) ? error.message : t('agent.providers.selectionUnavailable'), 'error');
       return false;
     }
 
