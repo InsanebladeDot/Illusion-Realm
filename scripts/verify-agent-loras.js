@@ -19,10 +19,7 @@ const { hostToolSpecs, findHostTool, settleHostCall } = require("../apps/electro
 // 与下面的生成测试共用扫描证据，不再维护第二套模型测试框架。
 // 此入口只接受测试路径，不读取应用当前用户设置。
 const { listModels } = require("../apps/electron/src/main/modules/agent/model-catalog");
-// 真实临时文件用于覆盖扫描和 realpath，而不是让一个假的清单直接返回预期系列。
-// searchPath 夹具按 ComfyUI 标准目录布局，单独路径夹具稍后另行验证。
-// fixtureRoot 只存在于测试进程，不会被持久化为用户的模型路径设置。
-// assertions 记录通过的检查组，任何未捕获异常都会让整轮失败。
+// 用临时文件验证真实扫描与 realpath，不改用户模型设置。
 const fixtureRoot = fs.mkdtempSync(path.join(os.tmpdir(),"ir-agent-loras-"));
 const paths = {searchPath:fixtureRoot,lorasPath:"",checkpointPath:"",diffusionModelsPath:""};
 let assertions = 0;
@@ -91,30 +88,14 @@ function setupFixtures() {
 }
 /** 基础契约检查与拒绝矩阵分开，基础输入可加载后，负向结果才具有可解释性。 */
 async function checkCore(args) {
-  // 此组是失败矩阵的正向基准：扫描目录可用、资料可读、名称可以唯一匹配。
-  // 如果这里失败，不能把后续所有拒绝都解释成兼容性护栏正确生效。
-  // 工具声明从 hostToolSpecs 读取，确保测试的是 sidecar 实际看到的形状。
-  // 不直接读取源码字符串寻找 loras 字样，因为注释里出现同名文字不代表工具可用。
-  // 兼容列表由真实 listLoras 产生，不使用手写预期列表替换执行函数。
-  // 数据中同时放入可兼容和不可兼容项，防止 compatible 恒真或恒假的实现通过。
-  // 来源触发词的精确断言证明 readEntry 输出实际流入工具查询结果。
-  // 生成准备函数仅返回规范参数，没有在这些成功检查里执行任何 GPU 任务。
-  // 零权重与负权重一起验证，能发现常见的 truthy 默认值转换问题。
-  // 新旧对象身份不同证明准备阶段没有就地改写上层保存的原始请求。
-  // SDXL 衍生例使用 Illustrious 主模型与 Pony LoRA，只保证 SDXL 架构归类。
-  // 查询 note 限制效果承诺，不将训练子系列不同说成一定能获得理想画面。
-  // 声明必须真实传到 sidecar，不能只增加一段不可调用的内部实现。
-  // 生成工具必须声明 loras 数组和名称必填，否则模型无法按约定组装参数。
-  // 权重上下界与运行时一致，避免 Schema 允许、执行却静默改写的分叉。
+  // 先跑正向基准：真实工具声明可调用，目录扫描、触发词和权重传递正常。
+  // 同时放入不兼容项，防止兼容判断恒真或恒假也通过；此处不运行 GPU 推理。
   await check("sidecar 工具声明包含 LoRA 查询与权重参数",() => {
     const specs = hostToolSpecs(); assert.ok(specs.some(item => item.name === "list_loras"));
     const schema = specs.find(item => item.name === "generate_image").parameters.properties.loras;
     assert.equal(schema.type,"array"); assert.deepEqual(schema.items.required,["name"]); assert.equal(schema.items.properties.strength.minimum,-5);
   });
-  // 查询带主模型：已补全来源和目录兜底应分别保留证据来源。
-  // SDXL、视频、未知与冲突条目必须保持不兼容，不能仅因为目录是 loras 就放行。
-  // trainedWords 应来自当前版本来源文件，不能丢成空列表。
-  // searchPath 下查询 LoRA 必须可用，不能继续按旧工具的根 key 过滤而返回空集。
+  // 同查兼容、不兼容、未知和冲突项，触发词须来自实际版本资料。
   await check("检索根下 LoRA 发现、兼容性原因及触发词",async () => {
     const result = JSON.parse(await listLoras({model:args.model},paths));
     assert.equal(result.series,"anima"); assert.equal(result.total,11);
@@ -137,208 +118,47 @@ async function checkCore(args) {
 }
 /** 每个失败输入使用同一个已通过基础组的主模型，从而隔离具体拒绝条件。 */
 async function checkFailures(args) {
-  // 以下每项只改变一个关键输入，避免所有失败都来自“缺少主模型”。
-  // 跨系列、未识别系列、冲突来源和坏来源都必须在 renderer send 之前停止。
-  // 使用字符串数字是实际语言模型常见脏输入，不能按 parseFloat 悄悄接受。
-  // 重复输入即使是绝对路径别名，也必须按实际文件身份去重。
-  // 不存在的路径不能通过工具给出绝对位置来绕过本地扫描白名单。
+  // 每项只改一个关键输入，须在发送生成请求前拒绝，不能靠其他错误碰巧通过。
   const failures = [
-    // 负向：两个文件都存在且各自有可读来源资料，排除文件缺失造成的偶然失败。
-    // 主模型位于 diffusion_models/Anima，baseModel 明确为 Anima。
-    // LoRA 位于 SDXL，资料为 Pony，属于 SDXL 衍生架构。
-    // 保留正确的主模型名称，仅把扩展替换为另一个图片系列。
-    // 不显式传 series，使执行端必须从实际主模型推导系列。
-    // 不设置 strength，缺省权重合法，不应是失败的触发条件。
-    // 预期错误含“不兼容”，而不是来源文件缺失或模型未扫描到。
-    // 这个检查防止工具把全部图片 LoRA 当作可共用的模型扩展。
-    // 即使未来统一了模型选择界面，也不能取消执行入口的家族约束。
-    // 不涉及 SDXL 衍生模型之间的画风效果评价，仅验证明显的架构边界。
+    // 文件及资料均有效，只把 Anima 扩展换成 SDXL/Pony，须报架构不兼容。
     ["跨图片系列",{...args,loras:[{name:"SDXL/x.safetensors"}]},/不兼容/],
-    // 负向：Wan2.2 与 Anima 都能被明确识别，因此不能用 unknown 解释拒绝。
-    // 视频 LoRA 在标准 loras 类别目录中，具备正常的 safetensors 扩展名。
-    // 主模型仍为基础成功组的 Anima UNet，其他参数全部保留。
-    // 工具不能仅按文件扩展名相同就把视频权重交给图片 KSampler。
-    // LoRA 的 baseModel 是 Wan 2.2 I2V-A14B，目录也没有冲突。
-    // 预期明确报不兼容，不能先发送任务再等待 ComfyUI 张量尺寸错误。
-    // 这项与后面的“视频主模型走生图”不同，此处主模型本身是可用图片模型。
-    // 它覆盖扩展列表里混入一个视频模型的常见误选场景。
-    // 不要求测试机器拥有视频节点或 GPU，拒绝发生在提交工作流前。
-    // 真实加载视频模型的效果不在这条预检断言的证明范围内。
+    // 图片主模型配视频 LoRA，须在提交前拒绝，不等后端报张量错误。
     ["视频误入图片",{...args,loras:[{name:"Wan2.2/v.safetensors"}]},/不兼容/],
-    // 负向：未知项是真实扫描到的文件，不是不存在名称的错误替代。
-    // 它没有来源 JSON，普通目录也没有明确的系列标记。
-    // 文件名故意不带架构词，避免目录兜底与名字猜测混淆。
-    // 主模型已确认 Anima，unknown 不允许作为与任何主模型都匹配的通配值。
-    // 预期结果是拒绝，并建议用户补全模型资料或明确分类。
-    // 不能用“本地没有资料”推导为“应该就是当前系列”。
-    // 查询中这条仍需可见，使用户知道它被识别为文件但不能直接加载。
-    // 这个检查不要求缺少资料的所有文件都失败，明确目录的成功组单独验证。
-    // 若以后增加张量头识别，应更新夹具并证明新证据真实生效。
-    // 当前不伪造权重头，也不宣称已经进行了模型内容识别。
+    // 文件存在但没有系列证据，不能默认它与当前主模型兼容。
     ["未知系列",{...args,loras:[{name:"Unknown/unknown.safetensors"}]},/不兼容/],
-    // 负向：冲突来源为合法 JSON，不能与无法解析的坏文件合并测试。
-    // 目录明确标记 Anima，但来源 baseModel 写明 SDXL 1.0。
-    // 两种证据各自可识别，冲突不能靠任选其一消失。
-    // 使用完整相对名，排除裸文件名歧义导致的提前失败。
-    // 主模型、强度以及加载器配置都是合法输入。
-    // 预期错误保留“冲突”原因，提示先核实分类而非自动改写资料。
-    // 如果实现直接优先目录放行，这条会产生错误的成功结果。
-    // 如果实现只优先资料但丢弃冲突，也会丢失需要人工纠正的信号。
-    // 这组只读来源文件，测试后不能出现被工具修正的 baseModel。
-    // 没有把模型目录搬迁作为测试的一部分，来源冲突状态由固定夹具保证。
+    // 合法资料写 SDXL，目录写 Anima：两种证据冲突，不能任选其一放行。
     ["来源目录冲突",{...args,loras:[{name:"Anima/conflict.safetensors"}]},/冲突/],
-    // 负向：同名 sidecar 确实存在，但内容只有左花括号，JSON 解析必然失败。
-    // 模型位于 Anima 目录，因此如果错误地把 invalid 当 missing 就会被放行。
-    // 与 unknown 用例不同，这里有明确目录证据，只是不能绕过损坏资料。
-    // 模型文件本体仍然可被 scanner 正常发现。
-    // 选择采用完整相对名，不借助任何目录推断来定位文件。
-    // 预期消息指出资料不可用，便于用户选择重新补全或修复 sidecar。
-    // 不要求坏 JSON 的解析堆栈传给 Agent，公开错误原因已经足够。
-    // 读取器必须在解析失败时关闭文件句柄，不能妨碍随后清理临时目录。
-    // 脚本 finally 清理成功也间接覆盖 Windows 文件未长期占用的行为。
-    // 这条不能外推为所有磁盘故障都被模拟，只针对损坏来源文件。
+    // 资料损坏不同于资料缺失，即使目录明确为 Anima 也不能绕过。
     ["坏 JSON 来源",{...args,loras:[{name:"Anima/corrupt.safetensors"}]},/资料不可用/],
-    // 负向：LoRA 数组来自已经通过成功组的合法输入。
-    // 唯一缺少的字段是 model，prompt 是否存在不属于本模块的判断职责。
-    // 带 LoRA 时不能沿用模板内机器相关的默认模型作为未经确认的实际底模。
-    // 即使 LoRA 明确为 Anima，也不能据此自动挑选第一个 Anima 主模型。
-    // 预期结果是要求明确指定主模型，而不是扫描后随机选一个文件。
-    // 后面的旧请求成功组会证明不使用 LoRA 时仍可省略 model。
-    // 因此这个约束只作用于需要做兼容性匹配的生成请求。
-    // 它防止本地部署与模板作者机器的模型名称差异被隐藏。
-    // 不需要实际访问 ComfyUI，主模型选择不明确应在宿主层立即暴露。
-    // 用户可以先查询本地主模型，再使用完整名称重新发起请求。
+    // 带 LoRA 必须明确主模型；不带 LoRA 的旧请求另验可省略。
     ["缺少主模型",{loras:args.loras},/必须明确/],
-    // 负向：实际主模型与两个 LoRA 都是 Anima，不存在真正的跨系列选择。
-    // 唯一改变是显式宣称 series=sdxl，模拟语言模型填错模板参数。
-    // 主进程不能因为调用方宣称 SDXL 就改用另一套图片工作流。
-    // 也不能静默删除用户输入的 series 后当作没有发生。
-    // 预期结果明确指出 series 与实际主模型不一致。
-    // 如果只检查 LoRA 的目录而信任 series，这条将错误进入 SDXL 加载器。
-    // 基础成功组已验证 series 省略时能从真实模型推导。
-    // 这条专门证明“缺省推导”与“显式冲突”是不同语义。
-    // 断言检查错误类别，不依赖完整中文提示每个标点保持不变。
-    // 未来加入其他模板时仍需保留实际主模型证据优先的原则。
+    // 实际模型是 Anima，却声明 series=sdxl，须指出冲突。
     ["虚报 series",{...args,series:"sdxl"},/series/],
-    // 负向：Anima 主模型本身有匹配的 baseModel 资料，家族识别可以成功。
-    // 但该文件放在 checkpoints 根中，不是 diffusion_models 类别。
-    // 现有 Anima 模板使用 UNETLoader，不应向 CheckpointLoader 的路径清单取替代项。
-    // LoRA 数组仍然是正常 Anima，确保错误确实来自加载器目录约束。
-    // 使用完整相对名区分 base.safetensors 与 misplaced.safetensors。
-    // 预期错误含加载器，不能以家族相同作为所有模型结构都可加载的理由。
-    // 不移动文件或修改模板来让请求通过，模型目录需要用户明确纠正。
-    // 这项与张量内容识别不同，只确认当前工程加载器契约。
-    // 如果未来允许另一种 Anima checkpoint 模板，应补对应的独立入口。
-    // 本轮不对创建页原有模型列表筛选规则作额外迁移。
+    // 系列正确但目录错误：UNETLoader 不能用 checkpoints 清单里的同系列文件代替。
     ["错误加载器目录",{...args,model:"Anima/misplaced.safetensors"},/加载器/],
-    // 负向：两个 duplicate.safetensors 都位于有效 Anima 子目录。
-    // 两个文件都可扫描，不能将失败归结为不存在或无架构证据。
-    // 调用只使用裸文件名，无法表达用户要 one 还是 two 版本。
-    // 不允许按扫描顺序、字母排序或第一个匹配决定模型身份。
-    // 预期明确提示歧义，要求使用完整相对名称。
-    // 后续完整名成功组独立证明 one/duplicate 确实可选择。
-    // 不把“两个都是同系列”作为可以随便选择其中一个的依据。
-    // 同名不同训练版本可能带来不同角色或风格，选择必须准确。
-    // 这个约束同样适用于主模型选择，不仅适用于 LoRA。
-    // 测试不依赖文件系统遍历顺序，所以可跨平台重复执行。
+    // 两个同名文件均有效，裸名有歧义；后面用完整相对名验证可以选中。
     ["同名歧义",{...args,loras:[{name:"duplicate.safetensors"}]},/歧义/],
-    // 负向：数组两项都指向同一个真实文件，第一项为相对名，第二项为绝对名。
-    // 绝对名来自本轮扫描白名单，不是向任意用户目录发起读取。
-    // 两个名字分别能唯一匹配，不能用“名称完全相同”的简单字符串去重替代。
-    // 预期结果按真实文件身份检测重复，阻止不经意的双重权重叠加。
-    // 每项的缺省强度合法，系列也与主模型一致。
-    // 如果按输入字符串去重，这组会错误生成两个相同 LoRA 节点。
-    // 不静默去重，因为那会改变用户请求的加载链和实际权重效果。
-    // 用户需要明确选择一项或修改权重后重试。
-    // 此处不检测硬链接 inode 身份，只覆盖扫描路径的别名选择。
-    // 链接文件授权由已有 readEntry 策略负责，不在本条新增绕过规则。
+    // 相对名和绝对名指向同一文件，须拒绝重复加载；不覆盖硬链接身份。
     ["重复 LoRA",{...args,loras:[{name:"Anima/a.safetensors"},{name:path.join(fixtureRoot,"loras/Anima/a.safetensors")}]},/重复/],
-    // 负向：把 loras 数组误写为一个模型名字符串，是常见的工具参数格式错误。
-    // 不能把字符串当可迭代列表逐字符处理，也不能忽略它后无扩展生成。
-    // 主模型仍合法，但此项应在任何目录扫描之前失败。
-    // 预期提示 loras 必须是数组，不能显示成模型文件不存在。
-    // 省略与空数组的兼容行为已经由独立成功用例覆盖。
-    // 单项对象同样不等价于数组，调用方必须遵守正式工具契约。
-    // 本条不需要修改 sidecar，因为模型输出本来就可能不服从 Schema。
-    // 运行时检查保证工具描述之外还有实际约束。
-    // 若此项意外放行，返回的生成结果将不包含用户要求的 LoRA。
-    // 测试只检查拒绝语义，不把脏参数自动修复当成预期功能。
+    // 字符串不能冒充数组，须报参数格式错，而非继续扫描或忽略扩展。
     ["无效数组",{...args,loras:"Anima/a.safetensors"},/数组/],
-    // 负向：strength 输入字符串 "1"，数值含义看似正确但类型不符合契约。
-    // 不允许 parseFloat 或 Number 自动转换后静默接受。
-    // 空字符串和带单位字符串的隐式转换会使实际执行更难解释。
-    // LoRA 名称与主模型都正确，因此应明确报 strength 参数错误。
-    // 默认值只用于字段缺省，不用于纠正显式错误的参数类型。
-    // 如果实现将字符串丢掉并回落 1，这条会暴露“输入与执行不一致”。
-    // 主进程与渲染层都具有对应负向检查，防止内部调用绕过约束。
-    // 权重按浮点数传给真实构造器，不应在转换层变成文本。
-    // 本条不规定 UI 输入框如何解析人类文本，只约束 MCP JSON 协议。
-    // 正常数字 1 的允许行为由缺省权重和成功链组共同覆盖。
+    // 显式字符串权重不能被转换或丢弃后回落默认值。
     ["字符串权重",{...args,loras:[{name:"Anima/a.safetensors",strength:"1"}]},/strength/],
-    // 负向：Infinity 属于 JavaScript number，但不能序列化为有效的有限采样参数。
-    // 如果只检查 typeof，JSON.stringify 会把它变为 null，掩盖原始错误。
-    // 预期在序列化或发送前拒绝，不让后端误以为使用默认权重。
-    // 输入直接进入生产模块，验证 Number.isFinite 的真实作用。
-    // 该值不会来自合法 JSON，但可能来自内部工具或计算后的调用参数。
-    // 因此不能因为外部 JSON 不支持 Infinity 就省略防御。
-    // LoRA 名称本身有效，不会抢先触发文件匹配错误。
-    // 这里不模拟采样数值溢出，验证的是参数边界的非有限数拦截。
-    // 负 Infinity 和 NaN 具有相同有限数约束，后续可作为额外矩阵输入。
-    // 实际失败必须由 strength 错误表达，不能以普通未知工具错误代替。
+    // Infinity 也是 number，须在序列化变成 null 前拒绝。
     ["无限权重",{...args,loras:[{name:"Anima/a.safetensors",strength:Infinity}]},/strength/],
-    // 负向：6 是有限数字，但超出当前工具声明的 [-5,5] 输入护栏。
-    // 这项与 Infinity 不同，专门证明有限数校验之外还有范围校验。
-    // 模型与 LoRA 都相容，不能依靠其他失败条件让测试偶然通过。
-    // 预期错误明确指出 strength 范围，不把数值钳制为 5 后继续生成。
-    // 静默钳制会使实际结果无法按照 Agent 原始参数复现。
-    // 允许负权重的成功组与此项配对，避免实现粗暴拒绝所有非正权重。
-    // Schema 下界另有断言，运行时范围必须和声明保持一致。
-    // 这个上限是工程护栏，不代表每个模型在允许范围内都保证稳定输出。
-    // 若项目调整范围，需要同时更新声明、两端解析和这条负向断言。
-    // 不能只放大 Schema 允许值而保留不同的执行端限制。
+    // 有限但越界的权重须报错，不静默夹到上限；合法负权重另有正向对照。
     ["越界权重",{...args,loras:[{name:"Anima/a.safetensors",strength:6}]},/strength/],
-    // 负向：名称包含独立的上级目录段，不能当作普通模型子目录处理。
-    // 选择函数必须在尝试 basename 匹配前识别穿越写法。
-    // 否则 ../a.safetensors 可能错误命中库里一个无关的 a 模型。
-    // 输入没有提供新的扫描根，工具也不能据它发起库外磁盘读取。
-    // 预期报名称无效，而不是尝试拼接后扫描父目录。
-    // 主模型仍合法，错误局限于本项 LoRA 名称。
-    // 成功组已经允许正常的嵌套子目录，所以不是禁用所有路径分隔符。
-    // 已扫描的绝对路径别名也另有用例，不与相对路径穿越混为一谈。
-    // 本条不创建外部文件，失败不依赖用户机器上是否碰巧存在 a 模型。
-    // 目录授权服务还会做真实路径检查，这里是名称选择阶段的额外约束。
+    // 先拒绝上级目录段，再匹配文件名，避免 ../a 误命中库内 a。
     ["上级路径",{...args,loras:[{name:"../a.safetensors"}]},/无效/],
-    // 负向：主模型和 LoRA 都是 Wan2.2，家族相同本身并不足以调用 generate_image。
-    // 两者都有正常来源资料，不是未知架构或目录冲突的问题。
-    // 工具只提供两套图片模板，不能把视频模型交给图片生成图构造器。
-    // 预期报当前生图不支持此系列，而不是假装新增了视频生成工具。
-    // 与前面的“视频 LoRA 配 Anima”不同，此处扩展和主模型彼此同系列。
-    // 视频查询成功组会证明这套模型不是被整个目录发现功能排除掉。
-    // 未来实现 generate_video 时应由其独立工作流和槽位约束接受这类输入。
-    // 不在本测试里伪造帧数、采样器或高低噪声分支来凑出视频成功结果。
-    // 当前错误应发生在 renderer send 前，不产生实际 GPU 排队任务。
-    // 这项明确限定了本轮功能的支持范围，避免查询能力被误读成生成能力。
+    // 主模型与 LoRA 同属 Wan2.2，也不能交给图片生成工具。
     ["视频不能走生图",{model:"Wan2.2/video.safetensors",loras:[{name:"Wan2.2/v.safetensors"}]},/不支持/],
   ];
   for (const [name,input,error] of failures) await check(name,() => assert.rejects(prepareLoraGeneration(input,paths),error));
 }
 /** 查询选择与旧参数兼容分别验证，不能让新增强约束破坏不使用 LoRA 的调用。 */
 async function checkCatalogOptions(args) {
-  // 旧参数检查与新能力分开，避免新增主模型必填限制误伤不使用扩展的生图。
-  // from-metadata 放入 Misc 目录，证明实现不要求用户必须按固定文件夹命名。
-  // 无来源但位于 Anima 的 b 模型提供相反方向的目录兜底对照。
-  // 这两个正向例共同说明来源与目录是可区分的证据，而非两个都必须存在。
-  // 完整名消歧与前面的裸名失败使用相同夹具，仅改变名称精度。
-  // 视频查询以 Wan2.2 主模型为基准，Wan2.1 必须保持 incompatible。
-  // 若把所有视频 family 简化成 video，两项会都变成 compatible，此组就会失败。
-  // 未选主模型时 null 代表没有判断依据，不应被界面当作 false 或 true 保存。
-  // 独立根测试移除 searchPath，证明检索优先规则不会永久覆盖单独目录设置。
-  // 直接配置到 Anima 子目录时，绝对目录证据仍需保留，不能只观察相对名称。
-  // 此组不检测服务器部署路径与本地根是否相同，服务器精确名称另在渲染组验证。
-  // 所有调用继续使用同一个临时根，不从系统设置获取任何替代路径。
-  // 无 LoRA 的旧请求仍可省略 model，保证新护栏不改变原工具默认行为。
-  // 资料正常且没有系列目录时也可加载，避免把目录命名当成唯一证据。
-  // 完整相对名可以消除裸名歧义，不能在发现重名后把整个模型库禁用。
+  // 配对验证资料识别与目录兜底、裸名歧义与完整名消歧，以及不带 LoRA 的旧请求。
+  // Wan2.1 和 Wan2.2 仍须区分；未选主模型时 compatible=null，表示尚无判断依据。
   await check("旧请求、资料单独识别及完整名消歧",async () => {
     assert.deepEqual(await prepareLoraGeneration({prompt:"cat"},paths),{prompt:"cat",loras:[]});
     for (const name of ["Misc/from-metadata.safetensors","Anima/one/duplicate.safetensors"]) assert.equal((await prepareLoraGeneration({...args,loras:[{name}]},paths)).loras[0].name,name);
@@ -436,20 +256,14 @@ async function checkCompactCatalog(args) {
   // 不兼容原因保留，让使用者知道需要换系列而不是反复改文件路径。
   // 原详细查询证据再长，也不能成为摘要把失败说明整个省略的理由。
   assert.ok(rejected.loras[0].reason);
-  // 两个入口共享查询校验器，但分别调用才能发现某一入口忘记接入校验。
-  // 字符串与数字分别覆盖两种常见错误类型，不只测试缺省值。
-  // assert.rejects 等待异步边界，错误未发生时会让脚本以失败结束。
-  // 类型失败发生在扫描前，不要求测试制造不存在的磁盘目录来凑报错。
+  // 两个查询入口分别验非法类型，防止某一入口漏接共同校验器。
   await assert.rejects(listModels({ summary: "true" }, paths), /summary/);
   await assert.rejects(listLoras({ summary: 1 }, paths), /summary/);
   // schema 是新模型调用的必填约束；旧内部适配器仍保留历史缺省模型兼容。
   // 因此不把这一断言误写成“所有旧调用缺主模型时都会运行期拒绝”。
   // 工具本体来自正式注册表，避免测试另写一份声明后自己检查自己。
   assert.ok(findHostTool("generate_image").parameters.required.includes("model"));
-  // 验证的是 Agent 首次发现工具时看到的版本，未依赖旧聊天中的工具描述缓存。
-  // 旧模板回落行为继续在 checkCatalogOptions 单独检查，两个契约并未混为一谈。
-  // Agent 新查询只广告本地来源，不能在无结果时改为扫描云端角色站点。
-  // 旧内部 online 兼容入口仍由原有网络测试覆盖，这里检查新发现契约。
+  // 检查 Agent 实际发现的本地工具声明，不以旧聊天缓存作证。
   assert.deepEqual(findHostTool("search_characters").parameters.properties.source.enum, ["local"]);
   // 真实生图请求的服务器名称复核仍由原生成组执行，不因摘要测试通过而省略。
   // 两组共同保护“返回可直接使用的名称”与“执行前仍要再核实”这两个边界。
@@ -465,15 +279,7 @@ async function checkCompactCatalog(args) {
  * 旧生成测试继续保护目录兼容与完整服务器名称，避免此处重复搭建转发器。
  */
 async function checkStructuredCatalog() {
-  // 查询结果必须能直接 JSON.parse，展示文字夹杂在结果中会在这里报错。
-  // Anima 默认模型来自 diffusion_models，查询 diffusion 不再因 search 根而空。
-  // 夹具确切内容为 ASCII fixture，因此精确大小应为七字节。
-  // name 保留目录与扩展，后面的 listLoras/generate_image 可原样使用。
-  // 同文件在旧兼容测试已成功选择，两个工具不应提供不一致身份。
-  // 根路径不能泄漏到返回 JSON，文件名中的正常子目录仍必须保留。
-  // 判断 validation 防止 usable 被误读成已完成 GPU 试载。
-  // evidence 来自版本来源，不能只返回没有依据的 series 标签。
-  // 本组尚未添加同名主模型，因此正常 Anima 必须给出本地预检通过。
+  // 结果须是可解析 JSON，保留完整可传递名称、七字节大小和系列证据，不泄漏根目录。
   await check("JSON清单保留分类、精确字节与完整可传递名称",async () => {
     const result = JSON.parse(await listModels({kind:"diffusion",series:"anima",query:"base.safetensors"},paths));
     const model = result.models[0];
@@ -505,11 +311,7 @@ async function checkStructuredCatalog() {
     // 此处不是禁止合法相对文件名，前面的 name 精确断言保护了子目录。
     assert.ok(!JSON.stringify(result).includes(fixtureRoot));
   });
-  // unet 和历史拼写是输入类别别名；输出类别仍统一叫 diffusion。
-  // 两个别名都使用同一已存在主模型，避免只测 schema 不测真实扫描。
-  // VAE 没有来源旁车，分类应靠标准目录，不凭名称中的 Anima 推断用途。
-  // 错加载器的 Anima 已在 checkpoints 中，输出须解释为不可用于当前生图。
-  // 所有这些条件只改变查询，不向 renderer 发送任何生成请求。
+  // 输入类别别名须查到真实模型；辅助模型和错目录主模型不能冒充可用底模。
   await check("目录别名可查询，辅助模型与错放主模型不冒充可用",async () => {
     // 本测试未配置单独的 unet 目录，别名应映射同一 diffusion 候选集合。
     // 若仍按 resolveScanRoots 的 search 键过滤，此处将读到空结果而失败。
@@ -534,21 +336,8 @@ async function checkCatalogPaging() {
   // LoRA 名称有扩展，不能用去后缀的显示名代替实际可提交身份。
   // 所有新增旁车沿用真实 LORA 元数据格式，不把系列结果手工塞入响应。
   for (let index = 0; index < 45; index++) fixture(`loras/Anima/page-${String(index).padStart(2,"0")}.safetensors`,"Anima");
-  // 用 nextOffset 续读，不由测试自行计算后恰好碰到第二页。
-  // 第一页 total 必须是四十五，不能等读到第二页才知道总数。
-  // 第二页 nextOffset 为 null，Agent 才有明确停止条件而非一直查询空页。
-  // 合并后的集合验证完整性，检查关键词末项能发现先切页再筛选的错误。
-  // list_loras 同步使用同一分页器，但其兼容结论仍保持独立语义。
-  // 没有选择主模型时 compatible 是 null，series 过滤不能冒充兼容验证。
-  // 这里不读取磁盘占用的近似文本，精确 bytes 已由前一组独立保护。
-  // 目录扫描结果按名称稳定排序，两个查询间没有夹具写入。
-  // 旧工具限制为四十时，会在 total 或第二页返回数量断言上明确失败。
-  // 超尾 offset 保留其值，不自动回首页，否则 Agent 可能不断重复第一页。
-  // 临时库此时实际有五十六项 LoRA，命中总数四十五专指 page- 子集。
-  // roots.files 是全根数，不应直接拿它与筛选后的 total 比较。
-  // 双位序号保证命名清楚；断言不依赖系统目录创建顺序。
-  // 这里的名称集合区分完整目录，不能用 basename 去重后隐藏不同版本。
-  // 默认页长四十与最大允许一百是两个约束，本组特意不覆盖默认 limit。
+  // 按真实 nextOffset 读完 45 个匹配项，尾页必须明确结束；超尾不能回首页。
+  // 根内共 56 项，筛选后 total 与全根数量不同；无主模型时兼容结论仍为 null。
   await check("四十五项完整分页，LoRA专用查询与总清单一致",async () => {
     const first = JSON.parse(await listModels({kind:"lora",query:"page-"},paths));
     // 首次响应提供的偏移作为第二次输入，是 Agent 无需算术猜测的续页方式。
@@ -566,14 +355,7 @@ async function checkCatalogPaging() {
     assert.deepEqual([loras.total,loras.loras.length,loras.nextOffset],[45,5,null]);
     assert.ok(loras.loras.every(model => model.compatible === null));
   });
-  // 空配置不得扫描工作目录，正常返回 not_configured 引导设置。
-  // 负偏移、小数、字符串上限与未知类别均应显式拒绝，而非回退 all。
-  // 主模型跨目录重名时，即使只查 diffusion 也不能把结果标为可用。
-  // 加入 SDXL 候选还可证明 series=anima 不会隐掉另一个实际匹配文件。
-  // 这不是权重损坏结论，仅是工具不能唯一确定要加载哪份文件。
-  // 没有移动或删除原夹具，测试只在私有临时根增加明确命名的文件。
-  // 末项检查后 suite 结束，finally 会清理所有原有和新增夹具。
-  // 上面的正常查询先通过，才能把这里的 false 解释为歧义护栏生效。
+  // 空设置不扫描当前目录；筛选也不能隐藏跨根同名导致的加载歧义。
   await check("空设置及非法输入可解释，筛选不能隐藏跨根同名",async () => {
     // 显式给完整设置形状且每项空串，与 readSettingsPaths 的缺省输出一致。
     // 不是给一个不符合内部路径契约的空对象来误测另一个 TypeError。
@@ -602,18 +384,8 @@ async function checkCatalogPaging() {
  * 断言捕获的 arguments 是规范后的实际参数，而不是只检查返回文字。
  */
 async function checkHostForwarding(args) {
-  // 宿主生成入口必须真实执行 prepareLoraGeneration，而不能只在列表查询时检查。
-  // 如果只展示警告但仍发送消息，不兼容请求的 sent.length 将大于零。
-  // 失败调用结束后再发成功请求，避免同时存在的 pending Map 条目互相干扰。
-  // sender.send 的 channel 不用于判断兼容性，它只是记录发生了转发这一事实。
-  // 模拟回执用 payload.callId，不能硬编码固定 ID，否则可能没有结算正确请求。
-  // queueMicrotask 模拟异步响应，不需要睡眠等待一个猜测的固定时长。
-  // 返回的 fixture 结果只用来结束宿主 Promise，不能当作真实生成成功证据。
-  // sent[0].arguments 检查两项 LoRA 都存在，不能只验证主模型名称正确。
-  // 测试 settings 文件包含本轮路径快照，工具仍按生产 readSettingsPaths 读取。
-  // 原环境变量可能被外部测试器设置，finally 必须恢复而非一律删除。
-  // 不修改 HOST_TOOLS 的 run 实现，所以兼容性失败不能被测试替身伪造。
-  // 这组覆盖主进程转发形状，真正渲染执行链在下一组用真实图构造器补充。
+  // 调真实宿主入口，验证不兼容请求未被转发，成功请求保留全部 LoRA 参数。
+  // 仅用微任务模拟回执结束 Promise，不证明真实生成；finally 恢复原环境变量。
   const previous = process.env.ILLUSION_AGENT_USER_DATA, settings = path.join(fixtureRoot,"settings.json"), sent = [];
   fs.writeFileSync(settings,JSON.stringify({settings:{paths}})); process.env.ILLUSION_AGENT_USER_DATA=settings;
   const ctx = {runId:"fixture",sender:{send:(channel,payload) => {sent.push(payload);queueMicrotask(() => settleHostCall({callId:payload.callId,ok:true,result:"fixture",images:[]}));}}};
@@ -635,30 +407,9 @@ async function checkHostForwarding(args) {
  * 本组不验证图片保存、任务队列或模型运行速度，这些不属于兼容性预检。
  */
 async function checkRendererWorkflow(args) {
-  // ComfyUI 清单里的 Anima 主模型使用反斜杠，工具参数使用正斜杠。
-  // 允许这一平台差异应不影响完整目录匹配，返回节点仍采用服务器原名。
-  // 另一个 SDXL/base 出现在 checkpoints 清单，不得作为 Anima UNet 的替代。
-  // 第一 LoRA 权重为零，第二为负，节点输入必须与请求严格相等。
-  // loader 节点通过 class_type 定位，不把 Anima 模板的主模型 ID 写死在断言里。
-  // 动态 LoRA 节点 ID 100/101 是项目构造器的现有约定，此处检查串联方向。
-  // KSampler 指向最后一项，能发现“节点存在但没有接到实际采样链”的假成功。
-  // 第一个 LoRA 必须连接真实 UNet 输出，不能错误使用 CLIP 或默认模板旧链接。
-  // 真实模型字段名是 unet_name，这个断言能识别错写 ckpt_name 的实现。
-  // 测试不会修改内置 JSON 文件，构造器克隆后的图只存于本次内存对象。
-  // 参数校验的错误检查使用 key，词条具体语言由生产 i18n 门禁独立校验。
-  // fake serverAddress 仅被清单替身接收，不解析为网络 URL 或启动 HTTP 服务。
-  // 当清单只剩 SDXL/a 时，完整名称不匹配应失败，basename 相同不能补救。
-  // 当两种分隔符分别列出同一个规范名时，匹配数量为二，必须拒绝歧义。
-  // 这两条负向清单用例共享同一个合法主模型，错误不会来自 UNet 缺失。
-  // 清单修改发生在正向节点图断言结束后，不会污染已经通过的模型选择。
-  // readAgentLoras 从真实渲染代码加载，不能用测试中的数组常量代替其校验行为。
-  // 若未来图构造器改为其他合法节点类型，应同步更新链路断言及功能约定。
-  // 这里没有模拟 saveGeneratedImages，因而不能证明图库归档、PNG Meta 落盘或通知行为。
-  // 运行时间仅反映小文件与纯函数处理，不外推实际 ComfyUI 推理性能。
-  // TypeScript 转译不是类型检查替代，本轮还要独立执行整个 monorepo typecheck。
-  // 测试失败会带出原 assert 堆栈供本地定位，不通过 IPC 发送给渲染用户。
-  // 不截获主进程日志，也不向测试输出写入原用户模型或密钥路径。
-  // 本轮夹具没有真实权重，所有通过结论限制在参数流和兼容性决策层。
+  // 用真实渲染解析器和图构造器，服务清单由替身提供：核对完整路径、零/负权重和实际采样链。
+  // 服务器原名可含反斜杠，缺失或规范化后重名都须拒绝，不能按 basename 猜。
+  // 夹具没有真实权重，不验证 GPU、图库落盘、PNG Meta 或推理性能；转译也不代替类型检查。
   const t = (key,values) => key+JSON.stringify(values||{});
   const lists = {checkpoints:["SDXL/base.safetensors"],diffusionModels:["Anima\\base.safetensors"],loras:["Anima\\a.safetensors","Anima\\b.safetensors"]};
   const renderer = loadTs("apps/next/src/utils/agent-loras.ts",{"@/api/comfyui":{fetchComfyModelLists:async () => lists},"@/i18n":{t}});
@@ -667,11 +418,7 @@ async function checkRendererWorkflow(args) {
     "@/data/comfy/imageWorkflower/SDXL/标准SDXL生成.json":require("../apps/next/src/data/comfy/imageWorkflower/SDXL/标准SDXL生成.json"),
     "@/i18n":{t},"@/utils/comfy/workflowToApi":{cloneComfyPrompt:structuredClone},"@/utils/comfy/comfyModelPath":{},
   });
-  // 原有带 LoRA 测试只直接调用严格解析器，未经过宿主根据扩展有无选分支。
-  // 此处新增同一真实宿主的无扩展场景，使默认生成策略也受到最终节点断言保护。
-  // 检查安排在原成功图之前，夹具会恢复清单，因此后续 LoRA 链还必须继续通过。
-  // 无需另起 Electron 窗口，生产 TS 模块经已有转译器执行，浏览器专属 I/O 被替换。
-  // 这与静态检查“包含某个函数名”不同：选错旧分支会真正提交错误节点并失败。
+  // 再经真实宿主验证不带扩展的分支，防止它回落到旧模型解析器；结束后恢复清单。
   await checkAgentModelHost(renderer, workflows, lists, t);
   await check("LoRA 实际进入 Anima UNet→LoRA→LoRA→KSampler 链",async () => {
     const params = await renderer.resolveAgentLoraParams({series:"anima",checkpointName:args.model,loras:renderer.readAgentLoras(args.loras)},"fixture");
@@ -681,10 +428,7 @@ async function checkRendererWorkflow(args) {
     assert.equal(graph["100"].inputs.strength_model,0); assert.equal(graph["101"].inputs.strength_model,-0.4);
     assert.equal(graph["100"].inputs.lora_name,"Anima\\a.safetensors"); assert.deepEqual(Object.values(graph).find(node => node.class_type==="KSampler").inputs.model,["101",0]);
   });
-  // 数字字符串与空名称在渲染端也要报错，不能靠 TypeScript 声明假定数据可靠。
-  // 服务端缺少同目录名称时必须失败，即使另一个系列里恰好有相同文件名。
-  // 同一规范名映射到多个实际服务名称也是歧义，不能依赖数组顺序。
-  // 一个对象被解析后会生成新对象，不会改动最初的 settings 或 tool arguments。
+  // 渲染侧也拒绝错误类型、空名称及模糊服务器匹配，且不改写原请求。
   await check("渲染端输入校验及完整服务器名称拒绝模糊回落",async () => {
     assert.throws(() => renderer.readAgentLoras([{name:"a",strength:"1"}]),/invalidLoras/);
     assert.throws(() => renderer.readAgentLoras([{name:""}]),/invalidLoras/);
@@ -739,26 +483,15 @@ function createAgentHostFixture(renderer, workflows, lists, t) {
   // meta 单独记录保存编排收到的参数，避免只修正执行值却让二创数据丢失目录。
   // 两个数组只在这个夹具中累积，不共享上一个测试组的生成结果。
   const submitted = [], meta = [];
-  // 传输替身不再自行处理模型名，生产图构造器写入什么就被原样记录。
-  // 返回一个合法的最小生成结果，让正式 try/finally 与落盘分支继续走完。
-  // images 只提供最小图片身份，像素和 Blob 不参与本例模型路径断言。
-  // promptId 仅为夹具标识，不代表 ComfyUI 已分配真实任务。
-  // 获取清单的函数供原解析器使用，严格解析器也通过传入的生产 renderer 工作。
-  // 两条分支面对同一 lists，因此不能用不同服务返回值掩盖选错清单的事实。
+  // 请求替身只记录生产构造器提交的图；最小结果用于走完清理，不代表 ComfyUI 真生成。
   const api = { fetchComfyModelLists: async () => lists, generateWithComfy: async graph => { submitted.push(graph); return { promptId: "fixture", images: [{ nodeId: "fixture", objectUrl: "blob:fixture" }] }; }, revokeComfyImages: () => {} };
   // 原路径模块也加载生产实现，修复前确实会发生 basename 截断。
   // 如果用一个直接返回完整名称的替身替换它，本次根因将无法被测试发现。
   // 类型专用 import 转译后消失，路径模块没有运行时外部依赖。
   const modelPaths = loadTs("apps/next/src/utils/comfy/comfyModelPath.ts", {});
-  // 保留旧 resolver 真实代码，唯一假的依赖是请求边界与空设置默认对象。
-  // 它只读取 checkpoints 的现有行为会在旧分支里把 Anima 路径截断。
-  // 本轮不顺便修改所有创建页调用方的路径策略，测试应明确隔离 Agent 分支修复。
-  // 若宿主仍调用旧分支，详细的主模型断言会失败，不会由夹具自动补救。
+  // 保留旧解析器作对照，若宿主选错分支，模型路径断言必须失败，夹具不替它补救。
   const resolver = loadTs("apps/next/src/utils/comfy/resolveComfyModels.ts", { "@/types/settings": { EMPTY_SETTINGS_PATHS: {} }, "@/utils/comfy/comfyModelPath": modelPaths, "@/api/comfyui": api });
-  // require 替换仅发生在内存转译器内，不修改 Node 的全局模块缓存或正式导出。
-  // 因此本例结束后，其他检查继续使用真实应用模块，不会继承假的用户状态。
-  // 未列出的依赖由 loadTs 拒绝，模块未来新增重要边界时不能被静默忽略。
-  // 引用生产 agentHostTools，检查的正是是否附带 LoRA 的分支，而非另写同样判断。
+  // 只在本次内存转译中替换依赖，不改全局模块缓存；未列出的依赖直接拒绝。
   const host = loadTs("apps/next/src/utils/agentHostTools.ts", {
     // 获取清单与提交工作流两个传输入口都在同一 API 模块边界替换。
     // 这里不启动 HTTP 服务，不能据此声称线上 ComfyUI 可连接。
@@ -914,8 +647,5 @@ async function checkAgentModelCompatibility(fixture, workflows) {
   const defaultName = Object.values(workflows.buildImagePrompt("anima")).find(node => node.class_type === "UNETLoader").inputs.unet_name;
   assert.equal(Object.values(fixture.submitted.at(-1)).find(node => node.class_type === "UNETLoader").inputs.unet_name, defaultName);
 }
-// 清理仅递归删除本脚本 mkdtemp 的返回目录，不接受外部路径作为删除目标。
-// finally 无论通过或失败都执行，避免测试留下看似真实模型的冗余夹具。
-// catch 设置非零状态，脚本可以独立作为回归检查接入后续门禁。
-// Promise 完成前进程由文件操作与宿主回执保持，不另起后台 Electron 子进程。
+// 无论成败都只清理本次 mkdtemp 目录，失败保留非零退出码。
 main().then(() => console.log(`AGENT LORAS OK: ${assertions} groups`)).catch(error => {console.error(error);process.exitCode=1;}).finally(() => fs.rmSync(fixtureRoot,{recursive:true,force:true}));

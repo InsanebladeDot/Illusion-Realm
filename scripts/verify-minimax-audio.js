@@ -237,17 +237,28 @@ async function references() {
   // 原文中非引用部分保留一个普通空格，转换不得重写用户对白。
   // 与固定期望比较，不用生产 formatter 生成测试期望而形成恒真对照。
   assert.equal(shared.normalizeVideoReferences('@image 7 @video3 @audio 1',media),'<Picture 1> <Video 1> <Audio 1>');
+  // 同名文件及混合类型独立编号；旧 Audio 草稿升级后再次转换保持不变。
+  const mixed = '<Picture 1> <Video 1> <Audio 1>';
+  assert.equal(shared.normalizeVideoReferences(mixed, media), mixed);
+  assert.equal(shared.normalizeVideoReferences('<Slot 1>', media), '<Audio 1>');
+  assert.equal(shared.normalizeVideoReferences('@picture7 @视频3 @音频1', media), mixed);
+  for (const token of ['<Slot 0>', '<Slot 2>', '<Audio 2>', '<Picture 2>', '<Video 2>']) assert.throws(() => shared.normalizeVideoReferences(token, media), /videoReferences.missing/);
   // 参考工作流已有唯一 LoadAudio 槽；prompt 转换不能额外增加音频端口。
   // 断言的是最后发往 ComfyUI 的节点字段，不是只读预览的临时字符串。
   // 有参考则 @audio1 合法，保留用户的声音描述原文。
   const graph = builder.buildAudioPrompt({prompt:'Follow @audio 1',seed:0,referenceName:'accepted.flac'});
   assert.equal(Object.values(graph).find(node => node.class_type === 'MiniMaxH3ReferenceToVideo').inputs.prompt,'Follow <Audio 1>');
+  // 关闭转换不会阻止正常上传参考音频，只把原提示词原样交给工作流。
+  const raw = builder.buildAudioPrompt({prompt:'Follow @audio1',promptConversion:false,seed:0,referenceName:'accepted.flac'});
+  assert.equal(Object.values(raw).find(node => node.class_type === 'MiniMaxH3ReferenceToVideo').inputs.prompt,'Follow @audio1');
+  const custom = builder.buildAudioPrompt({prompt:'Follow @audio1',promptReferenceLabels:{audio:'Voice'},seed:0,referenceName:'accepted.flac'});
+  assert.equal(Object.values(custom).find(node => node.class_type === 'MiniMaxH3ReferenceToVideo').inputs.prompt,'Follow <Voice 1>');
   // 直接输入官方 Audio 标签也要核对素材存在，不能绕过别名转换校验。
   // 无参考、编号越界及错误媒体种类分别验证，拒绝并非只靠一个场景触发。
   // 错误 key 来自现有共享词条，确保失败指向缺失引用而非无关参数。
   // 所有 seed/prompt 基础条件有效，排除其他验证错误导致负向假通过。
   // 用户仍可不用任何引用写普通文字，graphs 中的原默认请求会独立通过。
-  for (const prompt of ['@audio1','<Audio 1>']) assert.throws(() => builder.buildAudioPrompt({prompt,seed:0}), /videoReferences.missing/);
+  for (const prompt of ['@audio1','<Slot 1>','<Audio 1>']) assert.throws(() => builder.buildAudioPrompt({prompt,seed:0}), /videoReferences.missing/);
   for (const prompt of ['@audio2','@image1','@video1']) assert.throws(() => builder.buildAudioPrompt({prompt,seed:0,referenceName:'accepted.flac'}), /videoReferences.missing/);
 }
 
@@ -310,6 +321,8 @@ async function roundTrip() {
   const queue = product('utils/audio-generation-queue.ts'), builder = product('utils/comfy/audio-workflow.ts');
   for (const reference of [null, new File([bytes], '中文参考.flac', { type: 'audio/flac' })]) { const result = await queue.enqueueAudioGeneration({ prompt: 'spoken words', seed: 123, loras: builder.defaultAudioLoras() }, reference).promise; assert.equal(result.outputs[0].blob.type, 'audio/flac'); assert.deepEqual(Buffer.from(await result.outputs[0].blob.arrayBuffer()), bytes); assert.deepEqual(fs.readFileSync(result.savedPaths[0]), bytes); assert.match(result.savedPaths[0], /IR_audio_.*\.flac$/); }
   assert.equal(uploadCount, 1); assert.equal(submissions[0]['153:9'].inputs.steps, 10); assert.equal(submissions[1]['157:9'].inputs.steps, 8); assert.equal(submissions[1]['164'].inputs.audio, 'references/accepted.flac');
+  await queue.enqueueAudioGeneration({ prompt: 'Keep @audio1', promptConversion: false, seed: 12 }, new File([bytes], 'reference.flac')).promise;
+  assert.equal(Object.values(submissions.at(-1)).find(node => node.class_type === 'MiniMaxH3ReferenceToVideo').inputs.prompt, 'Keep @audio1');
   const graph = builder.buildAudioPrompt({ prompt: 'model test', seed: 1 }); const names = Object.values(graph); lists = { checkpoints: [], diffusionModels: names.filter(n => n.class_type === 'UNETLoader').map(n => n.inputs.unet_name), clips: names.filter(n => n.class_type === 'CLIPLoader').map(n => n.inputs.clip_name), vaes: names.filter(n => n.class_type === 'VAELoader' && n.inputs.vae_name !== 'pixel_space').map(n => n.inputs.vae_name), loras: builder.defaultAudioLoras().map(n => n.name) }; await builder.resolveAudioModels(graph, address); assert.equal(graph['153:11'].inputs.vae_name, 'pixel_space');
 }
 

@@ -126,7 +126,7 @@ exports.checkResults = async context => {
   // 复制按钮不触发 summary 收起，因此后续截图仍可以查看结果上下文。
   await context.waitSaved(2);
   const saved = context.history();
-  context.check("Only successful responses are recorded with original text and selected model", saved.length === 2 && saved[0].after === "older translated result" && saved[0].before === "女孩站在月光下" && saved.every(item => item.model === "glm-4.5-flash"));
+  context.check("Only successful responses are recorded with original text and selected model", saved.length === 2 && saved[0].after === "older translated result" && saved[0].before === "女孩站在月光下" && saved.every(item => item.model === "glm-4.7-flash"));
   await openHistory(context, context.toolbar);
   context.check("History defaults to newest first", await context.run("[...document.querySelectorAll('[data-translation-record]')].every((row,i,all)=>!i||Number(all[i-1].dataset.translationTime)>=Number(row.dataset.translationTime))"));
   const previous = clipboard.readText();
@@ -137,8 +137,25 @@ exports.checkResults = async context => {
     // 这样 readText 读回的是系统实际写入结果，而不是把复制函数替换成返回 true。
     // 显示的只是当前隔离窗口，不能关闭或聚焦用户正在使用的另一个应用实例。
     await context.focus();
+    // 只选每栏的一小段，用桌面按键写入系统剪贴板，再与整条「复制译文」区分。
+    for (const [index, start, end, expected] of [[0, 3, 5, '在月'], [1, 6, 16, 'translated']]) {
+      await context.run(`(() => {
+        const paragraph = document.querySelectorAll('[data-translation-record][open] p')[${index}];
+        const text = document.createTreeWalker(paragraph, NodeFilter.SHOW_TEXT).nextNode();
+        window.getSelection().setBaseAndExtent(text, ${start}, text, ${end});
+      })()`);
+      clipboard.writeText('history-selection-pending');
+      context.copyShortcut();
+      for (let attempt = 0; attempt < 50 && clipboard.readText() === 'history-selection-pending'; attempt++) {
+        await new Promise(resolve => setTimeout(resolve, 20));
+      }
+      context.check(`History Ctrl+C copies selected ${index === 0 ? 'original' : 'translation'} text`, clipboard.readText() === expected);
+    }
+    await context.run('window.getSelection().removeAllRanges()');
     await context.click("[data-translation-record] [data-translation-copy]");
-    await context.wait("document.body.textContent.includes('已复制')");
+    for (let attempt = 0; attempt < 50 && clipboard.readText() !== 'older translated result'; attempt++) {
+      await new Promise(resolve => setTimeout(resolve, 20));
+    }
     context.check("History copies only the exact translated text", clipboard.readText() === "older translated result");
   } finally { clipboard.writeText(previous); }
   await context.click("[data-translation-history-order]");
@@ -195,7 +212,7 @@ exports.checkPersistence = async context => {
   // reload 不清除其他 store 的文档段落，旧分类、凭据和用户主题仍由原套件继续检查。
   const saved = context.history();
   context.check("History shares assembly and negative translations but excludes truncated output", saved.some(item => item.after === "translated first category") && saved.some(item => item.after === "blurry image") && !saved.some(item => item.after === "incomplete output"));
-  context.check("Provider snapshots survive later model and provider changes", saved.some(item => item.provider === "euzhi" && item.model === "grok-4") && saved.some(item => item.provider === "glm" && item.model === "glm-4.5-flash"));
+  context.check("Provider snapshots survive later model and provider changes", saved.some(item => item.provider === "euzhi" && item.model === "grok-4.7") && saved.some(item => item.provider === "glm" && item.model === "glm-4.7-flash"));
   await context.reload();
   await openHistory(context, context.toolbar);
   context.check("Translation history survives a complete renderer reload", await context.run(`document.querySelectorAll('[data-translation-record]').length===${saved.length}`));

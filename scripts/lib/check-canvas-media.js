@@ -36,10 +36,12 @@ function createFiles(root) {
   // 每份样本单独生成，避免一个容器里的音视频轨混淆“独立音频导入”的验证。
   // WAV 选择浏览器普遍支持的 PCM，失败时更容易区分路径问题与复杂编码限制。
   // MP4 使用 yuv420p，避免仅因默认像素格式不受支持而无法测试正常视频链路。
-  // 三秒时长足够观察 currentTime 推进，同时控制验收运行成本。
+  // 视频三秒即可验证推进，音频九秒用于覆盖六秒波形窗口的实际滚动。
+  // 音频首尾渐变提供可识别的真实振幅，不把静态装饰柱当成采样结果。
+  // 所有样本仍由随包 FFmpeg 写入临时目录，不经过上传或模型生成。
   const binary = path.join(__dirname, "../../apps/electron/bin/ffmpeg/ffmpeg.exe");
   const files = { image: path.join(root, "中文 cover #1.png"), video: path.join(root, "horizontal-24fps.mp4"), audio: path.join(root, "voice-440hz.wav"), broken: path.join(root, "broken.mp4"), unsupported: path.join(root, "unsupported.txt") };
-  for (const [name, source, output] of [["image", "color=c=royalblue:s=180x320", ["-frames:v", "1"]], ["video", "testsrc2=size=320x180:rate=24", ["-t", "3", "-c:v", "libx264", "-pix_fmt", "yuv420p"]], ["audio", "sine=frequency=440:sample_rate=44100", ["-t", "3"]]]) {
+  for (const [name, source, output] of [["image", "color=c=royalblue:s=180x320", ["-frames:v", "1"]], ["video", "testsrc2=size=320x180:rate=24", ["-t", "3", "-c:v", "libx264", "-pix_fmt", "yuv420p"]], ["audio", "sine=frequency=440:sample_rate=44100,afade=t=in:d=2,afade=t=out:st=7:d=2", ["-t", "9"]]]) {
     // -y 只覆盖随机临时目录里本用例的文件，不与用户目录发生同名冲突。
     // stderr 由异常边界保留，失败不把空输出当作已经创建成功。
     // 图片只生成一帧，后续 naturalWidth/naturalHeight 可以直接识别该样本。
@@ -71,6 +73,18 @@ function createFiles(root) {
   // 本地磁盘文件交给 Chromium 后，路径仍须通过生产 preload 才能进入作品。
   // 注入 FileList 不会自动证明 multiple 正确，多选数量由后面的三节点断言确认。
   // 100 毫秒只给调试事件留调度机会，不会写入任何媒体状态或生成结果。
+// 工程素材页按需加载，先等真实弹层或原选择器，不在首帧误判入口丢失。
+// 有界轮询在主进程等待，页面隐藏也不会无限等待挂载；没有调用产品导入私有方法。
+async function enterLocalImport(ctx, hasChooser) {
+  const deadline = Date.now() + 5000;
+  while (!hasChooser() && Date.now() < deadline && !await ctx.run("!!document.querySelector('[data-canvas-resources]')")) await new Promise(resolve => setTimeout(resolve, 30));
+  if (await ctx.run("!!document.querySelector('[data-canvas-resources]')")) {
+    // 列表读取期间控件明确禁用，等真实可用再激活，不能把无效点击当成系统框失败。
+    await ctx.wait("[...document.querySelectorAll('[data-canvas-resources] footer button')].some(e=>e.textContent.includes('导入本地素材')&&!e.disabled)");
+    await ctx.win.webContents.executeJavaScript("[...document.querySelectorAll('[data-canvas-resources] footer button')].find(e=>e.textContent.includes('导入本地素材')).click()", true);
+  }
+}
+
 async function chooseFiles(ctx, files, selector = '[data-canvas-toolbar] [aria-label="导入本地素材"]', choice = "copy") {
   // choice 是测试应执行的用户选择，不能直接作为模式传给生产 IPC。
   // copy 情况完全不点选项，只按确认，真正检查产品初始值的副作用。
@@ -114,6 +128,7 @@ async function chooseFiles(ctx, files, selector = '[data-canvas-toolbar] [aria-l
     // backendNodeId 指向当前真正打开 chooser 的 input，能发现多个入口接到错误节点。
     // 不直接将路径字符串传给产品 importMedia 命令，保留 File 转换边界的覆盖。
     await ctx.win.webContents.executeJavaScript(`document.querySelector(${JSON.stringify(selector)}).click()`, true);
+    await enterLocalImport(ctx, () => chooser);
     await new Promise(resolve => setTimeout(resolve, 100));
     if (!chooser) throw new Error("Native canvas file chooser was not opened");
     await debuggerApi.sendCommand("DOM.setFileInputFiles", { files, backendNodeId: chooser.backendNodeId });
@@ -177,7 +192,10 @@ async function checkImportChoice(ctx, files) {
   const source = path.join(ctx.root, "move-video.mp4");
   fs.copyFileSync(files.video, source);
   await chooseFiles(ctx, [source], undefined, "cancel");
-  ctx.smoke.check("Canceling video confirmation keeps files and graph", fs.existsSync(source) && await ctx.run("document.querySelectorAll('[data-canvas-node]').length===4&&!document.querySelector('[inert]')"));
+  // 折叠的提示词工具条也有局部 inert；取消只需恢复承载卡片的画布主体。
+  // 同时检查确认层消失，避免仅因节点数未变就漏掉无法退出的对话框。
+  // 原文件存在和四张原卡片均保留仍是必要条件，没有减少取消保护断言。
+  ctx.smoke.check("Canceling video confirmation keeps files and graph", fs.existsSync(source) && await ctx.run("document.querySelectorAll('[data-canvas-node]').length===4&&!document.querySelector('[data-canvas-node]').closest('[inert]')&&!document.querySelector('[data-canvas-import-choice]')"));
   await chooseFiles(ctx, [source], undefined, "move");
   await ctx.wait("document.querySelector('[data-canvas-media=video]')?.dataset.mediaStatus==='ready'");
   const target = await ctx.run("new URL(document.querySelector('video').src).searchParams.get('path')");
@@ -257,7 +275,7 @@ async function checkImports(ctx, files) {
   // natural 尺寸来自原图，不能读取被 CSS 拉伸后的元素宽高代替。
   // 特殊文件名同时覆盖 query path 的 # 编码，截断 URL 会导致实际加载失败。
   // 对象适配模式是可计算的显示契约，不凭截图看起来没裁切就下结论。
-  ctx.smoke.check("Image pixels and full-frame fit come from the local source", await ctx.run("(()=>{const e=document.querySelector('[data-canvas-media=image] img');return e.naturalWidth===180&&e.naturalHeight===320&&getComputedStyle(e).objectFit==='contain'})()"));
+  ctx.smoke.check("Image pixels fill the card from the local source", await ctx.run("(()=>{const e=document.querySelector('[data-canvas-media=image] img');return e.naturalWidth===180&&e.naturalHeight===320&&getComputedStyle(e).objectFit==='cover'})()"));
   // 横向视频与竖向图片覆盖不同源比例，排除三种媒体都指向同一图片路径。
   // 原生 videoWidth 和 videoHeight 非零才能说明 Chromium 真正读到了视频数据。
   // 音频时长大于 2.9 秒允许容器精度差，不把精确浮点舍入当作业务错误。
@@ -278,6 +296,58 @@ async function checkImports(ctx, files) {
 // 切换到文字节点属于离开媒体操作，全部旧源应暂停，不能后台继续读文件。
 // 该用例验证自动播放与暂停 API，不把它描述成人工按播放按钮的手感验证。
 // 返回原有画布焦点后，其 Delete 快捷键仍由下一组用例验证，不永久禁用。
+// 音频控件回归使用真实 PCM 文件和生产采样 IPC，不提供波形返回值夹具。
+// 定位是自动输入事件，播放是实际控件点击，二者都不写成人工实机操作。
+// 六秒窗口必须在九秒音源内移动，短样本无法揭露只画整段静态波形的问题。
+// 测试主动静音，因此验证媒体时钟与 UI，同样不能声称扬声器试听通过。
+// 该流程不改工程内容，暂停后仍应保留当前节点和已导入引用。
+async function checkAudioWaveform(ctx) {
+  // 等待生产 FFmpeg 返回真实峰值，媒体 ready 不代表辅助波形已经完成。
+  // ready 和非空路径一起验证，避免一个空 SVG 或状态文字蒙混通过。
+  // 旧浏览器控件应退出布局，但 audio 仍是当前卡片唯一的实际播放来源。
+  // 页面里原有空音频节点没有 media，不能错误选到样板卡证明当前导入成功。
+  const wave = "document.querySelector('[data-canvas-media=audio] [data-clip-waveform]')";
+  await ctx.wait(`${wave}?.dataset.waveformState === 'ready' && ${wave}?.querySelector('svg path')?.getAttribute('d')`);
+  // 共享组件的参数标记只用于测试观察，工程文件没有存储这种展示状态。
+  // 同时检查控件和真实元素，不能通过把整个音频节点隐藏来消除原生白条。
+  // 真实 audio 必须只有一份，波形没有额外创建一个可能同时发声的播放器。
+  ctx.smoke.check("Audio node reuses the real editor waveform without native controls", await ctx.run(`${wave}.dataset.waveformPresentation === 'player' && !document.querySelector('audio').controls && document.querySelectorAll('audio').length === 1 && !!document.querySelector('[data-canvas-audio-play]')`));
+  // 先选所属卡片，确保后续真实播放也覆盖原来的选择暂停契约。
+  // muted 只保护测试环境，不改产品默认音量，也不写回保存文档。
+  // 这不是把 currentTime 直接赋成期望值，下一步仍通过进度字段触发正常定位。
+  await ctx.pointer('[data-canvas-node]:has([data-canvas-media=audio]) header>svg');
+  await ctx.run("document.querySelector('audio').muted = true; true");
+  // 使用原生 value setter，React 才能收到与受控字段一致的真实输入变化。
+  // 4.2 秒位于当前六秒窗口内，但超过窗口中心，足以使下一视窗向右移动。
+  // 输入事件经过组件 onSeek，不读取 React 私有状态或调用隐藏的业务命令。
+  // 先完成定位再按播放，后面的媒体时间增长不能被这次 seek 冒充。
+  await ctx.run("(()=>{const e=document.querySelector('.hy-audio-wave input');Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(e,'4.2');e.dispatchEvent(new Event('input',{bubbles:true}));e.dispatchEvent(new Event('change',{bubbles:true}))})()");
+  await ctx.wait(`document.querySelector('audio').currentTime >= 4.19 && Number(${wave}.dataset.waveformSourceIn) > 1`);
+  // 按正式播放按钮，控件图标必须等媒体事件而不是点击时预先翻转。
+  // 4.4 秒大于已定位的 4.2，只有媒体时钟真正推进才能满足。
+  // 期间不注入第二次定位，也不依赖波形动画自己增加一个数字。
+  await ctx.click('[data-canvas-audio-play]');
+  await ctx.wait("document.querySelector('audio').currentTime > 4.4 && !document.querySelector('audio').paused");
+  // 当前源时间大于中心三秒后，波形入点必须正好等于源时间减三。
+  // 若只移动指示线而不移动窗口，这个入点仍为零，会明确失败。
+  // 允许少量媒体事件间隔差，不能为容差把实际入点要求改成只要非空即可。
+  // 指示线存在也是必要条件，源在滚动后仍须看得出当前播放位置。
+  ctx.smoke.check("Real playback scrolls the waveform under its playhead", await ctx.run(`Number(${wave}.dataset.waveformSourceIn) > 1.2 && !!${wave}.querySelector('i') && document.querySelector('[data-canvas-audio-play]').getAttribute('aria-label') === '暂停音频'`));
+  // 截图保留真实采样和播放状态，不把参考音频图片贴进 DOM。
+  // 后续浅主题回归继续检查同一组件，不为白色皮肤重新导入一份假音频。
+  // 截图完成再暂停，能在证据中看到实际非零时间和滚动窗口。
+  await ctx.shot("33-audio-waveform-playing-dark");
+  await ctx.click('[data-canvas-audio-play]');
+  // 暂停完成后记录真实时间，短等待只用于发现错误的假进度推进。
+  // 这里的等待没有修改播放器，暂停时源时间必须保持不变。
+  // 对比 sourceIn 同时覆盖波形窗口不能在暂停后继续漂移。
+  const paused = await ctx.run(`({ time: document.querySelector('audio').currentTime, start: ${wave}.dataset.waveformSourceIn })`);
+  await new Promise(resolve => setTimeout(resolve, 260));
+  // 精确不变适用于已暂停的同一元素，不把浏览器时间精度的微差用于放宽播放断言。
+  // 成功只表示按钮、媒体时钟和波形同步，不推广成所有编码或大文件性能保证。
+  // 后续旧播放互斥回归会从这里继续操作原视频和音频，不重建节点掩盖清理问题。
+  ctx.smoke.check("Pausing freezes both real audio time and waveform viewport", await ctx.run(`document.querySelector('audio').paused && document.querySelector('audio').currentTime === ${paused.time} && ${wave}.dataset.waveformSourceIn === ${JSON.stringify(paused.start)}`));
+}
 async function checkPlayback(ctx) {
   // 导入结束默认选中首张图片，播放视频前先通过正式节点头部建立选择前提。
   // 只启动未选中的媒体再点文字不会产生 deselect，不能用这个假前提要求 effect 重跑。
@@ -432,7 +502,7 @@ async function checkImportFailures(ctx, files) {
   // 名称出现在实际批量反馈中，不能只是返回一个静默空数组。
   // 节点数仍七，同时 ready 的等待保证之前的正常媒体没有被错误清理。
   // TXT 不会触发播放器试图读取任意文本；只允许已支持的本地媒体类型。
-  ctx.smoke.check("Unsupported files are rejected without clearing imported media", await ctx.run("document.querySelectorAll('[data-canvas-node]').length===7&&document.querySelector('[data-canvas-message]').textContent.includes('unsupported.txt')"));
+  ctx.smoke.check("Unsupported files are rejected without clearing imported media", await ctx.run("document.querySelectorAll('[data-canvas-node]').length===7&&document.querySelector('[data-app-toast=error]')?.textContent.includes('unsupported.txt')"));
   await ctx.run("document.querySelector('[data-canvas-file-input]').dispatchEvent(new Event('cancel'))");
   // 这不是人工按系统框取消；交付时必须与 chooser 拦截和实体操作区分。
   // 不传伪 File 或空路径作为“取消”，直接验证浏览器输入的原生取消事件接线。
@@ -440,7 +510,7 @@ async function checkImportFailures(ctx, files) {
   // 原生 cancel 监听在 effect 注册，事件可以发现使用不存在 React onCancel 的接线错误。
   // input.value 清空是重复选择仍可工作的前提，不只是一项视觉细节。
   // 已有三张媒体保留，取消不能复用清空列表的旧导入实现。
-  ctx.smoke.check("Cancellation leaves media intact and file input empty", await ctx.run("document.querySelectorAll('[data-canvas-media]').length===3&&!document.querySelector('[data-canvas-file-input]').value&&document.querySelector('[data-canvas-message]').textContent.includes('取消')"));
+  ctx.smoke.check("Cancellation leaves media intact and file input empty", await ctx.run("document.querySelectorAll('[data-canvas-media]').length===3&&!document.querySelector('[data-canvas-file-input]').value&&document.querySelector('[data-app-toast=info]')?.textContent.includes('取消')"));
 }
 
 // 使用第二个原生 input 得到磁盘 File，再组装拖放，证明 drop 与选择框使用同一导入方法。
@@ -529,7 +599,7 @@ async function checkMediaPersistence(ctx, files) {
   // 磁盘读取发生在主进程测试环境，渲染层产品仍禁止导入 fs。
   await ctx.click('.hy-project-header [aria-label="保存画布"]');
   await ctx.wait("document.querySelector('[data-canvas-save-status]').textContent.includes('已保存')");
-  const stored = JSON.parse(fs.readFileSync(ctx.documentPath, "utf8")).infiniteCanvas;
+  const stored = require("./canvas-library-fixture").readCanvas(ctx);
   // 读取 JSON 而非只看顶部成功文字，可发现保存回调空实现或缓存未真正落盘。
   // 此处只读临时文档的画布段，外层已另验无关用户分段没有被覆盖。
   // 字段保持普通数据，读取测试无需 Electron 渲染对象或浏览器 File 构造器。
@@ -537,7 +607,7 @@ async function checkMediaPersistence(ctx, files) {
   // image.path 现在是受管副本的绝对路径，不能保存带 ?path 的派生协议 URL。
   // 检查 blob 字样能发现使用临时对象 URL 绕过真实路径保存的实现。
   // 旧空卡仍没有 media 字段，optional 兼容性由同一份实际草稿一起覆盖。
-  ctx.smoke.check("Real JSON stores local media references", stored.nodes.filter(node => node.data.media).length === 4 && stored.nodes.some(node => node.data.media?.name === path.basename(files.image) && node.data.media.path.startsWith(path.join(ctx.root, "user", stored.workspace.folder, "Picture"))) && !JSON.stringify(stored).includes("blob:"));
+  ctx.smoke.check("Real JSON stores local media references", stored.nodes.filter(node => node.data.media).length === 4 && stored.nodes.some(node => node.data.media?.name === path.basename(files.image) && node.data.media.path.startsWith(path.join(ctx.root, "user", "Infinite Canvas", stored.workspace.folder, "Picture"))) && !JSON.stringify(stored).includes("blob:"));
 // 受管路径断言替代早期原文件路径断言，是本轮业务变化。
 // 导入后 stored.workspace 应由真实主进程分配。
 // 图片引用必须位于该归属的 Picture 下，而不是外部原图路径。
@@ -568,7 +638,10 @@ async function checkMediaPersistence(ctx, files) {
   // 完整刷新后 Chromium 重新发起读取，不依赖当前页面已解码的图片缓存。
   // finally 无论断言成败都会还原用例文件，便于失败后重看截图与证据。
   try {
-    await ctx.win.reload();
+    // 缺图检查先清缓存，避免 Chromium 用旧图片掩盖磁盘文件已经移走。
+    await ctx.win.webContents.session.clearCache();
+    await new Promise(resolve => { ctx.win.webContents.once("did-finish-load", resolve); ctx.win.webContents.reloadIgnoringCache(); });
+  await require("./canvas-library-fixture").openProject(ctx);
     // 整页刷新丢掉 React 模块缓存与所有旧播放器，不能靠旧媒体 DOM 满足 ready。
     // 刷新仍使用正式 app:// 路由与生产 preload，和正常用户重新打开页面一致。
     // 缺图错误来自文件读取，不通过修改 data-media-status 属性伪造。
@@ -618,6 +691,10 @@ async function checkCanvasMedia(ctx) {
   const files = createFiles(ctx.root);
   await checkImportChoice(ctx, files);
   await checkImports(ctx, files);
+  // 在同一真实导入节点上先验证新版波形控件，再继续旧播放互斥与资源清理。
+  // 不增加第四个正式媒体节点，旧节点总数与保存恢复断言仍有相同前置。
+  // 辅助采样出错必须让这一组明确失败，而不是用演示波形继续跑成成功。
+  await checkAudioWaveform(ctx);
   ctx.smoke.check("Default copying preserves the real source", fs.existsSync(files.video));
   await checkImageDragging(ctx);
   await checkPlayback(ctx);
@@ -626,4 +703,4 @@ async function checkCanvasMedia(ctx) {
   await checkDropAndCleanup(ctx, files);
   await checkMediaPersistence(ctx, files);
 }
-module.exports = { checkCanvasMedia };
+module.exports = { checkCanvasMedia, chooseFiles };

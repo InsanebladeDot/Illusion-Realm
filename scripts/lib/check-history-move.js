@@ -85,8 +85,23 @@ function prepare(context) {
 async function selectSource(context) {
   const { click, run, smoke } = context;
   await click('[data-history-toolbar] button[aria-label="批量选择"]');
+  // 操作条在正式 side 和主区文件页各执行一次，不能只在宽版样板里看起来是一行。
+  // 检查按钮实际 top 值，能发现删除仍被挤到第二排，而不只检查 nowrap 类名。
+  // 数量摘要比按钮矮，因此仅对齐四个真实操作按钮，不把文本基线差异当作换行。
+  // Portal 必须直接挂 body，父元素的 overflow 才不能再次裁掉按钮。
+  // 左右边界读取真实 Chromium 几何，不能用约定的侧栏宽度自行算出一个预期。
+  // 这验证应用窗口/CSS 布局，不等于人工手感或系统显示缩放验收。
+  // 浏览器原生锚定没有额外 React 就绪标记，等待的是实际可见工具条。
+  // 若 anchor 不受当前 Electron 支持，坐标或可见性断言应直接暴露失败。
+  // 选空时移动仍禁用，下面原磁盘回归继续验证全选、取消与失败后的恢复。
+  // 宽版和主区版读取同一个 data 标记，不复制两套选择管理断言。
+  // 这里没有注入 CSS 帮产品通过布局检查，截图来自构建产物自己的样式。
+  // 判断一次四个按钮的排布，不重复点击或改变业务选择来迁就坐标错误。
+  smoke.check("Selection actions float outside the gallery and remain one row", await run("(()=>{const e=document.querySelector('[data-history-selection-actions]'),b=[...e.querySelectorAll('button')].map(x=>x.getBoundingClientRect());return e.parentElement===document.body&&b.length===4&&b.every(r=>Math.abs(r.top-b[0].top)<1)})()"));
+  smoke.check("Selection toolbar stays inside actual viewport", await run("(()=>{const e=document.querySelector('[data-history-selection-actions]'),r=e.getBoundingClientRect();return getComputedStyle(e).visibility==='visible'&&r.left>=0&&r.right<=innerWidth&&r.top>=44&&r.bottom<=innerHeight})()"));
   smoke.check("Move is disabled with no selected images", await run("document.querySelector('[data-history-move]').disabled"));
-  await run("[...document.querySelectorAll('[data-history-sidebar] button')].find(b=>b.textContent.trim()==='全选').click()");
+  // 按钮已迁到 body 浮层，按真实操作条定位；原图库只继续持有图片选择状态。
+  await run("[...document.querySelectorAll('[data-history-selection-actions] button')].find(b=>b.textContent.trim()==='全选').click()");
   smoke.check("Move selection contains both source images", await run("document.querySelectorAll('[data-history-grid] > button[aria-pressed=true]').length===2"));
 }
 

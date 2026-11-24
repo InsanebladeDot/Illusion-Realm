@@ -40,6 +40,12 @@ function history(req, res) {
   if (state.mode === "disconnected") return req.socket.destroy();
   if (state.mode === "hang") return;
   if (state.mode === "error") return json(res, { "fixture-1": { status: { status_str: "error" }, outputs: {} } });
+  if (state.mode === "timing") {
+    const status = { completed: state.history > 1, messages: [["execution_start", { prompt_id: "fixture-1", timestamp: 100000 }]] };
+    if (status.completed) status.messages.push(["execution_success", { prompt_id: "fixture-1", timestamp: 128700 }]);
+    return json(res, { "fixture-1": { status, outputs: { "1": { images: [image] } } } });
+  }
+  if (state.mode === "legacy-history") return json(res, { "fixture-1": { outputs: { "1": { images: [image] } } } });
   if (["completed", "download-disconnect", "download-hang"].includes(state.mode)) {
     state.running = []; return json(res, { "fixture-1": { status: { completed: true }, outputs: { "1": { images: [image] } } } });
   }
@@ -57,6 +63,7 @@ async function serve(req, res) {
     state.downloads++;
     if (state.mode === "download-disconnect") return req.socket.destroy();
     if (state.mode === "download-hang") return;
+    if (state.mode === "timing") await delay(250);
     res.writeHead(200, { "Content-Type": "image/png" }); return res.end(Buffer.from("fixture"));
   }
   if (url === "/queue" && req.method === "GET") return json(res, { queue_running: state.running, queue_pending: state.pending });
@@ -197,9 +204,24 @@ async function checkCancellation(mode) {
   });
 }
 async function checks() {
+  // 第一次只有预览，第二次才完成；本地轮询和下载延迟不应改变服务端的 28.70 秒。
+  await check("workflow timing waits for completion and excludes transport delays", async () => {
+    state.mode = "timing";
+    const result = await begin();
+    assert.equal(result.value.executionMs, 28700);
+    assert.equal(state.history, 2);
+    assert.equal(state.downloads, 1);
+  });
   await check("successful generation still downloads its result", async () => {
     state.mode = "completed"; const result = await begin();
     assert.equal(result.value.images.length, 1); assert.equal(state.downloads, 1);
+    assert.equal(result.value.executionMs, undefined);
+  });
+  await check("history without status still returns output without timing", async () => {
+    state.mode = "legacy-history";
+    const result = await begin();
+    assert.equal(result.value.images.length, 1);
+    assert.equal(result.value.executionMs, undefined);
   });
   for (const mode of ["disconnected", "download-disconnect", "hang"]) {
     await check(mode + " returns a bounded connection error", async () => {

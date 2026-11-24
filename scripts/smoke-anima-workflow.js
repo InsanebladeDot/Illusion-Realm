@@ -561,7 +561,7 @@ app.whenReady().then(async () => {
       await run(`(() => { document.querySelector(${JSON.stringify(triggerSelector)}).click(); return true; })()`);
       await sleep(400);
       const values = await run(`(() => Array.from(document.querySelectorAll('[role="option"]'))
-        .map((o) => o.getAttribute('data-value')))()`);
+        .map((o) => o.getAttribute('data-simple-select-option')))()`);
       await run(`(() => { document.querySelector(${JSON.stringify(triggerSelector)}).click(); return true; })()`);
       await sleep(250);
       return values;
@@ -588,7 +588,7 @@ app.whenReady().then(async () => {
       await sleep(400);
       const clicked = await run(`(() => {
         const option = Array.from(document.querySelectorAll('[role="option"]'))
-          .find((o) => o.getAttribute('data-value') === ${JSON.stringify(value)});
+          .find((o) => o.getAttribute('data-simple-select-option') === ${JSON.stringify(value)});
         if (option) option.click();
         return !!option;
       })()`);
@@ -917,12 +917,10 @@ app.whenReady().then(async () => {
         duration: getComputedStyle(panel).transitionDuration,
         editorInDom: !!document.getElementById('prompt-editor'),
         text: document.getElementById('prompt-editor')?.textContent ?? '',
-        hintHeight: hint ? Math.round(hint.getBoundingClientRect().height) : -1,
+        hintPresent: !!hint,
         expandBtn: !!document.querySelector('[aria-label="展开提示词"]'),
         // 失败时用于定位的最小上下文（属性值 + 实际高度）
         panelState: panel.getAttribute('data-prompt-editor-panel') ?? '(无)',
-        hintState:
-          hint?.getAttribute('data-prompt-collapsed-hint') ?? '(无)',
       };
     })()`,
       { step: "提示词抽屉/2 收起（读高度→点按→等过渡）" }
@@ -948,9 +946,9 @@ app.whenReady().then(async () => {
     check("收起过程中输入框不卸载（内容保留）",
       collapsePrompt.editorInDom === true && collapsePrompt.text.includes("drawer-keep-marker"),
       collapsePrompt.text.slice(0, 40));
-    check("收起后显示展开提示",
-      collapsePrompt.hintHeight > 0 && collapsePrompt.expandBtn === true,
-      `hint=${collapsePrompt.hintHeight}`);
+    check("收起后没有额外提示行",
+      !collapsePrompt.hintPresent && collapsePrompt.expandBtn === true,
+      `hint=${collapsePrompt.hintPresent}`);
 
     const expandPrompt = await run(`(async () => {
       const panel = document.querySelector('[data-prompt-editor-panel]');
@@ -969,13 +967,13 @@ app.whenReady().then(async () => {
         mid,
         after,
         text: document.getElementById('prompt-editor')?.textContent ?? '',
-        hintHeight: hint ? Math.round(hint.getBoundingClientRect().height) : -1,
+        hintPresent: !!hint,
       };
     })()`);
     check("提示词框可再次展开（回到原高度）",
       expandPrompt.before === 0 && expandPrompt.after > 100,
       JSON.stringify({ mid: expandPrompt.mid, after: expandPrompt.after }));
-    check("展开后收起提示消失", expandPrompt.hintHeight === 0, String(expandPrompt.hintHeight));
+    check("展开后也没有额外提示行", !expandPrompt.hintPresent, String(expandPrompt.hintPresent));
     check("收起/展开不会丢内容", expandPrompt.text.includes("drawer-keep-marker"),
       expandPrompt.text.slice(0, 40));
 
@@ -1001,7 +999,7 @@ app.whenReady().then(async () => {
         duration: getComputedStyle(panel).transitionDuration,
         editorInDom: !!document.getElementById('negative-prompt-editor'),
         text: document.getElementById('negative-prompt-editor')?.textContent ?? '',
-        hintHeight: hint ? Math.round(hint.getBoundingClientRect().height) : -1,
+        hintPresent: !!hint,
       };
     })()`);
     check("反向提示词框可收起（抽屉）",
@@ -1011,8 +1009,8 @@ app.whenReady().then(async () => {
     check("反向提示词收起也是高度过渡（非零时长）",
       collapseNegative.duration !== "0s",
       `mid=${collapseNegative.mid} / ${collapseNegative.duration}`);
-    check("反向提示词收起后显示展开提示",
-      collapseNegative.hintHeight > 0, String(collapseNegative.hintHeight));
+    check("反向提示词收起后没有额外提示行",
+      !collapseNegative.hintPresent, String(collapseNegative.hintPresent));
 
     const negExpanded = await run(`(async () => {
       const panel = document.querySelector('[data-negative-editor-panel]');
@@ -1030,7 +1028,6 @@ app.whenReady().then(async () => {
         mid,
         after,
         text: document.getElementById('negative-prompt-editor')?.textContent ?? '',
-        hintHeight: Math.round(document.querySelector('[data-negative-collapsed-hint]').getBoundingClientRect().height),
       };
     })()`);
     check("反向提示词框可再次展开（回到原高度）",

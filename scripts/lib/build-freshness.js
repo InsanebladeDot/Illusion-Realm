@@ -55,6 +55,9 @@ const GENERATED_FILE_NAMES = new Set(["next-env.d.ts", "tsconfig.tsbuildinfo"]);
 const SOURCE_FILES = [
   "tsconfig.base.json",
   "pnpm-lock.yaml",
+  // 依赖补丁和登记配置都参与构建，不能只核对锁文件而漏掉补丁正文变化。
+  "pnpm-workspace.yaml",
+  "patches/next@16.2.10.patch",
   /**
    * `logs.md` 是**构建输入**：`scripts/sync-changelog.mjs` 在 build 前把它复制成
    * `apps/next/public/changelog.md`，再进入静态导出。漏掉它就会出现

@@ -81,7 +81,7 @@ const model = { id: 1, name: "Source fixture", type: "LORA", description: "<p>Mo
 // 模拟响应应遵守真实生产解析契约，不能为测试要求改产品去猜缺失字段。
 async function api(request) {
   if (request.url.includes("/api/v1/models")) catalogRequests.push(new URL(request.url));
-  if (request.url.includes("/api/v1/models")) return new Response(JSON.stringify({ items: [{ ...model, baseModels: ["SDXL", "Anima", "Krea 2", "ZImageTurbo", "Flux.1 D", "Pony"], modelVersions: [...model.modelVersions, ...["Anima", "Krea 2", "ZImageTurbo", "Flux.1 D", "Pony"].map((baseModel, index) => ({ ...model.modelVersions[0], id: 200 + index, baseModel, files: [file(200 + index)] }))] }], metadata: {} }), { headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" } });
+  if (request.url.includes("/api/v1/models")) return new Response(JSON.stringify({ items: [{ ...model, baseModels: ["SDXL", "Anima", "Krea 2", "ZImageTurbo", "Flux.1 D", "Pony"], modelVersions: [...model.modelVersions, ...["Anima", "Krea 2", "ZImageTurbo", "Flux.1 D", "Pony"].map((baseModel, index) => ({ ...model.modelVersions[0], id: 200 + index, name: `v${200 + index}`, baseModel, files: [{ ...file(200 + index), hashes: { SHA256: (index === 0 ? "b" : "c").repeat(64) } }] }))] }], metadata: {} }), { headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" } });
   return new Response(request.url.includes("preview-2") ? red : blue, { headers: { "Content-Type": "image/png" } });
 }
 async function network(request) {
@@ -114,52 +114,25 @@ async function waitCompleted(fileName) {
   throw new Error("Download did not complete");
 }
 async function configure() { await click("[data-civitai-download]"); await wait("document.querySelector('[data-model-download-start]')?.disabled===false"); }
-/**
- * 使用真实临时模型与来源 JSON 检查在线卡片标记，不直接给 React 塞匹配布尔值。
- * 每个场景重新进入页面，让 AppShell 按已有路径扫描发现实际文件。
- * 远端仍由固定 API 夹具提供，测试不把模型名或图片变化交给公网决定。
- * 等待本地只读元数据完成再核对缺标记，避免请求没回来时“没有”被误判为通过。
- * 有标记时也要核对证据类型，不能拿严格同名通过代替 SHA256 回退通过。
- * 旧的宽松文件名匹配会让第一条错误显示标记，形成直接的反证样本。
- * 旧的仅哈希规则会让第二条没有标记，两种错误都有独立样本捕获。
- * 所有页面都在同一个离屏窗口中，不切换用户桌面或读取真实模型配置。
- * 图片是测试协议返回的像素图，匹配证据来自本地磁盘而非封面相似度。
- */
+/** 同名不能证明内容一致；真实来源读取完成后才检查标记，避免把加载中当作未匹配。 */
 async function assertLocalMatch(win, expected) {
   await win.loadURL("app://app/tools/models/civitai");
   await wait("document.querySelector('[data-civitai-card]')&&document.querySelector('[data-civitai-catalog]')?.dataset.civitaiLocalScanned==='true'&&document.querySelector('[data-civitai-catalog]')?.dataset.civitaiLocalState==='ready'");
+  // 关闭测试配置首次启动的更新说明，截图与真实点击不应被旧弹窗遮挡。
+  await run("[...document.querySelectorAll('button')].find(button=>button.textContent.trim()==='知道了')?.click()");
   // 给扫描完成一个明确条件：本地文件已进入真实模型清单，而不是只等远端卡片。
   // scanned 标记来自 settings.lastScannedAt，与本地索引在同一次更新中写入。
   // 不通过“没有扫描中文字”猜完成，页面可能根本没有显示那段文字。
   // 命中条件用 DOM 的实际证据属性，不借用被测 matcher 的返回值当期望。
   // 文字翻译也由 CivitaiCard 选择，标记仍由原共享卡片角标插槽显示。
-  // 两种证据各有独立的 title，避免用户把同名误解成重新校验了文件内容。
+  // 角标只代表 SHA256 记录匹配，不代表所有版本均已下载。
   // 空期望必须等元数据读取完成，不能因为 loading 初始隐藏而提前通过。
   await wait(expected ? `document.querySelector('[data-civitai-local-match]')?.dataset.civitaiLocalMatch===${JSON.stringify(expected)}` : "!document.querySelector('[data-civitai-local-match]')");
   smoke.check(`local match evidence is ${expected || 'absent'}`, await run(`(document.querySelector('[data-civitai-local-match]')?.dataset.civitaiLocalMatch||null)===${JSON.stringify(expected)}`));
 }
-/**
- * 名称与哈希使用配对样本：文件名相同但目录不符、严格全名、仅前缀相近、改名后哈希一致。
- * 目录标题直接取 Source fixture，不能靠别名 model.name 或去标点后的近似标题。
- * 只有版本文件名前缀完全相同才接受，fixture-101-extra 不能当成 fixture-101。
- * 同名正向没有 JSON，证明用户确认的低成本名称路径确实可独立工作。
- * 哈希正向的目录与文件均改名，不能让名称路径掩盖摘要回退未接通。
- * 哈希负向把 64 位摘要改成另一完整值，格式合法也不能随便认作同一文件。
- * JSON 存在却没有摘要的负向样本，防止把 ready 状态当作身份匹配。
- * 每条结束删除自己新建的精确文件，下一条不能借用前一条的成功证据。
- * 只删除显式创建的权重占位文本和 sidecar，空目录可以保留到测试结束。
- * 配置根由 mkdtemp 新建，实际用户模型目录、密钥和来源不被读取或修改。
- * 主进程来源仍通过生产读取链，坏路径或格式不能被夹具替身悄悄接受。
- * 返回页面不会自动补 JSON；补全通道计数必须始终保持零。
- * 大写摘要正向同时检查十六进制表示归一化，不能要求本地 JSON 必须小写保存。
- * 缺 JSON 与有 JSON 但空摘要分开验证，两者经过不同的来源读取状态。
- * 三个负向样本复用相同远端响应，失败不能归因于网站临时换了文件信息。
- * 文件名近似样本仍保持目录标题正确，确保测试确实能单独约束完整主干。
- * 错误目录样本仍保持文件名正确，确保两个名称条件不能被“任一个相同”替代。
- * 临时占位权重没有承诺能用于生成，此回归只覆盖扫描、来源读取和卡片判断。
- */
+/** 同名缺摘要、同名不同摘要都不匹配；改名但完整摘要相同仍匹配。 */
 async function verifyLocalMatches(win) {
-  const cases = [["Different model", "fixture-101", undefined, null], [model.name, "fixture-101", undefined, "name"], [model.name, "fixture-101-extra", undefined, null], ["Renamed", "renamed", hash.toUpperCase(), "sha256"], ["Renamed", "renamed", "f".repeat(64), null], ["Renamed", "renamed", "", null]];
+  const cases = [["Different model", "fixture-101", undefined, null], [model.name, "fixture-101", undefined, null], [model.name, "fixture-101", "e".repeat(64), null], [model.name, "fixture-101-extra", undefined, null], ["Renamed", "renamed", hash.toUpperCase(), "sha256"], ["Renamed", "renamed", "f".repeat(64), null], ["Renamed", "renamed", "", null]];
   for (const [title, stem, sha256, expected] of cases) {
     // 每条只创建一个权重，使 AppShell 扫描完成后有确定的一条本地结果。
     // 文件字节故意不是实际下载模型，匹配应信任已有 JSON 而不重新计算它。
@@ -179,6 +152,57 @@ async function verifyLocalMatches(win) {
   // 这条断言覆盖整个六次页面进入，而非仅在一次成功请求前取计数。
   smoke.check("catalog matching never invokes SHA256 recovery", matchRecoveryCalls === 0);
 }
+/** 本地只命中一个非首版本时，卡片和详情都要指到该版本。 */
+async function verifySingleVersionMatch(win) {
+  const folder = path.join(modelsRoot, "loras", "SDXL", "match-fixtures", "Single version");
+  const filePath = path.join(folder, "renamed.safetensors");
+  fs.mkdirSync(folder, { recursive: true });
+  fs.writeFileSync(filePath, bytes);
+  fs.writeFileSync(filePath + ".civitai.json", JSON.stringify({ version: 1, sha256: "b".repeat(64) }));
+  try {
+    await assertLocalMatch(win, "sha256");
+    smoke.check("the card shows only the matching non-default version", await run("document.querySelector('[data-civitai-local-match]')?.textContent.trim() === '已匹配 v200'"));
+    await click("[data-civitai-card]");
+    await click("[data-civitai-version-bar] button");
+    smoke.check("the non-default version is the only match in the menu", await run("[...document.querySelectorAll('[role=option]')].filter(item => item.textContent.includes('已匹配')).map(item => item.textContent.trim()).join('|') === '已匹配 v200 · Anima'"));
+  } finally {
+    fs.unlinkSync(filePath);
+    fs.unlinkSync(filePath + ".civitai.json");
+  }
+}
+
+/** 真按钮触发真实离线计算，重新读 JSON 后卡片出现摘要匹配；不调用联网补全。 */
+async function verifyHashLoad(win) {
+  const filePath = path.join(modelsRoot, "loras", "SDXL", "offline-hash", "renamed.safetensors");
+  fs.mkdirSync(path.dirname(filePath), { recursive: true }); fs.writeFileSync(filePath, bytes);
+  try {
+    await assertLocalMatch(win, null);
+    await click("[data-civitai-hash-local]"); await click("[data-civitai-hash-start]");
+    await wait("document.querySelector('[data-civitai-hash-result=\"saved\"]')");
+    const record = JSON.parse(fs.readFileSync(filePath + ".sha256.json", "utf8"));
+    smoke.check("manual offline hash saves actual file SHA256", record.sha256 === hash && !fs.existsSync(filePath + ".civitai.json"));
+    await delay(250);
+    fs.writeFileSync(path.join(directory, "sha256-progress-light.png"), (await win.webContents.capturePage()).toPNG());
+    await run("document.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}))");
+    await wait("document.querySelector('[data-civitai-local-match=\"sha256\"]')");
+    await delay(250);
+    fs.writeFileSync(path.join(directory, "sha256-local-match.png"), (await win.webContents.capturePage()).toPNG());
+    smoke.check("manual hash refreshes matching without source recovery", matchRecoveryCalls === 0);
+    // 本地摘要只对应 v101 和 v102，两者在同一张卡片，v200 没有标记。
+    smoke.check("the card names both matched versions", await run("document.querySelectorAll('[data-civitai-card]').length === 1 && document.querySelector('[data-civitai-local-match]')?.textContent.trim() === '已匹配 v101 · v102'"));
+    await click('[data-civitai-card]');
+    await click('[data-civitai-version-bar] button');
+    smoke.check("only matched versions are labeled in details", await run("[...document.querySelectorAll('[role=option]')].filter(item => item.textContent.includes('已匹配')).map(item => item.textContent.trim()).join('|') === '已匹配 v101 · SDXL|已匹配 v102 · SDXL'"));
+    await click('[data-civitai-version-bar] button');
+    await click("[data-civitai-hash-local]"); await click("[data-civitai-hash-start]");
+    await wait("document.querySelector('[data-civitai-hash-result=\"existing\"]')");
+    smoke.check("repeating manual hash skips existing fingerprint", true);
+  } finally {
+    fs.unlinkSync(filePath);
+    if (fs.existsSync(filePath + ".sha256.json")) fs.unlinkSync(filePath + ".sha256.json");
+  }
+}
+
 // 在线与本地引用同一个外壳，在线测试仍经过生产请求适配器和浏览器 fetch。
 // 只有远端 HTTPS 响应被夹具替换，筛选参数通过请求 URL 独立检查。
 // 初次无选中时关闭资料也必须释放列宽，不能靠选择模型后才能点 X。
@@ -417,7 +441,12 @@ async function main() {
   const win = new BrowserWindow({ ...windowChromeOptions(), width: 1500, height: 950, show: false, webPreferences: { additionalArguments: windowChromeArguments(), offscreen: true, preload: path.join(__dirname, "../apps/electron/src/preload/index.js"), contextIsolation: true, nodeIntegration: false, sandbox: false, backgroundThrottling: false } });
   smoke.attachWebContents(win.webContents); const occlusion = await smoke.hardenWindow(win);
   win.webContents.on("console-message", event => { if (event.level === "error" && /React|render|hydration|Minified/i.test(event.message)) errors.push(event.message); });
-  try { await verifyLocalMatches(win); await verifyUi(win); } finally { occlusion.dispose(); downloadSession.protocol.unhandle("https"); win.destroy(); }
+  try {
+    await verifyLocalMatches(win);
+    await verifySingleVersionMatch(win);
+    await verifyHashLoad(win);
+    if (!process.argv.includes("--match-only")) await verifyUi(win);
+  } finally { occlusion.dispose(); downloadSession.protocol.unhandle("https"); win.destroy(); }
   smoke.finish({ app, ok: smoke.allPassed() });
 }
 main().catch(error => { console.error(error.message); smoke.finish({ app, ok: false, error }); });

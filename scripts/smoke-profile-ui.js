@@ -335,7 +335,7 @@ async function checkExistingFunctions() {
   smoke.check('Cover reset restores bundled reference resource', await run("!document.querySelector('.pr-banner-image').src.startsWith('data:')"));
 }
 /**
- * 顶栏伸缩回归：重现旧 CSS 在中等窗口吞掉展开效果的问题。
+ * 侧栏首行伸缩回归：重现旧 CSS 在中等窗口吞掉展开效果的问题。
  * 使用已经水合的真实个人中心，不注入 Zustand 状态或替换产品样式。
  * 覆盖 821px 侧栏起点、900/1280px 常用窄窗及 1449/1450px 旧断点两侧。
  * 1536px 同时检查宽屏规则，防止只修中屏却破坏原来的正常状态。
@@ -344,9 +344,9 @@ async function checkExistingFunctions() {
  * 使用 CSS 坐标中心发出点击；不通过 DOM click 绕过命中测试。
  * 等待 400ms 覆盖原有 300ms 宽度过渡，不把动画中间值当作最终宽度。
  * 断言同时比较 aria-expanded 和几何，避免状态切换而视觉仍被媒体查询锁住。
- * nav 真实宽度应为展开 127px、收起 68px，主内容留白必须同步。
+ * nav 真实宽度应为展开宽度读取外壳变量、收起 68px，主内容留白必须同步。
  * 图标恢复原版 16px，展开和收起均须一致，且主导航与底部设置都检查。
- * 820px 以下应用使用移动导航，顶栏伸缩按钮应与桌面 nav 一起隐藏。
+ * 820px 以下应用使用移动导航，侧栏伸缩按钮应与桌面 nav 一起隐藏。
  * 截图保留 1280px 的两个状态，便于核对标签、立绘及内容左边缘。
  * 测试不写账户资料；最后一次点击恢复每组尺寸进入时的展开状态。
  */
@@ -356,14 +356,14 @@ async function checkNavToggle() {
     for (const expanded of [!original,original]) {
       const point = await run("(()=>{const r=document.querySelector('[data-sidebar-toggle]').getBoundingClientRect();return{x:Math.round(r.left+r.width/2),y:Math.round(r.top+r.height/2)}})()");
       win.webContents.sendInputEvent({type:'mouseDown',button:'left',clickCount:1,...point}); win.webContents.sendInputEvent({type:'mouseUp',button:'left',clickCount:1,...point}); await delay(400);
-      // 个人中心复用当前 127px nav 规范，移除旧 220px 预期以免把现有布局误判为回归。
+      // 展开宽度读取外壳共用变量，避免测试保留过期的导航常量。
       // 展开与收起均比较主内容左留白，颜色调整不能破坏导航的实际伸缩行为。
-      // 同一指针点击还校验 no-drag，避免视觉改动吞掉顶栏伸缩按钮事件。
-      smoke.check(`Nav ${width}px ${expanded?'expanded':'collapsed'} responds to real pointer`, await run(`(()=>{const b=document.querySelector('[data-sidebar-toggle]'),n=document.querySelector('[data-app-nav]'),s=getComputedStyle(document.querySelector('[data-app-content-layout]'));return b.getAttribute('aria-expanded')==='${expanded}'&&n.getBoundingClientRect().width===${expanded?127:68}&&parseFloat(s.paddingLeft)===${expanded?127:68}&&getComputedStyle(b).getPropertyValue('-webkit-app-region')==='no-drag'&&[...n.querySelectorAll('a>svg')].every(i=>i.getBoundingClientRect().width===16&&i.getBoundingClientRect().height===16)})()`));
+      // 同一指针点击还校验 no-drag，避免视觉改动吞掉侧栏伸缩按钮事件。
+      smoke.check(`Nav ${width}px ${expanded?'expanded':'collapsed'} responds to real pointer`, await run(`(()=>{const b=document.querySelector('[data-sidebar-toggle]'),n=document.querySelector('[data-app-nav]'),s=getComputedStyle(document.querySelector('[data-app-content-layout]'));return b.getAttribute('aria-expanded')==='${expanded}'&&n.getBoundingClientRect().width===${expanded?"parseFloat(getComputedStyle(n).getPropertyValue('--nav-expanded-width'))":68}&&parseFloat(s.paddingLeft)===n.getBoundingClientRect().width&&getComputedStyle(b).getPropertyValue('-webkit-app-region')==='no-drag'&&[...n.querySelectorAll('a>svg')].every(i=>i.getBoundingClientRect().width===16&&i.getBoundingClientRect().height===16)})()`));
       if(width===1280)await shot(`profile-nav-${expanded?'expanded':'collapsed'}-1280`);
     }
   }
-  for(const width of [820,768,390]) {await metrics(width);smoke.check(`Nav ${width}px hides desktop toggle with desktop navigation`,await run("getComputedStyle(document.querySelector('[data-sidebar-toggle]')).display==='none'&&getComputedStyle(document.querySelector('[data-app-nav]')).display==='none'"));}
+  for(const width of [820,768,390]) {await metrics(width);smoke.check(`Nav ${width}px hides desktop toggle with desktop navigation`,await run("!document.querySelector('[data-sidebar-toggle]').getClientRects().length&&getComputedStyle(document.querySelector('[data-app-nav]')).display==='none'"));}
 }
 /** 明暗与语言切换均走真实应用菜单；截图保存实际主题，英文断言覆盖新统计标题。 */
 /** 明暗与语言切换均走真实应用菜单；截图保存实际主题，英文断言覆盖新统计标题。 */

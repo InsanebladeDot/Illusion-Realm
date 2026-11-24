@@ -247,7 +247,7 @@ async function checkFrameExport(ctx) {
   dialog.showSaveDialog = async () => ({ canceled: false, filePath: target });
   try {
     await ctx.click('[data-canvas-capture]');
-    await ctx.wait("document.querySelector('.hy-video-message')?.textContent.includes('导出')");
+    await ctx.wait("document.querySelector('[data-app-toast=success]')?.textContent.includes('导出')");
     ctx.smoke.check("Video capture writes an actual PNG through the existing frame job", fs.existsSync(target) && fs.readFileSync(target).subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10])));
     await ctx.shot("26-canvas-video-transport");
   } finally { dialog.showSaveDialog = original; }
@@ -312,7 +312,7 @@ async function checkProjectRoundTrip(ctx) {
   dialog.showOpenDialog = async () => ({ canceled: false, filePaths: [target] });
   try {
     await ctx.click('.hy-project-header [aria-label="导出画布工程"]');
-    await ctx.wait("document.querySelector('[data-canvas-message]').textContent.includes('已导出')");
+    await ctx.wait("document.querySelector('[data-app-toast=success]')?.textContent.includes('已导出')");
 // 便携证据采用“切断旧地址”的反证方式。
 // 若导出只保存绝对路径，在旧目录改名后必然无法 ready。
 // 若导出携带媒体正文，则能在新归属恢复并重新实际解码。
@@ -338,17 +338,21 @@ async function checkProjectRoundTrip(ctx) {
     // 先明确保存现有草稿，导入就不需要悄悄绕过“未保存改动”确认。
     await ctx.click('.hy-project-header [aria-label="保存画布"]');
     await ctx.wait("document.querySelector('[data-canvas-save-status]').textContent.includes('已保存')");
-    const before = JSON.parse(fs.readFileSync(ctx.documentPath, "utf8")).infiniteCanvas;
-    const directory = path.join(ctx.root, "user", before.workspace.folder);
-    fs.renameSync(directory, `${directory}.away`);
+    const before = require("./canvas-library-fixture").readCanvas(ctx);
+    const directory = path.join(ctx.root, "user", "Infinite Canvas", before.workspace.folder);
+    // 工程数据库如今也在此目录；只移走素材，验证归档不依赖旧媒体，同时保留合法保存目标。
+    for (const kind of ['Picture', 'video', 'Audio']) {
+      const source = path.join(directory, kind);
+      if (fs.existsSync(source)) fs.renameSync(source, `${source}.away`);
+    }
     await ctx.click('.hy-project-header [aria-label="导入画布工程"]');
-    await ctx.wait("document.querySelector('[data-canvas-message]').textContent.includes('工程已导入')");
+    await ctx.wait("document.querySelector('[data-app-toast=success]')?.textContent.includes('工程已导入')");
     await ctx.wait("document.querySelectorAll('[data-canvas-media][data-media-status=ready]').length===4");
     ctx.smoke.check("Reimported portable project decodes without the old asset folder", await ctx.run(`document.querySelectorAll('[data-canvas-node]').length===${manifest.document.nodes.length}`));
     await ctx.click('.hy-project-header [aria-label="保存画布"]');
     await ctx.wait("document.querySelector('[data-canvas-save-status]').textContent.includes('已保存')");
-    const after = JSON.parse(fs.readFileSync(ctx.documentPath, "utf8")).infiniteCanvas;
-    ctx.smoke.check("Imported project uses a separate owned asset folder", after.workspace.id !== before.workspace.id && after.nodes.filter(node => node.data.media).every(node => node.data.media.path.startsWith(path.join(ctx.root, "user", after.workspace.folder))));
+    const after = require("./canvas-library-fixture").readCanvas(ctx);
+    ctx.smoke.check("Imported project uses a separate owned asset folder", after.workspace.id !== before.workspace.id && after.nodes.filter(node => node.data.media).every(node => node.data.media.path.startsWith(path.join(ctx.root, "user", "Infinite Canvas", after.workspace.folder))));
     await ctx.shot("27-canvas-project-restored");
   } finally { dialog.showSaveDialog = originalSave; dialog.showOpenDialog = originalOpen; }
 }
@@ -423,7 +427,7 @@ async function checkProjectFailures(ctx) {
   try {
     dialog.showOpenDialog = async () => ({ canceled: true, filePaths: [] });
     await ctx.click('.hy-project-header [aria-label="导入画布工程"]');
-    await ctx.wait("document.querySelector('[data-canvas-message]').textContent.includes('取消')");
+    await ctx.wait("document.querySelector('[data-app-toast=info]')?.textContent.includes('取消')");
     ctx.smoke.check("Canceling project open preserves the current graph", await ctx.run(`document.querySelectorAll('[data-canvas-node]').length===${count}`));
 // 坏文件的内容不含 IRCNVS01，因此失败发生在格式入口。
 // 没有通过伪造返回值直接写 success=false。
@@ -449,7 +453,7 @@ async function checkProjectFailures(ctx) {
     fs.writeFileSync(broken, "not a canvas archive");
     dialog.showOpenDialog = async () => ({ canceled: false, filePaths: [broken] });
     await ctx.click('.hy-project-header [aria-label="导入画布工程"]');
-    await ctx.wait("document.querySelector('[data-canvas-message]').textContent.includes('失败')");
+    await ctx.wait("document.querySelector('[data-app-toast=error]')?.textContent.includes('失败')");
     ctx.smoke.check("A broken project leaves current nodes and controls usable", await ctx.run(`document.querySelectorAll('[data-canvas-node]').length===${count}&&!document.querySelector('.hy-project-header [aria-label="导入画布工程"]').disabled`));
     await ctx.shot("28-canvas-project-error");
   } finally { dialog.showOpenDialog = original; }

@@ -48,7 +48,7 @@ registerHandle(C.ACCOUNT_ME, () => ({ status: 401, body: { success: false } }));
 // 本替身不声称验证 HTTP 传输；HTTP 由 verify-minimax-audio 独立检查。
 // 输出种类使用 audio，而不是给图片字段添加一个 wav 文件名。
 // 文件夹类型为 temp，与 PreviewAudio 的实际历史格式一致。
-const template = require('../apps/next/src/data/comfy/audioWorkflower/Audio_Minimax.json'), nodes = Object.values(template);
+const template = require('../apps/next/src/data/comfy/audioWorkflower/MiniMax_Audio/Audio_Minimax.json'), nodes = Object.values(template);
 registerHandle(C.COMFY_LIST_MODELS, () => ({ checkpoints: [], diffusionModels: [...nodes.filter(n => n.class_type === 'UNETLoader').map(n => n.inputs.unet_name), renamed], clips: nodes.filter(n => n.class_type === 'CLIPLoader').map(n => n.inputs.clip_name), vaes: nodes.filter(n => n.class_type === 'VAELoader' && n.inputs.vae_name !== 'pixel_space').map(n => n.inputs.vae_name), loras: nodes.filter(n => n.class_type === 'LoraLoaderModelOnly').map(n => n.inputs.lora_name) }));
 registerHandle(C.COMFY_UPLOAD_IMAGE, (_event, _server, input) => { uploads.push(input); return { name: 'accepted.wav', subfolder: 'references', type: 'input' }; });
 registerHandle(C.COMFY_GENERATE, async (_event, graph, _server, id) => { prompts.push({ graph, id }); if (held) await new Promise(resolve => { release = resolve; }); return { promptId: id, images: [], videos: [{ nodeId: 'out', filename: 'fixture.wav', subfolder: 'preview', folderType: 'temp', kind: 'audio', dataUrl: `data:audio/wav;base64,${wav.toString('base64')}` }] }; });
@@ -69,7 +69,7 @@ async function inputPrompt(value) { await run(`(()=>{const e=document.querySelec
  * 通过真实键盘输入 @ 打开视频同款菜单，不能直接插入最终 token 冒充选中。
  * 参考音频已导入，分类只有 audio；图片和视频即使空分类也不能出现。
  * Enter 选择高亮的唯一素材，复用既有键盘分支而非鼠标专用捷径。
- * 选择后原稿仍为 @audio1，展开预览才看到官方 <Audio 1>。
+ * 选择后原稿仍为 @audio1，展开预览才看到官方 <Slot 1>。
  * 预览使用文本节点，尖括号不得被浏览器吞成未知 HTML 标签。
  * 不触发生成，随后 flow 的真实生成步骤检查最终节点 prompt。
  */
@@ -100,7 +100,7 @@ async function selectAudioMention() {
   // details 真实点击展开，不靠修改 innerHTML 伪造显示结果。
   // 只检查必要内容，保留编辑器自动追加空格这一既有插入行为。
   await click('[data-audio-create] [data-prompt-conversion] summary');
-  smoke.check('Audio reference preview uses official H3 text labels', await run("document.querySelector('[data-audio-create] [data-prompt-conversion-text]').textContent.includes('<Audio 1>')&&Boolean(document.querySelector('#audio-prompt [data-media-reference]'))"));
+  smoke.check('Audio reference preview uses official H3 text labels', await run("document.querySelector('[data-audio-create] [data-prompt-conversion-text]').textContent.includes('<Slot 1>')&&Boolean(document.querySelector('#audio-prompt [data-media-reference]'))"));
   // 原音频提示词助手仍位于真实输入旁，不能复用 @ 时把翻译复制入口删掉。
   // 工具条和预览是两个独立操作，不让点击助手误触生成表单。
   // 检查可见入口存在，不把所有助手网络服务都描述为本套件已验证。
@@ -137,7 +137,7 @@ async function missingReference() {
   // 提示词本身无需替换，引用仍指向唯一参考编号一。
   // 生成失败的错误历史保留，不在测试里直接清空 error 字段制造假成功。
   await upload();
-  await wait("document.querySelector('[data-audio-create] [data-prompt-conversion-text]').textContent.includes('<Audio 1>')");
+  await wait("document.querySelector('[data-audio-create] [data-prompt-conversion-text]').textContent.includes('<Slot 1>')");
 }
 async function upload() { await run(`(()=>{const e=document.querySelector('[data-audio-create] input[type=file]'),data=new DataTransfer();data.items.add(new File([new Uint8Array(${JSON.stringify([...wav])})],'中文参考.wav',{type:'audio/wav'}));e.files=data.files;e.dispatchEvent(new Event('change',{bubbles:true}))})()`); }
 
@@ -199,7 +199,7 @@ async function flow() {
   // 实际主进程图应已不含 UI 的 @ 标记，预览转换不能只停留在屏幕上。
   // 末尾空格来自原补全插入行为，比较时 trim 不改变被提交图本身。
   // 序号一对应唯一 LoadAudio，而不是素材文件名里的任意数字。
-  assert.equal(Object.values(prompts[1].graph).find(node => node.class_type === 'MiniMaxH3ReferenceToVideo').inputs.prompt.trim(),'Follow <Audio 1>');
+  assert.equal(Object.values(prompts[1].graph).find(node => node.class_type === 'MiniMaxH3ReferenceToVideo').inputs.prompt.trim(),'Follow <Slot 1>');
 }
 
 /**

@@ -230,9 +230,9 @@ async function appearanceAndScale(ctx,helpers) {
   // 提示挂在Portal中，必须从document搜索，不能限定为rail子节点。
   // stage宽度使用CSS像素，不能把DPR导致的绘制缓冲差异当成布局变化。
   const target=await run("(()=>{const r=document.querySelector('[data-mask-mode=rectangle]').getBoundingClientRect();return{x:Math.round(r.x+r.width/2),y:Math.round(r.y+r.height/2),right:r.right,stage:document.querySelector('[data-mask-stage]').getBoundingClientRect().width}})()");ctx.input({type:'mouseMove',x:target.x,y:target.y});await new Promise(resolve=>setTimeout(resolve,420));
-  smoke.check('Tool name appears to the right without shrinking the canvas',await run("(()=>{const e=[...document.querySelectorAll('[data-mask-tool-tip]')].find(e=>e.dataset.visible==='true'&&e.textContent==='矩形选区');return !!e&&e.getBoundingClientRect().left>="+target.right+"&&document.querySelector('[data-mask-stage]').getBoundingClientRect().width==="+target.stage+"})()"));
+  smoke.check('Tool name appears to the right without shrinking the canvas',await run("(()=>{const e=[...document.querySelectorAll('[data-hover-tip]')].find(e=>e.dataset.visible==='true'&&e.textContent==='矩形选区');return !!e&&getComputedStyle(e).backgroundColor==='rgb(5, 5, 5)'&&e.getBoundingClientRect().left>="+target.right+"&&document.querySelector('[data-mask-stage]').getBoundingClientRect().width==="+target.stage+"})()"));
   ctx.input({type:'mouseMove',x:target.x+140,y:target.y});await new Promise(resolve=>setTimeout(resolve,180));
-  smoke.check('Leaving a tool fades its name without changing the selected mode',await run("![...document.querySelectorAll('[data-mask-tool-tip]')].some(e=>e.dataset.visible==='true')"));
+  smoke.check('Leaving a tool fades its name without changing the selected mode',await run("![...document.querySelectorAll('[data-hover-tip]')].some(e=>e.dataset.visible==='true')"));
   // 使用产品真实主题菜单，不只给根节点手工加类制造局部假深色。
   // 等待 view transition 结束，截图反映完整应用最终配色。
   // 选区与 PNG 不因主题切换而重建或重置。

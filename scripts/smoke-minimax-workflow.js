@@ -32,6 +32,9 @@ const assert = require("node:assert/strict");
 const { app, BrowserWindow, nativeImage } = require("electron");
 const { IPC_CHANNELS: C } = require("../apps/electron/src/common/ipc-channels");
 const { registerHandle } = require("../apps/electron/src/main/ipc/result");
+// 仅替代外部文本转换；原工具栏、preload、引用解析和撤销均执行真实实现。
+const promptConversions = [];
+registerHandle(C.PROMPT_TRANSFORM, (_event, request) => { promptConversions.push(request); return `${request.text} transformed`; });
 const { windowChromeOptions, windowChromeArguments } = require("../apps/electron/src/main/core/windows/window-chrome");
 // 尺寸专项使用独立名称，日志中的绿灯不能被误读为整套视频回归通过。
 // 两个模式仍使用同一个护栏，异常和断言失败都返回非零退出码。
@@ -722,6 +725,7 @@ async function verifyReferenceGraph() {
   const multi = await submit();
   const inputs = multi['147:136'].inputs;
   smoke.check('Three media types normalize to official Minimax reference markers', inputs.prompt === '<Picture 1>, <Picture 2>, <Picture 3>. Follow <Video 1> and <Audio 1>.');
+  await verifyReferencePromptTools(inputs.prompt);
   assert.equal(Object.keys(inputs).filter(key=>key.startsWith('ref_images.')).length,3);
   for (const kind of ['image','video','audio']) {
     const group = kind === 'image' ? 'images' : kind === 'video' ? 'videos' : 'audios';
@@ -742,6 +746,18 @@ async function verifyReferenceGraph() {
   for (const id of ['147:123','147:129','147:130','147:150','153']) assert.deepEqual(multi[id],referenceTemplate[id]);
   smoke.check('Reference workflow keeps sampling, output, timing and seed wiring; default LoRA is removed', true);
   await captureSettings('minimax-reference-media.png','[data-video-reference-inputs]');
+}
+// 混合媒体验证同一原输入：预览与真实提交一致，转换请求也必须包含 Video 和 Slot。
+async function verifyReferencePromptTools(expected) {
+  const tool = '[data-video-create-panel] [data-prompt-assistant]';
+  const raw = await run("document.querySelector('[data-video-prompt]').textContent");
+  smoke.check('Mixed-media preview matches the actual submitted prompt', await run(`document.querySelector('[data-prompt-conversion-text]').textContent===${JSON.stringify(expected)}`));
+  await run(`document.querySelector('${tool} [data-assistant-options]').focus()`);
+  await click(`${tool} [data-assistant-translate]`);
+  await wait(`document.querySelector('[data-video-prompt]').textContent===${JSON.stringify(`${expected} transformed`)}`);
+  smoke.check('Mixed-media assistant receives official Picture, Video and Slot markers', promptConversions.at(-1).text === expected);
+  await click(`${tool} [data-assistant-undo]`);
+  smoke.check('Mixed-media assistant undo restores the raw @ references', await run(`document.querySelector('[data-video-prompt]').textContent===${JSON.stringify(raw)}`));
 }
 async function verifyReferenceRemoval() {
   await removeReference('image',2);

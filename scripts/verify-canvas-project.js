@@ -90,6 +90,152 @@ const node = (id, media) => ({ id, position: { x: 20, y: 40 }, data: { kind: med
 // 这组不验证节点能否执行生成任务，连线仍只是本地引用。
 // 测试失败用 assert 抛出，最终 main.catch 保留非零退出。
 // 不会只打印 bad case 后继续报格式全部通过。
+// 模板编号同时经过 shared 与主进程校验，不能只验证 UI 菜单列出了几个名字。
+// 用每种节点类型搭配所有模板，专门发现跨类型误收，而非只检查合法模板。
+// undefined 代表旧工程，不需要为了新增字段迁移用户已保存的节点。
+// null 不是缺字段，两端必须明确拒绝，不能恢复成错误的默认模板。
+// 对象与数字防止主进程靠隐式字符串转换接收损坏数据。
+// 未知名称防止工程绕过注册表，不能当作可加载的外部工作流文件。
+// edge 与 inpaint 虽然是创建页现有工具，也不属于本轮图片编辑范围。
+// 音频与文本没有支持的模板，不能借同名编号伪装成图片任务。
+// 每个样本只改 kind 和 workflow，其他字段来自现有合法节点基线。
+// 样本没有媒体引用，避免类型不匹配先被另一个检查拒绝而遮住本规则。
+// 主进程直接调用生产校验器，不复述它的布尔表达式作为被测实现。
+// shared 实际 safeParse 可发现字段被遗漏、剥离或接受范围不同。
+// 合法输入还检查解析后的编号，防止字段没登记却被悄悄丢掉仍报成功。
+// 先用确定的业务允许表算预期，不从任何一个被测返回值推断另一个预期。
+// 包含 Anima、SDXL、文字改图和全部当前视频模板，覆盖两类节点实际入口。
+// 同一个模板在错误类型上必须失败，不能因为总白名单存在就全局放行。
+// 默认缺值要在所有四类样本通过，旧文本和音频草稿不应因本轮失效。
+// 这一组只证明契约和旧数据兼容，不把它写成 ComfyUI 推理验证。
+// 没有伪造任务进度、文件输出或本地模型已安装状态。
+// 失败通过断言抛出，由原 main.catch 保留非零退出码。
+// 不在这里捕获并继续打印成功，任何一个两端差异都应阻止发布结论。
+// 循环枚举固定小样本，没有扫描用户目录或把大模型读进内存。
+// 这些是纯数据反证，可以在没有 Electron 可见窗口的机器上运行。
+// 真正菜单操作、持久化及主题仍由独立串行 Electron 回归验证。
+// 样本修改只落在新对象，原 empty 与 node 工具不被后续循环污染。
+// 没有新增全局工作流默认值，测试不替产品决定每张节点的选择。
+// 相同编号通过后必须逐字保存，不能被大小写或翻译替换。
+// 非图片编辑工具的拒绝是明确业务边界，而不是环境缺模型导致的偶然失败。
+// 本测试不触碰用户工程，后续真实归档继续使用独立临时目录。
+// 两类校验必须各自成功，不能仅凭相等就让“全部返回 false”也通过。
+// 配置测试对两端分别断言，避免“都返回 false”也被误判成一致通过。
+// 合法数据额外核对解析保留的字段，schema 漏登记不能悄悄吞掉 LoRA。
+// undefined 的属性在 JSON 中会省略，比较时按真实落盘形状处理。
+// 输入来自小型纯数据夹具，不宣称已经读取或成功加载这些模型权重。
+// 正常参数保留模型顺序，因为 LoRA 链的先后具有实际语义。
+// 这里只覆盖磁盘契约，交互、权重提交和焦点另由 Electron 验证。
+// 不修改 empty 或原 node，后续格式往返仍使用它们原来的输入。
+// 失败直接抛出，由脚本的唯一 catch 留下非零退出码。
+// 对象循环、恶意 getter 不属于本次 IPC 可序列化数据模型。
+// 先验节点类型合法，再核对配置字段，避免不相关字段提前拒绝掩盖规则。
+function checkLoraCase(kind, workflowLoras, expected) {
+  const sample = { ...empty, nodes: [{ ...node("lora"), data: { ...node("lora").data, kind, workflowLoras } }] };
+  assert.equal(validate.document(sample), expected, `${kind} main loras`);
+  const parsed = InfiniteCanvasDocumentSchema.safeParse(sample);
+  assert.equal(parsed.success, expected, `${kind} shared loras`);
+  if (parsed.success) assert.equal(JSON.stringify(parsed.data.nodes[0].data.workflowLoras), JSON.stringify(workflowLoras));
+}
+
+// 当前 golden 先覆盖显式空数组，删除全部 LoRA 不能被视为损坏工程。
+// 缺整张表和表内可选键都是旧数据兼容形态，不能强迫用户补默认值。
+// 图片行采用原 extensionId/weight，视频行采用原 id/name/strength。
+// 两种形状不得互换，不能因为两个控件都叫 LoRA 就放松数据契约。
+// 最小、最大权重是创建页已有 -5 和 5，端点均允许保存。
+// 超范围、NaN 和字符串检查数值没有隐式转换或静默截断。
+// 重复身份反证约束删除和调权目标，避免两行同时响应一次操作。
+// 未知模板和 Wan 覆盖拒绝，防止提供当前执行器不能消费的参数。
+// null 和数组不是配置表，不能借 typeof object 绕过保护。
+// 音频和文本即使传空表也拒绝，它们未接本轮工作流配置。
+// 图片带 minimax 键、视频带 anima 键分别检查父节点归属。
+// 超量列表用不同身份构造，失败不能只来自重复去重规则。
+// 单条合法模型并不代表它存在，生成前仍需真实服务器目录匹配。
+// 本组不访问用户模型、不启动 ComfyUI，也不创建模型文件。
+// 权重测试只替换一个数值，其余形状保持 golden，有明确失败原因。
+// 表内 undefined 与 JSON 省略同义，主进程不能比 shared 更严格。
+// 数组顺序不排序，验证解析没有改变用户链条。
+// 任一样本分歧都会中断后续格式测试，不能打印总成功掩盖它。
+// 没有用待测校验的结果计算 expected，预期来自这份业务验收表。
+// 旧完整归档失败若仍存在需单独报告，专项成功不能替代全脚本通过。
+// 端点样本分别放在两种形状上，防止只给图片实现正确范围而漏掉视频。
+// 大数组中的每行身份不同，确保拒绝来自数量保护而不是碰巧相同id。
+// 图片行伪装成视频时缺少name，视频行伪装成图片时缺少extensionId。
+// 这种交叉输入可发现只验证weight而忽略行身份结构的漏洞。
+// undefined 整表与空表分别允许在图片和视频，明确兼容与显式记录的区别。
+// 文本空表拒绝进一步约束类型归属，不依赖是否存在具体子键。
+// 使用真实生产模块校验，不把本组枚举白名单复制成被测实现。
+// 日志打印在所有断言之后，不会在首个通过样本就提前报告专项成功。
+// 通过的返回值仍可能在未来执行时缺文件，这个阶段不声称模型已加载。
+// 本组不会改变后面的原归档输入，避免借新字段“修正”旧失败用例。
+// 反证独立于主题颜色，因此深浅样式通过不能掩盖非法参数被接收。
+// 权重的实际UI操作仍需要Electron场景，不能用纯数据断言代替鼠标和键盘。
+function checkWorkflowLoras() {
+  const image = { extensionId: "local-lora:Anima/style.safetensors", weight: 0.4 };
+  const video = { id: "v1", name: "minimax/style.safetensors", strength: 1 };
+  for (const value of [undefined, {}, { anima: undefined }, { anima: [] }, { sdxl: [image] }, { "anima-edit": [{ ...image, weight: -5 }] }]) checkLoraCase("image", value, true);
+  for (const value of [undefined, {}, { minimax: [] }, { "minimax-reference": [{ ...video, strength: 5 }] }]) checkLoraCase("video", value, true);
+  for (const value of [null, [], { unknown: [] }, { "wan2.2": [] }, { minimax: [video] }, { anima: [video] }, { anima: [image, image] }, { anima: Array.from({ length: 129 }, (_, i) => ({ ...image, extensionId: `lora-${i}` })) }]) checkLoraCase("image", value, false);
+  for (const weight of [6, NaN, "1"]) checkLoraCase("image", { anima: [{ ...image, weight }] }, false);
+  for (const value of [{ anima: [] }, { minimax: [image] }, { minimax: [video, video] }, { minimax: [{ ...video, strength: Infinity }] }]) checkLoraCase("video", value, false);
+  for (const kind of ["audio", "text"]) checkLoraCase(kind, {}, false);
+  checkLoraSerialization();
+  console.log("CANVAS_WORKFLOW_LORAS_OK: both validators and retained configuration");
+}
+
+// 必须先验证内存作品，再模拟 JSON 写盘；否则 undefined 键会被 JSON 提前抹掉。
+// 本次实际故障发生在 schema.parse，文件还没写，单测 JSON 往返会漏报。
+// 直接加载生产序列化函数，不能在测试里复制一份“正确归档”算法自证。
+// 上面的 TS 转译钩子只擦类型；lucide 从 Next 现有依赖正常加载。
+// 图片和视频各放一个有效表，防止只修好其中一类仍留下同样的保存失败。
+// 图片先插入 SDXL 再插入 ANIMA，特意与 schema 的字段顺序相反。
+// 视频同样先参考流后基础流，覆盖另一套参数形状的签名次序。
+// 空数组参与校验，证明明确删除默认扩展的意图仍能保存。
+// 所有身份都是纯参数夹具，不会从磁盘读取真实模型内容。
+// 两端验证都必须接受内存输出，不能等待 JSON 替产品去掉无效归属键。
+// 再比较解析后的 JSON，证明同一作品不会因 schema 整理顺序而误报未保存。
+// JSON 比较只放在内存校验之后，无法替前面的 strict 归属条件兜底。
+// 原表拍快照后再次比较，归档不能删除用户当前会话中的字段。
+// 这里不修复非法外部工程；未知字段仍交由工程恢复的独立校验处理。
+// 未配置整表仍由原兼容测试覆盖，本组集中防止有效配置保存失败。
+// 后续 Electron 还会用真实选择器调权、保存和完整刷新，不以本组替代 UI。
+// 对比的是稳定作品数据，临时菜单开合和按钮焦点不应进入序列化结果。
+// 若生产函数重新填入所有 undefined 键，这组应在 JSON 比较之前立即失败。
+// 没有放宽 shared 或主进程白名单来迁就序列化，错误类型仍需拒绝。
+// 两种合法列表顺序保留，模型执行链顺序不因整理模板键而改变。
+// 测试不改变 empty、node 或传入参数，避免影响后面的工程包反证。
+// 任一 assert 抛错由 main.catch 负责非零退出，不能先打印专项通过。
+// 这是保存边界的回归，和真实媒体是否能解码是不同验收项。
+// schema 解析会重建小型参数对象，因此比较正文而非依赖对象引用相同。
+// 原节点的 media 为空，失败不能被无关的媒体路径校验提前遮住。
+// 未来增加模板时扩展样本，不把允许键清单作为另一个生产实现导入产品。
+// 统计新增测试时包含本函数和调用行，不能借旧文件的大段注释抵扣增量。
+// 本检查在现有串行格式流程执行，不另启动 Electron 争抢窗口或单实例锁。
+function checkLoraSerialization() {
+  const { serializeCanvas } = require("../apps/next/src/view/infinite-canvas/canvas-model.ts");
+  for (const [kind, workflowLoras] of [["image", { sdxl: [], anima: [{ extensionId: "local-lora:style", weight: 1.25 }] }], ["video", { "minimax-reference": [], minimax: [{ id: "v1", name: "minimax/style.safetensors", strength: 1 }] }]]) {
+    const original = JSON.stringify(workflowLoras);
+    const value = serializeCanvas({ name: "", nodes: [{ ...node("lora-save"), data: { ...node("lora-save").data, kind, workflowLoras } }], edges: [] });
+    assert.equal(validate.document(value), true, `${kind} serialized main`);
+    assert.equal(JSON.stringify(InfiniteCanvasDocumentSchema.parse(value)), JSON.stringify(value));
+    assert.equal(JSON.stringify(workflowLoras), original);
+  }
+}
+
+function checkWorkflows() {
+  const supported = { image: ["anima", "sdxl", "anima-edit"], video: ["minimax", "minimax-reference", "wan2.2"] };
+  for (const kind of ["image", "video", "audio", "text"]) {
+    for (const workflow of [undefined, ...supported.image, ...supported.video, "edge", "inpaint", "unknown.json", null, {}, 1]) {
+      const value = { ...empty, nodes: [{ ...node("workflow"), data: { ...node("workflow").data, kind, workflow } }] };
+      const allowed = workflow === undefined || (supported[kind] ?? []).includes(workflow);
+      assert.equal(validate.document(value), allowed, `${kind}:${String(workflow)} main`);
+      const parsed = InfiniteCanvasDocumentSchema.safeParse(value);
+      assert.equal(parsed.success, allowed, `${kind}:${String(workflow)} shared`);
+      if (parsed.success) assert.equal(parsed.data.nodes[0].data.workflow, workflow);
+    }
+  }
+}
+
 function checkValidation() {
   for (const value of [empty, { ...empty, nodes: [node("text")] }]) {
     assert.equal(validate.document(value), true);
@@ -220,6 +366,7 @@ async function checkImportModes(root) {
   for (const mode of [undefined, "copy", "move", null, false, "MOVE", "delete"]) {
     assert.equal(validate.importRequest({ ...request, mode }), mode === undefined || mode === "copy" || mode === "move");
     assert.equal(CanvasImportMediaSchema.safeParse({ ...request, mode }).success, validate.importRequest({ ...request, mode }));
+    assert.equal(CanvasImportMediaSchema.safeParse({ ...request, files: [], mode }).success, validate.importRequest({ ...request, files: [], mode }));
   }
   const copied = await importAssets(path.join(root, "user"), { ...request, mode: "copy" });
   assert.equal(await fs.readFile(source, "utf8"), "move mode bytes");
@@ -357,7 +504,13 @@ async function main() {
   // 与真实归档用例串行执行，没有额外启动 Electron 或读取用户工程。
   require("./lib/check-canvas-drag-model").checkCanvasDrag();
   const root = await fs.mkdtemp(path.join(os.tmpdir(), "ir-canvas-project-"));
-  checkValidation(); checkHostileManifest();
+  // 基础格式通过后再核对新增模板字段，不跳过已有非法包反证。
+  // 这里只增加契约覆盖，不改变真实资产复制与归档恢复的测试输入。
+  // 新旧两组串行失败即停，不能以其中一组成功掩盖另一组失败。
+  // 先验证新增配置与兼容形态，再进入真实文件回归，保持失败原因可区分。
+  // 专项输出仅表示契约通过，后面的归档任一失败仍使全脚本退出1。
+  // 没有跳过旧反证，历史用例继续使用原始文件与包正文。
+  checkValidation(); checkWorkflows(); checkWorkflowLoras(); checkHostileManifest();
   const imported = await checkAssets(root);
   await checkImportModes(root);
   await checkRoundTrip(root, imported);

@@ -31,7 +31,10 @@ function fixture(relative) {
   return folder;
 }
 function request(folderPath, category, targetRootPath = path.join(models, "loras")) { return { folderPath, targetRootPath, category }; }
-function movement() {
+// 扫描转为异步后必须等真正读完，不能只断言 Promise 存在。
+// 移动的磁盘断言保持原样，异步化不允许改变源目录或版本数量。
+// app 启动链同样等待本检查，失败不能落在已退出的进程之后。
+async function movement() {
   const source = fixture("loras/Anima/Uncategorized/Example");
   fs.mkdirSync(path.join(models, "checkpoints"), { recursive: true });
   const info = categoryTarget(source);
@@ -44,7 +47,7 @@ function movement() {
   assert.deepEqual(fs.readdirSync(moved).sort(), ["logo.png", "notes.json", "v1.safetensors", "v2.safetensors"]);
   assert.equal(fs.readFileSync(path.join(moved, "v1.safetensors"), "utf8"), "first version");
   assert.equal(fs.readFileSync(path.join(moved, "logo.png"), "utf8"), "cover");
-  assert.equal(scanModelsInDirectory(info.rootPath, "lora")[0].filePath, moved);
+  assert.equal((await scanModelsInDirectory(info.rootPath, "lora"))[0].filePath, moved);
   assert.equal(categoryTarget(moved).currentCategory, "风格");
   assert.equal(moveCategory(request(moved, "风格")), moved);
   assert.equal(moveCategory(request(moved, "")), source);
@@ -136,7 +139,7 @@ async function deleteChecks(folders) {
   } finally { shell.trashItem = originalTrash; }
 }
 app.whenReady().then(async () => {
-  try { const source = movement(); refusals(source); links(source); explicitRoots(); await batchChecks(); app.exit(0); }
+  try { const source = await movement(); refusals(source); links(source); explicitRoots(); await batchChecks(); app.exit(0); }
   catch (error) { console.error(error); app.exit(1); }
   finally { fs.rmSync(root, { recursive: true, force: true }); }
 }).catch((error) => { console.error(error); app.exit(1); });

@@ -32,7 +32,11 @@ registerHandle(C.MODELS_DOWNLOAD_LIST, () => ({ revision: 0, tasks: [] })); regi
 // 公开目录用随包参考，不访问真实价目接口或认证端点。
 // available=null 表示未验证账号权限，与本地已保存 key 是两个不同事实。
 // runner payload 含解密 key，因此只在局部断言，不输出对象或写入截图说明。
-registerHandle(C.AGENT_CATALOG, (_event, provider) => require("../apps/electron/src/main/modules/agent/provider-catalog").fallback(provider));
+// 测试只为当前替身型号声明图片能力，不能据此声称官网已确认 Grok 识图。
+registerHandle(C.AGENT_CATALOG, (_event, provider) => {
+  const catalog = require("../apps/electron/src/main/modules/agent/provider-catalog").fallback(provider);
+  return { ...catalog, models: catalog.models.map(model => model.id === 'grok-4.7' ? { ...model, imageInput: true } : model) };
+});
 // 控制回归模拟启动握手延迟，验证 runId 返回前用户也能停止。
 // 仅替换执行端，表单、store、preload 与参数校验继续使用正式代码。
 // cancelled 记录精确运行编号，能发现旧启动返回后误杀新任务的问题。
@@ -155,7 +159,7 @@ async function checkImages() {
   // base64 解码后比较字节，不用“包含 image_url 字样”作为上传成功证据。
   // 当前问题不重复写进 history，图片应只出现在自己的这一条用户消息上。
   // 第一轮结束后发送第二轮，新请求的 images 为空，第一轮图应留在 history。
-  await attachImages(); await input('请分析这两张图片'); await run("document.querySelector('[data-agent-send]').click()"); await wait("document.querySelector('[data-agent-stop]')");
+  await attachImages(); await input('请分析这两张图片'); await checkRetainedImages(); await run("document.querySelector('[data-agent-send]').click()"); await wait("document.querySelector('[data-agent-stop]')");
   const first = requests[0], bytes = fs.readFileSync(path.join(root, 'one.png'));
   smoke.check('Euzhi receives two actual image byte payloads', first.config.provider === 'euzhi' && first.config.baseUrl === 'https://euzhi.vip/v1' && first.config.model === 'grok-4.7' && first.images.length === 2 && first.images.every(image => Buffer.from(image.split(',')[1], 'base64').equals(bytes)));
   smoke.check('Image inputs contain no blob or local paths', first.images.every(image => image.startsWith('data:image/png;base64,')));
@@ -164,6 +168,16 @@ async function checkImages() {
   smoke.check('Follow-up retains original image context', requests[1].images.length === 0 && requests[1].history[0].images.length === 2 && requests[1].history[0].images[0] === first.images[0]);
   win.webContents.send(C.AGENT_EVENT, { runId: 'vision-ui-2', type: 'final', text: ('一段用于验证固定布局的长回复。\n\n').repeat(120), steps: 1 }); await wait("!document.querySelector('[data-agent-stop]')");
   smoke.check('Sent images remain previewable in conversation', await run("document.querySelectorAll('[data-agent-message][data-agent-role=user] [data-agent-attachment]').length===2"));
+}
+/** 已选附件不能绕过型号限制；拒绝时保留正文和附件，切回视觉模型后继续原发送。 */
+async function checkRetainedImages() {
+  const { chooseAgentModel } = require('./lib/check-agent-image-capability');
+  await chooseAgentModel({ run, wait }, 'glm', 'glm-4.7-flash');
+  await run("document.querySelector('[data-agent-send]').click()");
+  await wait("document.body.textContent.includes('仅文字 · 不支持图片')");
+  smoke.check('Retained attachments cannot bypass text-only model gating', requests.length === 0 && await run("document.querySelector('[data-agent-input]').value==='请分析这两张图片'&&document.querySelector('[data-agent-composer] [data-agent-attachment-count]').dataset.agentAttachmentCount==='2'"));
+  await chooseAgentModel({ run, wait }, 'euzhi', 'grok-4.7');
+  await wait("!document.querySelector('[data-agent-add]').disabled");
 }
 /**
  * 几何验证覆盖长回复、内部滚动、浏览器焦点恢复和手动窗口变化。
@@ -331,13 +345,15 @@ async function main() {
   // finish 的非零退出与公共看门狗结合，任何未完成套件不得被 CI 误判为绿。
   await app.whenReady(); smoke.assertBuildFresh({ app });
   require("../apps/electron/src/main/modules/agent/provider-secrets").updateProviderKey('euzhi', 'sk-vision-ui-test');
+  require("../apps/electron/src/main/modules/agent/provider-secrets").updateProviderKey('glm', 'sk-text-gate-test');
   win = new BrowserWindow({ ...windowChromeOptions(), show: false, width: 1435, height: 900, webPreferences: { additionalArguments: windowChromeArguments(), offscreen: true, preload: path.join(__dirname, "../apps/electron/src/preload/index.js"), contextIsolation: true, nodeIntegration: false, sandbox: false, backgroundThrottling: false } });
   smoke.attachWebContents(win.webContents); const occlusion = await smoke.hardenWindow(win);
   try {
     await win.loadURL('app://app/agent'); await wait("document.querySelector('[data-agent-model]')?.dataset.agentModel==='grok-4.7'");
     await wait("document.querySelector('[aria-labelledby=update-announcement-title]')"); await run("document.querySelector('[aria-labelledby=update-announcement-title] button').click()");
     await checkImages(); await checkLayout(); await checkControls(); await checkLightMenu(); console.log('VISION_SCREENSHOTS', root);
-  } finally { occlusion.dispose(); if (win.webContents.debugger.isAttached()) win.webContents.debugger.detach(); win.destroy(); }
+  } catch (error) { console.error(error.message); throw error; }
+  finally { occlusion.dispose(); if (win.webContents.debugger.isAttached()) win.webContents.debugger.detach(); win.destroy(); }
   assert.ok(requests.length === 5); smoke.finish({ app, ok: smoke.allPassed() });
 }
 // 失败必须走 harness 非零退出，不能由截图成功覆盖前面的失败断言。

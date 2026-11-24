@@ -949,7 +949,12 @@ async function verifyRecoveredCover() {
   // 文件身份使用原模型完整路径，不依赖多个 one.safetensors 的同名显示文本。
   // 这里不主动扫描或重载页面，必须由原批量流程的完成回调刷新列表。
   // naturalWidth 大于零才说明浏览器真的解码了图片，而不只是生成 img 标签。
-  // 限定 data:image/png 排除卡片原占位图或其他 WebP 样例意外满足断言。
+  // 显示改走已有媒体协议，不再要求整张 PNG 先变成 Base64。
+  // 比对解码后的绝对 path，排除卡片原占位图或其他 WebP 样例误命中。
+  // naturalWidth 的等待继续保留，不能把地址正确当成已成功解码。
+  // 卡片和详情分别核对同一个实际落盘文件，不能只检查 URL 协议前缀。
+  // 版本刷新参数不参与路径比较，同路径换封面仍可使用新的缓存身份。
+  // 生产本地协议实际读取磁盘，测试不将返回值替换成 data URL 来绕开它。
   // 随后打开同一张卡片，检查第三栏与中间列表使用的是同一份补全结果。
   // 生产选择动作通过真实点击完成，不给详情组件手工注入封面 URL。
   // 此组网络仍是模拟响应，只能证明真实 IPC、磁盘和渲染之间的链路。
@@ -982,10 +987,10 @@ async function verifyRecoveredCover() {
   const card = `[data-local-model-file=${JSON.stringify(batchNoLogo)}]`;
   const image = `document.querySelector(${JSON.stringify(card)})?.closest('[data-model-library-card]')?.querySelector('img')`;
   await wait(`${image}?.naturalWidth>0`);
-  smoke.check("batch completion refreshes the decoded PNG on the model card", await run(`${image}?.src.startsWith('data:image/png')`));
+  smoke.check("batch completion refreshes the decoded PNG on the model card", await run(`new URL(${image}.src).searchParams.get('path')===${JSON.stringify(path.join(path.dirname(batchNoLogo), "logo.png"))}`));
   await openFile(batchNoLogo);
   await wait("document.querySelector('[data-local-model-details] img')?.naturalWidth>0");
-  smoke.check("recovered cover also decodes in the selected model details", await run("document.querySelector('[data-local-model-details] img')?.src.startsWith('data:image/png')"));
+  smoke.check("recovered cover also decodes in the selected model details", await run(`new URL(document.querySelector('[data-local-model-details] img').src).searchParams.get('path')===${JSON.stringify(path.join(path.dirname(batchNoLogo), "logo.png"))}`));
 }
 async function setTab(text) {
   await run(`(()=>{const el=document.querySelector('[data-prompt-tab-input]');Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype,'value').set.call(el,${JSON.stringify(text)});el.dispatchEvent(new Event('input',{bubbles:true}))})()`);

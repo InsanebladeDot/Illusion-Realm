@@ -21,6 +21,7 @@
  * 本脚本不创建窗口，不与另一个 Electron 冒烟同时运行。
  */
 const assert = require('node:assert/strict'), fs = require('node:fs'), os = require('node:os'), path = require('node:path');
+const { createHash } = require('node:crypto');
 const { app, safeStorage } = require('electron');
 const root = fs.mkdtempSync(path.join(os.tmpdir(), 'ir-agent-providers-'));
 process.env.ILLUSION_AGENT_SECRET_DIR = root;
@@ -36,7 +37,7 @@ const { getProviderCatalog, request } = require("../apps/electron/src/main/modul
 // 表达式只用纯字符串，生产解析器不执行任何服务商代码。
 // token 模型的倍率公式与 tiered_expr 表达式分别覆盖，避免单一格式恒真。
 // 配置组只有 grok=0.8，期望值是倍率折算后的 USD 每百万 token。
-const pricing = { success: true, group_ratio: { grok: 0.8 }, data: ['grok-4.6', 'grok-4.7', 'grok-image-test'].map(model_name => ({ model_name, quota_type: 0, model_ratio: 9, completion_ratio: 3, enable_groups: ['grok'], supported_endpoint_types: ['openai'], billing_mode: 'tiered_expr', billing_expr: 'len <= 200000 ? tier("base", p * 2 + c * 6 + cr * 0.5) : tier("longcontext", p * 4 + c * 12)' })) };
+const pricing = { success: true, group_ratio: { grok: 0.8, standard: 1.2 }, data: ['grok-4.6', 'grok-4.7', 'gpt-5.5', 'claude-sonnet-4.6', 'grok-image-test'].map(model_name => ({ model_name, quota_type: 0, model_ratio: 9, completion_ratio: 3, enable_groups: ['grok', 'standard'], supported_endpoint_types: ['openai'], billing_mode: 'tiered_expr', billing_expr: 'len <= 200000 ? tier("base", p * 2 + c * 6 + cr * 0.5) : tier("longcontext", p * 4 + c * 12)' })) };
 // model_ratio 与表达式基础输入价刻意不同，确保表达式模式不误用旧倍率字段。
 // 期望输入 2×0.8=1.6，输出 6×0.8=4.8，不能套用 model_ratio×2 的旧字段公式。
 // 长阶梯输入 4×0.8=3.2、输出 12×0.8=9.6，阈值为 200000 输入 token。
@@ -68,7 +69,7 @@ async function fakeFetch(url, options) {
   if (url.endsWith('/api/pricing')) return new Response(JSON.stringify(pricing));
   if (badKey) return new Response('', { status: 401 });
   assert.equal(auth, 'Bearer sk-euzhi-test-2222');
-  return new Response(JSON.stringify({ data: [{ id: 'grok-4.7' }] }));
+  return new Response(JSON.stringify({ data: [{ id: 'grok-4.7' }, { id: 'gpt-5.5' }, { id: 'claude-sonnet-4.6' }, { id: 'gpt-new-chat' }, { id: 'gpt-image-2' }] }));
 }
 /**
  * 先验证旧密钥仍用于硅基流动，再确认 Euzhi 无密钥不会借用环境变量。
@@ -147,8 +148,9 @@ function checkParsing() {
   // 换行结束的 Flight 行与实际官网一致，匹配逻辑需完整读到 JSON 行。
   // 测试不运行 script，若生产实现改成 eval 也不因此被允许，源码审查仍需禁止。
   const models = parser.parseEuzhi(pricing);
-  assert.equal(models.length, 2); assert.equal(models[0].input, 1.6); assert.ok(Math.abs(models[0].output - 4.8) < 1e-9); assert.equal(models[0].tiers[0].above, 200000);
-  assert.equal(parser.recommend(models), 'grok-4.7'); assert.equal(parser.recommend([...models].reverse()), 'grok-4.7');
+  assert.equal(models[0].groupPrices.length, 2); assert.equal(models[0].groupPrices[1].input, 2.4);
+  assert.equal(models.length, 4); assert.equal(models[0].input, 1.6); assert.ok(Math.abs(models[0].output - 4.8) < 1e-9); assert.equal(models[0].tiers[0].above, 200000);
+  assert.ok(models.some(model => model.id === 'gpt-5.5')); assert.ok(models.some(model => model.id === 'claude-sonnet-4.6')); assert.equal(parser.recommend(models), parser.recommend([...models].reverse()));
   const unknown = parser.parseEuzhi({ ...pricing, data: [{ ...pricing.data[0], billing_expr: 'unknown' }] }); assert.equal(unknown[0].input, null); assert.equal(parser.recommend(unknown), '');
   assert.deepEqual(parser.parseEuzhi({ ...pricing, data: [] }), []); assert.throws(() => parser.parseEuzhi({ success: false }), /catalog/);
   const row = { modelName: 'Pro/test/chat', targetModelName: 'test/chat', subType: 'chat', status: 'normal', functionCallSupport: true, pricing: [{ specification: 'prompt', price: '0', unitOfGood: '/ M Tokens' }, { specification: 'completion', price: '0', unitOfGood: '/ M Tokens' }] };
@@ -157,7 +159,7 @@ function checkParsing() {
 }
 /**
  * 公共目录刷新成功后记录请求数，下一次普通读取应命中六小时缓存。
- * 每次有密钥都核对 /models，令牌不可见的便宜模型不能成为推荐。
+ * /models 仅补充型号，列表缺项不能作为模型不可用的证据。
  * 公开请求不得携带 Authorization，即使已配置 Euzhi 密钥。
  * 一次离线强刷保留模型及原更新时间，同时清楚返回失败状态。
  * 认证失败独立返回 auth，不能伪装成所有模型都已获授权。
@@ -170,8 +172,8 @@ async function checkCatalog() {
   // 替换 global.fetch 在测试进程内生效，不影响用户另一个应用的网络实现。
   // live.source 是当前价格请求成功的证据，单有模型列表不算刷新成功。
   // live.error 为空是账户可见性核对成功的证据，不能只检查公开价格成功。
-  // 当前账户只返回 4.7，因此更旧 4.6 的 available 必须明确为 false。
-  // 推荐仍为 4.7，证明账户过滤没有把推荐指向不可用模型。
+  // 当前账户列表漏掉 4.6，但用户仍必须能选择它发起真实请求。
+  // 是否置灰改由实际调用结果决定，不由目录完整性决定。
   // calls 中分开定位公开 /api/pricing 和私有 /models，不能混用认证期待。
   // 公开请求头必须 undefined，而不是空的 Bearer，避免无必要转发令牌。
   // 私有请求精确包含本站 key 与 Bearer 前缀，别站 key 会让替身立即失败。
@@ -189,7 +191,7 @@ async function checkCatalog() {
   // 本组没有检查支付金额、实际消耗或流式工具调用，不应外推这些结果。
   updateProviderKey('euzhi', 'sk-euzhi-test-2222'); const original = global.fetch; global.fetch = fakeFetch;
   try {
-    const live = await getProviderCatalog('euzhi', true); assert.equal(live.error, ''); assert.equal(live.source, 'live'); assert.equal(live.recommended, 'grok-4.7'); assert.equal(live.models.find(x => x.id === 'grok-4.6').available, false);
+    const live = await getProviderCatalog('euzhi', true); assert.equal(live.error, ''); assert.equal(live.source, 'live'); assert.ok(live.models.some(model => model.id === 'gpt-new-chat' && model.input === null && model.available === null)); assert.ok(!live.models.some(model => model.id === 'gpt-image-2')); assert.equal(live.models.find(x => x.id === 'grok-4.6').available, null);
     assert.equal(calls.find(x => x.url.endsWith('/api/pricing')).auth, undefined); assert.equal(calls.find(x => x.url.endsWith('/models')).auth, 'Bearer sk-euzhi-test-2222');
     const count = calls.filter(x => x.url.endsWith('/api/pricing')).length; await getProviderCatalog('euzhi'); assert.equal(calls.filter(x => x.url.endsWith('/api/pricing')).length, count);
     const disk = JSON.parse(fs.readFileSync(path.join(root, 'agent-catalog-euzhi.json'), 'utf8')); assert.ok(disk.models.every(x => x.available === null)); assert.ok(!JSON.stringify(disk).includes('sk-euzhi'));
@@ -203,6 +205,71 @@ async function checkCatalog() {
 // 临时目录保留用于失败调查，不递归删除工作区或用户数据。
 // stdout 只输出分组通过摘要，不输出密钥文件原文或任何真实用户路径。
 // 全部成功后才给出 PASS，不能通过零项执行的分支直接返回成功。
+/** 兼容老 GLM 凭据，三站实际请求复用固定端点；自定义站点仍隔离。 */
+async function checkSharedTextProviders() {
+  const assistant = require('../apps/electron/src/main/modules/prompt-assistant/service');
+  const secret = require('../apps/electron/src/main/modules/agent/secret');
+  const endpoint = 'https://open.bigmodel.cn/api/paas/v4/chat/completions';
+  const legacy = path.join(root, 'legacy-prompt');
+  process.env.ILLUSION_PROMPT_SECRET_DIR = legacy;
+  secret.writeSecret('sk-glm-legacy', path.join(legacy, 'glm', createHash('sha256').update(endpoint).digest('hex').slice(0, 24)));
+  assert.equal(resolveProviderKey('glm').key, 'sk-glm-legacy');
+  assert.ok(assistant.status({ provider: 'glm', baseUrl: '' }).configured);
+  const payload = JSON.parse(buildPayloadLine({ question: 'test', config: { provider: 'glm', model: 'glm-4.7-flash' } }));
+  assert.equal(payload.config.baseUrl, 'https://open.bigmodel.cn/api/paas/v4');
+  assert.equal(payload.config.apiKey, 'sk-glm-legacy');
+  const original = global.fetch; const sent = [];
+  global.fetch = async (url, options) => { sent.push({ url, key: options.headers.Authorization, body: JSON.parse(options.body) }); return new Response(JSON.stringify({ choices: [{ message: { content: 'translated' } }] })); };
+  try {
+    for (const [provider, model] of [['glm', 'glm-4.7-flash'], ['euzhi', 'gpt-5.5'], ['siliconflow', 'Qwen/chat']]) {
+      await assistant.transform({ provider, baseUrl: 'https://invalid.example', model, text: 'input', instruction: 'translate' });
+      const last = sent.at(-1);
+      assert.equal(last.body.model, model); assert.equal(last.url, assistant.endpoint({ provider, baseUrl: '' }));
+      assert.equal(last.key, `Bearer ${resolveProviderKey(provider).key}`);
+    }
+    updateProviderKey('glm', null);
+    assert.equal(assistant.status({ provider: 'glm', baseUrl: '' }).configured, false);
+    assert.equal(resolveProviderKey('glm').key, '');
+  } finally { global.fetch = original; }
+}
+
+/** 使用官网当前格式夹具核对多档价，不把视觉生成价格混成聊天费用。 */
+function checkGlmParsing() {
+  const { parseGlm } = require('../apps/electron/src/main/modules/agent/glm-catalog-parser');
+  const markdown = '## 最新模型\n| GLM-5.3 | 1M | 8 | 28 |\n### 文本模型\n| GLM-5 | 输入长度 [0, 32K) | 4 | 18 |\n| GLM-5 | 输入长度 ≥32K | 6 | 22 |\n> | GLM-4.7-Flash | 200K | 免费 | 免费 |\n### 视觉理解\n| GLM-OCR | 32K | 0.2 | 0.2 |';
+  const models = parseGlm(markdown);
+  assert.equal(models.length, 3); assert.equal(models[0].context, 1000000);
+  assert.equal(models[1].pricingBasis, 'tiered'); assert.ok(models[1].priceNote.includes('≥32K'));
+  assert.equal(models[2].input, 0); assert.equal(models[2].tier, 'free');
+  assert.throws(() => parseGlm('unrecognized page'), /catalog/);
+}
+
+// 强制刷新不能搭上正在结束的旧请求；下一次登录和换密钥必须读到第二份目录。
+async function checkQueuedRefresh() {
+  const original = global.fetch;
+  let release; let reads = 0;
+  updateProviderKey('euzhi', null);
+  global.fetch = async () => {
+    reads++;
+    if (reads === 1) await new Promise(resolve => { release = resolve; });
+    return new Response(JSON.stringify({ ...pricing, data: reads === 1 ? pricing.data.slice(0, 1) : pricing.data }));
+  };
+  try {
+    const first = getProviderCatalog('euzhi', true);
+    for (let i = 0; i < 100 && !release; i++) await new Promise(resolve => setTimeout(resolve, 10));
+    assert.ok(release, 'first official request started');
+    const second = getProviderCatalog('euzhi', true);
+    release(); await first;
+    assert.equal((await second).models.length, 4);
+    assert.equal(reads, 2);
+    // 新模块实例不共享内存，故意离线，验证第二份目录确实能从磁盘恢复。
+    delete require.cache[require.resolve('../apps/electron/src/main/modules/agent/provider-catalog')];
+    global.fetch = async () => { throw Error('offline'); };
+    const disk = await require('../apps/electron/src/main/modules/agent/provider-catalog').getProviderCatalog('euzhi');
+    assert.equal(disk.source, 'cache'); assert.equal(disk.models.length, 4);
+  } finally { global.fetch = original; }
+}
+
 app.whenReady().then(async () => {
   // 依赖组按存储、纯解析、联网缓存顺序执行，前一组失败不会报告后一组已通过。
   // 使用 await 等待账户目录核对结束，不以启动一个未完成 Promise 当作测试成功。
@@ -212,5 +279,9 @@ app.whenReady().then(async () => {
   // 运行目录与样本从当前仓库模块解析，测试不是对拷贝实现自证。
   // Electron ready 保证 Windows DPAPI 可用性与正式 IPC 保存时机一致。
   // 如果该脚本卡在系统初始化，调用方必须按进程退出或超时报告，不能当绿。
-  checkSecrets(); checkParsing(); await checkCatalog(); console.log('PASS Agent providers: secret isolation, payload routing, pricing parsing, cache and authentication'); app.exit(0);
+  checkSecrets(); checkParsing(); checkGlmParsing(); await checkCatalog(); await checkSharedTextProviders(); await checkQueuedRefresh();
+  await require('./lib/check-glm-free-catalog').checkGlmFreeCatalog();
+  await require('./lib/check-model-availability').checkModelAvailability(pricing);
+  await require('./lib/check-model-image-capability').checkModelImageCapability(root);
+  console.log('PASS Agent providers: secret isolation, payload routing, pricing, cache, official GLM models and actual-request availability'); app.exit(0);
 }).catch(error => { console.error(error); app.exit(1); });

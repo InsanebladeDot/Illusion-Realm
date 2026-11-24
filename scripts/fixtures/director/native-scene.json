@@ -1,0 +1,135 @@
+{
+  "characters": [
+    {
+      "id": "291c2349-ad75-409e-9b3b-7ff2134c22c0",
+      "label": "角色A",
+      "color": "#d5cec5",
+      "bodyType": "mannequin",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "posture": {
+        "body": {
+          "bend": 0,
+          "turn": 0,
+          "tilt": 0
+        },
+        "torso": {
+          "bend": 2,
+          "turn": 0,
+          "tilt": 0
+        },
+        "head": {
+          "nod": -10,
+          "turn": 0,
+          "tilt": 0
+        },
+        "l_arm": {
+          "raise": -5,
+          "straddle": 7,
+          "turn": 0
+        },
+        "r_arm": {
+          "raise": -5,
+          "straddle": 7,
+          "turn": 0
+        },
+        "l_elbow": {
+          "bend": 15
+        },
+        "r_elbow": {
+          "bend": 15
+        },
+        "l_leg": {
+          "raise": 0,
+          "straddle": 0,
+          "turn": 0
+        },
+        "r_leg": {
+          "raise": 0,
+          "straddle": 0,
+          "turn": 0
+        },
+        "l_knee": {
+          "bend": 0
+        },
+        "r_knee": {
+          "bend": 0
+        },
+        "l_wrist": {
+          "bend": 0,
+          "turn": 0
+        },
+        "r_wrist": {
+          "bend": 0,
+          "turn": 0
+        },
+        "l_ankle": {
+          "bend": 0,
+          "tilt": 0
+        },
+        "r_ankle": {
+          "bend": 0,
+          "tilt": 0
+        }
+      },
+      "visible": true,
+      "locked": false
+    }
+  ],
+  "cameras": [
+    {
+      "id": "79820be9-2598-4b22-8037-4aa1b2c784de",
+      "label": "机位1",
+      "position": {
+        "x": 0,
+        "y": 2,
+        "z": 6
+      },
+      "lookAt": {
+        "x": 0,
+        "y": 1.2,
+        "z": 0
+      },
+      "fov": 50,
+      "visible": true,
+      "locked": false
+    }
+  ],
+  "props": [],
+  "groups": [],
+  "cameraAnimations": [],
+  "activeCamera": "79820be9-2598-4b22-8037-4aa1b2c784de",
+  "panoramaUrl": "",
+  "skyColor": "#060608",
+  "groundOpacity": 1,
+  "groundHeight": 0,
+  "aspectRatio": 1.7777777777777777,
+  "showLabels": true,
+  "labelFontSize": 18,
+  "showBaseMarker": true,
+  "editorCameraPose": {
+    "position": {
+      "x": 6,
+      "y": 5,
+      "z": 8
+    },
+    "target": {
+      "x": 1.574485893084665,
+      "y": 1.9021401251592653,
+      "z": 2.099314524112888
+    }
+  }
+}

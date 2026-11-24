@@ -28,6 +28,10 @@ app.disableHardwareAcceleration(); app.setPath("userData", path.join(temp, "brow
 smoke.setWorkDir(temp); smoke.installWatchdog(app);
 require("../apps/electron/src/main/core/protocol").registerAppProtocol();
 require("../apps/electron/src/main/core/windows/window.handlers").registerThemeHandlers();
+// 登录 head 也会查询真实最大化状态，夹具必须安装生产窗口 handler。
+// 只注册主题不足以支撑原有窗口控件，会产生未注册通道错误。
+// 不以返回固定成功的假 handler 掩盖该初始化链路缺失。
+require("../apps/electron/src/main/core/windows/window.handlers").registerWindowHandlers();
 // 清理凭据使用真实账户 handler，账户文件仅位于本脚本隔离的 userData 目录。
 // 后面的登录注册和资料接口仍由夹具覆盖，不会连接真实账户后端。
 // 这样可以验证游客进入的新增前置条件，而不拿空返回替代本地清理。
@@ -71,7 +75,13 @@ async function fillForm(confirm = "fixture-password") {
 async function checkEntry() {
   await load("/create"); await wait("document.querySelector('[data-auth-card]')&&location.pathname==='/login'");
   smoke.check("Old v1 document opens login; direct create route cannot mount business page", await run("!document.querySelector('[data-generate-button]')&&!document.querySelector('nav[aria-expanded]')"));
-  smoke.check("Custom titlebar remains above login", await run("document.querySelector('[data-window-titlebar]').getBoundingClientRect().top===0"));
+  // 登录页没有品牌和工具按钮，真实挂载的 head 只能留下三枚窗口控件。
+  // 检查实际文本与按钮数量，避免仅凭隐藏样式通过而留下可聚焦工具。
+  // 同时保留旧用例的顶边判定，精简内容不能改变窗口栏几何位置。
+  smoke.check("Login head has no title or tools, only three window controls", await run("(()=>{const h=document.querySelector('[data-window-entry-head]');return h?.getBoundingClientRect().top===0&&h.textContent.trim()===''&&h.querySelectorAll('button').length===3&&h.querySelectorAll('[data-window-controls] button').length===3})()"));
+  // 空白区域需要继续支持窗口拖动，窗口按钮则必须能正常接收点击。
+  // 使用最终计算样式，拒绝仅保留类名却被其他样式覆盖的情况。
+  smoke.check("Login head preserves drag area and no-drag controls", await run("(()=>{const h=document.querySelector('[data-window-entry-head]');return getComputedStyle(h).getPropertyValue('-webkit-app-region')==='drag'&&[...h.querySelectorAll('button')].every(b=>getComputedStyle(b).getPropertyValue('-webkit-app-region')==='no-drag')})()"));
   smoke.check("Background asset decodes at original 1042px", await run("new Promise(resolve=>{const img=new Image();img.onload=()=>resolve(img.naturalWidth===1042);img.onerror=()=>resolve(false);img.src='/images/login-background.webp'})"));
   // 居中参照是 head 下方的可用视口，顶栏缩短后其中心也会上移。
   // 水平中心仍取整个视口，垂直中心则包含实际 head 底边的偏移。
@@ -144,6 +154,9 @@ async function checkGuest() {
   failSave = true; await click("[data-auth-guest]"); await wait("document.querySelector('[data-login-page] [role=alert]')");
   smoke.check("Storage failure leaves guest outside application with retryable error", await run("location.pathname==='/login'&&!document.querySelector('[data-auth-guest]').disabled") && !userData.entrySession?.guest);
   failSave = false; await click("[data-auth-guest]"); await wait("location.pathname==='/'&&document.querySelector('[data-home-hero-explore]')");
+  // 游客进入后要恢复同一套工作区工具，不能把精简栏扩展到全部页面。
+  // 此处走真实入口和持久化动作，不直接把身份塞进渲染 store。
+  smoke.check("Guest entry restores header toggle and titlebar tools", await run("!document.querySelector('[data-window-entry-head]')&&!document.querySelector('[data-sidebar-brand]')&&Boolean(document.querySelector('[data-window-titlebar] [data-sidebar-toggle]'))&&Boolean(document.querySelector('[data-window-appearance]'))"));
   // 更新公告异步读取静态 changelog；必须等弹窗真正出现后关闭，才开始后续滚轮用例。
   // 过早的可选点击可能什么也没点到，随后公告打开会正确锁住个人页，导致测试假红。
   // 此操作同时落盘已读记录，后续刷新仍走正式水合流程，不直接篡改 CSS 或弹窗状态。
@@ -196,6 +209,9 @@ async function checkGuest() {
   smoke.check("Closing the existing modal restores inner content scrolling", await run("getComputedStyle(document.querySelector('[data-profile-scroll]')).overflowY==='auto'"));
   await click("[data-auth-logout]");
   await wait("document.querySelector('[data-auth-card]')&&location.pathname==='/login'"); await delay(400);
+  // 退出后的身份和路由都已稳定，工具栏此时必须真正卸载而非遮住。
+  // 这能发现只在首次启动时选择窗口栏、后续退出不更新的回归。
+  smoke.check("Guest logout returns to the clean entry head", await run("Boolean(document.querySelector('[data-window-entry-head]'))&&!document.querySelector('[data-window-appearance]')&&!document.querySelector('[data-caption-account]')"));
   smoke.check("Explicit guest logout returns to login without erasing profile", userData.entrySession.guest===null&&userData.profile.nickname==='Keep me');
   await click("[data-auth-guest]"); await wait("document.querySelector('[data-home-hero-explore]')");
   // 把页面时钟推进十年再触发 focus/visibilitychange，不能因时间跳变退出。

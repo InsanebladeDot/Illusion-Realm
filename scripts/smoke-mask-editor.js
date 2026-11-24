@@ -242,6 +242,24 @@ async function verifyCannyLayout() {
   await click("[data-theme-trigger]"); await click("[data-theme-option=light]");
   await require("./lib/sidebar-menu-fixture").closeAppearance(run);
 }
+// 已展开笔刷设置后修改蒙版显示色，绘画层颜色不参与本组像素期望。
+async function setBlackMaskColor() {
+  // 颜色输入已迁移到共享选色浮层，原生 color input 不再存在。
+  // 从真实设置按钮展开，再打开 mask 颜色，不能误改 RGB 绘画颜色。
+  // 通过三个受控通道输入黑色，保留后续“黑色显示仍导出白 mask”的反证。
+  // 原生 setter 绕开 React 的值追踪，input 事件才会进入正式 onChange。
+  // 每次等待 output 确认提交，不能在一次页面脚本中批量覆盖陈旧 props。
+  // 关闭的是当前选色浮层，外层设置保持打开直到原来的关闭步骤。
+  // 本步骤属于自动 DOM 输入，不宣称人工选色或系统对话框验收。
+  // 先前失败发生在旧选择器取到 null，未改变任何导出像素的期望。
+  await click('[data-color-trigger="mask"]');
+  for (const channel of ['red', 'green', 'blue']) {
+    await run(`(()=>{const el=document.querySelector('[data-color-picker="mask"] [data-color-channel="${channel}"]');Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(el,'0');el.dispatchEvent(new Event('input',{bubbles:true}));})()`);
+    await wait(`document.querySelector('[data-color-picker="mask"] [data-color-channel="${channel}"]')?.value==='0'`);
+  }
+  await wait(`document.querySelector('[data-color-picker="mask"] [data-color-value]')?.textContent==='#000000'`);
+  await click('[data-color-picker="mask"] button');
+}
 async function verifyMasks() {
   await run("document.querySelector('#mask-edit-tab').click()"); await wait("document.querySelector('[data-mask-editor]')");
   const bytes = [...fs.readFileSync(path.join(root, "source.png"))];
@@ -261,7 +279,7 @@ async function verifyMasks() {
   await click("[data-mask-action=undo]"); smoke.check("Undo restores erased coverage", (await exportsPixels())[0].pixel(256,240)[0] === 255);
   await click("[data-mask-action=redo]"); smoke.check("Redo restores erasing", (await exportsPixels())[0].pixel(256,240)[0] === 0);
   await click("[data-mask-settings]");
-  await run("(()=>{const el=document.querySelector('[data-mask-color]');Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(el,'#000000');el.dispatchEvent(new Event('input',{bubbles:true}));el.dispatchEvent(new Event('change',{bubbles:true}));})()");
+  await setBlackMaskColor();
   await click("[data-mask-settings]");
   await click("[data-mask-mode=draw]"); await draw(.7,.3);
   smoke.check("Black display color still exports a white mask", (await exportsPixels())[0].pixel(448,144)[0] === 255);

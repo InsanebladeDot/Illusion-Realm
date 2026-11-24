@@ -147,6 +147,9 @@ async function checkInput(ctx, source) {
   // 蒙版标签同时存在，用于发现新工具接入时误删原编辑功能的回归。
   const { run, wait, click, smoke, requests, uploads } = ctx, before = requests.length;
   await run("[...document.querySelectorAll('[data-create-mode-tabs] button')].find(b=>b.textContent.trim()==='编辑').click()"); await wait("document.querySelector('[data-anima-run]')");
+  // 默认已改为 H3；这组原 Anima 回归显式选择第二项，不借旧默认掩盖功能。
+  await click('[aria-label="文字编辑模型"]');
+  await run("[...document.querySelectorAll('[role=option]')].find(e=>e.textContent.trim()==='Anima').click()");
   smoke.check('Text editing fills main with the original mask tool still reachable', await run("document.querySelector('[data-anima-edit]').getBoundingClientRect().width>0&&getComputedStyle(document.querySelector('[data-create-side]')).display==='none'&&!!document.getElementById('mask-edit-tab')"));
   await click('[data-anima-run]'); smoke.check('Missing source is rejected before upload or generation', requests.length === before && uploads.length === 0 && await run("document.querySelector('[data-anima-status]').textContent.includes('原图')"));
   // 先触发缺原图再导入坏文件，专门覆盖旧运行错误遮盖新导入错误的顺序问题。
@@ -212,8 +215,9 @@ async function checkChoices(ctx) {
   // 两个 OptionSelect 都通过正式 listbox 选项完成，不用默认 select API 绕过 UI。
   await run("document.querySelector('[data-anima-models] [data-selected-extension] p span').dispatchEvent(new MouseEvent('dblclick',{bubbles:true}))"); await fill(ctx, '[data-anima-models] [data-selected-extension] input', '0.8'); await run("document.querySelector('[data-anima-models] input').dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',bubbles:true}))");
   await run("document.querySelector('[data-anima-form] [data-advanced-settings-toggle]').click()");
-  await click('[data-anima-form] button[aria-label=采样器]'); await click('[data-anima-form] [role=option][data-value=heun]');
-  await click('[data-anima-form] button[aria-label=调度器]'); await click('[data-anima-form] [role=option][data-value=karras]'); await fill(ctx, '[data-anima-seed]', '123456');
+  const { selectWorkflowOption } = require('./select-workflow-option');
+  await selectWorkflowOption(ctx, '[data-anima-form] button[aria-label=采样器]', 'heun');
+  await selectWorkflowOption(ctx, '[data-anima-form] button[aria-label=调度器]', 'karras'); await fill(ctx, '[data-anima-seed]', '123456');
 }
 
 /**

@@ -100,7 +100,10 @@ async function checks(server) {
     assert.equal(task.filePath, path.join(root, "loras", "Uncategorized", "Example", "model.safetensors"));
     assert.deepEqual(fs.readFileSync(task.filePath), body);
     assert.equal(nativeImage.createFromPath(path.join(task.folderPath, "logo.png")).isEmpty(), false);
-    assert.equal(scanModelsInDirectory(path.join(root, "loras"), "lora").length, 1);
+    // 下载真实落盘后等待扫描，检查实际模型数而非 Promise 的字段。
+    // 固定预期仍是一份模型，不能为异步扫描放宽成空结果也算通过。
+    // 原有权重字节和封面解码断言继续独立验证下载内容。
+    assert.equal((await scanModelsInDirectory(path.join(root, "loras"), "lora")).length, 1);
     assert.throws(() => manager.startDownload(owner, request), /exists/);
     assert.deepEqual(fs.readFileSync(task.filePath), body);
     smoke.check("Streamed download, configured root, PNG cover, scanner and no overwrite", true);
@@ -184,8 +187,8 @@ async function removeFailedTask(setMode, missing) {
   assert.equal(await manager.removeDownload(owner.id, task.id), true);
   assert.equal(manager.listDownloads(owner.id).some(item => item.id === task.id), false);
   assert.equal(fs.existsSync(task.folderPath), false);
-  const queue = JSON.parse(fs.readFileSync(path.join(root, "browser/model-download-queue.json"), "utf8"));
-  assert.equal(queue.jobs.some(job => job.task.id === task.id), false);
+  const queue = await require("../apps/electron/src/main/modules/models/downloads/model-download-persistence").loadQueue();
+  assert.equal(queue.some(job => job.task.id === task.id), false);
   if (missing) assert.equal(fs.existsSync(task.folderPath + "-external"), true);
   assert.equal(await manager.removeDownload(owner.id, task.id), false);
   smoke.check("Failed download is removed without a new task; missing folder=" + missing, true);

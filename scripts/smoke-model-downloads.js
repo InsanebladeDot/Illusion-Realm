@@ -52,7 +52,10 @@ require("../apps/electron/src/main/modules/models/models.handlers").registerMode
 require("../apps/electron/src/main/modules/models/downloads/model-download.handlers").registerModelDownloadHandlers();
 require("../apps/electron/src/main/modules/civitai/civitai.handlers").registerCivitaiHandlers();
 registerHandle(C.USER_DATA_READ, () => ({ data: require("./lib/guest-session-fixture").withGuestSession({ settings }), filePath: "", isNew: false }));
-registerHandle(C.USER_DATA_WRITE, () => undefined);
+registerHandle(C.USER_DATA_WRITE, (_event, document) => {
+  // 专项测试在内存模拟设置落盘。目录删除和扫描仍走真实桌面服务。
+  if (process.argv.includes("--visibility-folders") && document?.settings) Object.assign(settings, document.settings);
+});
 registerHandle(C.USER_DATA_GET_DEFAULT_PATH, () => "");
 registerHandle(C.PATHS_GET_DEFAULT_OUTPUT, () => path.join(root, "output"));
 registerHandle(C.AGENT_SECRET_STATUS, () => ({ configured: false, source: "none", protection: "", tail: "" }));
@@ -88,12 +91,13 @@ async function screenshot(name) {
   await delay(250);
   fs.writeFileSync(path.join(root, name + ".png"), (await win.webContents.capturePage(undefined, { stayHidden: true, stayAwake: true })).toPNG());
 }
-function fixtureModel(id, name, preview) {
-  return { id, name, type: "LORA", baseModels: ["SDXL"], creator: { username: "Fixture" }, modelVersions: [{ id, name: "v1", baseModel: "SDXL", files: [{ id, name: `fixture-${id}.safetensors`, sizeKB: bytes.length / 1024, primary: true, hashes: { SHA256: hash }, downloadUrl: `https://civitai.red/api/download/models/${id}`, metadata: { format: "SafeTensor" } }], images: preview ? [{ type: "image", nsfwLevel: 1, url: "https://image.civitai.com/preview.png" }] : [] }] };
+function fixtureModel(id, name, preview, baseModel = "SDXL") {
+  return { id, name, type: "LORA", baseModels: [baseModel], creator: { username: "Fixture" }, modelVersions: [{ id, name: "v1", baseModel, files: [{ id, name: `fixture-${id}.safetensors`, sizeKB: bytes.length / 1024, primary: true, hashes: { SHA256: hash }, downloadUrl: `https://civitai.red/api/download/models/${id}`, metadata: { format: "SafeTensor" } }], images: preview ? [{ type: "image", nsfwLevel: 1, url: "https://image.civitai.com/preview.png" }] : [] }] };
 }
 async function fixtureApiResponse(request) {
   if (!request.url.includes("/api/v1/models")) return new Response(cover, { headers: { "Content-Type": "image/png" } });
   let payload = { items: [fixtureModel(1, "With Preview", true), fixtureModel(2, "No Preview", false), fixtureModel(3, "Cancel", false)] };
+  if (process.argv.includes("--lora-folders")) payload = { items: [fixtureModel(1, "Moss Fixture", false, "Moss Image"), fixtureModel(2, "Illustrious Fixture", false, "Illustrious"), fixtureModel(3, "Pony Fixture", false, "Pony")] };
   if (paginationMode) {
     const page = Number(new URL(request.url).searchParams.get("page") || 1);
     pageRequests[page]++;
@@ -196,8 +200,54 @@ async function verifyActiveRemoval() {
   smoke.check("X on an active task removes partial files without recreating the row", !fs.existsSync(task.folderPath) && await run(`!document.querySelector('${selector}')`));
   await screenshot("download-list-compact-dark");
 }
+// 下载前只预览目录，提交后核对模型内容确实落在同一路径。
+async function verifyLoraArchive() {
+  const moss = path.join(modelsRoot, "loras", "Moss_Image", "Moss Fixture", "fixture-1.safetensors");
+  await configure(1);
+  const destination = "document.querySelector('[data-model-download-destination]').textContent";
+  smoke.check("Moss preview normalizes spaces without creating folders", await run(destination) === moss && !fs.existsSync(path.dirname(moss)));
+  await click("[data-model-download-start]");
+  for (let index = 0; index < 100 && !fs.existsSync(moss + ".civitai.json"); index++) await delay(100);
+  smoke.check("Download writes model and metadata under Moss_Image", fs.existsSync(moss + ".civitai.json") && fs.readFileSync(moss).equals(bytes));
+  await configure(2);
+  const alias = path.join(modelsRoot, "loras", "SDXL", "Illustrious Fixture", "fixture-2.safetensors");
+  smoke.check("Illustrious defaults to SDXL before SDXL exists", await run(destination) === alias && !fs.existsSync(path.dirname(alias)));
+  const pony = await run("window.electronAPI.modelDownloadTarget({modelType:'LORA',baseModel:'Pony'})");
+  smoke.check("Pony keeps its own family", pony.success && pony.data.rootPath === path.join(modelsRoot, "loras", "Pony"));
+  // 旧记录保留原保存路径。允许旧分组续传，但相邻模型的目录不能借旧记录认领。
+  const { matchesDownloadFolder } = require("../apps/electron/src/main/modules/models/downloads/model-download-paths");
+  const oldRequest = { modelType: "LORA", baseModel: "Pony", category: "Styles", modelName: "Legacy Pony" };
+  const oldFolder = path.join(modelsRoot, "loras", "SDXL", "Styles", "Legacy Pony");
+  smoke.check("Legacy Pony queue folders remain authorized", matchesDownloadFolder(oldRequest, oldFolder) && !matchesDownloadFolder(oldRequest, path.join(path.dirname(oldFolder), "Other Model")));
+}
+
+// 空目录必须能在重开页面后从磁盘读回，避免只显示当前会话新增的假节点。
+async function verifyEmptyFolders() {
+  const traversal = await run("window.electronAPI.createLocalModelFolder({root:'loras',parent:'../outside',name:'Escaped'})");
+  smoke.check("Folder creation refuses paths outside the selected category", !traversal.success && !fs.existsSync(path.join(modelsRoot, "outside", "Escaped")));
+  await click("[data-model-library=local]");
+  await wait("document.querySelector('[data-local-model-root=loras]')");
+  await click("[data-local-model-root=loras]");
+  await click("[data-model-tree-folder=Moss_Image]");
+  await click("[data-local-folder-new]");
+  await input("[data-local-folder-form] input", "Character Styles");
+  await click("[data-local-folder-form] button[type=submit]");
+  const folder = "Moss_Image/Character_Styles";
+  const tree = `[data-model-tree-folder="${folder}"]`;
+  await wait(`document.querySelector('${tree}')?.getAttribute('aria-current') === 'page'`);
+  const empty = `document.querySelector('${tree} small')?.textContent === '0'`;
+  smoke.check("Created subfolder is empty on disk and shown with count zero", fs.readdirSync(path.join(modelsRoot, "loras", folder)).length === 0 && await run(empty));
+  await click("[data-model-library=online]");
+  await click("[data-model-library=local]");
+  await click("[data-local-model-root=loras]");
+  await click("[data-model-tree-folder=Moss_Image]");
+  await wait(empty);
+  smoke.check("Empty folder survives reopening the local library", await run(empty));
+}
+
 async function verifyDownloads() {
   await configure(1);
+  await chooseMoveOption("[data-model-download-form] button[aria-label=分类]", "Uncategorized");
   smoke.check("Default category and configured destination shown", await run("document.querySelector('[data-model-download-form]').textContent.includes('Uncategorized')"));
   await screenshot("download-light");
   await click("[data-model-download-start]");
@@ -205,7 +255,7 @@ async function verifyDownloads() {
   await wait("document.querySelector('[data-window-download-center] [data-model-download-task]')?.textContent.includes('已完成')");
   smoke.check("Model page has only the titlebar download entry", await run("!document.querySelector('[data-model-downloads]')&&document.querySelectorAll('[data-model-download-list]').length===1"));
   await run("document.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}))");
-  smoke.check("Download reaches native destination and saves first preview as logo.png", fs.existsSync(path.join(modelsRoot, "loras", "Uncategorized", "With Preview", "fixture-1.safetensors")) && fs.existsSync(path.join(modelsRoot, "loras", "Uncategorized", "With Preview", "logo.png")));
+  smoke.check("Download reaches native destination and saves first preview as logo.png", fs.existsSync(path.join(modelsRoot, "loras", "SDXL", "Uncategorized", "With Preview", "fixture-1.safetensors")) && fs.existsSync(path.join(modelsRoot, "loras", "SDXL", "Uncategorized", "With Preview", "logo.png")));
   await configure(2);
   await click("[data-model-download-form] button[aria-label='分类']");
   await run("[...document.querySelectorAll('[role=option]')].find(el=>el.textContent.includes('自定义分类')).click()");
@@ -216,10 +266,12 @@ async function verifyDownloads() {
   await click("[data-window-download]"); await wait("document.querySelector('[data-window-download-center]')");
   await wait("[...document.querySelectorAll('[data-window-download-center] [data-model-download-task]')].filter(el=>el.textContent.includes('已完成')).length===2");
   await run("document.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}))");
-  smoke.check("Custom category creates an independent folder and no-preview models have no logo", fs.existsSync(path.join(modelsRoot, "loras", "Styles", "No Preview", "fixture-2.safetensors")) && !fs.existsSync(path.join(modelsRoot, "loras", "Styles", "No Preview", "logo.png")));
-  await configure(3); await click("[data-model-download-start]");
+  smoke.check("Custom category creates an independent folder and no-preview models have no logo", fs.existsSync(path.join(modelsRoot, "loras", "SDXL", "Styles", "No Preview", "fixture-2.safetensors")) && !fs.existsSync(path.join(modelsRoot, "loras", "SDXL", "Styles", "No Preview", "logo.png")));
+  await configure(3);
+  await chooseMoveOption("[data-model-download-form] button[aria-label=分类]", "Uncategorized");
+  await click("[data-model-download-start]");
   await verifyCaptionProgress();
-  smoke.check("Cancelled task can retry to completion and keeps its file after dismissal", fs.readFileSync(path.join(modelsRoot, "loras", "Uncategorized", "Cancel", "fixture-3.safetensors")).equals(bytes));
+  smoke.check("Cancelled task can retry to completion and keeps its file after dismissal", fs.readFileSync(path.join(modelsRoot, "loras", "SDXL", "Uncategorized", "Cancel", "fixture-3.safetensors")).equals(bytes));
 }
 async function verifyLocalAndNarrow() {
   await click("[data-model-library=local]"); await wait("document.querySelectorAll('[data-local-model-card]').length===3");
@@ -230,7 +282,7 @@ async function verifyLocalAndNarrow() {
   dialog.showOpenDialog = async () => ({ canceled: false, filePaths: [replacement] });
   try { await click("[data-local-change-logo]"); await wait("document.querySelector('[data-local-model-details] img')?.src.startsWith('data:image/png')"); }
   finally { dialog.showOpenDialog = originalDialog; }
-  smoke.check("Change-logo button writes logo.png and updates the cover", fs.existsSync(path.join(modelsRoot, "loras", "Styles", "No Preview", "logo.png")));
+  smoke.check("Change-logo button writes logo.png and updates the cover", fs.existsSync(path.join(modelsRoot, "loras", "SDXL", "Styles", "No Preview", "logo.png")));
   await openLocalDetails("With Preview");
   await wait("document.querySelector('[data-local-model-details] img')?.src.startsWith('data:image/png')");
   const oldSrc = await run("document.querySelector('[data-local-model-details] img').src");
@@ -305,8 +357,8 @@ async function chooseMoveOption(selector, name) {
   await run(`[...document.querySelectorAll('[role=option]')].find(el=>el.textContent.trim()===${JSON.stringify(name)}).click()`);
 }
 async function verifyLocalCategoryMoves() {
-  const source = path.join(modelsRoot, "loras", "Uncategorized", "With Preview");
-  const conflict = path.join(modelsRoot, "loras", "Conflict", "With Preview");
+  const source = path.join(modelsRoot, "loras", "SDXL", "Uncategorized", "With Preview");
+  const conflict = path.join(modelsRoot, "loras", "SDXL", "Conflict", "With Preview");
   fs.mkdirSync(conflict, { recursive: true }); fs.writeFileSync(path.join(conflict, "keep.txt"), "existing");
   await openLocalDetails("With Preview");
   await click("[data-local-change-category]"); await wait("document.querySelector('[data-model-category-form]')");
@@ -333,7 +385,7 @@ async function verifyLocalCategoryMoves() {
   await screenshot("local-model-category-light");
   await click("[data-model-category-move]");
   await wait("document.querySelector('[data-local-model-details]')?.textContent.includes('New Style')&&document.querySelector('[data-local-model-category] button')?.textContent.includes('New Style')");
-  const moved = path.join(modelsRoot, "loras", "New Style", "With Preview");
+  const moved = path.join(modelsRoot, "loras", "SDXL", "New Style", "With Preview");
   smoke.check("Move refreshes category filter, focused details and the cover", !fs.existsSync(source) && fs.existsSync(path.join(moved, "fixture-1.safetensors")) && fs.existsSync(path.join(moved, "logo.png")) && await run("document.querySelectorAll('[data-local-model-card]').length===1&&document.querySelector('[data-local-model-details]').textContent.includes('With Preview')"));
   await win.webContents.debugger.sendCommand("Emulation.setDeviceMetricsOverride", { width: 390, height: 844, deviceScaleFactor: 1, mobile: true });
   await wait("document.querySelector('[aria-labelledby=local-model-details-title]')");
@@ -375,7 +427,7 @@ async function verifyLocalHierarchy() {
 }
 async function verifyBatchModels() {
   await chooseLocalCategory("全部");
-  const sources = [path.join(modelsRoot, "loras", "Uncategorized", "With Preview"), path.join(modelsRoot, "loras", "Uncategorized", "Cancel"), path.join(modelsRoot, "loras", "Styles", "No Preview")];
+  const sources = [path.join(modelsRoot, "loras", "SDXL", "Uncategorized", "With Preview"), path.join(modelsRoot, "loras", "SDXL", "Uncategorized", "Cancel"), path.join(modelsRoot, "loras", "SDXL", "Styles", "No Preview")];
   smoke.check("Default library browses models with no checkboxes or select-all action", await run("document.querySelector('[data-local-batch-toolbar]').dataset.localSelectionMode==='browse'&&!document.querySelector('[data-local-model-checkbox]')&&!document.querySelector('[data-local-select-all]')"));
   await click("[data-local-model-card]"); await wait("document.querySelector('[data-local-model-details]')");
   smoke.check("Default card click opens details without selecting or changing files", await run("!document.querySelector('[data-local-model-card][aria-pressed=true]')") && sources.every(fs.existsSync));
@@ -398,10 +450,31 @@ async function verifyBatchModels() {
   await input("[data-local-batch-dialog] input:not([type])", "Batch Style");
   await click("[data-local-batch-acknowledge]"); await screenshot("local-model-batch-move-light");
   await click("[data-local-batch-confirm]"); await wait("!document.querySelector('[data-local-batch-dialog]')");
-  const destinations = sources.map((source) => path.join(modelsRoot, "loras", "Batch Style", path.basename(source)));
+  const destinations = sources.map((source) => path.join(modelsRoot, "loras", "SDXL", "Batch Style", path.basename(source)));
   smoke.check("Confirmed batch move preserves files and covers and returns to browsing", sources.every((source) => !fs.existsSync(source)) && destinations.every(fs.existsSync) && fs.existsSync(path.join(destinations[0], "logo.png")) && await run("document.querySelector('[data-local-batch-toolbar]').dataset.localSelectionMode==='browse'&&!document.querySelector('[data-local-model-checkbox]')"));
   await verifyBatchDelete(destinations);
 }
+/** 单独验证删除时，用临时权重绕过下载和移动，保留真实扫描与回收站流程。 */
+async function verifyDeleteOnly() {
+  const destinations = ["With Preview", "No Preview", "Cancel"].map(name => path.join(modelsRoot, "loras", "SDXL", "Delete Fixtures", name));
+  fs.mkdirSync(path.join(modelsRoot, "vae", "Empty Fixtures"), { recursive: true });
+  for (const folder of destinations) {
+    fs.mkdirSync(folder, { recursive: true });
+    fs.writeFileSync(path.join(folder, "fixture.safetensors"), bytes);
+  }
+  await win.loadURL("app://app/tools/models/civitai");
+  await wait("document.querySelector('[data-model-library=local]')");
+  await run("document.querySelector('[aria-labelledby=update-announcement-title] button')?.click()");
+  await click("[data-model-library=local]");
+  await wait("document.querySelectorAll('[data-local-model-card]').length === 3");
+  // 先等空目录出现在文件夹树，再检查官方分类列表，避免把索引未加载当成隐藏成功。
+  await wait("document.querySelector('[data-model-tree-folder=\"Empty Fixtures\"]')");
+  smoke.check("Official categories show populated LoRA and omit empty VAE", await run("document.querySelector('[data-local-model-root=loras] small')?.textContent === '3' && !document.querySelector('[data-local-model-root=vae]')"));
+  await verifyBatchDelete(destinations);
+  await wait("document.querySelector('[data-local-model-root=\"\"] small')?.textContent === '0'");
+  smoke.check("LoRA disappears from official categories after its last model is removed", await run("!document.querySelector('[data-local-model-root=loras]')"));
+}
+
 async function verifyBatchDelete(destinations) {
   await click("[data-local-batch-delete]"); await click("[data-local-model-card]"); await click("[data-local-select-exit]");
   smoke.check("Exit selection clears checkboxes and returns cards to details behavior", await run("!document.querySelector('[data-local-model-checkbox]')&&!document.querySelector('[data-local-select-all]')&&document.querySelector('[data-local-batch-toolbar]').dataset.localSelectionMode==='browse'") && destinations.every(fs.existsSync));
@@ -410,15 +483,20 @@ async function verifyBatchDelete(destinations) {
   smoke.check("Delete starts empty and does not reuse prior selections", await run("document.querySelector('[data-local-batch-delete]').disabled&&!document.querySelector('[data-local-model-card][aria-pressed=true]')"));
   await click("[data-local-select-all]"); await click("[data-local-batch-delete]");
   await wait("document.querySelector('[data-local-batch-acknowledge]:not(:disabled)')");
-  smoke.check("Delete requires acknowledgement and describes Recycle Bin recovery", await run("document.querySelector('[data-local-batch-confirm]').disabled&&document.querySelector('[data-local-batch-dialog]').textContent.includes('系统回收站')") && destinations.every(fs.existsSync));
-  await run("document.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}))");
-  smoke.check("Cancelling delete preserves all model folders", destinations.every(fs.existsSync));
-  await click("[data-toolbox-theme]"); await wait("document.documentElement.dataset.theme==='dark'");
+  smoke.check("Delete requires acknowledgement and describes Recycle Bin recovery", await run("document.querySelector('#local-model-delete-confirm').disabled&&document.querySelector('dialog[open][role=alertdialog]').textContent.includes('系统回收站')") && destinations.every(fs.existsSync));
+  // 用真实按键关闭原生弹窗，再检查模型和当前选择还在。
+  win.webContents.sendInputEvent({ type: "keyDown", keyCode: "Escape" });
+  win.webContents.sendInputEvent({ type: "keyUp", keyCode: "Escape" });
+  await wait("!document.querySelector('[data-local-batch-dialog=delete]')");
+  smoke.check("Pressing Escape preserves all model folders and selections", destinations.every(fs.existsSync) && await run("!!document.querySelector('[data-local-model-checkbox]:checked') || !!document.querySelector('[data-local-model-checkbox][aria-checked=true]')"));
+  await click("[data-theme-trigger]"); await click("[data-theme-option=dark]");
+  await wait("document.documentElement.dataset.theme==='dark'&&!document.documentElement.classList.contains('theme-ripple')");
+  await click("[data-theme-trigger]");
   await win.webContents.debugger.sendCommand("Emulation.setDeviceMetricsOverride", { width: 390, height: 844, deviceScaleFactor: 1, mobile: true });
   await click("[data-local-batch-delete]"); await wait("document.querySelector('[data-local-batch-acknowledge]:not(:disabled)')");
-  smoke.check("Reopening starts unchecked and the dark narrow confirmation fits", await run("!document.querySelector('[data-local-batch-acknowledge]').checked&&document.documentElement.scrollWidth<=innerWidth&&document.querySelector('[data-local-batch-confirm]').getBoundingClientRect().bottom<=innerHeight"));
+  smoke.check("Reopening starts unchecked and the dark narrow confirmation fits", await run("!document.querySelector('[data-local-batch-acknowledge]').checked&&document.querySelector('dialog[open][role=alertdialog]').getBoundingClientRect().width<innerWidth&&document.documentElement.scrollWidth<=innerWidth&&document.querySelector('#local-model-delete-confirm').getBoundingClientRect().bottom<=innerHeight"));
   await screenshot("local-model-batch-delete-mobile-dark");
-  await click("[data-local-batch-acknowledge]"); await click("[data-local-batch-confirm]");
+  await click("[data-local-batch-acknowledge]"); await click("#local-model-delete-confirm");
   await wait("!document.querySelector('[data-local-batch-dialog]')");
   smoke.check("Confirmed batch deletion trashes all selected folders and removes them from the scan", destinations.every((folder) => !fs.existsSync(folder)) && await run("![...document.querySelectorAll('[data-local-model-card]')].some(el=>el.textContent.includes('With Preview')||el.textContent.includes('No Preview')||el.textContent.includes('Cancel'))"));
   await win.webContents.debugger.sendCommand("Emulation.clearDeviceMetricsOverride");
@@ -458,6 +536,82 @@ async function verifyScrollPagination() {
   await run("(()=>{const el=document.querySelector('[data-civitai-catalog]');el.scrollTop=el.scrollHeight;el.dispatchEvent(new WheelEvent('wheel',{deltaY:100}))})()"); await delay(250);
   smoke.check("The final page stops further scroll requests", pageRequests[3] === 2);
 }
+// 两份同名模型放在不同目录，旁边加非模型文件，用来区分隐藏和整目录回收。
+async function verifyModelVisibility() {
+  const base = path.join(modelsRoot, "loras");
+  const target = path.join(base, "VisibilityA"), sibling = path.join(base, "VisibilityB");
+  fs.mkdirSync(path.join(target, "nested"), { recursive: true });
+  fs.mkdirSync(sibling, { recursive: true });
+  for (const folder of [target, sibling]) fs.writeFileSync(path.join(folder, "same.safetensors"), "fixture");
+  fs.writeFileSync(path.join(target, "nested", "notes.txt"), "not a model");
+  // 启动扫描早于这个夹具，重新打开页面才能读到刚写入的两个模型。
+  await win.loadURL("app://app/tools/models/civitai");
+  await wait("document.querySelector('[data-model-library=local]')");
+  await run("document.querySelector('[aria-labelledby=update-announcement-title] button')?.click()");
+  await click("[data-model-library=local]");
+  await wait("document.querySelectorAll('[data-local-model-card]').length===2");
+  await click("[data-local-model-visibility-action]");
+  await click("[data-local-select-all]");
+  await click("[data-local-select-all]");
+  smoke.check("Select all toggles back to no selections", await run("!document.querySelector('[data-local-model-checkbox]:checked')"));
+  await click('[data-local-model-file*="VisibilityA"]');
+  await click("[data-local-model-visibility-action]");
+  await wait("document.querySelectorAll('[data-local-model-card]').length===1");
+  smoke.check("Hiding a file leaves it on disk and keeps the same name in another folder", fs.existsSync(path.join(target, "same.safetensors")) && await run("!!document.querySelector('[data-local-model-file*=VisibilityB]')"));
+  await verifyHiddenViewAfterReload();
+  await verifyFolderMenuCreate(target);
+  await verifyFolderTrash(target, sibling);
+}
+
+async function verifyHiddenViewAfterReload() {
+  // 重载清空渲染进程的状态，必须通过测试宿主的设置读回刚写的隐藏路径。
+  await win.loadURL("app://app/tools/models/civitai");
+  await wait("document.querySelector('[data-model-library=local]')");
+  await run("document.querySelector('[aria-labelledby=update-announcement-title] button')?.click()");
+  await click("[data-model-library=local]");
+  await wait("document.querySelector('[data-local-model-visibility-view]')?.textContent.includes('1')");
+  await click("[data-local-model-visibility-view]");
+  await click('[data-local-model-file*="VisibilityA"]');
+  smoke.check("Stored hidden list opens the ordinary model details", await run("!!document.querySelector('[data-local-model-details]') && !document.querySelector('[data-local-model-checkbox]')"));
+  await click("[data-local-model-visibility-action]");
+  await click("[data-local-select-all]");
+  await click("[data-local-model-visibility-action]");
+  await click("[data-local-model-visibility-view]");
+  await wait("document.querySelectorAll('[data-local-model-card]').length===2");
+  smoke.check("Restore shows both models in their original list", await run("!document.querySelector('[data-local-model-visibility-view]')"));
+}
+
+async function verifyFolderMenuCreate(target) {
+  // 右键后直接输入，确认子目录归右键目标而非正在浏览的目录。
+  await run("document.querySelector('[data-model-tree-folder=VisibilityA]').dispatchEvent(new MouseEvent('contextmenu',{bubbles:true,clientX:200,clientY:250}))");
+  await wait("[...document.querySelectorAll('button')].some(button=>button.textContent.trim()==='新建子文件夹')");
+  await run("[...document.querySelectorAll('button')].find(button=>button.textContent.trim()==='新建子文件夹').click()");
+  await input("[data-local-folder-form] input", "New Child");
+  await click("[data-local-folder-form] button[type=submit]");
+  await wait("document.querySelector('[data-model-tree-folder=\"VisibilityA/New_Child\"]')");
+  smoke.check("Context menu creates and selects the new subfolder", fs.existsSync(path.join(target, "New_Child")));
+}
+
+async function verifyFolderTrash(target, sibling) {
+  const open = async () => {
+    await run("document.querySelector('[data-model-tree-folder=VisibilityA]').dispatchEvent(new MouseEvent('contextmenu',{bubbles:true,clientX:200,clientY:250}))");
+    await wait("[...document.querySelectorAll('button')].some(button=>button.textContent.trim()==='删除文件夹')");
+    await run("[...document.querySelectorAll('button')].find(button=>button.textContent.trim()==='删除文件夹').click()");
+    await wait("document.querySelector('dialog[open][role=alertdialog]')");
+  };
+  await wait("document.querySelector('[data-model-tree-folder=VisibilityA]')");
+  await open();
+  await run("[...document.querySelectorAll('dialog[open] button')].find(button=>button.textContent.trim()==='取消').click()");
+  smoke.check("Cancel keeps every file in the folder", fs.existsSync(path.join(target, "nested", "notes.txt")));
+  const invalid = await run("window.electronAPI.deleteLocalModelFolder({root:'loras',folder:'../VisibilityB',acknowledged:true})");
+  const rootRequest = await run("window.electronAPI.deleteLocalModelFolder({root:'loras',folder:'',acknowledged:true})");
+  smoke.check("Native deletion rejects traversal and whole model roots", !invalid.success && !rootRequest.success && fs.existsSync(sibling));
+  await open();
+  await run("[...document.querySelectorAll('dialog[open] button')].find(button=>button.textContent.trim()==='确认删除').click()");
+  await wait("document.querySelectorAll('[data-local-model-card]').length===1 && !document.querySelector('[data-model-tree-folder=VisibilityA]')");
+  smoke.check("Confirm recycles the directory and all files without touching its sibling", !fs.existsSync(target) && fs.existsSync(path.join(sibling, "same.safetensors")));
+}
+
 async function main() {
   await app.whenReady(); smoke.installWatchdog(app); smoke.assertBuildFresh({ app });
   protocol.handle("https", fixtureApiResponse);
@@ -475,7 +629,14 @@ async function main() {
     // --catalog-only 只运行本轮布局涉及的分页，复用下方原有请求与断言。
     // 默认入口仍跑全部流程，不能让专项成功掩盖旧综合用例的失败。
     // 窗口、协议、退出码与临时文件隔离沿用同一宿主，不造第二套测试页面。
-    if (process.argv.includes("--catalog-only")) {
+    if (process.argv.includes("--visibility-folders")) {
+      await verifyModelVisibility();
+    } else if (process.argv.includes("--delete-only")) {
+      await verifyDeleteOnly();
+    } else if (process.argv.includes("--lora-folders")) {
+      await verifyLoraArchive();
+      await verifyEmptyFolders();
+    } else if (process.argv.includes("--catalog-only")) {
       await verifyScrollPagination();
     } else {
     await verifyCaptionEntry(); await verifyDownloads(); await verifyRestoredHistory(); await verifyConcurrentOrder(); await verifyLocalAndNarrow(); await verifyScrollPagination(); await verifyDownloadErrors(); await verifyKeySettings();

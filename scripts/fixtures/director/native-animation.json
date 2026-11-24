@@ -1,0 +1,103 @@
+[
+  {
+    "schemaVersion": 2,
+    "id": "45973d62-a7e7-428c-8954-137a3cb1a6e4",
+    "label": "动画 1",
+    "fps": 30,
+    "durationFrames": 150,
+    "playMode": "once",
+    "playRange": null,
+    "playbackSpeed": 1,
+    "defaultInterp": "spline",
+    "tracks": [
+      {
+        "id": "14d250d2-e6e9-4427-9fa8-820b9869b18d",
+        "targetId": "111673ac-2c04-4157-ad51-da1d385bffb9",
+        "targetType": "camera",
+        "collapsed": false,
+        "muted": false,
+        "locked": false,
+        "channels": [
+          {
+            "id": "ce38436f-e3b2-4c34-a1ec-1bf3c7c2c419",
+            "kind": "camera",
+            "clips": [
+              {
+                "id": "e474398f-412b-4442-a235-f16b307f0f69",
+                "startFrame": 0,
+                "endFrame": 45,
+                "keyframes": [
+                  {
+                    "id": "a8e7a4ca-1ff6-4f35-9cfc-e9faa2c67f88",
+                    "frame": 0,
+                    "position": {
+                      "x": 6,
+                      "y": 5,
+                      "z": 8
+                    },
+                    "lookAt": {
+                      "x": 1.574485893084665,
+                      "y": 1.9021401251592653,
+                      "z": 2.099314524112888
+                    },
+                    "fov": 60,
+                    "roll": 0,
+                    "interp": "spline",
+                    "easing": "linear",
+                    "bezier": {
+                      "x1": 0,
+                      "y1": 0,
+                      "x2": 1,
+                      "y2": 1
+                    },
+                    "handleType": "auto",
+                    "tangentIn": null,
+                    "tangentOut": null
+                  },
+                  {
+                    "id": "481a5a64-3251-448f-85bc-4d7435390dfd",
+                    "frame": 45,
+                    "position": {
+                      "x": 6,
+                      "y": 5,
+                      "z": 8
+                    },
+                    "lookAt": {
+                      "x": 1.574485893084665,
+                      "y": 1.9021401251592653,
+                      "z": 2.099314524112888
+                    },
+                    "fov": 60,
+                    "roll": 0,
+                    "interp": "spline",
+                    "easing": "linear",
+                    "bezier": {
+                      "x1": 0,
+                      "y1": 0,
+                      "x2": 1,
+                      "y2": 1
+                    },
+                    "handleType": "auto",
+                    "tangentIn": null,
+                    "tangentOut": null
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "aim": {
+          "mode": "keyframes",
+          "target": {
+            "objectId": null,
+            "point": {
+              "x": 0,
+              "y": 1,
+              "z": 0
+            }
+          }
+        }
+      }
+    ]
+  }
+]

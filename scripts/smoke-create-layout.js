@@ -65,6 +65,10 @@ const fixtureImages = Array.from({length:12},(_,i)=>({filePath:path.join(root,`a
 // fixtures 不参与产品打包，也不读取用户的模型、图库或账号数据。
 // 保持文件内容与迁移前一致，让本轮断言仍能验证同一组图片尺寸与原字节上传。
 const fixtureCover = 'data:image/webp;base64,' + fs.readFileSync(path.join(__dirname, 'fixtures/create-layout/hero.webp')).toString('base64');
+// 第二版必须使用另一张真实图片，否则固定显示分类封面的旧错误也能通过测试。
+// 仍读取已有测试资源，不联网、不写用户模型目录，也不把夹具当作模型权重读取证明。
+// 两张图的字节不同，后续同时核对图片已解码和 src，避免只看到标签变了。
+const fixtureSecondCover = 'data:image/webp;base64,' + fs.readFileSync(path.join(__dirname, 'fixtures/create-layout/file-1.webp')).toString('base64');
 // 两个隔离 LoRA 版本供嵌套选择器走真实分类/版本流程；路径仅指向临时夹具目录。
 let userData = { version: 1, settings: { paths: { lorasPath: path.join(root, 'loras'), diffusionModelsPath: path.join(root, 'diffusion_models') }, theme: 'light', locale: 'zh-CN', outputPath: root } };
 app.disableHardwareAcceleration(); app.setPath('userData', path.join(root, 'browser'));
@@ -85,7 +89,9 @@ registerHandle(C.MODELS_DOWNLOAD_LIST, () => ({ revision: 0, tasks: [] }));
 // 主进程扫描用例返回两个同分类模型，覆盖版本子页；不读取磁盘模型或用户目录。
 registerHandle(C.MODELS_SCAN, (_e, dirPath) => dirPath.endsWith('loras') ? [
   { id: 'fixture-lora-a', name: 'Fixture Style', filePath: path.join(dirPath, 'Anima', 'Style'), iconPath: fixtureCover, type: 'lora', versions: [{ id: 'fixture-a', name: 'Version A', filePath: path.join(dirPath, 'Anima', 'Style', 'a.safetensors') }] },
-  { id: 'fixture-lora-b', name: 'Fixture Style', filePath: path.join(dirPath, 'Anima', 'Style'), iconPath: fixtureCover, type: 'lora', versions: [{ id: 'fixture-b', name: 'Version B', filePath: path.join(dirPath, 'Anima', 'Style', 'b.safetensors') }] },
+  // 第二个扫描结果保留原独立模型 ID 与文件名，只替换封面来揭露图片跟随错误。
+  // 两个版本仍属于同一分类，不能靠拆成两个分类回避多选代表图片的规则。
+  { id: 'fixture-lora-b', name: 'Fixture Style', filePath: path.join(dirPath, 'Anima', 'Style'), iconPath: fixtureSecondCover, type: 'lora', versions: [{ id: 'fixture-b', name: 'Version B', filePath: path.join(dirPath, 'Anima', 'Style', 'b.safetensors') }] },
 ] : dirPath.endsWith('diffusion_models') ? [{ id: 'fixture-unet', name: 'Custom Anima', filePath: path.join(dirPath, 'Anima', 'Custom'), iconPath: fixtureCover, type: 'checkpoint', versions: [{ id: 'custom-unet', name: 'custom_unet', filePath: path.join(dirPath, 'Anima', 'Custom', 'custom_unet.safetensors') }] }] : []);
 // 元数据读取只返回合法空结果；封面与滑块布局断言不依赖真实 safetensors 文件。
 // 这样主进程不会打印未注册 handler 错误，同时也不伪造模型元数据成功数据。
@@ -556,15 +562,7 @@ async function checkCustomTools() {
   await wait("document.querySelector('[data-character-main]')");
   await checkMainPage('[data-resource-main-page="true"]:not([hidden])','character');
   await click('[data-resource-dialog-back]');
-  await run("[...document.querySelectorAll('[data-create-prompt-tools] button')].find(b=>b.textContent==='片段').click()");
-  await wait("document.querySelector('[data-quick-phrase-main-page]')");
-  await checkMainPage('[data-quick-phrase-main-page]','quick phrases');
-  // 短语页过去把返回与标题分成两行，这里测真实高度和标题中线。
-  // 保留说明与搜索列表，只压缩页头；测试不靠隐藏标题来满足40px。
-  // 该控件属于单栏主区替换，宽屏弹窗的独立布局在后面配对验证。
-  smoke.check('Quick phrase replacement has a vertically centered 40px header',await run("(()=>{const h=document.querySelector('[data-quick-phrase-header]'),r=h.getBoundingClientRect(),b=h.querySelector('button').getBoundingClientRect();return r.height===40&&Math.abs((b.top+b.bottom-r.top-r.bottom)/2)<1&&!!h.querySelector('h2')})()"));
-  await run("document.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}))");
-  await wait("!document.querySelector('[data-quick-phrase-main-page]')");
+  smoke.check('The image prompt toolbar has no snippet library',await run("!document.querySelector('[data-create-prompt-tools] [data-prompt-tool=phrases]')"));
   await click('[data-view3d-trigger]'); await wait("document.querySelector('[data-view3d-dialog-fullscreen=none]')");
   await checkMainPage('[data-view3d-dialog-fullscreen=none]','3D');
   // 3D普通替换页使用同一40px标题，场景全屏仍由下一条独立验证。
@@ -614,6 +612,12 @@ async function checkCustomTools() {
 async function checkRestoredExtensions() {
   await click('[data-extension-picker-trigger]');
   await wait("document.querySelector('[data-resource-model-picker]')");
+  // 调用方保存的是 B 后 A 的选择顺序，重开后第一张不能被资源列表的 A 抢占。
+  // 这里检查外层图片，不用内层两张图都存在来替代代表图片的判断。
+  // 先前确认已关闭会话，当前图片必须从 selectedIds 初值恢复，不能依赖残留草稿。
+  // 下面仍逐个检查两个模型的选中标记，确保正确封面不是遗漏第二个模型造成的。
+  // 图片比较继续使用夹具字节，不依赖平台字体或布局截图差异。
+  smoke.check('Reopened cover preserves first selected version B', await run(`document.querySelector('[data-resource-model-picker]').closest('.group').querySelector('img')?.getAttribute('src') === ${JSON.stringify(fixtureSecondCover)}`));
   smoke.check('Reopened extension category counts all loaded LoRAs and starts multiple',await run("document.querySelector('[data-resource-selected-count=\"2\"]')&&document.querySelector('[data-resource-total-selected=\"2\"]')&&document.querySelector('[data-resource-selection-mode=multiple]').getAttribute('aria-checked')==='true'"));
   await click('[data-resource-model-picker]');
   await wait("document.querySelector('[data-model-version-main-page]')");
@@ -621,6 +625,80 @@ async function checkRestoredExtensions() {
   await shot('create-extension-restored');
   await click('[data-resource-model-done]');
   await click('[data-resource-dialog-back]');
+}
+/**
+ * 覆盖截图中的问题：内层选第二版后，外层分类必须真正换图。
+ * 前置是空选择的分类页，结束仍保持空草稿，后续原有确认回归可以接着跑。
+ * 测试通过实际 React 按钮改变状态，不直接调用组件私有的 setter。
+ * 单选场景先选择 B，与默认 A 形成反例，不能只测默认项本来就显示正确。
+ * 多选场景在 B 后追加 A，显示 B 才能证明使用选择顺序而不是版本列表顺序。
+ * 取消 B 后必须显示 A，揭露继续记住最近点击项的独立版本草稿。
+ * 全部取消后应显示 A，但确认按钮必须禁用，默认展示不能变成默认选中。
+ * 返回使用同一主区页栈，确认图片变化不依赖关闭整个选择器再重新打开。
+ * 每步等待图片自然宽度大于零，排除只有 src 属性变化而图像仍没解码的情况。
+ * 图片来自隔离 IPC 扫描夹具，通过不代表用户磁盘模型或在线封面服务已验证。
+ */
+async function checkResourceCoverFlow() {
+  // 顺序刻意与资源列表相反，普通 A 后选 B 无法区分这两种排序规则。
+  // 只给每步需要点击的索引，不在断言侧调用生产代表图片函数生成期望。
+  // 第二步不再点击 B，测试多选应保留之前的单选，而不是暗中清空队列。
+  // 第三步删除先选项，检验队列接替和角标数量是否来自同一份草稿。
+  // 第四步删除最后一项，覆盖“没有选中则展示第一模型”的明确需求。
+  const cases = [
+    // 只点第二版时，第一版没有被选中，分类必须离开默认封面。
+    // 单选仍会自动关闭内层，外层最终确认前不能提前写入已加载 LoRA。
+    // 此时数量为一，也为下一步的跨模式保留提供明确前置。
+    ['single', [1], fixtureSecondCover, 1, 'single-second'],
+    // B 已在队首，再点列表中的 A；B 与 A 的图片都能解码。
+    // 错按版本列表排序会显示 A，错按最近点击也会显示 A，这一步能同时揭露两者。
+    // 角标必须增长到二，而不是通过覆盖单选让图片碰巧保持 B。
+    ['multiple', [0], fixtureSecondCover, 2, 'multiple-first-selected'],
+    // 再点 B 是取消，不是重新将它排到队尾；剩下的只有 A。
+    // 若继续采用独立的最后点击记录，B 虽未选中仍可能占着封面。
+    // 这里不重建分类页，故能验证同一会话中的即时同步。
+    ['multiple', [1], fixtureCover, 1, 'remove-first-selected'],
+    // 最后一项取消后，图片恢复 A 只是浏览默认，不应隐式替用户勾选。
+    // 这一状态与单选 A 的封面相同，必须用总数和确认禁用来区分。
+    // 后续原有全选确认从这里开始，不能把该空选择提交给业务层。
+    ['multiple', [0], fixtureCover, 0, 'empty-first-version'],
+  ];
+  // 初始状态也核对封面，避免前置残留选择让后面的成功只是偶然。
+  // closest 只定位既有分类卡片，不注入新图片或改写产品页面结构。
+  // 只有外层分类的图片参加比较，隐藏内层的缩略图不能冒充展示结果。
+  const image = "document.querySelector('[data-resource-model-picker]').closest('.group').querySelector('img')";
+  await wait(`${image}?.complete && ${image}?.naturalWidth > 0 && ${image}?.getAttribute('src') === ${JSON.stringify(fixtureCover)}`);
+  for (const [mode, indices, cover, count, name] of cases) {
+    // 切换选择模式走原工具栏，内层根据该模式决定是否自动返回。
+    // 版本按钮按真实渲染顺序取第二张，不依赖显示中文或固定屏幕坐标。
+    // 每次点击后 helper 等待 React 提交，避免同一旧 DOM 连续点击造成假结果。
+    // 正式控件只有一个多选开关，单选表示该开关未按下，并不存在独立单选按钮。
+    // 先读 aria-checked，再决定是否点击，连续多选步骤不能反复把它关闭。
+    // 这也使测试遵循真实切换行为，不靠伪造一个不存在的 DOM 入口操作。
+    if (await run(`document.querySelector('[data-resource-selection-mode=multiple]').getAttribute('aria-checked') !== '${mode === 'multiple'}'`)) await click('[data-resource-selection-mode=multiple]');
+    await click('[data-resource-model-picker]');
+    for (const index of indices) await click(`[data-resource-version-grid] > div:nth-child(${index + 1}) [data-resource-model-select]`);
+    // 单选会自动返回，多选仍需点完成，二者使用真实的不同返回契约。
+    // 不能无条件手动关闭内层，否则会掩盖自动返回行为的回归。
+    // 检查只读取是否有完成按钮，不改写当前模式或外层确认逻辑。
+    if (await run("!!document.querySelector('[data-resource-model-done]')")) await click('[data-resource-model-done]');
+    // 先等内层退出，再等外层真正加载目标图片，排除上一张图滞留。
+    // 无界动画帧等待不适合离屏窗口，这里沿用有时限的主进程轮询。
+    // 图片字节相同才算匹配，不用封面 alt 或文件名推断它已经换图。
+    await wait("!document.querySelector('[data-resource-model-done]')");
+    await wait(`${image}?.complete && ${image}?.naturalWidth > 0 && ${image}?.getAttribute('src') === ${JSON.stringify(cover)}`);
+    // 角标和确认可用性与图片一起核对，防止展示更正却偷偷改变选择行为。
+    // count 来自测试预先声明的用户操作结果，不从页面当前数量抄写期望。
+    // 空选择时不要求显示零角标，但底部总数必须为零且确认不可点击。
+    // 非空时仍需允许确认，不能用整体禁用选择器来消除封面不同步。
+    smoke.check(`Resource cover follows selection: ${name}`, await run(`!!document.querySelector('[data-resource-total-selected="${count}"]') && document.querySelector('[data-resource-confirm]').disabled === ${count === 0}`));
+    // 保存每个真实渲染状态，供核对单选、选择顺序和清空后的图片差别。
+    // 截图使用当前静态构建，没有把用户参考图片覆盖到被测页面。
+    await shot(`create-cover-${name}`);
+  }
+  // 本 helper 用多选完成清空，但原有流程接下来要主动开启多选。
+  // 结束时恢复单选，防止后续点击开关反而关掉多选而污染原回归前置。
+  // 当前没有选中项，模式切换不能额外勾选第一版或提交空草稿。
+  await click('[data-resource-selection-mode=multiple]');
 }
 async function checkExtensionSelection() {
   // 单栏验证完整替换与返回，宽屏路径另测，避免旧始终替换的假设。
@@ -636,9 +714,22 @@ async function checkExtensionSelection() {
   // 再从空态重新打开，下面验证多选版本确认与已选行，避免取消用例污染状态。
   await click('[data-extension-picker-trigger]');
   await wait("document.querySelector('[data-resource-model-picker]')");
+  // 分类入口使用同一资源卡，计数文字不应推开底部原操作组。
+  // 保留实际卡片矩形作反证，不修改 DOM 高度让测试自己变绿。
+  // 后续原选择流程继续检查封面与状态，不因几何检查省略业务回归。
+  await require('./lib/check-resource-card-height')({ run, check: smoke.check }, 'category');
+  // 先验证封面状态再沿用原有两版本确认、重开和权重用例。
+  // helper 结束时无选中项，原用例的空态前提不变。
+  // 不让新增回归替代已有的真实多选数量和取消行为检查。
+  await checkResourceCoverFlow();
   // 多选模式允许在版本页连续选择后通过确认返回；单选会按产品契约选择后立即返回。
   await click('[data-resource-selection-mode=multiple]');
   await click('[data-resource-model-picker]');
+  // 版本入口缺少可选副标题时仍须占同样的文字区，选择按钮不能提前上移。
+  // 这与分类调用方配对验证，两个页面确实使用同一固定高度表面。
+  // 原页栈就绪后读取几何，未挂载的空集合不能以 every 返回真误通过。
+  await wait("document.querySelector('[data-resource-model-option]')");
+  await require('./lib/check-resource-card-height')({ run, check: smoke.check }, 'model versions');
   await wait("document.querySelector('[data-model-version-main-page]')");
   await checkMainPage('[data-model-version-main-page]','extension versions');
   smoke.check('Nested version page hides its parent without a backdrop',await run("!!document.querySelector('[data-resource-main-page][hidden]')&&!document.querySelector('[data-lora-model-backdrop]')"));
@@ -646,7 +737,12 @@ async function checkExtensionSelection() {
   // 同分类两个版本均通过真实卡片按钮选择，验证multiple不是只有名称的单选模式。
   // 选择后先返回分类再最终确认，保留原有两层草稿提交契约。
   // 不直接构造已选扩展数组，最终表单必须实际出现两个独立可移除项。
-  await run("document.querySelectorAll('[data-resource-model-select]').forEach(b=>b.click())"); await click('[data-resource-model-done]');
+  // 反向选择 B 后 A，保证重新打开的回归能检查保存的选择次序。
+  // 用户操作仍是逐个按钮事件，没有把预设已选数组直接写入 store。
+  // 权重回归不依赖 A 在第一位，两个模型仍各有独立权重与移除入口。
+  // 正式确认保持原调用方的追加、去重规则，不为封面检查改变业务回调。
+  // 选择顺序只影响代表图，分类版本列表本身仍保持原始顺序。
+  await run("[...document.querySelectorAll('[data-resource-model-select]')].reverse().forEach(b=>b.click())"); await click('[data-resource-model-done]');
   await wait("!document.querySelector('[data-model-version-main-page]')");
   await checkMainPage('[data-resource-main-page]:not([hidden])','extension category after return');
   await click('[data-resource-confirm]');
@@ -723,17 +819,11 @@ async function checkWideDialogs() {
   await run("document.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}))"); await wait("!document.querySelector('[data-resource-backdrop]')");
   smoke.check('Cancelling responsive extension flow does not submit its draft',await run("!document.querySelector('[data-selected-extension]')&&!document.querySelector('[data-create-workspace-content]').hidden"));
 }
-// 片段与3D没有使用共享资源外壳，必须独立验证其宽屏弹窗分支。
-// 两栏视口1100px同时覆盖旧1280px窗口媒体查询可能错误触发紧凑页的风险。
-// 只打开和返回，不创建短语、不导入3D模型，也不连接真实ComfyUI。
+// 3D 沿用独立工具弹窗，宽屏时应留住原工作区。
 async function checkWideCustomTools() {
-  await metrics(1100); await run("[...document.querySelectorAll('[data-create-prompt-tools] button')].find(b=>b.textContent==='片段').click()"); await wait("document.querySelector('[aria-labelledby=quick-phrase-dialog-title]')");
-  // 片段对话框应固定居中且有全局模态语义，工作区不能被页面栈隐藏。
-  // 真实标题存在才判定打开，避免只读空的main-page属性得到恒真结果。
-  // 返回使用Escape，与列表新建子层关闭行为继续共享原监听机制。
-  smoke.check('Two-column quick phrases retain their original centered modal',await run("(()=>{const d=document.querySelector('[aria-labelledby=quick-phrase-dialog-title]');return d.getAttribute('aria-modal')==='true'&&getComputedStyle(d).position==='fixed'&&!document.querySelector('[data-create-workspace-content]').hidden&&!document.querySelector('[data-quick-phrase-main-page]')})()"));
-  await run("document.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}))"); await wait("!document.querySelector('[aria-labelledby=quick-phrase-dialog-title]')"); await click('[data-view3d-trigger]'); await wait("document.querySelector('[data-view3d-dialog-fullscreen=none]')");
-  // 3D普通模式应与短语一致恢复弹窗，显式窗口全屏仍在单栏配对中验证。
+  await metrics(1100);
+  await click('[data-view3d-trigger]');
+  await wait("document.querySelector('[data-view3d-dialog-fullscreen=none]')");
   // 比较布局宽度小于展示区，能识别错误沿用整区紧凑宽度的情况。
   // 本用例不判断WebGL模型质量，仍使用内置程序化模特作为场景输入。
   smoke.check('Two-column 3D uses modal presentation without hiding the workspace',await run("(()=>{const d=document.querySelector('[data-view3d-dialog-fullscreen=none]');return d.getAttribute('aria-modal')==='true'&&getComputedStyle(d).position==='fixed'&&!document.querySelector('[data-create-workspace-content]').hidden})()"));
@@ -845,7 +935,7 @@ async function checkFileInteractions() {
   // 读取整个 header 的矩形可发现旧 calc(100%-138px) 规则仍残留的问题。
   smoke.check('Custom caption fills window and account remains no-drag',await run("document.querySelector('[data-window-titlebar]').getBoundingClientRect().right===innerWidth&&document.querySelectorAll('[data-window-controls] button').length===3&&getComputedStyle(document.querySelector('[data-caption-account]')).getPropertyValue('-webkit-app-region')==='no-drag'"));
   await click('[data-preview-thumbnail="0"]');
-  await click('[data-negative-collapsed-hint] button');
+  await click('[aria-label="展开反向提示词"]');
   await run("document.getElementById('prompt-editor').textContent='';document.getElementById('negative-prompt-editor').textContent=window.__negativeText;document.querySelector('[data-create-rail-scroll]').scrollTop=0");
   await shot('create-reference-grid');
   await click('[data-history-toolbar] button[aria-label="堆栈"]');
@@ -861,7 +951,9 @@ async function checkFileInteractions() {
   await click('[data-history-toolbar] button[aria-label="批量选择"]');
   await run("(()=>{const b=document.querySelectorAll('[data-history-grid] > button');b[0].click();b[1].click()})()");
   smoke.check('Multiselect toggles two independent image selections',await run("document.querySelectorAll('[data-history-grid] > button[aria-pressed=true]').length===2"));
-  await run("[...document.querySelectorAll('[data-history-sidebar] button')].find(b=>b.textContent.trim()==='全选').click()");
+  // 多选动作脱离父栏后从真实浮层定位，勾选数量仍从原图片网格独立读取。
+  // 全选仍走原 click 回调，测试不为迁移后的 DOM 直接写入选中状态。
+  await run("[...document.querySelectorAll('[data-history-selection-actions] button')].find(b=>b.textContent.trim()==='全选').click()");
   smoke.check('Select all retains current page selections',await run("document.querySelectorAll('[data-history-grid] > button[aria-pressed=true]').length===9"));
   await click('[data-history-pagination] button[aria-label="下一页"]');
   smoke.check('Select all retains selections on the next page',await run("document.querySelectorAll('[data-history-grid] > button[aria-pressed=true]').length===3"));
@@ -1042,8 +1134,19 @@ async function checkModesAndLanguage() {
   smoke.check('English workspace uses translated labels',await run("document.querySelector('[data-create-stage] header').textContent.startsWith('Preview')&&document.querySelector('[data-create-size] summary').textContent.includes('Size settings')"));
   await shot('create-english-dark');
 }
-async function main() {
-  await app.whenReady(); smoke.assertBuildFresh({app});
+// 隔离窗口初始化独立于各业务分支，新增标签专项不应让主编排函数持续增长。
+// 这里统一沿用生产窗口装饰、preload与主题通知，不创建第二套窗口配置。
+// 构建新鲜度仍在main等待app就绪后检查，初始化不能提前加载过期产物。
+// 原console错误收集保留在同一个窗口，后续所有分支都经过最终渲染错误断言。
+// 生命周期仍由main的finally销毁，prepareWindow不另设app退出或取消护栏。
+// offscreen和backgroundThrottling:false保留原前提，不把此测试当成实体可见窗口验收。
+// 生产windowChromeArguments提供启动语言快照，不能让专项绕回异步首帧语言读取。
+// sandbox:false继续支持原preload的CommonJS依赖，本次没有改变渲染层隔离边界。
+// debugger附加只用于现有视口与输入验证，不暴露给产品页面或持久化文档。
+// win由原主流程唯一拥有，helper不保存另一份隐藏备用窗口引用。
+// console-message收集包含组件渲染错误，主流程结束时统一检查而非在每个专项吞异常。
+// 窗口初始化不读取真实用户输出，素材夹具与写盘仍使用宿主临时根目录。
+function prepareWindow() {
   const chrome=require("../apps/electron/src/main/core/windows/window-chrome");
   win=new BrowserWindow({...chrome.windowChromeOptions(),show:false,width:1440,height:900,webPreferences:{additionalArguments:chrome.windowChromeArguments(),offscreen:true,preload:path.join(__dirname,"../apps/electron/src/preload/index.js"),contextIsolation:true,nodeIntegration:false,sandbox:false,backgroundThrottling:false}});
   // 沿用生产窗口事件桥接，系统最大化/全屏变化时 head 应获得真实通知。
@@ -1052,6 +1155,10 @@ async function main() {
   chrome.registerWindowChrome(win);
   smoke.attachWebContents(win.webContents); win.webContents.debugger.attach('1.3');
   win.webContents.on('console-message',event=>{if(event.level==='error')errors.push(event.message)});
+}
+async function main() {
+  await app.whenReady(); smoke.assertBuildFresh({app});
+  prepareWindow();
   try {
     await win.loadURL('app://app/create'); await wait("document.getElementById('prompt-editor')");
     await wait("document.querySelector('[aria-labelledby=update-announcement-title]')");
@@ -1061,7 +1168,42 @@ async function main() {
     // 移动专项复用同一真实创建页与窗口，只有文件管理接口切到生产磁盘实现。
     // 专项会在独立输出子目录创建图片，避免原布局夹具的虚构路径冒充真实移动。
     // 不继续运行需要原假图片清单的生成用例，两类测试的前置条件不同。
-    if (process.argv.includes('--context-menus-only')) {
+    // 封面专项复用原静态构建、窗口及隔离 handler，不复制另一套测试页面。
+    // 只缩小运行范围，仍保留构建新鲜度、渲染错误和退出码护栏。
+    // 包括确认、重开和逐项移除，不能只验证临时图片切换就结束。
+    // 标签专项沿用已关闭公告的正式创建页，不能在一个脱离AppShell的HTML里比较样式。
+    // 只缩小执行范围，window背景节流、构建指纹和总退出码护栏仍由原main管理。
+    // helper接收当前窗口与截图器，不允许自己再启动第二个Electron实例。
+    // 原布局、图库和生成专项的分支不变，避免局部样式验证重置已有测试行为。
+    // 截图与日志写同一临时根，主题两次采样可以对应到同一次运行。
+    // 没有在此分支更改userData模式，真实点击切换仍由页面处理。
+    // tab专项结束也继续经过主流程的React错误检查，不提前打印假成功退出。
+    // 命令行开关只用于测试编排，产品页面没有这个开关或隐藏入口。
+    // 组件调用共享IconTabButton，本分支不提供第二份按钮以绕过全局hover样式。
+    // 其他专项仍需串行独立运行，标签通过不能代替它们的业务覆盖。
+    if (process.argv.includes('--shell-only')) {
+      await checkBreakpoints();
+    } else if (process.argv.includes('--preview-pan-only')) {
+      // 复用正式创建页和隔离图库，只缩小测试范围，不跳过构建与错误门禁。
+      showFiles = true;
+      // 本地媒体协议读取真实PNG，不沿用旧布局夹具里只有名称却不存在的路径。
+      const imageBytes = fs.readFileSync(path.join(__dirname, 'fixtures/video-composition/image.png'));
+      fixtureImages.forEach(image => fs.writeFileSync(image.filePath, imageBytes));
+      await metrics(1566, 900);
+      await new Promise(resolve => { win.webContents.once('did-finish-load', resolve); win.webContents.reload(); });
+      await wait("document.querySelector('[data-preview-thumbnail]')");
+      await require('./lib/check-preview-pan')({ win, run, click, wait, metrics, shot, smoke, input: event => win.webContents.sendInputEvent(event) });
+    } else if (process.argv.includes('--model-series-only')) {
+      await require('./lib/check-model-series-menu')({ win, run, wait, click, shot, smoke, metrics });
+    } else if (process.argv.includes('--mode-tabs-only')) {
+      await require('./lib/check-create-mode-hover')({ win, run, wait, shot, smoke });
+    } else if (process.argv.includes('--resource-selection-only')) {
+      // 全量套件由布局步骤登记原输入 DOM，专项跳过布局时也必须保留这个观察基准。
+      // 这里只记下节点引用，不创建新输入框、不改变 React 状态或选择器布局。
+      // 后续页栈检查才能区分正常隐藏原编辑器与错误卸载重建，而不是和空值比较。
+      await run("window.__promptNode = document.getElementById('prompt-editor'); true");
+      await checkExtensionSelection();
+    } else if (process.argv.includes('--context-menus-only')) {
       await checkSharedContextMenus();
     } else if (process.argv.includes('--history-move-only')) {
       // 专项仍使用同一个窗口和静态页面，不另外启动一个排序测试应用。
@@ -1119,30 +1261,30 @@ async function checkBreakpoints() {
   // 分隔符来自 18px 伪元素，容器自身不能留有贯穿高度的 border。
   // 箭头旋转为下拉指示，原按钮仍整体可点击，无额外键盘停靠点。
   // 字体与背景值从浏览器读取，避免只写上预期类名却被旧外壳规则覆盖。
-  // 同时测量品牌、说明文字、导航伸缩、工具、账户和三个窗口图标的可见布局盒。
+  // 同时测量工具、账户和三个窗口图标；品牌和导航开关在侧栏单独检查。
   // 全部中点须与 head 中点相差不足 1px，隐藏元素不参与几何判定。
   // 这是隔离页面布局检查，不覆盖真实账户头像下载或账号服务。
-  smoke.check('Head contents share one centerline with 32px avatar and short separator',await run("(()=>{const head=document.querySelector('[data-window-titlebar]'),h=head.getBoundingClientRect(),box=head.querySelector('[data-caption-account]'),button=box.querySelector('button'),r=button.firstElementChild.getBoundingClientRect(),b=button.getBoundingClientRect(),label=button.querySelector('span:nth-child(2)>span'),arrow=button.querySelector('svg'),rects=[...head.querySelectorAll(':scope > div:first-child > svg, :scope > div:first-child > span, [data-sidebar-toggle], :scope > div:nth-child(2) > button > svg, [data-account-menu-trigger] > span:first-child, [data-account-menu-trigger] > span:nth-child(2) > span:first-child, [data-account-menu-trigger] > svg, [data-window-controls] svg')].map(n=>n.getBoundingClientRect()).filter(a=>a.width&&a.height);return rects.length>=12&&rects.every(a=>Math.abs((a.top+a.bottom-h.top-h.bottom)/2)<1)&&r.width===32&&r.height===32&&b.height===44&&r.top>=h.top&&r.bottom<=h.bottom&&getComputedStyle(box).borderLeftWidth==='0px'&&getComputedStyle(box,'::before').height==='18px'&&getComputedStyle(box,'::before').width==='1px'&&getComputedStyle(box,'::before').top==='22px'&&getComputedStyle(label).fontSize==='14px'&&getComputedStyle(arrow).transform==='matrix(0, 1, -1, 0, 0, 0)'})()"));
+  smoke.check('Head contents share one centerline with 32px avatar and short separator',await run("(()=>{const head=document.querySelector('[data-window-titlebar]'),h=head.getBoundingClientRect(),box=head.querySelector('[data-caption-account]'),button=box.querySelector('button'),r=button.firstElementChild.getBoundingClientRect(),b=button.getBoundingClientRect(),label=button.querySelector('span:nth-child(2)>span'),arrow=button.querySelector('svg'),rects=[...head.querySelectorAll(':scope > div:nth-child(2) > button > svg, [data-account-menu-trigger] > span:first-child, [data-account-menu-trigger] > span:nth-child(2) > span:first-child, [data-account-menu-trigger] > svg, [data-window-controls] svg')].map(n=>n.getBoundingClientRect()).filter(a=>a.width&&a.height);return rects.length>=12&&rects.every(a=>Math.abs((a.top+a.bottom-h.top-h.bottom)/2)<1)&&r.width===32&&r.height===32&&b.height===44&&r.top>=h.top&&r.bottom<=h.bottom&&getComputedStyle(box).borderLeftWidth==='0px'&&getComputedStyle(box,'::before').height==='18px'&&getComputedStyle(box,'::before').width==='1px'&&getComputedStyle(box,'::before').top==='22px'&&getComputedStyle(label).fontSize==='14px'&&getComputedStyle(arrow).transform==='matrix(0, 1, -1, 0, 0, 0)'})()"));
   // 展开态以真实导航链接为样本，避免把顶栏的品牌图形或工具按钮算进 nav 图标。
-  // 必须有五个业务入口；空列表不能通过 every() 得到无意义的成功。
+  // 必须有六个业务入口；空列表不能通过 every() 得到无意义的成功。
   // 读取实际布局尺寸而非 h-4 类名，确保能发现外壳 CSS 再次放大 SVG 的回归。
   // 设置已迁入账户菜单，nav 和顶栏都不应再出现独立的 /settings 链接。
   // 密度断言读取每行实际高度与组间距，防止 Tailwind 类名被全局样式覆盖。
-  // 五个入口均须为 36px；2px 间距与 16px 图标共同对应用户紧凑参考。
-  smoke.check('Expanded nav uses compact spacing and 16px icons without standalone settings',await run("(()=>{const n=document.querySelector('[data-app-nav]'),icons=[...n.querySelectorAll('a > svg')],links=[...n.querySelectorAll('a')];return n.getAttribute('aria-expanded')==='true'&&icons.length===5&&icons.every(i=>i.getBoundingClientRect().width===16&&i.getBoundingClientRect().height===16)&&links.every(a=>a.getBoundingClientRect().height===36)&&getComputedStyle(n.firstElementChild.firstElementChild).rowGap==='2px'&&!n.querySelector('a[href=\"/settings\"]')&&!document.querySelector('[data-window-titlebar] a[href=\"/settings\"]')})()"));
+  // 六个入口均须为 36px；2px 间距与 16px 图标共同对应用户紧凑参考。
+  smoke.check('Expanded nav uses compact spacing and 16px icons without standalone settings',await run("(()=>{const n=document.querySelector('[data-app-nav]'),icons=[...n.querySelectorAll('a > svg')],links=[...n.querySelectorAll('a')];return n.getAttribute('aria-expanded')==='true'&&icons.length===6&&icons.every(i=>i.getBoundingClientRect().width===16&&i.getBoundingClientRect().height===16)&&links.every(a=>a.getBoundingClientRect().height===36)&&getComputedStyle(n.firstElementChild.firstElementChild).rowGap==='2px'&&!n.querySelector('a[href=\"/settings\"]')&&!document.querySelector('[data-window-titlebar] a[href=\"/settings\"]')})()"));
   // 此截图来自实际静态导出，与用户给的展开态图对照；不改写图标或导航 DOM。
   await shot('nav-expanded');
-  await click('[data-window-titlebar] button[aria-expanded]:not([aria-haspopup])'); await delay(400);
-  // 通过正式顶栏按钮折叠，连同 Zustand 状态及 CSS 过渡一起验证。
+  await click('[data-sidebar-toggle]'); await delay(400);
+  // 通过正式侧栏按钮折叠，连同 Zustand 状态及 CSS 过渡一起验证。
   // 图标应继续保持 16px；收起状态不能重新显示仅图标形式的设置入口。
   // 检查图标的宽高两个方向，防止只恢复宽度造成纵向拉伸。
   // 收起时只隐藏文字，行高和组间距必须沿用展开态，防止切换后密度反弹。
-  // 明确要求五个图标，避免因整个导航消失而误判尺寸检查通过。
-  smoke.check('Collapsed nav keeps compact spacing and original icon size',await run("(()=>{const n=document.querySelector('[data-app-nav]'),icons=[...n.querySelectorAll('a > svg')];return n.getAttribute('aria-expanded')==='false'&&icons.length===5&&icons.every(i=>i.getBoundingClientRect().width===16&&i.getBoundingClientRect().height===16)&&[...n.querySelectorAll('a')].every(a=>a.getBoundingClientRect().height===36)&&getComputedStyle(n.firstElementChild.firstElementChild).rowGap==='2px'&&!n.querySelector('a[href=\"/settings\"]')})()"));
+  // 明确要求六个图标，避免因整个导航消失而误判尺寸检查通过。
+  smoke.check('Collapsed nav keeps compact spacing and original icon size',await run("(()=>{const n=document.querySelector('[data-app-nav]'),icons=[...n.querySelectorAll('a > svg')];return n.getAttribute('aria-expanded')==='false'&&icons.length===6&&icons.every(i=>i.getBoundingClientRect().width===16&&i.getBoundingClientRect().height===16)&&[...n.querySelectorAll('a')].every(a=>a.getBoundingClientRect().height===36)&&getComputedStyle(n.firstElementChild.firstElementChild).rowGap==='2px'&&!n.querySelector('a[href=\"/settings\"]')})()"));
   // 独立保存收起态，便于确认紧凑点击区域与原业务入口仍在。
   await shot('nav-collapsed');
   smoke.check('Compact nav preserves room for three panels',before==='three'&&await run("document.querySelector('[data-create-layout]').dataset.createLayout==='three'&&document.querySelector('[data-app-nav]').getBoundingClientRect().width===68"));
-  await click('[data-window-titlebar] button[aria-expanded]:not([aria-haspopup])'); await delay(400);
+  await click('[data-sidebar-toggle]'); await delay(400);
   // 再展开一次，检查设置未因切换重新出现，同时保留创建页的选中路由。
   // 本用例只验证本地导航渲染，不把隔离 IPC 夹具当成真实账号或模型验证。
   // 紧接着的原图库用例继续覆盖九宫格、多选和图片右键业务。

@@ -170,7 +170,7 @@ async function checkEditing() {
   await wait("document.querySelector('[aria-labelledby=update-announcement-title]')");
   await click("[aria-labelledby=update-announcement-title] button"); await wait("!document.querySelector('[aria-labelledby=update-announcement-title]')");
   smoke.check("Two-column workspace starts without a persistent template library", await run("!document.querySelector('[data-dialogue-library]')&&document.querySelector('[data-dialogue-properties]').getBoundingClientRect().left>document.querySelector('[data-dialogue-stage]').getBoundingClientRect().left"));
-  smoke.check("Tool description uses the shared caption slot", await run("document.querySelector('[data-window-titlebar-content=cartoon]')?.textContent.includes('漫画对话框')"));
+  smoke.check("Tool description uses the shared caption slot", await run("document.querySelector('[data-window-route-segment=\"/tools/image/cartoon\"]')?.textContent.includes('漫画对话框')"));
   await choose("classic-left"); await choose("oval"); await input("[data-dialogue-text]", "第一层对白\nLine two <literal>");
   smoke.check("Adding and editing templates creates two independent layers", await run("document.querySelectorAll('[data-dialogue-layer]').length===2&&document.querySelectorAll('[data-dialogue-layer]')[0].textContent.includes('我们从这里出发')&&document.querySelectorAll('[data-dialogue-layer]')[1].textContent.includes('第一层对白')"));
   await run("document.querySelector('[data-dialogue-text]').focus();document.activeElement.dispatchEvent(new KeyboardEvent('keydown',{key:'Delete',bubbles:true}))");
@@ -890,10 +890,10 @@ async function checkSurroundingTools() {
   await wait("document.querySelector('[data-model-library=local]')");
   await click("[data-model-library=local]");
   await wait("document.querySelector('[data-model-library-location]')");
-  smoke.check("The local model library retains its content in the shared title slot", await run("document.querySelector('[data-window-titlebar-content=model-library]')?.textContent.includes('本地模型库')&&!document.querySelector('[data-window-titlebar-content=cartoon]')"));
+  smoke.check("The local model library retains its content in the shared title slot", await run("document.querySelector('[data-model-library-location]')?.textContent.includes('本地模型库')&&!document.querySelector('[data-window-route-segment=\"/tools/image/cartoon\"]')"));
   await win.loadURL("app://app/tools/video/gif");
   await wait("document.querySelector('[data-app-main]')");
-  smoke.check("Leaving the editor clears its caption and preserves the ordinary GIF host", await run("!document.querySelector('[data-window-titlebar-content]')&&!document.querySelector('[data-tool-workspace]')"));
+  smoke.check("Leaving the editor clears its caption and preserves the ordinary GIF host", await run("!document.querySelector('[data-model-library-location]')&&document.querySelector('[data-window-route-segment=\"/tools/video/gif\"]')&&!document.querySelector('[data-tool-workspace]')"));
 }
 
 // 外观先走正式菜单，再等待根主题与涟漪结束，截图才代表稳定的深色布局。
