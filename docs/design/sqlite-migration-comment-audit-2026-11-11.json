@@ -1,0 +1,388 @@
+{
+  "date": "2026-11-11",
+  "baseline": "Previous SQLite v1 foundation + existing canvas work preserved; migration new/rewritten files and new resize/pan modules; old foundation schema/client/queries/engine and unrelated dirty files excluded.",
+  "method": "Lexical comments for new/rewritten implementation files plus explicit changed-line selections for existing wiring/styles/tests. Type-only JSDoc, delimiters, documentation and untouched earlier workspace edits excluded; mixed lines count code. Comments and line selections manually reviewed against current implementation.",
+  "review": "Comments reviewed against behavior; reference range is 20%-30%, not former 70%. Sparse explicit SQL/field mapping code explains rates below reference; no repetitive padding. Legacy SQL verbose comments are not counted.",
+  "unquantifiedDeltas": [],
+  "totals": {
+    "business": {
+      "comments": 58,
+      "code": 985,
+      "percent": 5.56
+    },
+    "test": {
+      "comments": 8,
+      "code": 354,
+      "percent": 2.21
+    }
+  },
+  "files": [
+    {
+      "file": "apps/electron/src/main/storage/sqlite/backup.js",
+      "comments": 1,
+      "code": 36,
+      "percent": 2.7,
+      "scope": "new-or-rewritten-for-migration-and-resize",
+      "category": "business"
+    },
+    {
+      "file": "apps/electron/src/main/storage/sqlite/canvas-load.js",
+      "comments": 3,
+      "code": 37,
+      "percent": 7.5,
+      "scope": "new-or-rewritten-for-migration-and-resize",
+      "category": "business"
+    },
+    {
+      "file": "apps/electron/src/main/storage/sqlite/canvas-media-store.js",
+      "comments": 1,
+      "code": 36,
+      "percent": 2.7,
+      "scope": "new-or-rewritten-for-migration-and-resize",
+      "category": "business"
+    },
+    {
+      "file": "apps/electron/src/main/storage/sqlite/canvas-store.js",
+      "comments": 2,
+      "code": 73,
+      "percent": 2.67,
+      "scope": "new-or-rewritten-for-migration-and-resize",
+      "category": "business"
+    },
+    {
+      "file": "apps/electron/src/main/storage/sqlite/connection.js",
+      "comments": 4,
+      "code": 62,
+      "percent": 6.06,
+      "scope": "new-or-rewritten-for-migration-and-resize",
+      "category": "business"
+    },
+    {
+      "file": "apps/electron/src/main/storage/sqlite/document-store.js",
+      "comments": 5,
+      "code": 80,
+      "percent": 5.88,
+      "scope": "new-or-rewritten-for-migration-and-resize",
+      "category": "business"
+    },
+    {
+      "file": "apps/electron/src/main/storage/sqlite/download-queue.js",
+      "comments": 2,
+      "code": 83,
+      "percent": 2.35,
+      "scope": "new-or-rewritten-for-migration-and-resize",
+      "category": "business"
+    },
+    {
+      "file": "apps/electron/src/main/storage/sqlite/download-store.js",
+      "comments": 2,
+      "code": 101,
+      "percent": 1.94,
+      "scope": "new-or-rewritten-for-migration-and-resize",
+      "category": "business"
+    },
+    {
+      "file": "apps/electron/src/main/storage/sqlite/migration-002.sql",
+      "comments": 6,
+      "code": 124,
+      "percent": 4.62,
+      "scope": "new-or-rewritten-for-migration-and-resize",
+      "category": "business"
+    },
+    {
+      "file": "apps/electron/src/main/storage/sqlite/receipt-store.js",
+      "comments": 2,
+      "code": 50,
+      "percent": 3.85,
+      "scope": "new-or-rewritten-for-migration-and-resize",
+      "category": "business"
+    },
+    {
+      "file": "apps/electron/src/main/storage/sqlite/store-helpers.js",
+      "comments": 3,
+      "code": 36,
+      "percent": 7.69,
+      "scope": "new-or-rewritten-for-migration-and-resize",
+      "category": "business"
+    },
+    {
+      "file": "apps/electron/src/main/storage/sqlite/user-document.js",
+      "comments": 7,
+      "code": 53,
+      "percent": 11.67,
+      "scope": "new-or-rewritten-for-migration-and-resize",
+      "category": "business"
+    },
+    {
+      "file": "apps/electron/src/main/modules/models/downloads/model-download-records.js",
+      "comments": 1,
+      "code": 19,
+      "percent": 5,
+      "scope": "new-or-rewritten-for-migration-and-resize",
+      "category": "business"
+    },
+    {
+      "file": "apps/electron/src/main/modules/models/downloads/model-download-persistence.js",
+      "comments": 4,
+      "code": 17,
+      "percent": 19.05,
+      "scope": "new-or-rewritten-for-migration-and-resize",
+      "category": "business"
+    },
+    {
+      "file": "apps/next/src/view/infinite-canvas/canvas-image-resizer.tsx",
+      "comments": 2,
+      "code": 13,
+      "percent": 13.33,
+      "scope": "new-or-rewritten-for-migration-and-resize",
+      "category": "business"
+    },
+    {
+      "file": "apps/next/src/view/infinite-canvas/use-canvas-pan-recovery.ts",
+      "comments": 2,
+      "code": 55,
+      "percent": 3.51,
+      "scope": "new-or-rewritten-for-migration-and-resize",
+      "category": "business"
+    },
+    {
+      "file": "scripts/sqlite-migrate.js",
+      "comments": 3,
+      "code": 50,
+      "percent": 5.66,
+      "scope": "new-or-rewritten-for-migration-and-resize",
+      "category": "business"
+    },
+    {
+      "file": "scripts/lib/assert-app-stopped.js",
+      "comments": 1,
+      "code": 16,
+      "percent": 5.88,
+      "scope": "new-or-rewritten-for-migration-and-resize",
+      "category": "business"
+    },
+    {
+      "file": "scripts/verify-sqlite-migration.js",
+      "comments": 2,
+      "code": 164,
+      "percent": 1.2,
+      "scope": "new-or-rewritten-for-migration-and-resize",
+      "category": "test"
+    },
+    {
+      "file": "scripts/verify-sqlite-asar.js",
+      "comments": 3,
+      "code": 34,
+      "percent": 8.11,
+      "scope": "new-or-rewritten-for-migration-and-resize",
+      "category": "test"
+    },
+    {
+      "file": "scripts/lib/check-canvas-card-resize.js",
+      "comments": 2,
+      "code": 146,
+      "percent": 1.35,
+      "scope": "new-or-rewritten-for-migration-and-resize",
+      "category": "test"
+    },
+    {
+      "file": "apps/next/src/view/infinite-canvas/canvas-reducer.ts",
+      "comments": 1,
+      "code": 10,
+      "percent": 9.09,
+      "scope": "new applyCardDimensions only; earlier clipboard changes excluded",
+      "category": "business"
+    },
+    {
+      "file": "apps/next/src/view/infinite-canvas/canvas-editor-context.tsx",
+      "category": "business",
+      "scope": "exact changed-line selection; earlier workspace edits excluded",
+      "lines": [
+        18,
+        19,
+        76,
+        77
+      ],
+      "comments": 0,
+      "code": 4,
+      "percent": 0
+    },
+    {
+      "file": "apps/next/src/view/infinite-canvas/canvas-reducer.ts",
+      "category": "business",
+      "scope": "exact changed-line selection; earlier workspace edits excluded",
+      "lines": [
+        75,
+        82,
+        223,
+        226
+      ],
+      "comments": 0,
+      "code": 4,
+      "percent": 0
+    },
+    {
+      "file": "apps/next/src/view/infinite-canvas/canvas-node.tsx",
+      "category": "business",
+      "scope": "exact changed-line selection; earlier workspace edits excluded",
+      "lines": [
+        21,
+        152
+      ],
+      "comments": 0,
+      "code": 2,
+      "percent": 0
+    },
+    {
+      "file": "apps/next/src/view/infinite-canvas/infinite-canvas-page.tsx",
+      "category": "business",
+      "scope": "exact changed-line selection; earlier workspace edits excluded",
+      "lines": [
+        30,
+        207,
+        420,
+        431,
+        436
+      ],
+      "comments": 0,
+      "code": 5,
+      "percent": 0
+    },
+    {
+      "file": "apps/next/src/view/infinite-canvas/canvas-media.css",
+      "category": "business",
+      "scope": "exact changed-line selection; earlier workspace edits excluded",
+      "lines": [
+        11,
+        12
+      ],
+      "comments": 1,
+      "code": 1,
+      "percent": 50
+    },
+    {
+      "file": "apps/next/src/view/infinite-canvas/canvas.module.css",
+      "category": "business",
+      "scope": "exact changed-line selection; earlier workspace edits excluded",
+      "lines": [
+        10,
+        11,
+        12,
+        13,
+        101,
+        102,
+        103,
+        104,
+        105,
+        106,
+        107,
+        108
+      ],
+      "comments": 2,
+      "code": 10,
+      "percent": 16.67
+    },
+    {
+      "file": "apps/next/src/app/globals.css",
+      "category": "business",
+      "scope": "exact changed-line selection; earlier workspace edits excluded",
+      "lines": [
+        801
+      ],
+      "comments": 0,
+      "code": 1,
+      "percent": 0
+    },
+    {
+      "file": "apps/electron/src/main/storage/user-data.handlers.js",
+      "category": "business",
+      "scope": "exact changed-line selection; earlier workspace edits excluded",
+      "lines": [
+        20,
+        23,
+        27,
+        38
+      ],
+      "comments": 1,
+      "code": 3,
+      "percent": 25
+    },
+    {
+      "file": "apps/electron/src/main/storage/sqlite/worker.js",
+      "category": "business",
+      "scope": "exact changed-line selection; earlier workspace edits excluded",
+      "lines": [
+        32,
+        104,
+        105
+      ],
+      "comments": 0,
+      "code": 3,
+      "percent": 0
+    },
+    {
+      "file": "apps/electron/src/main/storage/sqlite/client.js",
+      "category": "business",
+      "scope": "exact changed-line selection; earlier workspace edits excluded",
+      "lines": [
+        127,
+        227,
+        237
+      ],
+      "comments": 2,
+      "code": 1,
+      "percent": 66.67
+    },
+    {
+      "file": "scripts/verify-sqlite.js",
+      "category": "test",
+      "scope": "exact changed-line selection; earlier workspace edits excluded",
+      "lines": [
+        333,
+        354
+      ],
+      "comments": 1,
+      "code": 1,
+      "percent": 50
+    },
+    {
+      "file": "scripts/verify-model-downloads.js",
+      "category": "test",
+      "scope": "exact changed-line selection; earlier workspace edits excluded",
+      "lines": [
+        190,
+        191
+      ],
+      "comments": 0,
+      "code": 2,
+      "percent": 0
+    },
+    {
+      "file": "scripts/smoke-infinite-canvas.js",
+      "category": "test",
+      "scope": "exact changed-line selection; earlier workspace edits excluded",
+      "lines": [
+        116,
+        120,
+        123,
+        124,
+        125,
+        667
+      ],
+      "comments": 0,
+      "code": 6,
+      "percent": 0
+    },
+    {
+      "file": "scripts/lib/check-canvas-media.js",
+      "category": "test",
+      "scope": "exact changed-line selection; earlier workspace edits excluded",
+      "lines": [
+        265
+      ],
+      "comments": 0,
+      "code": 1,
+      "percent": 0
+    }
+  ]
+}

@@ -1,0 +1,56 @@
+{
+  "baseline": "889b67441d37eaa0538974e6cac53cebd6fcca3ad82458745d45054a616ba53e",
+  "build": "f2d6757dab2ee10b9ebe31e2597d1862367a2e029c96f473404204cd241e3c96",
+  "method": "Read-only source inspection and direct script references in exported HTML; raw bytes are not measured memory, FPS, or page load time. Shared script bytes can be reused on navigation.",
+  "routes": [
+    {
+      "route": "/",
+      "beforeBytes": 1275005,
+      "afterBytes": 1275924,
+      "scriptCount": 16,
+      "reductionPercent": -0.07
+    },
+    {
+      "route": "/create",
+      "beforeBytes": 6829279,
+      "afterBytes": 2690063,
+      "scriptCount": 19,
+      "reductionPercent": 60.61
+    },
+    {
+      "route": "/canvas",
+      "beforeBytes": 1526180,
+      "afterBytes": 1527006,
+      "scriptCount": 17,
+      "reductionPercent": -0.05
+    },
+    {
+      "route": "/agent",
+      "beforeBytes": 1655136,
+      "afterBytes": 1656013,
+      "scriptCount": 18,
+      "reductionPercent": -0.05
+    },
+    {
+      "route": "/profile",
+      "beforeBytes": 1937521,
+      "afterBytes": 1938529,
+      "scriptCount": 17,
+      "reductionPercent": -0.05
+    },
+    {
+      "route": "/tools/video/editor",
+      "beforeBytes": 1426463,
+      "afterBytes": 1427348,
+      "scriptCount": 19,
+      "reductionPercent": -0.06
+    },
+    {
+      "route": "/tools/models/civitai",
+      "beforeBytes": 1384320,
+      "afterBytes": 1385407,
+      "scriptCount": 17,
+      "reductionPercent": -0.08
+    }
+  ]
+}

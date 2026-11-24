@@ -319,18 +319,10 @@ node apps/next/scripts/verify-i18n-values.mjs --base HEAD           # 迁移后�
 4. **没有单元测试框架**：回归依赖 `pnpm check`（typecheck + 主进程 verify + 文案断言）
    与 `scripts/verify-*.js` / `scripts/smoke-*.js`（九个真实启动流程）。
 
+## 需求与交付简报
 
-## 无限画布工程素材（2026-11-13）
-
-工程素材按图片、视频、音频存放于用户目录的 `Infinite Canvas/工程目录/`。手放及旧未登记文件归入“未知归属”，原位保留、不自动删除；明确受管副本保存并关闭后，无任何工程依赖才进入统一temp，24小时后重新核对清理。素材库支持直接复用、保留与恢复。节点网预览复用原媒体组件，提供缩略导航、信息、缩放与旋转。
-
-实际验证、九宫格数据关系、自动测试与人工待验边界见[实施记录](docs/代办/infinite-canvas-ui/resource-management-preview-implementation.md)。完整check的旧文案和Meta阻塞仍保留，不能将本轮专项通过理解为全仓验收通过。
-
-画布音频节点复用原输入框和 ↑，固定单份生成；正文半高，秒数用原浮层选择，“参数”打开创作页同一模型与高级设置组件。支持参考、工程内保存与恢复；视频 LoRA 修复 MiniMax 大小写与深层目录漏项。[最新音频调整与验证](docs/代办/infinite-canvas-ui/canvas-audio-compact-implementation.md) · [原请求接入与边界](docs/代办/infinite-canvas-ui/canvas-audio-lora-implementation.md)。
-
-MiniMax 引用统一为图片 `<Picture N>`、视频 `<Video N>`、音频 `<Slot N>`。画布 ↑ 左侧“预览提示词”复用原轻量浮层；右下角转换助手发送官方标记并保留原稿撤销。H3 图片编辑的真实请求同步接入转换，旧 `<Audio N>` 草稿可兼容升级。[实施、截图与验证边界](docs/代办/infinite-canvas-ui/canvas-reference-preview-implementation.md)。
-
-画布节点输入统一复用音频基准面板：同一外壳、80px正文与单行操作区，内容和动作通过参数注入；设置齿轮复用标准图标。类型、lint、构建通过，串行Electron专项34/34、完整画布149/149；人工与真实模型推理未验。[本轮复用关系与截图](docs/代办/infinite-canvas-ui/canvas-panel-reuse-implementation.md)。
-
-
-无限画布新增全局资源库，批量复制导入图片/视频/音频，所有画布可通过 `@/资源库/` 直接引用；`@/图片/` 选择当前画布图片。选中仍显示缩略图＋文件名前缀，MiniMax沿用原编号转换，不创建连线。工程与全局清单共用原卡片、按钮和引用编辑器；多选下全选再次点击全部取消，明确删除移入系统回收站，当前草稿和其他工程依赖受保护，未知文件仍不自动回收。[实施、截图、测试与限制](docs/代办/infinite-canvas-ui/canvas-global-resources-implementation.md)。
+- [创作流程与提示词](docs/summary/01-creation.md)
+- [无限画布与工程素材](docs/summary/02-infinite-canvas.md)
+- [视频、漫画与媒体工具](docs/summary/03-media-tools.md)
+- [Agent、模型与下载](docs/summary/04-agent-and-models.md)
+- [桌面体验、数据与交付验证](docs/summary/05-desktop-and-delivery.md)
