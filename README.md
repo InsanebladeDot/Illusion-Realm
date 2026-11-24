@@ -11,7 +11,7 @@
 
 **创作与生成（`/create`）**
 - 连接本地 ComfyUI（默认 `127.0.0.1:8188`），请求经 `window.electronAPI` → 主进程 `comfyProxy.js` 转发，规避渲染进程的跨域限制
-- 图片任务串行排队，支持取消排队、停止生成及停止全部；ComfyUI 断连后终止待执行任务，保留已保存图片。具体行为与限制见[生成任务生命周期](docs/comfy-generation-lifecycle.md)。
+- 图片任务串行排队，支持取消排队、停止生成及停止全部；ComfyUI 断连后终止待执行任务，保留已保存图片。具体行为与限制见[生成任务生命周期](docs/01-creation.md#生成任务生命周期)。
 - 提示词组装：画师 / 角色库 / 动作库 / 背景库 / 3D 视角 一排入口；普通模式**插入**到单一提示词框，高级组装模式**覆盖**对应分类（角色 / 姿势 / 背景 / 镜头视图）
 - 模型选择：扫描本地 Checkpoint / LoRA / Diffusion 模型（`.safetensors` / `.ckpt` / `.gguf`），支持自定义分类、权重调节、封面与元数据
 - 3D 视角：用 Three.js 加载本地 `.glb` / `.gltf` 模型，通过视角检测推导对应的镜头提示词
@@ -319,10 +319,10 @@ node apps/next/scripts/verify-i18n-values.mjs --base HEAD           # 迁移后�
 4. **没有单元测试框架**：回归依赖 `pnpm check`（typecheck + 主进程 verify + 文案断言）
    与 `scripts/verify-*.js` / `scripts/smoke-*.js`（九个真实启动流程）。
 
-## 需求与交付简报
+## 需求分析与模板
 
-- [创作流程与提示词](docs/summary/01-creation.md)
-- [无限画布与工程素材](docs/summary/02-infinite-canvas.md)
-- [视频、漫画与媒体工具](docs/summary/03-media-tools.md)
-- [Agent、模型与下载](docs/summary/04-agent-and-models.md)
-- [桌面体验、数据与交付验证](docs/summary/05-desktop-and-delivery.md)
+- [创作流程与提示词](docs/01-creation.md)
+- [无限画布与工程素材](docs/02-infinite-canvas.md)
+- [视频、漫画与媒体工具](docs/03-media-tools.md)
+- [Agent、模型与下载](docs/04-agent-and-models.md)
+- [桌面体验与本地数据](docs/05-desktop-and-delivery.md)

@@ -111,7 +111,7 @@ applyLocaleSignals(initialLocaleResolution.locale as Locale);
 /**
  * 首帧主题信号：文档里的选择要等异步读盘，而**系统偏好此刻就能读到**，
  * 因此先按 `system` 落一次（与加主题开关之前的行为一致），读到文档后 AppShell 的订阅会纠正。
- * 与 locale 一样的「至多一次单向跳变」，理由见 docs/locale-hydration.md。
+ * 与 locale 一样的「至多一次单向跳变」，理由见 docs/05-desktop-and-delivery.md 的首帧语言要求。
  */
 applyThemeSignals(DEFAULT_THEME_PREFERENCE);
 applyWindowChromeSignals();

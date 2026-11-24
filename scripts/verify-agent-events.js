@@ -15,7 +15,7 @@
  *
  * 为什么没并进 `pnpm check`：它依赖本机有可用的 Python 解释器与 `mcp`/`openai` 依赖，
  * 而这些属于环境前提（退出码 2），不适合塞进「代码门禁」里天天喊红。
- * 等 `apps/agent/.venv` 随包分发的方式定下来（见 docs/agent-integration.md），再决定接不接。
+ * 等 `apps/agent/.venv` 随包分发的方式定下来（见 docs/04-agent-and-models.md），再决定接不接。
  */
 const fs = require("fs");
 const os = require("os");

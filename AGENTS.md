@@ -95,7 +95,7 @@ scripts/                     # 跨包校验、冒烟与门禁自检
 - 窗口显式设置 `contextIsolation: true`、`nodeIntegration: false`。当前 `sandbox: false` 支持 preload 的 CommonJS 本地 require，例如 `../common/ipc-channels`；仅在桥接实现允许时重新评估开启 sandbox。
 - 不暴露原始 ipcRenderer、任意通道或 Node 能力。主进程按调用者和业务规则校验权限、路径与参数；事件订阅返回独立取消函数，卸载时清理。
 - 错误日志保留级别、模块及必要诊断信息并脱敏；不记录令牌、API 密钥和用户路径，堆栈不返回渲染层。
-- 按 2026-11-11 用户授权，生成小票、无限画布草稿和快捷词由 `storage/sqlite/user-document.js` 接管 SQLite 读写；原 USER_DATA IPC 形状保持不变。设置、账号偏好及首帧语言继续使用实际 `user/illusion-realm.json`，凭据继续原专用服务。业务库与实际 JSON 同目录、同名前缀；下载恢复队列独立使用原 Electron userData 目录的 `model-download-queue.sqlite`。迁移先备份原字节、事务写入并反读对照，再切换权威来源；不引入 ORM，不把媒体字节塞进库。工作流参数和外嵌工具文档保留明确版本化附表；具体范围、例外与恢复边界见 `docs/design/sqlite-migration-2026-11-11.md`。
+- 按 2026-11-11 用户授权，生成小票、无限画布草稿和快捷词由 `storage/sqlite/user-document.js` 接管 SQLite 读写；原 USER_DATA IPC 形状保持不变。设置、账号偏好及首帧语言继续使用实际 `user/illusion-realm.json`，凭据继续原专用服务。业务库与实际 JSON 同目录、同名前缀；下载恢复队列独立使用原 Electron userData 目录的 `model-download-queue.sqlite`。迁移先备份原字节、事务写入并反读对照，再切换权威来源；不引入 ORM，不把媒体字节塞进库。工作流参数和外嵌工具文档保留明确版本化附表；具体范围、例外与恢复边界见 `docs/05-desktop-and-delivery.md#数据归属与恢复`。
 
 ## 主题与 i18n
 

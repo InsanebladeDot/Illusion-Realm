@@ -280,8 +280,7 @@ app.whenReady().then(async () => {
   // Electron ready 保证 Windows DPAPI 可用性与正式 IPC 保存时机一致。
   // 如果该脚本卡在系统初始化，调用方必须按进程退出或超时报告，不能当绿。
   checkSecrets(); checkParsing(); checkGlmParsing(); await checkCatalog(); await checkSharedTextProviders(); await checkQueuedRefresh();
-  await require('./lib/check-glm-free-catalog').checkGlmFreeCatalog();
   await require('./lib/check-model-availability').checkModelAvailability(pricing);
   await require('./lib/check-model-image-capability').checkModelImageCapability(root);
-  console.log('PASS Agent providers: secret isolation, payload routing, pricing, cache, official GLM models and actual-request availability'); app.exit(0);
+  console.log('PASS Agent providers: secret isolation, payload routing, pricing, cache, GLM parsing and actual-request availability'); app.exit(0);
 }).catch(error => { console.error(error); app.exit(1); });

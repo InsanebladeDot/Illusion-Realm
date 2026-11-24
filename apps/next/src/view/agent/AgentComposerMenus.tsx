@@ -120,7 +120,7 @@ const PERMISSION_VALUES: AgentPermission[] = ["readonly", "full"];
 
 /**
  * 权限：与 Codex 一样放在 `+` 右边，点开是「应如何批准…」的两项。
- * 现在只是界面状态（后端接上后由它决定挂哪些工具，见 docs/agent-integration.md 的 P3）。
+ * 现在只是界面状态（工具权限见 docs/04-agent-and-models.md）。
  */
 export function AgentPermissionMenu() {
   const { t } = useTranslation();

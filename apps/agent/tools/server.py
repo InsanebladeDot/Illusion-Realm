@@ -8,7 +8,7 @@ Agent 会以子进程方式自动拉起它（`python -m tools.server`，stdio �
     ILLUSION_AGENT_PERMISSION     readonly | full（写盘类工具只在 full 时挂载）
 
 现状（P0/P1）：这里只有**纯本地、只读**的能力。应用专属能力（本地模型清单 /
-图片内嵌 Meta / 图库列表）在 P3 接 —— 见 `docs/agent-integration.md`：
+图片内嵌 Meta / 图库列表）通过宿主工具接入（见 `docs/04-agent-and-models.md`）：
 那些能力在 Electron 侧已经有了实现，接的时候走「宿主桥」或复用同一份判据，
 **不要在 Python 里重写一份**，否则两边解析结果会悄悄分叉。
 

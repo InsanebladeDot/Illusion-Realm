@@ -7,7 +7,7 @@
  * 实测症状：第 1 档（不传）通过，第 2 档（传 en）读到 `undefined`。
  * 所以每一档必须跑在**独立进程**里（与 `self-test-harness-guard.js` 同款形状）。
  *
- * ## 三档（对应 docs/locale-hydration.md 第九节 e）
+ * ## 三档（对应 docs/05-desktop-and-delivery.md 的首帧语言要求）
  *   1. 不传                  → `undefined`（missing）
  *   2. `--illusion-locale=en` → `"en"`（stored）
  *   3. `--illusion-locale=ja` → `"ja"`（**原样透传**，非法值由渲染层判）

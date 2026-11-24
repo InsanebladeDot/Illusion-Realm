@@ -231,7 +231,7 @@ function buildAllowedRoots(): string[] {
  * 持久化：**只在内存里**（刷新即清空）；要落盘得进用户数据文档（格式变更 + 迁移）。
  * 密钥：渲染层**永远拿不到** —— 用户在设置页填的那把存在主进程侧（`apps/electron/src/main/modules/agent/secret.js`），
  * 环境变量 / `.env` 只在开发测试时用；两者都由主进程经 stdin 传给 sidecar。
- * 「没配就拦在拉起进程之前」见 `sendDraft`；**完整消息流见 `docs/agent-message-flow.md`**。
+ * 「没配就拦在拉起进程之前」见 `sendDraft`；消息契约见 `docs/04-agent-and-models.md`。
  */
 export const useAgentStore = create<AgentState>((set, get) => ({
   sessions: [],

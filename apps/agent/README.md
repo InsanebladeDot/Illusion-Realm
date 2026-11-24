@@ -1,7 +1,7 @@
 # Illusion Realm Agent（Python 侧）
 
 从 `D:/Code/LLM` 整理而来：**一份核心 + 三个入口**。桌面端只走 `stdio_agent`，
-其余入口只在开发期用。设计与取舍见 [`docs/agent-integration.md`](../../docs/agent-integration.md)。
+其余入口只在开发期用。设计与取舍见 [`docs/04-agent-and-models.md#agent-接入与权限边界`](../../docs/04-agent-and-models.md#agent-接入与权限边界)。
 
 ```
 agent_core/

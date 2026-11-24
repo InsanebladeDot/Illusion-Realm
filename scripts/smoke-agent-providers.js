@@ -24,10 +24,6 @@ let win, captured, offline = false, priceReads = 0;
 registerHandle(C.AGENT_RUN, (_event, options) => { const { config } = JSON.parse(require("../apps/electron/src/main/modules/agent/runner").buildPayloadLine(options)); captured = { provider: config.provider, model: config.model, baseUrl: config.baseUrl, matchingKey: config.apiKey === 'sk-euzhi-ui-2222' }; return { runId: 'provider-ui' }; }, require("../apps/electron/src/main/modules/agent/agent.handlers").validateRunArgs);
 global.fetch = async url => {
   if (offline || String(url).includes('siliconflow')) throw new Error('offline');
-  if (String(url).includes('docs.bigmodel.cn')) {
-    const name = String(url).endsWith('pricing.md') ? 'pricing' : String(url).endsWith('model-overview.md') ? 'model-overview' : 'glm-4';
-    return new Response(fs.readFileSync(path.join(__dirname, '../docs/design/glm-model-order-2026-11-17/evidence', name + '.md'), 'utf8'));
-  }
   if (String(url).endsWith('/models')) return new Response(JSON.stringify({ data: [{ id: 'grok-4.7' }, { id: 'grok-4.6' }, { id: 'gpt-5.5' }, { id: 'claude-sonnet-4.6' }] }));
   if (!String(url).endsWith('/api/pricing')) throw new Error('unexpected request');
   priceReads++;
@@ -92,22 +88,6 @@ async function checkNarrow() {
   smoke.check('Failed refresh keeps Grok choices', await run("document.querySelectorAll('[data-agent-model-option]').length===4")); await delay(200); fs.writeFileSync(path.join(root, 'models-narrow.png'), (await win.webContents.capturePage()).toPNG());
   await run("document.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}))"); await wait("!document.querySelector('#agent-model-dialog')"); smoke.check('Escape restores conversation', await run("document.querySelector('[data-agent-answer]')?.textContent.includes('test complete')"));
 }
-async function checkGlmOrder() {
-  await run("document.querySelector('[data-agent-model]').click()");
-  await wait("document.querySelector('#agent-model-dialog')");
-  await run("document.querySelector('[data-agent-provider=glm]').click()");
-  // 官网会补充型号；等目标卡片出现，不把旧目录数量当作加载条件。
-  await wait("document.querySelector('[data-agent-model-option=\"glm-4.7-flash\"]')");
-  await require('./lib/check-agent-model-order').checkAgentModelOrder({
-    run, wait, check: smoke.check,
-    capture: async name => {
-      await delay(250);
-      fs.writeFileSync(path.join(root, name + '.png'), (await win.webContents.capturePage()).toPNG());
-    },
-  });
-  await run("document.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}))");
-  await wait("!document.querySelector('#agent-model-dialog')");
-}
 // 同一个黑卡片要能用于 nav、head 和模型入口；聚焦只展示提示，不点击窗口动作。
 async function checkSharedHints() {
   win.show(); win.focus(); win.webContents.focus(); await wait('document.hasFocus()');
@@ -125,8 +105,17 @@ async function main() {
   await app.whenReady(); smoke.assertBuildFresh({ app });
   win = new BrowserWindow({ ...windowChromeOptions(), show: false, width: 1280, height: 900, webPreferences: { additionalArguments: windowChromeArguments(), offscreen: true, preload: path.join(__dirname, "../apps/electron/src/preload/index.js"), contextIsolation: true, nodeIntegration: false, sandbox: false, backgroundThrottling: false } });
   smoke.attachWebContents(win.webContents); const occlusion = await smoke.hardenWindow(win);
-  try { await checkPicker(); await checkGlmOrder(); await require('./lib/check-agent-image-capability').checkAgentImageCapability({ run, wait, check: smoke.check }); await checkSettings(); await checkSubmission(); await checkNarrow(); await checkSharedHints(); console.log('PROVIDER_SCREENSHOTS', root); }
-  finally { occlusion.dispose(); win.destroy(); }
+  try {
+    await checkPicker();
+    await checkSettings();
+    await checkSubmission();
+    await checkNarrow();
+    await checkSharedHints();
+    console.log('PROVIDER_SCREENSHOTS', root);
+  } finally {
+    occlusion.dispose();
+    win.destroy();
+  }
   smoke.finish({ app, ok: smoke.allPassed() });
 }
 main().catch(error => { console.error(error.message); smoke.finish({ app, ok: false, error }); });

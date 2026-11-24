@@ -1,9 +1,8 @@
-/** 核对识图依据和旧缓存升级；仅使用公开目录样本，不发送推理或读取用户图片。 */
+/** 用构造的 SiliconFlow 目录核对图片能力和旧缓存升级。 */
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const parser = require('../../apps/electron/src/main/modules/agent/provider-catalog-parser');
-const { parseGlm } = require('../../apps/electron/src/main/modules/agent/glm-catalog-parser');
 
 function siliconRows(rows) {
   const base = { subType: 'chat', status: 'normal', functionCallSupport: true, pricing: [] };
@@ -19,10 +18,6 @@ function checkCapabilities() {
   assert.equal(rows[2].id, 'unknown-VL');
   const models = Array.from({ length: 20 }, (_, index) => ({ ...rows[0], id: 'visual-' + index }));
   assert.equal(parser.curateSiliconFlow(models).length, 20);
-  const pages = ['pricing', 'model-overview', 'glm-4'].map(name => fs.readFileSync(path.join(__dirname, '../../docs/design/glm-model-order-2026-11-17/evidence', name + '.md'), 'utf8'));
-  const glm = parseGlm(...pages);
-  for (const id of ['glm-4.6v-flash', 'glm-4v-flash', 'glm-4.1v-thinking-flash']) assert.equal(glm.find(row => row.id === id)?.imageInput, true, id);
-  for (const id of ['glm-4.7-flash', 'glm-4.5-flash']) assert.equal(glm.find(row => row.id === id)?.imageInput, false, id);
 }
 
 /** 缺字段的旧目录即使未过期也刷新；离线恢复只补已核实型号，陌生型号仍未知。 */

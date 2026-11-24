@@ -5,7 +5,7 @@
 // 标签文案继续走 i18n，切换语言时仍由同一份业务模式 id 确定选中项。
 // 公共 IconTabButton 仍供素材分类使用，创建页外观覆盖限定在自己的 data 标记下。
 // 本组件不提交生成任务，也不在标签切换时重置表单、队列或输出目录。
-// 参考来源是 docs/待办/资源/anime-create/index.html 的 mode-tabs。
+// 按创建页的模式入口组织标签，见 docs/01-creation.md。
 // 55px容器与32px按钮高度由 workspace-shell.css 统一约束。
 // 创建页使用 data-create-mode-tabs 限定覆盖范围，公共按钮仍可被其他页面复用。
 // 选中底色和底部细线都读取 aria-selected，切换语言不会影响判断。

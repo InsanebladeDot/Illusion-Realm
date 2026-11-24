@@ -13,7 +13,7 @@
  * 用法：
  *   node apps/next/scripts/check-i18n-en.mjs           # 基线比对（超过基线即失败）
  *   node apps/next/scripts/check-i18n-en.mjs --list    # 按命名空间列出未翻译分布
- *   node apps/next/scripts/check-i18n-en.mjs --backlog # 把未翻译清单写成 docs/i18n-backlog.md
+ *   node apps/next/scripts/check-i18n-en.mjs --backlog # 生成未翻译清单到 logs/generated/
  *   node apps/next/scripts/check-i18n-en.mjs --rebase  # 翻译完成后把基线压到当前值（只允许调小）
  */
 import fs from "fs";
@@ -121,7 +121,7 @@ if (listMode) {
 function writeBacklog() {
   /** scriptDir = apps/next/scripts，仓库根在三级之上 */
   const repoRoot = path.join(scriptDir, "..", "..", "..");
-  const backlogPath = path.join(repoRoot, "docs", "i18n-backlog.md");
+  const backlogPath = path.join(repoRoot, "logs", "generated", "i18n-backlog.md");
   const ordered = [...perNamespace].sort((a, b) => b.untranslated - a.untranslated);
   const lines = [
     "# 未翻译清单（en 目录）",
@@ -130,9 +130,7 @@ function writeBacklog() {
     "> `node apps/next/scripts/check-i18n-en.mjs --backlog`",
     ">",
     /**
-     * 刻意**不写生成时间**：写了的话每次重新生成都产生 diff，于是「这份清单过没过期」
-     * 这件事就再也看不出来（内容没变也会红）。去掉时间戳后，它可以用
-     * `node … --backlog && git diff --exit-code docs/i18n-backlog.md` 当一致性检查用。
+     * 省略生成时间，方便直接比较两次运行的清单内容。
      */
     `> 未翻译合计 **${untranslatedTotal} / ${leafTotal}**`,
     "",
@@ -179,6 +177,8 @@ function writeBacklog() {
     );
   }
 
+  // 日志目录归档后也可以按需生成清单。
+  fs.mkdirSync(path.dirname(backlogPath), { recursive: true });
   fs.writeFileSync(backlogPath, `${lines.join("\n")}\n`, "utf8");
   console.log(`已写出未翻译清单：${path.relative(repoRoot, backlogPath)}`);
   console.log(`未翻译合计 ${untranslatedTotal} / ${leafTotal}`);
